@@ -1,0 +1,65 @@
+---
+  title: "regCtsem"
+output: rmarkdown::html_vignette
+vignette: >
+%\VignetteIndexEntry{regCtsem}
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+collapse = TRUE,
+comment = "#>"
+)
+```
+
+# THIS DOCUMENT IS WORK IN PROGRESS
+
+# regCtsem
+
+*regCtsem* is an R package for regularized continuous time dynamic models. It is based on the *ctsem* package and allows for regularization of the drift matrix. The general model equation is:
+
+$$
+\text{d}\boldsymbol{\eta}(t) = \Big(\mathbf A \boldsymbol{\eta}(t) + \mathbf b + \boldsymbol\kappa \Big) \text{d} t + \mathbf G\text d \mathbf W(t)
+$$
+$\boldsymbol\eta$ is a vector of latent variables, $\mathbf A$ is the so-called drift matrix, $\mathbf b$ the continuous time intercept, $\boldsymbol \kappa$ allows for trait variance and $\mathbf G$ is the diffusion matrix which allows modulation of the stochastic part of the model (the Wiener process $\mathbf W$). The latent variables $\boldsymbol \eta$ can be related to manifest measurements by the following measurement equation:
+
+$$
+\mathbf y_{t_u} = \mathbf C \boldsymbol{\eta}_{t_u} + \mathbf d +  \boldsymbol{\epsilon}_{t_u}
+$$
+
+More details on continuous time structural equation models can be found in Voelkle et al. (2012). For details on fitting these models using R, see ctsem.
+
+As mentioned above, regCtsem allows for regularization of the drift matrix $\mathbf A$. The objectives are to improve the generalization of continuous time structural equation models to new data sets and to introduce sparsity to the drift. This can considerably simplify the interpretation of the model.
+
+At the time of writing, regCtsem supports lasso (Tibshirani, 1998), and adaptive lasso (?????) regularization. To this end a penalty term is added to the fitting function of continuous time structural equation models. Let $L(\boldsymbol\theta)$ denote the -2-log-Likelihood and $P(\boldsymbol \theta)$ a penalty function, where $\boldsymbol \theta$ is a vector with model parameters. Then the new fitting function is given by:
+
+$$f(\boldsymbol\theta) = L(\boldsymbol\theta) + P(\boldsymbol \theta)$$
+In lasso regularization, $P(\boldsymbol \theta)$ is set to: 
+
+$$P(\boldsymbol \theta) = N\lambda\sum_{j\in J}|\theta_j|$$
+where $N$ is the sample size, $\lambda \geq 0$ is a tuning parameter weighting the relative importance of the likelihood and the penalty term and $J$ is a set of indices of parameters which should be regularized. Note that only a subset of the parameters are regularized. The multiplication with $N$ is introduced because the likelihood in structural equation models is sample size dependent.
+
+In adaptive lasso $P(\boldsymbol \theta)$ is set to: 
+
+$$
+\mathcal{P}(\boldsymbol{\theta}) = N\lambda \sum_{j\in J}\hat{\omega}_j|\theta_j|,
+$$
+The only difference to lasso regularization is the term $\hat{\omega}_j$. This allows for parameter specific modulation of the penalty term. Typically, the objective is to drive parameters which are zero in the population to zero while leaving non-zero parameters unpenalized. By default, $\hat{\omega}_j = \frac{1}{|\theta_j|}$.
+
+A challenge when using lasso and adaptive lasso regularization is that the penalty term can be driven by the units of the penalized parameters. Typically, this is adressed by first standardizing the variables, which can be very challenging in longitudinal models. regCtsem offers a simple solution which is based on the idea of pre-multiplying each regularized parameter in the penalty term with a scaling factor (see harrellRegressionModelingStrategies2015). To this end, $\hat{\omega}_j$ in the adaptive lasso is set to $\hat{\omega}_j = \frac{\sqrt{\hat{\phi}_{\eta_{\text{pred.},t_0}}}}{\sqrt{\hat{\phi}_{\eta_{\text{crit.},t_0}}}}$ with $\hat{\phi}_{t_0}$ refering to the initial variances of the unregularized model. However, this procedure is not yet well tested and researchers using regCtsem should try to standardize the latent variables in the model prior to the analysis if possible.
+
+The tuning parameter $\lambda$ has to be set by the researcher. Typically, a set of $\lambda$ values is specified and separate models for each of those $\lambda$ is fitted. Increasing $\lambda$ will result in more weight given to the penalty term and increase the sparsity of the model. Finally, the best among the fitted models is selected based on information criteria such as the AIC, BIC or cross-validation. The AIC and BIC will reward model sparseness, while cross-validation will solely focus on out of sample prediction.
+
+At the time of writing, regCtsem offers three different options for fitting regularized continuous time structural equation models. The first option is an approximate optimization of the penalized likelihood function $f(\boldsymbol\theta)$. This procedure cannot take the non-differentiability of the penalty terms into account and will not result in sparse solutions. Therefore, a threshold parameter has to be specified, below which parameters are set to zero. However, the results tend to be highly dependent on the choice of this threshold parameter. On the plus side, the approximate procedure relies on the internal optimizers of OpenMx, which are well established in structural equation modeling.
+
+The other two options are specialized optimizers. Currently regCtsem supports a variant of the newGLMNET (Yuan et al. 2011, Friedman et al. 2010) optimizer and the GIST (Gong et al. 2013) optimizer. 
+
+Workflow
+
+* set up for mx and Kalman
+* starting values for Kalman
+* verbose, multi-core
+* cpptsem
+
