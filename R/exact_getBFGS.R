@@ -41,3 +41,4 @@ exact_getBFGS <- function(theta_k, g_k, H_k, theta_kp1, g_kp1){
 }
 
 
+

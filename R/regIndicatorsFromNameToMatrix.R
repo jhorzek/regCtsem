@@ -13,3 +13,4 @@ regIndicatorsFromNameToMatrix <- function(mxObject, regOn, regIndicators){
 }
 
 
+

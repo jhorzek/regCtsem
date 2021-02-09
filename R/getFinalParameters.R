@@ -23,3 +23,4 @@ getFinalParameters <- function(regCtsemObject, criterion = NULL){
 }
 
 
+

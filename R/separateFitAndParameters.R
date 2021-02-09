@@ -29,3 +29,4 @@ separateFitAndParameters <- function(regCtsemObject){
 }
 
 
+

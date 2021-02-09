@@ -113,7 +113,7 @@
 #'                                     returnFitIndices = TRUE,
 #'                                     cores = 1))
 #'
-#' summarizeRegCtsem(regModel, criterion = "BIC")
+#' summary(regModel, criterion = "BIC")
 #'
 #' # The same regularization can be performed with the approximate optimization:
 #' # Note that we are using extraTries to get better parameter estimates
@@ -187,7 +187,7 @@
 #'                                     cores = 2,
 #'                                     objective = "Kalman"))
 #'
-#' summarizeRegCtsem(regModel, criterion = "cvM2LL")
+#' summary(regModel, criterion = "cvM2LL")
 #'
 #' @author Jannik Orzek
 #' @import ctsemOMX doSNOW rlist
@@ -354,5 +354,6 @@ regCtsem <- function(
   cat("\n")
   return(regCtsemObject)
 }
+
 
 
