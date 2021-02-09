@@ -60,7 +60,7 @@
 #' @param calledInternally Boolean: used internally for skipping checks
 #'
 #' @examples
-#' set.seed(175446)
+#' set.seed(17046)
 #'
 #' library(regCtsem)
 #'
@@ -114,6 +114,8 @@
 #'                                     cores = 1))
 #'
 #' summary(regModel, criterion = "BIC")
+#' plot(regModel, what = "drift")
+#' plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 #'
 #' # The same regularization can be performed with the approximate optimization:
 #' # Note that we are using extraTries to get better parameter estimates
@@ -128,7 +130,8 @@
 #'                                           optimization = "approx",
 #'                                           returnFitIndices = TRUE,
 #'                                           cores = 1,
-#'                                           epsilon = .0001,
+#'                                           epsilon = .001,
+#'                                           zeroThresh = .04, # value below which parameters are evaluated as zero
 #'                                           extraTries = 5))
 #'
 #' # Comparison of parameter estimates:
@@ -188,6 +191,7 @@
 #'                                     objective = "Kalman"))
 #'
 #' summary(regModel, criterion = "cvM2LL")
+#' plot(regModel, what = "fit", criterion = "cvM2LL")
 #'
 #' @author Jannik Orzek
 #' @import ctsemOMX doSNOW rlist
@@ -220,7 +224,7 @@ regCtsem <- function(
   scaleLambdaWithN = TRUE,
   # for approximate estimation:
   epsilon = .001,
-  zeroThresh = .001,
+  zeroThresh = .04,
   extraTries = 1,
   # for exact optimization:
   tryCpptsem = TRUE,
