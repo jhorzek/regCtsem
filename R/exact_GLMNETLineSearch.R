@@ -45,8 +45,14 @@ exact_GLMNETLineSearch <- function(gradientModel, objective, gradientModelcpp,
   pen_0 <- lambda*sum(abs((adaptiveLassoWeightsMatrix%*%theta_kp1)[regIndicators,]))
 
   i <- 0
+
+  if(stepSize >= 1){
+    stepSizeInit <- .9
+  }else{
+    stepSizeInit <- stepSize
+  }
   while(TRUE){
-    stepSize <- stepSize^i
+    stepSize <- stepSizeInit^i
     theta_kp1_td <- theta_kp1+stepSize*d
 
     # compute new fitfunction value
@@ -61,7 +67,7 @@ exact_GLMNETLineSearch <- function(gradientModel, objective, gradientModelcpp,
       }
       if(any(class(out1)== "try-error") | any(class(out2)== "try-error") | !is.finite(gradientModelcpp_i$m2LL)){
         # if the starting values are not feasible
-        stepSize <- .5*stepSize
+        i <- i+1
         next
       }
 

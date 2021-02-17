@@ -189,7 +189,10 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
       rownames(newGradients) <- parameterNames
     }
 
-    if(newRegM2LL > oldRegM2LL){
+    if(newRegM2LL - oldRegM2LL > 10){
+      # the value of 10 is rather arbitrary and is only used to prevent
+      # warnings near convergence, when there might be negligible steps in
+      # the wrong direction
       warning("Step in wrong direction!")
     }
 
