@@ -237,7 +237,7 @@ regCtsem <- function(
   gam = 0,
   differenceApprox = "central",
   initialHessianApproximation = "OpenMx",
-  maxIter_out = 100,  maxIter_in = 1000,  maxIter_line = 100,
+  maxIter_out = 100,  maxIter_in = 1000,  maxIter_line = 500,
   eps_out = .0000000001,  eps_in = .0000000001,  eps_WW = .0001,
   # settings for GIST
   eta = 2,
