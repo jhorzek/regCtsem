@@ -130,7 +130,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
   ## try cpptsem
   if(tryCpptsem){
     if(tolower(objective)  == "ml"){
-      gradientModelcpp <- try(cpptsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
+      gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
       if (any(class(gradientModelcpp) == "try-error")){
         message("Using OpenMx. This can slow down the computation considerably.")
         gradientModelcpp <- NULL
@@ -147,7 +147,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
     }else if (tolower(objective)  == "kalman"){
       tempCtsemObject <- ctFit(ctmodelobj = ctsemObject, dat = dataset, fit = FALSE, objective = "Kalman")
       tempCtsemObject$mxobj <- mxObject
-      gradientModelcpp <- try(cpptsem::cpptsemFromCtsem(ctsemModel = tempCtsemObject, wideData = dataset))
+      gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = tempCtsemObject, wideData = dataset))
       if (any(class(gradientModelcpp) == "try-error")){
         message("Using OpenMx. This can slow down the computation considerably.")
         gradientModelcpp <- NULL
@@ -394,6 +394,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
   return(list("regValues" = regValues, "thetas" = thetas, "m2LL" = m2LL,"regM2LL" = regM2LL))
 
 }
+
 
 
 

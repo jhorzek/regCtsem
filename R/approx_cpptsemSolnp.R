@@ -15,7 +15,7 @@
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @param testGradients should be tested if the final parameters result in NA gradients?
 #' @author Jannik Orzek
-#' @import cpptsem Rsolnp
+#' @import Rsolnp
 #' @export
 approx_cpptsemSolnp <- function(cpptsemmodel,
                                 regM2LLCpptsem,
@@ -50,6 +50,7 @@ approx_cpptsemSolnp <- function(cpptsemmodel,
   return(list("parameters" = CpptsemFit$pars,
               "regM2LL" = CpptsemFit$values[length(CpptsemFit$values)]))
 }
+
 
 
 

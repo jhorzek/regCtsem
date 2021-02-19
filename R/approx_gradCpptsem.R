@@ -12,7 +12,7 @@
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @param testGradients should be tested if the final parameters result in NA gradients?
 #' @author Jannik Orzek
-#' @import cpptsem
+#' @import
 #' @export
 approx_gradCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, epsilon, objective, failureReturns){
   invisible(capture.output(grad <- try(exact_getCppGradients(cppmodel = cpptsemmodel, objective = objective),
@@ -27,6 +27,7 @@ approx_gradCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N
     N*lambda*adaptiveLassoWeights[regIndicators] * parameters[regIndicators]/sqrt(parameters[regIndicators]^2+epsilon)
   return(grad[names(parameters)])
 }
+
 
 
 

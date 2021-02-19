@@ -43,7 +43,7 @@ regCtsem(
   initialHessianApproximation = "OpenMx",
   maxIter_out = 100,
   maxIter_in = 1000,
-  maxIter_line = 100,
+  maxIter_line = 500,
   eps_out = 1e-10,
   eps_in = 1e-10,
   eps_WW = 1e-04,

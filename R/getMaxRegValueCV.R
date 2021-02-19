@@ -97,3 +97,4 @@ getMaxRegValueCV <- function(ctsemObject, mxObject, fullData, KalmanStartValues,
 
 
 
+

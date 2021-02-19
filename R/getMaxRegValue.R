@@ -100,3 +100,4 @@ getMaxRegValue <- function(mxObject, regIndicators, differenceApprox, adaptiveLa
 
 
 
+

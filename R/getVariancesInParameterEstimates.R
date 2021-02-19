@@ -161,3 +161,4 @@ getVariancesInParameterEstimates <- function(mxObject, parameterEstimates){
 
 
 
+

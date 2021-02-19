@@ -64,7 +64,7 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
   ## try cpptsem
   if(tryCpptsem){
     if(tolower(objective)  == "ml"){
-      gradientModelcpp <- try(cpptsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
+      gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
       if (any(class(gradientModelcpp) == "try-error")){
         message("Using OpenMx. This can slow down the computation considerably.")
         gradientModelcpp <- NULL
@@ -81,7 +81,7 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
     }else if (tolower(objective)  == "kalman"){
       tempCtsemObject <- ctFit(ctmodelobj = ctsemObject, dat = dataset, fit = FALSE, objective = "Kalman")
       tempCtsemObject$mxobj <- mxObject
-      gradientModelcpp <- try(cpptsem::cpptsemFromCtsem(ctsemModel = tempCtsemObject, wideData = dataset))
+      gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = tempCtsemObject, wideData = dataset))
       if (any(class(gradientModelcpp) == "try-error")){
         message("Using OpenMx. This can slow down the computation considerably.")
         gradientModelcpp <- NULL
@@ -644,6 +644,7 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
               "regM2LL" = regM2LL,
               "convergence" = convergence))
 }
+
 
 
 

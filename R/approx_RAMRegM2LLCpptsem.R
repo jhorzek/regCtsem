@@ -11,7 +11,7 @@
 #' @param objective ML or Kalman
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @author Jannik Orzek
-#' @import cpptsem
+#' @import
 #' @export
 approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, epsilon, objective, failureReturns){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
@@ -33,6 +33,7 @@ approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeig
   }
   return(regM2LL)
 }
+
 
 
 

@@ -4,7 +4,15 @@
 \alias{exact_getBFGS}
 \title{exact_getBFGS}
 \usage{
-exact_getBFGS(theta_k, g_k, H_k, theta_kp1, g_kp1)
+exact_getBFGS(
+  theta_k,
+  g_k,
+  H_k,
+  theta_kp1,
+  g_kp1,
+  cautious = TRUE,
+  hessianEps = 0.001
+)
 }
 \arguments{
 \item{theta_k}{Theta at iteration k}
@@ -16,6 +24,10 @@ exact_getBFGS(theta_k, g_k, H_k, theta_kp1, g_kp1)
 \item{theta_kp1}{Theta at iteration k+1}
 
 \item{g_kp1}{Gradients of the likelihood function at iteration k+1}
+
+\item{hessianEps}{controls when the update of the Hessian approximation is skipped}
+
+\item{cautios}{boolen: should the update be skipped if it would result in a non positive definite Hessian?}
 }
 \description{
 computes the BFGS Hessian approximation

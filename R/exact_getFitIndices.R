@@ -46,3 +46,4 @@ exact_getFitIndices <- function(mxObject, parameterLabels, fitAndParameters, reg
 
 
 
+
