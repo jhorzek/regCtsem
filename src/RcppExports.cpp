@@ -369,9 +369,8 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP _rcpp_module_boot_cpptsemKalmanmodule();
-RcppExport SEXP _rcpp_module_boot_cpptsemRAMmodule();
-RcppExport SEXP _rcpp_module_boot_cpptsemmodule();
+RcppExport SEXP _rcpp_module_boot_cpptsemKalmanModel_cpp();
+RcppExport SEXP _rcpp_module_boot_cpptsemRAMmodel_cpp();
 
 static const R_CallMethodDef CallEntries[] = {
     {"_regCtsem_computeDRIFTHASH", (DL_FUNC) &_regCtsem_computeDRIFTHASH, 1},
@@ -401,9 +400,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_regCtsem_getMatrixExponential", (DL_FUNC) &_regCtsem_getMatrixExponential, 1},
     {"_regCtsem_getVarianceFromVarianceBase", (DL_FUNC) &_regCtsem_getVarianceFromVarianceBase, 1},
     {"_regCtsem_kalmanFit", (DL_FUNC) &_regCtsem_kalmanFit, 17},
-    {"_rcpp_module_boot_cpptsemKalmanmodule", (DL_FUNC) &_rcpp_module_boot_cpptsemKalmanmodule, 0},
-    {"_rcpp_module_boot_cpptsemRAMmodule", (DL_FUNC) &_rcpp_module_boot_cpptsemRAMmodule, 0},
-    {"_rcpp_module_boot_cpptsemmodule", (DL_FUNC) &_rcpp_module_boot_cpptsemmodule, 0},
+    {"_rcpp_module_boot_cpptsemKalmanModel_cpp", (DL_FUNC) &_rcpp_module_boot_cpptsemKalmanModel_cpp, 0},
+    {"_rcpp_module_boot_cpptsemRAMmodel_cpp", (DL_FUNC) &_rcpp_module_boot_cpptsemRAMmodel_cpp, 0},
     {NULL, NULL, 0}
 };
 

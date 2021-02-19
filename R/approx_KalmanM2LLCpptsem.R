@@ -5,7 +5,6 @@
 #' @param cpptsemmodel model from cpptsem
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @author Jannik Orzek
-#' @import
 #' @export
 approx_KalmanM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
   cpptsemmodel$setParameterValues(parameters, names(parameters))

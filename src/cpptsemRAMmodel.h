@@ -2,13 +2,12 @@
 #define CPPTSEMRAMMODEL_H
 
 #include <RcppArmadillo.h>
-#include "cpptsemmodel.h"
 
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
 // cpptsemRAMmodel class
 
-class cpptsemRAMmodel: public cpptsemmodel{
+class cpptsemRAMmodel{
   // inherits from cpptsemmodel
   public:
 
@@ -23,7 +22,34 @@ class cpptsemRAMmodel: public cpptsemmodel{
   arma::mat expectedCovariance;
   arma::mat expectedMeans;
 
-  // constrcutor
+  std::string name;
+  Rcpp::List ctMatrixList;
+  Rcpp::List discreteDRIFTUnique;
+  Rcpp::List discreteTRAITUnique;
+  Rcpp::List DRIFTHASHExponentialUnique;
+  Rcpp::List discreteDIFFUSIONUnique;
+  Rcpp::List discreteCINTUnique;
+  Rcpp::DataFrame parameterTable;
+  arma::mat DRIFTValues;
+  arma::mat DIFFUSIONValues;
+  arma::mat T0VARValues;
+  arma::colvec T0MEANSValues;
+  arma::mat TRAITVARValues;
+  arma::mat MANIFESTVARValues;
+  arma::mat LAMBDAValues;
+  arma::colvec MANIFESTMEANSValues;
+  bool hasDiscreteDRIFTUnique = false,
+    hasDiscreteTRAITUnique = false,
+    hasDRIFTHASHExponentialUnique = false,
+    hasDiscreteDIFFUSIONUnique = false,
+    hasDiscreteCINTUnique = false,
+    computeWasCalled = false,
+    stationaryT0VAR = false,
+    stationaryT0MEANS = false;
+
+  double m2LL;
+
+  // constructor
   cpptsemRAMmodel(std::string mName,
                   Rcpp::List mCtMatrixList,
                   Rcpp::DataFrame mParameterTable,
@@ -31,6 +57,13 @@ class cpptsemRAMmodel: public cpptsemmodel{
                   bool mStationaryT0MEANS);
 
   // setter
+  void setParameterValues(Rcpp::NumericVector mParameters, Rcpp::StringVector parameterLabels);
+  void setDiscreteDRIFTUnique(Rcpp::List mDiscreteDRIFTUnique);
+  void setDiscreteTRAITUnique(Rcpp::List mDiscreteTRAITUnique);
+  void setDRIFTHASHExponentialUnique(Rcpp::List mDRIFTHASHExponentialUnique);
+  void setDiscreteDIFFUSIONUnique(Rcpp::List mDiscreteDIFFUSIONUnique);
+  void setDiscreteCINTUnique(Rcpp::List mDiscreteCINTUnique);
+
   void setRAMMatrices(arma::mat mA,
                       arma::mat mS,
                       arma::mat mM,
@@ -45,6 +78,9 @@ class cpptsemRAMmodel: public cpptsemmodel{
   void computeRAM();
   void fitRAM();
   Rcpp::NumericVector approxRAMGradients(double epsilon);
+
+  // getter
+  Rcpp::NumericVector getParameterValues();
 
 };
 
