@@ -184,6 +184,9 @@ main function: performs regularized ctsem
 
 This package is based on ctsem and can regularize Drift parameters in continuous time structural equation models
 }
+\details{
+NOTE: Function located in file regCtsem.R
+}
 \examples{
 set.seed(17046)
 

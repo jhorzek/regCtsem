@@ -2,10 +2,10 @@
 % Please edit documentation in R/RcppExports.R
 \name{computeDRIFTHASH}
 \alias{computeDRIFTHASH}
-\title{Computes the computeDRIFTHASH given the drift. DRIFTHASH = DRIFT \otimes I + I \otimes DRIFT.}
+\title{Computes the computeDRIFTHASH given the drift. DRIFTHASH = DRIFT otimes I + I otimes DRIFT.}
 \usage{
 computeDRIFTHASH(DRIFTValues)
 }
 \description{
-Computes the computeDRIFTHASH given the drift. DRIFTHASH = DRIFT \otimes I + I \otimes DRIFT.
+Computes the computeDRIFTHASH given the drift. DRIFTHASH = DRIFT otimes I + I otimes DRIFT.
 }
