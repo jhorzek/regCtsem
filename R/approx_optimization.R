@@ -6,7 +6,7 @@
 #'
 #' sets up an approximate regularized ctsem
 #'
-#' NOTE: Function located in file approx_Optimization.R
+#' NOTE: Function located in file approx_optimization.R
 #'
 #' @param ctsemObject Fitted object of class ctsemOMX
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
@@ -103,7 +103,7 @@ approx_initializeModel <- function(  # model
 #'
 #' loops over regValues if optimization = "approx"
 #'
-#' NOTE: Function located in file approx_Optimization.R
+#' NOTE: Function located in file approx_optimization.R
 #'
 #' @param ctsemObject Fitted object of class ctsemOMX
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
@@ -252,7 +252,7 @@ approx_iterateOverRegValues <- function(  # model
 #'
 #' Creates the new approx_createFitFunString for specified regularization
 #'
-#' NOTE: Function located in file approx_Optimization.R
+#' NOTE: Function located in file approx_optimization.R
 #'
 #' @param penalty type of penalty. Currently supported are lasso and ridge
 #' @param elastic_alpha PLACEHOLDER. Used in elastic net. Not yet implemented
@@ -288,7 +288,7 @@ approx_createFitFunString = function(penalty, elastic_alpha = NULL, elastic_gamm
 #'
 #' computes cv fit for approximate optimization
 #'
-#' NOTE: Function located in file approx_Optimization.R
+#' NOTE: Function located in file approx_optimization.R
 #'
 #' @param ctsemObject Fitted object of class ctsemOMX
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
@@ -331,7 +331,7 @@ approx_getCVFit <- function(mxObject, ctsemObject, cvSample, objective, fitAndPa
 #'
 #' computes fit indices
 #'
-#' NOTE: Function located in file approx_Optimization.R
+#' NOTE: Function located in file approx_optimization.R
 #'
 #' @param fittedRegModel fitted regCtsem object
 #' @param ctsemObject Only for Kalman: Model to set up the Kalman object

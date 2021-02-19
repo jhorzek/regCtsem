@@ -5,7 +5,7 @@
 #'
 #' computes cross-validation fit for exact optimization
 #'
-#' NOTE: Function located in file exact_Optimization.R
+#' NOTE: Function located in file exact_optimization.R
 #'
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
@@ -57,7 +57,7 @@ exact_getCVFit <- function(objective, ctsemObject, mxObject, parameterLabels,
 #'
 #' computes fit indices for optimization = "exact"
 #'
-#' NOTE: Function located in file exact_Optimization.R
+#' NOTE: Function located in file exact_optimization.R
 #'
 #' @param mxObject Fitted object of class MxObject
 #' @param parameterLabels labels of optimized parameters
@@ -108,7 +108,7 @@ exact_getFitIndices <- function(mxObject, parameterLabels, fitAndParameters, reg
 #'
 #' returns the standardizer for the standardized drift parameters if standardizeDrift = TRUE. Computes T0SD_predictor/T0SD_dependent
 #'
-#' NOTE: Function located in file exact_Optimization.R
+#' NOTE: Function located in file exact_optimization.R
 #'
 #' @param T0VAR matrix with T0VAR values
 #' @param thetaNames vector with parameter names
@@ -129,7 +129,7 @@ exact_getFlatStdizer <- function(T0VAR, thetaNames){
 #'
 #' computes sum(lambda*abs(regularized Values))
 #'
-#' NOTE: Function located in file exact_Optimization.R
+#' NOTE: Function located in file exact_optimization.R
 #'
 #' @param regIndicators Names of regularized parameters
 #' @param lambda Penaltiy value
@@ -170,7 +170,7 @@ exact_getRegValue <- function(lambda, theta, regIndicators, adaptiveLassoWeights
 #'
 #' Computes the subgradients of a lasso penalized likelihood f(theta) = L(theta)+lambda*p(theta)
 #'
-#' NOTE: Function located in file exact_Optimization.R
+#' NOTE: Function located in file exact_optimization.R
 #'
 #' @param theta vector with named parameters
 #' @param jacobian derivative of L(theta)
@@ -209,7 +209,7 @@ exact_getSubgradients <- function(theta, jacobian, regIndicators, lambda, lineSe
 #'
 #' computes the updated T0VAR given the old parameter values in an mxObject and the updates to the parameters in a vector d
 #'
-#' NOTE: Function located in file exact_Optimization.R
+#' NOTE: Function located in file exact_optimization.R
 #'
 #' @param mxObject mxObject with old parameter values
 #' @param d vector with updates to parameter values
@@ -266,7 +266,7 @@ exact_getT0VAR <- function(mxObject, d){
 #'
 #' tries different starting values to find a good starting point for exact optimization
 #'
-#' NOTE: Function located in file exact_Optimization.R
+#' NOTE: Function located in file exact_optimization.R
 #'
 #' @param gradientModel Model used for computing gradients (from OpenMx)
 #' @param cppmodel cpptsem object to compute gradients
@@ -423,7 +423,7 @@ exact_tryStartingValues <- function(gradientModel, cppmodel,
 #'
 #' computes an initial positive-definite Hessian matrix
 #'
-#' NOTE: Function located in file exact_Optimization.R
+#' NOTE: Function located in file exact_optimization.R
 #'
 #' @param mxObject Fitted object of class MxObject
 #' @param approximationType which Hessian should be used? Currently available are "ident" for an identity matrix and "OpenMx" for the Hessian from OpenMx Gradient Descent (recommended)
@@ -472,7 +472,7 @@ exact_initialHessian <- function(mxObject,
 #'
 #' set the parameter values of mxObject to the values in approx_regModel for the specified regValue
 #'
-#' NOTE: Function located in file exact_Optimization.R
+#' NOTE: Function located in file exact_optimization.R
 #'
 #' @param approx_regModel fitted regCtsem with optimization = "approx" and without automatic cross-validation
 #' @param mxObject Fitted object of class MxObject
