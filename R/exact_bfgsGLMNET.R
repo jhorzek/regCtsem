@@ -92,6 +92,13 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
   # get initial Hessian
   if(computeHessian){
     H_kp1 <- hessianModel$output$calculatedHessian
+    eigenDecomp <- eigen(H_kp1)
+    if(any(eigenDecomp$values < 0)){
+      warning("Initial Hessian is not positive definite. Flipping Eigen values to obtain a positive definite initial Hessian.")
+      D <- abs(diag(eigenDecomp$values))
+      L <- eigenDecomp$vectors
+      H_kp1 <- L%*%D%*%solve(L)
+    }
   }else if(is.matrix(initialHessianApproximation)){
     H_kp1 <- initialHessianApproximation
   }else{
@@ -101,13 +108,13 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
 
   # stop if Hessian is not positive definite
   if(any(eigen(H_kp1)$values < 0)){
-    if(is.matrix(initialHessianApproximation) | !is.null(mxObject$output$hessian)){
+    if(is.matrix(initialHessianApproximation) || !is.null(mxObject$output$hessian)){
       H_kp1 <- "ident"
     }
     warning("Initial Hessian is not positive definite and will be approximated.")
     H_kp1 <- regCtsem::exact_initialHessian(mxObject = mxObject,
-                                             approximationType = initialHessianApproximation,
-                                             estimatedHessian = H_kp1)
+                                            approximationType = initialHessianApproximation,
+                                            estimatedHessian = H_kp1)
   }
   initialHessian <- H_kp1
   # define return values
@@ -195,12 +202,12 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
       names(startingValues) <- rownames(theta_kp1)
 
       approxModel <- regCtsem::approx_initializeModel(mxObject = mxObject,
-                                                       sampleSize = 1, # scaling with N is handled above
-                                                       regOn = regOn,
-                                                       regIndicators = regIndicatorsFromNameToMatrix(mxObject = mxObject, regOn = regOn, regIndicators = regIndicators),
-                                                       regValue = lambda,
-                                                       adaptiveLassoWeights = adaptiveLassoWeights,
-                                                       penalty = "lasso"
+                                                      sampleSize = 1, # scaling with N is handled above
+                                                      regOn = regOn,
+                                                      regIndicators = regIndicatorsFromNameToMatrix(mxObject = mxObject, regOn = regOn, regIndicators = regIndicators),
+                                                      regValue = lambda,
+                                                      adaptiveLassoWeights = adaptiveLassoWeights,
+                                                      penalty = "lasso"
       )
       approxModel <- omxSetParameters(approxModel, labels = names(startingValues), values = startingValues)
       suppressMessages(invisible(capture.output(approxModel <- try(expr = OpenMx::mxTryHardctsem(approxModel, extraTries = extraTries), silent = TRUE))))
@@ -266,14 +273,14 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
 
     # outer loop: optimize parameters
     resGLMNET <- try(regCtsem::exact_outerGLMNET(mxObject = mxObject, objective =objective,
-                                                  adaptiveLassoWeights = adaptiveLassoWeights, sampleSize = sampleSize,
-                                                  gradientModel = gradientModel, gradientModelcpp = gradientModelcpp, parameterNames = thetaNames,
-                                                  initialParameters = theta_kp1, initialGradients = g_kp1, initialHessian = H_kp1,
-                                                  lambda = lambda, regIndicators = regIndicators,
-                                                  stepSize = stepSize, lineSearch = lineSearch, c1 = c1, c2 = c2,
-                                                  differenceApprox = differenceApprox, maxIter_out = maxIter_out,
-                                                  maxIter_in = maxIter_in, maxIter_line = maxIter_line, eps_out = eps_out,
-                                                  eps_in = eps_in, eps_WW = eps_WW, scaleLambdaWithN = scaleLambdaWithN, verbose = verbose))
+                                                 adaptiveLassoWeights = adaptiveLassoWeights, sampleSize = sampleSize,
+                                                 gradientModel = gradientModel, gradientModelcpp = gradientModelcpp, parameterNames = thetaNames,
+                                                 initialParameters = theta_kp1, initialGradients = g_kp1, initialHessian = H_kp1,
+                                                 lambda = lambda, regIndicators = regIndicators,
+                                                 stepSize = stepSize, lineSearch = lineSearch, c1 = c1, c2 = c2,
+                                                 differenceApprox = differenceApprox, maxIter_out = maxIter_out,
+                                                 maxIter_in = maxIter_in, maxIter_line = maxIter_line, eps_out = eps_out,
+                                                 eps_in = eps_in, eps_WW = eps_WW, scaleLambdaWithN = scaleLambdaWithN, verbose = verbose))
 
 
     if(any(class(resGLMNET) == "try-error")){
@@ -334,9 +341,9 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
           # save fit
           cM2LL <- ifelse(resGLMNET$convergence, gradientModelcpp$m2LL, Inf)
           cRegM2LL <- ifelse(resGLMNET$convergence, gradientModelcpp$m2LL +  regCtsem::exact_getRegValue(lambda = lambda,
-                                                                                                          theta = resGLMNET$theta_kp1,
-                                                                                                          regIndicators = regIndicators,
-                                                                                                          adaptiveLassoWeights = adaptiveLassoWeights), Inf)
+                                                                                                         theta = resGLMNET$theta_kp1,
+                                                                                                         regIndicators = regIndicators,
+                                                                                                         adaptiveLassoWeights = adaptiveLassoWeights), Inf)
           # save results
           thetas[,iteration] <- resGLMNET$theta_kp1[rownames(thetas),]
           m2LL[iteration] <- cM2LL
@@ -370,9 +377,9 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
           # save fit
           cM2LL <- ifelse(resGLMNET$convergence, resGLMNET$gradientModel$fitfunction$result[[1]], Inf)
           cRegM2LL <- ifelse(resGLMNET$convergence, resGLMNET$gradientModel$fitfunction$result[[1]] +  regCtsem::exact_getRegValue(lambda = lambda,
-                                                                                                                                    theta = resGLMNET$theta_kp1,
-                                                                                                                                    regIndicators = regIndicators,
-                                                                                                                                    adaptiveLassoWeights = adaptiveLassoWeights), Inf)
+                                                                                                                                   theta = resGLMNET$theta_kp1,
+                                                                                                                                   regIndicators = regIndicators,
+                                                                                                                                   adaptiveLassoWeights = adaptiveLassoWeights), Inf)
           # save results
           thetas[,iteration] <- resGLMNET$theta_kp1[rownames(thetas),]
           m2LL[iteration] <- cM2LL
