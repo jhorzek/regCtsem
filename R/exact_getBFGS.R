@@ -16,7 +16,7 @@ exact_getBFGS <- function(theta_k, g_k, H_k, theta_kp1, g_kp1, cautious = TRUE, 
 
   # test if positive definiteness is ensured
   skipUpdate <- try((t(y)%*%d < hessianEps) && cautious, silent = TRUE)
-  if(any(class(skipUpdate) == "try-error") || skipUpdate){
+  if(any(class(skipUpdate) == "try-error") || skipUpdate || is.na(skipUpdate)){
     # Hessian might become non-positive definite. Return without update
     return(H_k)
   }
