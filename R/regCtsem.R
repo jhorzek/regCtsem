@@ -41,7 +41,10 @@
 #'
 #' library(regCtsem)
 #'
-#' ## define the population model:
+#' #### Example 1 ####
+#' ## Regularization with FIML objective function
+#'
+#' ## Population model:
 #'
 #' # set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
 #' ct_drift <- matrix(c(-.3,.2,0,-.5), ncol = 2)
@@ -57,7 +60,7 @@
 #'                                 T0VAR=diag(1,2), type = "omx")
 #'
 #' # simulate a training data set
-#' dat <- ctsem::ctGenerate(generatingModel,n.subjects = 100, wide = TRUE)
+#' dat <- ctsem::ctGenerate(generatingModel, n.subjects = 100, wide = TRUE)
 #'
 #' ## Build the analysis model. Note that drift eta1_eta2 is freely estimated
 #' # although it is 0 in the population.
@@ -73,22 +76,30 @@
 #' # fit the model using ctsemOMX:
 #' fit_myModel <- ctsemOMX::ctFit(dat, myModel)
 #'
-#' # select DRIFT values:
+#' # select DRIFT values for regularization:
 #' regOn = "DRIFT"
-#' regIndicators = matrix(c(0,1,1,0), byrow = T, ncol = 2)
+#' regIndicators = matrix(c(0,1,
+#'                          1,0),
+#'                        byrow = T, nrow = 2)
 #'
-#' # perform regularization
-#' regModel <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
-#'                                     regOn = regOn,
-#'                                     regIndicators = regIndicators,
-#'                                     regValues = "auto",
-#'                                     regValuesAutoLength = 15,
-#'                                     penalty = "lasso",
-#'                                     standardizeDrift = TRUE,
-#'                                     autoCV = F,
-#'                                     optimization = "exact",
-#'                                     returnFitIndices = TRUE,
-#'                                     cores = 1))
+#' # Optimize model using GIST with lasso penalty
+#' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+#'                                regOn = regOn,
+#'                                regIndicators = regIndicators,
+#'                                regValues = "auto",
+#'                                regValuesAutoLength = 15)
+#'
+#' summary(regModel, criterion = "BIC")
+#' plot(regModel, what = "drift")
+#' plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
+#'
+#' # Optimize model using GLMNET with lasso penalty
+#' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+#'                                regOn = regOn,
+#'                                regIndicators = regIndicators,
+#'                                regValues = "auto",
+#'                                regValuesAutoLength = 15,
+#'                                optimizer = "GLMNET")
 #'
 #' summary(regModel, criterion = "BIC")
 #' plot(regModel, what = "drift")
@@ -96,25 +107,24 @@
 #'
 #' # The same regularization can be performed with the approximate optimization:
 #' # Note that we are using extraTries to get better parameter estimates
-#' regModelApprox <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
-#'                                           regOn = regOn,
-#'                                           regIndicators = regIndicators,
-#'                                           regValues = "auto",
-#'                                           regValuesAutoLength = 15,
-#'                                           penalty = "lasso",
-#'                                           standardizeDrift = T,
-#'                                           autoCV = F,
-#'                                           optimization = "approx",
-#'                                           returnFitIndices = TRUE,
-#'                                           cores = 1,
-#'                                           epsilon = .001,
-#'                                           zeroThresh = .04, # value below which parameters are evaluated as zero
-#'                                           extraTries = 5))
+#' regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+#'                                      regOn = regOn,
+#'                                      regIndicators = regIndicators,
+#'                                      regValues = "auto",
+#'                                      regValuesAutoLength = 15,
+#'                                      optimization = "approx",
+#'                                      control = list(
+#'                                        epsilon = .001, # epsilon is used to transform the non-differentiable
+#'                                        #lasso penalty to a differentiable one if optimization = approx
+#'                                        zeroThresh = .04 # threshold below which parameters will be evaluated as == 0
+#'                                      ),
+#'                                      extraTries = 5)
 #'
 #' # Comparison of parameter estimates:
 #' round(regModel$fitAndParameters - regModelApprox$fitAndParameters,4)
 #'
-#' #### regCtsem with Kalman Filter and N>1
+#' #### Example 2 ####
+#' ## Regularization with Kalman objective function
 #'
 #' set.seed(175446)
 #'
@@ -152,20 +162,19 @@
 #' regOn = "DRIFT"
 #' regIndicators = matrix(c(0,1,1,0), byrow = T, ncol = 2)
 #'
-#' regModel <- try(regCtsem::regCtsem(ctsemObject = myModel,
-#'                                     dataset = traindata,
-#'                                     regOn = regOn,
-#'                                     regIndicators = regIndicators,
-#'                                     regValues = "auto",
-#'                                     regValuesAutoLength = 15,
-#'                                     penalty = "lasso",
-#'                                     standardizeDrift = TRUE,
-#'                                     autoCV = F,
-#'                                     cvSample = testdata,
-#'                                     optimization = "exact",
-#'                                     returnFitIndices = TRUE,
-#'                                     cores = 2,
-#'                                     objective = "Kalman"))
+#' ## Optimization with GIST:
+#' regModel <- regCtsem::regCtsem(# important: We now have to pass the ctModel object, not the fitted model!
+#'   ctsemObject = myModel,
+#'   # Furthermore, the data has to be passed to regCtsem
+#'   dataset = traindata,
+#'   regOn = regOn,
+#'   regIndicators = regIndicators,
+#'   regValues = "auto",
+#'   regValuesAutoLength = 15,
+#'   cvSample = testdata,
+#'   objective = "Kalman",
+#'   cores = 2
+#' )
 #'
 #' summary(regModel, criterion = "cvM2LL")
 #' plot(regModel, what = "fit", criterion = "cvM2LL")

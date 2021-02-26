@@ -914,7 +914,7 @@ exact_GLMNETLineSearch <- function(gradientModel, objective, gradientModelcpp,
     }
     i <- i+1
     if(i >= maxIter_line){
-      warning("Line search found no stepSize within the maximal number of line search iterations.")
+      #warning("Line search found no stepSize within the maximal number of line search iterations.")
       break
     }
   }
