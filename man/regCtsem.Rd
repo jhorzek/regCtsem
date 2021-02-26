@@ -17,47 +17,20 @@ regCtsem(
   adaptiveLassoWeights = NULL,
   elastic_alpha = NULL,
   elastic_gamma = NULL,
-  standardizeDrift = FALSE,
-  returnFitIndices = TRUE,
   cvSample = NULL,
   autoCV = FALSE,
   k = 5,
-  optimizer = "GIST",
   objective = "ML",
   KalmanStartValues = NULL,
   optimizeKalman = TRUE,
   sparseParameters = NULL,
-  optimization = "exact",
+  standardizeDrift = FALSE,
   scaleLambdaWithN = TRUE,
-  epsilon = 0.001,
-  zeroThresh = 0.04,
-  extraTries = 1,
-  tryCpptsem = TRUE,
-  forceCpptsem = FALSE,
-  stepSize = 1,
-  lineSearch = "GLMNET",
-  c1 = 1e-04,
-  c2 = 0.9,
-  sig = 10^(-5),
-  gam = 0,
-  differenceApprox = "central",
-  initialHessianApproximation = "OpenMx",
-  maxIter_out = 100,
-  maxIter_in = 1000,
-  maxIter_line = 500,
-  eps_out = 1e-10,
-  eps_in = 1e-10,
-  eps_WW = 1e-04,
-  eta = 2,
-  stepsizeMin = 1/(10^30),
-  stepsizeMax = 10^30,
-  GISTLinesearchCriterion = "monotone",
-  GISTNonMonotoneNBack = 5,
-  break_outer = 10^(-5),
-  exactApproximateFirst = "auto",
-  exactApproximateFirst3NumStartingValues = 0,
-  exactApproximateFirst3Optimize = 1,
-  exactApproximateFirstMaxIter_out = "auto",
+  returnFitIndices = TRUE,
+  optimization = "exact",
+  optimizer = "GIST",
+  control = list(),
+  extraTries = 3,
   cores = 1,
   verbose = 0,
   silent = FALSE,
@@ -89,10 +62,6 @@ regCtsem(
 
 \item{elastic_gamma}{placehoder for elastic net. NOT YET IMPLEMENTED}
 
-\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using T0VAR?}
-
-\item{returnFitIndices}{Boolean: should fit indices be returned?}
-
 \item{cvSample}{cross-validation sample. Has to be of type mxData}
 
 \item{autoCV}{Boolean: Should automatic cross-validation be used?}
@@ -107,65 +76,19 @@ regCtsem(
 
 \item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. Required for exactApproximateFirst = 3}
 
-\item{optimization}{which optimization procedure should be used. Possible are  "exact" or "approx".}
+\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using T0VAR?}
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 
-\item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
+\item{returnFitIndices}{Boolean: should fit indices be returned?}
 
-\item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
+\item{optimization}{which optimization procedure should be used. Possible are  "exact" or "approx".}
+
+\item{optimizer}{for exact optimization: Either GIST or GLMNET}
+
+\item{control}{List with control arguments for the optimizer. See ?controlGIST, ?controlGLMNET and ?controlApprox for the respective parameters}
 
 \item{extraTries}{number of extra tries in mxTryHard}
-
-\item{tryCpptsem}{should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models}
-
-\item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the m,atrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "cpptsem") for more details}
-
-\item{stepSize}{GLMNET & GIST: initial step size of the outer iteration}
-
-\item{lineSearch}{GLMNET: String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.}
-
-\item{c1}{GLMNET: c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"}
-
-\item{c2}{GLMNET: c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"}
-
-\item{sig}{GLMNET & GIST: GLMNET: only relevant when lineSearch = 'GLMNET' | GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.}
-
-\item{gam}{GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.}
-
-\item{differenceApprox}{GLMNET: Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
-
-\item{initialHessianApproximation}{GLMNET: Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and OpenMx (here the hessian approxmiation from the mxObject is used)}
-
-\item{maxIter_out}{GLMNET & GIST: Maximal number of outer iterations}
-
-\item{maxIter_in}{GLMNET & GIST: Maximal number of inner iterations}
-
-\item{maxIter_line}{GLMNET: Maximal number of iterations for the lineSearch procedure}
-
-\item{eps_out}{GLMNET: Stopping criterion for outer iterations}
-
-\item{eps_in}{GLMNET: Stopping criterion for inner iterations}
-
-\item{eps_WW}{GLMNET: Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned}
-
-\item{eta}{GIST: if the current step size fails, eta will decrease the step size. Must be > 1}
-
-\item{stepsizeMin}{GIST: Minimal acceptable step size. Must be > 0. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)}
-
-\item{stepsizeMax}{GIST: Maximal acceptable step size. Must be > stepsizeMin. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)}
-
-\item{GISTLinesearchCriterion}{criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.}
-
-\item{GISTNonMonotoneNBack}{in case of non-monotone line search: Number of preceding regM2LL values to consider}
-
-\item{exactApproximateFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first regValue, 2 = optimization for all regValues. 3 ensures that the fit will not be worse than in the sparse model if regValues = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or Opemx if cpptsem is not available, 5 = optimizing using optim or Opemx if cpptsem is not available (requires installation of Rsolnp)}
-
-\item{exactApproximateFirst3NumStartingValues}{Used if exactApproximateFirst = 3. regCtsem will try exactApproximateFirst3NumStartingValues+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
-
-\item{exactApproximateFirst3Optimize}{Used if exactApproximateFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp}
-
-\item{exactApproximateFirstMaxIter_out}{Used if exactApproximateFirst = 3 and exactApproximateFirst3Optimize > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If exactApproximateFirst =  4, or exactApproximateFirst = 5 this will control the number of outer iteration in optim or solnp .}
 
 \item{cores}{how many computer cores should be used?}
 
@@ -175,7 +98,7 @@ regCtsem(
 
 \item{progressBar}{Boolean: Should a progress bar be displayed}
 
-\item{parallelProgressBar}{list: used internally to display progress when executing in parallel}
+\item{parallelProgressBar}{list: used internally to display progress when executing in parallel. Do not pass values to parallelProgressBar}
 
 \item{calledInternally}{Boolean: used internally for skipping checks}
 }
