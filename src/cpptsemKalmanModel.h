@@ -24,7 +24,7 @@ public:
   arma::mat DRIFTValues;
   arma::mat DIFFUSIONValues;
   arma::mat T0VARValues;
-  arma::colvec T0MEANSValues;
+  arma::colvec T0MEANSValues, indM2LL;
   arma::mat TRAITVARValues;
   arma::mat MANIFESTVARValues;
   arma::mat LAMBDAValues;

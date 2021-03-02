@@ -255,24 +255,24 @@ void cpptsemKalmanModel::computeAndFitKalman(){
 
 
   // Kalman filter: Prediction and Updating
-
-  m2LL = kalmanFit(sampleSize,
-                   Tpoints,
-                   nlatent,
-                   nmanifest,
-                   kalmanData,
-                   latentScores,
-                   predictedManifestValues,
-                   discreteTimeParameterNames,
-                   T0MEANSValues,
-                   T0VARValues,
-                   discreteDRIFTUnique,
-                   discreteCINTUnique,
-                   discreteTRAITUnique,
-                   discreteDIFFUSIONUnique,
-                   LAMBDAValues,
-                   MANIFESTMEANSValues,
-                   MANIFESTVARValues);
+  indM2LL = kalmanFit(sampleSize,
+                      Tpoints,
+                      nlatent,
+                      nmanifest,
+                      kalmanData,
+                      latentScores,
+                      predictedManifestValues,
+                      discreteTimeParameterNames,
+                      T0MEANSValues,
+                      T0VARValues,
+                      discreteDRIFTUnique,
+                      discreteCINTUnique,
+                      discreteTRAITUnique,
+                      discreteDIFFUSIONUnique,
+                      LAMBDAValues,
+                      MANIFESTMEANSValues,
+                      MANIFESTVARValues);
+  m2LL = sum(indM2LL);
 
 }
 
@@ -339,6 +339,7 @@ RCPP_MODULE(cpptsemKalmanModel_cpp){
   .field_readonly( "MANIFESTVARValues", &cpptsemKalmanModel::MANIFESTVARValues, "MANIFESTVARValues")
   .field_readonly( "LAMBDAValues", &cpptsemKalmanModel::LAMBDAValues, "LAMBDAValues")
   .field_readonly( "m2LL", &cpptsemKalmanModel::m2LL, "-2 log likelihood")
+  .field_readonly( "indM2LL", &cpptsemKalmanModel::indM2LL, "individual -2 log likelihood")
   .field_readonly( "kalmanData", &cpptsemKalmanModel::kalmanData, "Data for Kalman model")
   .field_readonly( "latentScores", &cpptsemKalmanModel::latentScores, "latentScores")
   .field_readonly( "predictedManifestValues", &cpptsemKalmanModel::predictedManifestValues, "predictedManifestValues")

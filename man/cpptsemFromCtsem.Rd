@@ -13,8 +13,7 @@ cpptsemFromCtsem(ctsemModel, wideData = NULL, removeD = TRUE)
 transforms fitted ctsem model to cpptsem model
 }
 \examples{
-library(ctsemOMX)
-library(cpptsem)
+library(regCtsem)
 
 addCINT <- FALSE
 if(addCINT){

@@ -353,7 +353,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // kalmanFit
-double kalmanFit(int sampleSize, int Tpoints, int nlatent, int nmanifest, arma::mat kalmanData, arma::mat& latentScores, arma::mat& predictedManifestValues, Rcpp::List discreteTimeParameterNames, arma::colvec T0MEANSValues, arma::mat T0VARValues, Rcpp::List discreteDRIFTUnique, Rcpp::List discreteCINTUnique, Rcpp::List discreteTRAITUnique, Rcpp::List discreteDIFFUSIONUnique, arma::mat LAMBDAValues, arma::colvec MANIFESTMEANSValues, arma::mat MANIFESTVARValues);
+arma::colvec kalmanFit(int sampleSize, int Tpoints, int nlatent, int nmanifest, arma::mat kalmanData, arma::mat& latentScores, arma::mat& predictedManifestValues, Rcpp::List discreteTimeParameterNames, arma::colvec T0MEANSValues, arma::mat T0VARValues, Rcpp::List discreteDRIFTUnique, Rcpp::List discreteCINTUnique, Rcpp::List discreteTRAITUnique, Rcpp::List discreteDIFFUSIONUnique, arma::mat LAMBDAValues, arma::colvec MANIFESTMEANSValues, arma::mat MANIFESTVARValues);
 RcppExport SEXP _regCtsem_kalmanFit(SEXP sampleSizeSEXP, SEXP TpointsSEXP, SEXP nlatentSEXP, SEXP nmanifestSEXP, SEXP kalmanDataSEXP, SEXP latentScoresSEXP, SEXP predictedManifestValuesSEXP, SEXP discreteTimeParameterNamesSEXP, SEXP T0MEANSValuesSEXP, SEXP T0VARValuesSEXP, SEXP discreteDRIFTUniqueSEXP, SEXP discreteCINTUniqueSEXP, SEXP discreteTRAITUniqueSEXP, SEXP discreteDIFFUSIONUniqueSEXP, SEXP LAMBDAValuesSEXP, SEXP MANIFESTMEANSValuesSEXP, SEXP MANIFESTVARValuesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

@@ -5,7 +5,7 @@
 
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-double kalmanFit(int sampleSize,
+arma::colvec kalmanFit(int sampleSize,
                             int Tpoints,
                             int nlatent,
                             int nmanifest,

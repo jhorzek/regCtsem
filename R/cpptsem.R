@@ -10,8 +10,7 @@
 #' @param ctsemModel fittet ctsem object
 #'
 #' @examples
-#' library(ctsemOMX)
-#' library(cpptsem)
+#' library(regCtsem)
 #'
 #' addCINT <- FALSE
 #' if(addCINT){
@@ -435,7 +434,7 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
   ctMatrices <- list()
   ## latent
   # T0MEANS
-  cat("Identified ")
+  cat("Translating model to C++. Found the following elements: ")
   if(!is.null(mxObject$T0MEANS)){
     cat("T0MEANS, ")
     T0MEANS <- list("values" = NULL, "names" = NULL)
@@ -529,7 +528,7 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
     ctMatrices[["MANIFESTVARbase"]] <- MANIFESTVARbase
   }
 
-  cat("\n")
+  cat(".\n")
   return(ctMatrices)
 
 }

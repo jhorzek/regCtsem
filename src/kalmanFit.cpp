@@ -6,7 +6,7 @@
 // Performs the prediciton and updating step for the Kalman Filter
 using namespace Rcpp;
 // [[Rcpp::export]]
-double kalmanFit(int sampleSize,
+arma::colvec kalmanFit(int sampleSize,
                  int Tpoints,
                  int nlatent,
                  int nmanifest,
@@ -24,7 +24,9 @@ double kalmanFit(int sampleSize,
                  arma::colvec MANIFESTMEANSValues,
                  arma::mat MANIFESTVARValues) {
 
-  double m2LL = 0;
+  double m2LL = 0; // -2 log likelihood
+  double currentM2LL = 0;
+  arma::colvec indM2LL(sampleSize, arma::fill::zeros); // individual -2 log likelihood
   arma::uvec nonmissing, missing;
   arma::mat LAMBDANotNA, MANIFESTVARNotNA, KalmanGain, predictedLatentVariance, predictedLatentVariance_tMinus1, predictedMANIFESTVariance, filteredCovariance,
   currentDiscreteDRIFTValues, currentDiscreteCINTValues, currentDiscreteDIFFUSIONValues;
@@ -82,7 +84,9 @@ double kalmanFit(int sampleSize,
       // compute Likelihood --nonmissing
       filteredData = observed(nonmissing);
       filteredMeans = predictedManifest(nonmissing);
-      m2LL = m2LL + computeIndividualM2LL(nObservedVariables, filteredData, filteredMeans, predictedMANIFESTVariance);
+      currentM2LL = computeIndividualM2LL(nObservedVariables, filteredData, filteredMeans, predictedMANIFESTVariance);
+      indM2LL(person) += currentM2LL;
+      m2LL += currentM2LL;
     }
     // save latent scores
     latentScores.submat(person, 0,
@@ -158,7 +162,9 @@ double kalmanFit(int sampleSize,
         // compute Likelihood --nonmissing
         filteredData = observed(nonmissing);
         filteredMeans = predictedManifest(nonmissing);
-        m2LL = m2LL + computeIndividualM2LL(nObservedVariables, filteredData, filteredMeans, predictedMANIFESTVariance);
+        currentM2LL = computeIndividualM2LL(nObservedVariables, filteredData, filteredMeans, predictedMANIFESTVariance);
+        indM2LL(person) += currentM2LL;
+        m2LL += currentM2LL;
       }
 
       // save predicted scores
@@ -175,7 +181,7 @@ double kalmanFit(int sampleSize,
   }
 
 
-  return(m2LL);
+  return(indM2LL);
 }
 
 
