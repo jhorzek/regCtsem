@@ -272,6 +272,13 @@ regCtsem <- function(
     argsIn$mxObject <- argsIn$ctsemObject$mxobj
   }
 
+  if(is.logical(argsIn$regIndicators)){
+    warning("regIndicators is a logical matrix. Interpreting TRUE as 1 and FALSE as 0.")
+    argsIn$regIndicators <- matrix(as.numeric(argsIn$regIndicators),
+                                   nrow = nrow(argsIn$regIndicators),
+                                   ncol = ncol(argsIn$regIndicators))
+  }
+
   if(argsIn$optimization == "exact" && is.numeric(argsIn$regIndicators)){
     if(tolower(argsIn$objective) == "kalman"){
       argsIn$regIndicators <- argsIn$ctsemObject[[argsIn$regOn]][argsIn$regIndicators == 1]

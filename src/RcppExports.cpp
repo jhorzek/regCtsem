@@ -6,6 +6,17 @@
 
 using namespace Rcpp;
 
+// armaExpmat
+arma::mat armaExpmat(arma::mat m);
+RcppExport SEXP _regCtsem_armaExpmat(SEXP mSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type m(mSEXP);
+    rcpp_result_gen = Rcpp::wrap(armaExpmat(m));
+    return rcpp_result_gen;
+END_RCPP
+}
 // computeDRIFTHASH
 arma::mat computeDRIFTHASH(arma::mat DRIFTValues);
 RcppExport SEXP _regCtsem_computeDRIFTHASH(SEXP DRIFTValuesSEXP) {
@@ -373,6 +384,7 @@ RcppExport SEXP _rcpp_module_boot_cpptsemKalmanModel_cpp();
 RcppExport SEXP _rcpp_module_boot_cpptsemRAMmodel_cpp();
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_regCtsem_armaExpmat", (DL_FUNC) &_regCtsem_armaExpmat, 1},
     {"_regCtsem_computeDRIFTHASH", (DL_FUNC) &_regCtsem_computeDRIFTHASH, 1},
     {"_regCtsem_computeDRIFTHASHExponentials", (DL_FUNC) &_regCtsem_computeDRIFTHASHExponentials, 2},
     {"_regCtsem_computeDiscreteCINTs", (DL_FUNC) &_regCtsem_computeDiscreteCINTs, 4},
