@@ -198,82 +198,16 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*samplesize
 
     # should the results first be approximated?
-    if((approxFirst == 1 & lambda == lambdas[1]) |
-       approxFirst == 2 |
-       (approxFirst == 4 & is.null(gradientModelcpp)) |
-       (approxFirst == 5 & is.null(gradientModelcpp))){
-      startingValues <- as.vector(theta_kp1)
-      names(startingValues) <- rownames(theta_kp1)
+    startingValues <- as.vector(theta_kp1)
+    names(startingValues) <- rownames(theta_kp1)
 
-      approxModel <- regCtsem::approx_initializeModel(mxObject = mxObject,
-                                                      sampleSize = 1, # scaling with N is handled above
-                                                      regOn = regOn,
-                                                      regIndicators = regIndicatorsFromNameToMatrix(mxObject = mxObject, regOn = regOn, regIndicators = regIndicators),
-                                                      lambda = lambda,
-                                                      adaptiveLassoWeights = adaptiveLassoWeights,
-                                                      penalty = "lasso"
-      )
-      approxModel <- omxSetParameters(approxModel, labels = names(startingValues), values = startingValues)
-      suppressMessages(invisible(capture.output(approxModel <- try(expr = OpenMx::mxTryHardctsem(approxModel, extraTries = extraTries), silent = TRUE))))
-      theta_kp1 <- as.matrix(omxGetParameters(approxModel))
-    }
-
-    if(approxFirst == 3){
-      startingValues <- as.vector(theta_kp1)
-      names(startingValues) <- rownames(theta_kp1)
-      temp_startValues <- try(exact_tryStartingValues(gradientModel = gradientModel,
-                                                      cppmodel = gradientModelcpp,
-                                                      objective = objective,
-                                                      currentParameters = startingValues,
-                                                      sparseParameters = sparseParameters,
-                                                      regIndicators = regIndicators,
-                                                      newLambda = lambda,
-                                                      adaptiveLassoWeights = adaptiveLassoWeights,
-                                                      differenceApprox = differenceApprox,
-                                                      numStartingValues = numStart, optimize = approxOpt,
-                                                      numOuter = approxMaxIt), silent = TRUE)
-      if(!any(class(temp_startValues) == "try-error")){
-        theta_kp1 <- as.matrix(temp_startValues)
-      }
-    }
-    if(approxFirst == 4 & !is.null(gradientModelcpp)){
-      startingValues <- as.vector(theta_kp1)
-      names(startingValues) <- rownames(theta_kp1)
-      optimized <- try(approx_cpptsemOptim(cpptsemmodel = gradientModelcpp,
-                                           regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                   regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                   regCtsem::approx_KalmanRegM2LLCpptsem),
-                                           gradCpptsem = regCtsem::approx_gradCpptsem,
-                                           startingValues = startingValues,
-                                           adaptiveLassoWeights = adaptiveLassoWeights,
-                                           N = 1, lambda = lambda,
-                                           regIndicators = regIndicators,
-                                           epsilon = 10^(-8),
-                                           maxit = approxMaxIt,
-                                           objective, testGradients = TRUE), silent = TRUE)
-      if(!any(class(optimized) == "try-error")){
-        theta_kp1 <- as.matrix(optimized$parameters)
-      }
-    }
-    if(approxFirst == 5 & !is.null(gradientModelcpp)){
-      startingValues <- as.vector(theta_kp1)
-      names(startingValues) <- rownames(theta_kp1)
-      optimized <- try(approx_cpptsemSolnp(cpptsemmodel = gradientModelcpp,
-                                           regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                   regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                   regCtsem::approx_KalmanRegM2LLCpptsem),
-                                           gradCpptsem = regCtsem::approx_gradCpptsem,
-                                           startingValues = startingValues,
-                                           adaptiveLassoWeights = adaptiveLassoWeights,
-                                           N = 1, lambda = lambda,
-                                           regIndicators = regIndicators,
-                                           epsilon = 10^(-8),
-                                           maxit = approxMaxIt,
-                                           objective = objective), silent = TRUE)
-      if(!any(class(optimized) == "try-error")){
-        theta_kp1 <- as.matrix(optimized$parameters)
-      }
-    }
+    theta_kp1 <- tryApproxFirst(startingValues = startingValues, returnAs = "matrix",
+                               approxFirst = approxFirst, numStart = numStart, approxOpt = approxOpt, approxMaxIt = approxMaxIt,
+                               lambda = lambda, lambdas = lambdas,
+                               gradientModelcpp = gradientModelcpp,
+                               mxObject = mxObject,
+                               regOn = regOn, regIndicators = regIndicators, adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
+                               extraTries = extraTries)
 
     # outer loop: optimize parameters
     resGLMNET <- try(regCtsem::exact_outerGLMNET(mxObject = mxObject, objective =objective,

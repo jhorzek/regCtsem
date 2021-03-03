@@ -136,78 +136,13 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*samplesize
 
     # should the results first be approximated?
-    if((approxFirst == 1 & lambda == lambdas[1]) |
-       approxFirst == 2 |
-       (approxFirst == 3 & is.null(gradientModelcpp)) |
-       (approxFirst == 4 & is.null(gradientModelcpp)) |
-       (approxFirst == 5 & is.null(gradientModelcpp))){
-
-      approxModel <- regCtsem::approx_initializeModel(mxObject = mxObject,
-                                                      sampleSize = 1, # scaling with N is handled above
-                                                      regOn = regOn,
-                                                      regIndicators = regIndicatorsFromNameToMatrix(mxObject = mxObject, regOn = regOn, regIndicators = regIndicators),
-                                                      lambda = lambda,
-                                                      adaptiveLassoWeights = adaptiveLassoWeights,
-                                                      penalty = "lasso"
-      )
-      suppressMessages(invisible(capture.output(approxModel <- try(expr = OpenMx::mxTryHardctsem(approxModel, extraTries = extraTries), silent = TRUE))))
-      if(!any(class(approxModel) == "try-error")){
-        startingValues <- omxGetParameters(approxModel)
-      }
-
-    }
-
-    if(approxFirst == 3 & !is.null(gradientModelcpp)){
-      temp_startValues <- try(exact_tryStartingValues(gradientModel = gradientModel,
-                                                      cppmodel = gradientModelcpp,
-                                                      objective = objective,
-                                                      currentParameters = startingValues,
-                                                      sparseParameters = sparseParameters,
-                                                      regIndicators = regIndicators,
-                                                      newLambda = lambda,
-                                                      adaptiveLassoWeights = adaptiveLassoWeights,
-                                                      differenceApprox = differenceApprox,
-                                                      numStartingValues = numStart, optimize = approxOpt,
-                                                      numOuter = approxMaxIt), silent = TRUE)
-      if(!any(class(temp_startValues) == "try-error")){
-        startingValues <- temp_startValues
-      }
-    }
-    if(approxFirst == 4 & !is.null(gradientModelcpp)){
-      optimized <- try(approx_cpptsemOptim(cpptsemmodel = gradientModelcpp,
-                                           regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                   regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                   regCtsem::approx_KalmanRegM2LLCpptsem),
-                                           gradCpptsem = regCtsem::approx_gradCpptsem,
-                                           startingValues = startingValues,
-                                           adaptiveLassoWeights = adaptiveLassoWeights,
-                                           N = 1, lambda = lambda,
-                                           regIndicators = regIndicators,
-                                           epsilon = 10^(-8),
-                                           maxit = approxMaxIt,
-                                           objective, testGradients = TRUE), silent = TRUE)
-      if(!any(class(optimized) == "try-error")){
-        startingValues <- optimized$parameters
-      }
-    }
-    if(approxFirst == 5 & !is.null(gradientModelcpp)){
-      optimized <- try(approx_cpptsemSolnp(cpptsemmodel = gradientModelcpp,
-                                           regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                   regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                   regCtsem::approx_KalmanRegM2LLCpptsem),
-                                           gradCpptsem = regCtsem::approx_gradCpptsem,
-                                           startingValues = startingValues,
-                                           adaptiveLassoWeights = adaptiveLassoWeights,
-                                           N = 1, lambda = lambda,
-                                           regIndicators = regIndicators,
-                                           epsilon = 10^(-8),
-                                           maxit = approxMaxIt,
-                                           objective), silent = TRUE)
-      if(!any(class(optimized) == "try-error")){
-        startingValues <- optimized$parameters
-      }
-    }
-
+    startingValues <- tryApproxFirst(startingValues = startingValues, returnAs = "vector",
+                                     approxFirst = approxFirst, numStart = numStart, approxOpt = approxOpt, approxMaxIt = approxMaxIt,
+                                     lambda = lambda, lambdas = lambdas,
+                                     gradientModelcpp = gradientModelcpp,
+                                     mxObject = mxObject,
+                                     regOn = regOn, regIndicators = regIndicators, adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters =sparseParameters,
+                                     extraTries = extraTries)
     # use Gist
     resGIST <- try(regCtsem::GIST(gradientModel = gradientModel, cppmodel = gradientModelcpp, startingValues = startingValues,
                                   objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
@@ -243,18 +178,18 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
         # save fit
         cM2LL <- ifelse(resGIST$convergence, resGIST$model$m2LL, Inf)
         cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getLambda(lambda = lambda,
-                                                                                     theta = newValues,
-                                                                                     regIndicators = regIndicators,
-                                                                                     adaptiveLassoWeights = adaptiveLassoWeights), Inf)
+                                                                                   theta = newValues,
+                                                                                   regIndicators = regIndicators,
+                                                                                   adaptiveLassoWeights = adaptiveLassoWeights), Inf)
       }else{
         newValues <- OpenMx::omxGetParameters(resGIST$model)
         startingValues <- newValues
         # save fit
         cM2LL <- ifelse(resGIST$convergence, resGIST$model$fitfunction$result[[1]], Inf)
         cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getLambda(lambda = lambda,
-                                                                                     theta = newValues,
-                                                                                     regIndicators = regIndicators,
-                                                                                     adaptiveLassoWeights = adaptiveLassoWeights), Inf)
+                                                                                   theta = newValues,
+                                                                                   regIndicators = regIndicators,
+                                                                                   adaptiveLassoWeights = adaptiveLassoWeights), Inf)
       }
     }
 
@@ -354,9 +289,9 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
   }
 
   regM2LL_k <- m2LL_k + regCtsem::exact_getLambda(lambda = lambda,
-                                                    theta = parameters_k,
-                                                    regIndicators = regularizedParameters,
-                                                    adaptiveLassoWeights = adaptiveLassoWeights)
+                                                  theta = parameters_k,
+                                                  regIndicators = regularizedParameters,
+                                                  adaptiveLassoWeights = adaptiveLassoWeights)
   regM2LL <- rep(NA, maxIter_out)
   regM2LL[1] <- regM2LL_k
 
@@ -500,9 +435,9 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
 
       }
       regM2LL_kp1 <- m2LL_kp1 + regCtsem::exact_getLambda(lambda = lambda,
-                                                            theta = parameters_kp1,
-                                                            regIndicators = regularizedParameters,
-                                                            adaptiveLassoWeights = adaptiveLassoWeights)
+                                                          theta = parameters_kp1,
+                                                          regIndicators = regularizedParameters,
+                                                          adaptiveLassoWeights = adaptiveLassoWeights)
 
       if(verbose == 2){
         cat(paste0("\r",
