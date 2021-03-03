@@ -167,6 +167,13 @@ summary(regModel, criterion = "BIC")
 plot(regModel, what = "drift")
 plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 
+# Using shinyfy can also give some insights into the model:
+# shinyfy(regCtsemObject = regModel)
+
+# The best parameter estimates and the final model as mxObject can be extracted with:
+# getFinalParameters(regCtsemObject = regModel, criterion = "BIC")
+# bestModel <- getFinalModel(regCtsemObject = regModel, criterion = "BIC")
+
 # Optimize model using GLMNET with lasso penalty
 regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
                                regOn = regOn,

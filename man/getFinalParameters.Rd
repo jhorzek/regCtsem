@@ -10,6 +10,8 @@ getFinalParameters(regCtsemObject, criterion = NULL, raw = FALSE)
 \item{regCtsemObject}{fitted regularized continuous time model}
 
 \item{criterion}{select a criterion. Possible are AIC, BIC, cvM2LL}
+
+\item{raw}{boolean: should the raw parameters be returned (raw = TRUE) or should the log-transformed variances be re-transformed (raw = FALSE)}
 }
 \description{
 returns the final parameters for a regularized model

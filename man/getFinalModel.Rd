@@ -12,7 +12,7 @@ getFinalModel(regCtsemObject, criterion = NULL)
 \item{criterion}{select a criterion. Possible are AIC, BIC, cvM2LL}
 }
 \description{
-returns the final model for a regularized model
+returns the final model for a regularized model. Note: Returns as mxObject!
 }
 \details{
 NOTE: Function located in file regCtsem.R

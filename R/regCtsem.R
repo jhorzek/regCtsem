@@ -93,6 +93,13 @@
 #' plot(regModel, what = "drift")
 #' plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 #'
+#' # Using shinyfy can also give some insights into the model:
+#' # shinyfy(regCtsemObject = regModel)
+#'
+#' # The best parameter estimates and the final model as mxObject can be extracted with:
+#' # getFinalParameters(regCtsemObject = regModel, criterion = "BIC")
+#' # bestModel <- getFinalModel(regCtsemObject = regModel, criterion = "BIC")
+#'
 #' # Optimize model using GLMNET with lasso penalty
 #' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
 #'                                regOn = regOn,
@@ -1667,6 +1674,7 @@ getAdaptiveLassoWeights <- function(mxObject, penalty, adaptiveLassoWeights, sta
 #'
 #' @param regCtsemObject fitted regularized continuous time model
 #' @param criterion select a criterion. Possible are AIC, BIC, cvM2LL
+#' @param raw boolean: should the raw parameters be returned (raw = TRUE) or should the log-transformed variances be re-transformed (raw = FALSE)
 #' @author Jannik Orzek
 #' @import OpenMx
 #' @export
@@ -1704,7 +1712,7 @@ getFinalParameters <- function(regCtsemObject, criterion = NULL, raw = FALSE){
 #' @export
 getFinalModel <- function(regCtsemObject, criterion = NULL){
   if(regCtsemObject$setup$autoCV){
-    stop("Function getFinalModel is not supported for cross-validation")
+    stop("getFinalModel not supported for automatic cross-validation. At the moment, you have to manually re-run the model with the best lambda value using the whole sample.")
   }
   bestPars <- getFinalParameters(regCtsemObject, criterion = criterion, raw = TRUE)
   message(paste0("Best fit for ", criterion, " was observed for lambda = ", bestPars$lambda, "."))
