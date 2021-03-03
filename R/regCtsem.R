@@ -1670,14 +1670,19 @@ getAdaptiveLassoWeights <- function(mxObject, penalty, adaptiveLassoWeights, sta
 #' @author Jannik Orzek
 #' @import OpenMx
 #' @export
-getFinalParameters <- function(regCtsemObject, criterion = NULL){
+getFinalParameters <- function(regCtsemObject, criterion = NULL, raw = FALSE){
   if(!regCtsemObject$setup$autoCV){
     minCriterionValue <- max(which(regCtsemObject$fit[criterion,] == min(regCtsemObject$fit[criterion,], na.rm = TRUE)))
     lambdas <- regCtsemObject$setup$lambdas
     bestLambda <- lambdas[minCriterionValue]
+    if(raw){
+      parameters <- regCtsemObject$parameterEstimatesRaw[,as.character(bestLambda)]
+    }else{
+      parameters <- regCtsemObject$parameters[,as.character(bestLambda)]
+    }
     return(list("criterion" = criterion,
                 "lambda" = bestLambda,
-                "parameters" = regCtsemObject$parameters[,as.character(bestLambda)]))
+                "parameters" = parameters))
   }
   minCriterionValue <- max(which(regCtsemObject$fit["mean CV fit",] == min(regCtsemObject$fit["mean CV fit",], na.rm = TRUE)))
   lambdas <- regCtsemObject$setup$lambdas
@@ -1686,7 +1691,27 @@ getFinalParameters <- function(regCtsemObject, criterion = NULL){
               "lambda" = bestLambda))
 }
 
-
+#' getFinalModel
+#'
+#' returns the final model for a regularized model. Note: Returns as mxObject!
+#'
+#' NOTE: Function located in file regCtsem.R
+#'
+#' @param regCtsemObject fitted regularized continuous time model
+#' @param criterion select a criterion. Possible are AIC, BIC, cvM2LL
+#' @author Jannik Orzek
+#' @import OpenMx
+#' @export
+getFinalModel <- function(regCtsemObject, criterion = NULL){
+  if(regCtsemObject$setup$autoCV){
+    stop("Function getFinalModel is not supported for cross-validation")
+  }
+  bestPars <- getFinalParameters(regCtsemObject, criterion = criterion, raw = TRUE)
+  message(paste0("Best fit for ", criterion, " was observed for lambda = ", bestPars$lambda, "."))
+  finalModel <- OpenMx::omxSetParameters(regCtsemObject$setup$mxObject, values = bestPars$parameters, labels = names(bestPars$parameters))
+  finalModel <- OpenMx::mxRun(finalModel, useOptimizer = FALSE, silent = TRUE)
+  return(finalModel)
+}
 
 
 #' getFlatStdizer

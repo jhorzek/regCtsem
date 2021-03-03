@@ -74,7 +74,7 @@ regCtsem(
 
 \item{optimizeKalman}{Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE}
 
-\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. Required for exactApproximateFirst = 3}
+\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3}
 
 \item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using T0VAR?}
 

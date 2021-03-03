@@ -35,13 +35,13 @@ controlGIST()
 
 \item{GISTNonMonotoneNBack}{in case of non-monotone line search: Number of preceding regM2LL values to consider}
 
-\item{exactApproximateFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first lambda, 2 = optimization for all lambdas. 3 ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or OpenMx if cpptsem is not available, 5 = optimizing using Rsolnp or OpenMx if cpptsem is not available (requires installation of Rsolnp). "auto" will default to 3 if lambdas = "auto" and 4 otherwise}
+\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first lambda, 2 = optimization for all lambdas. 3 ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or OpenMx if cpptsem is not available, 5 = optimizing using Rsolnp or OpenMx if cpptsem is not available (requires installation of Rsolnp). "auto" will default to 3 if lambdas = "auto" and 4 otherwise}
 
-\item{exactApproximateFirst3NumStartingValues}{Used if exactApproximateFirst = 3. regCtsem will try exactApproximateFirst3NumStartingValues+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
+\item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{exactApproximateFirst3Optimize}{Used if exactApproximateFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp}
+\item{approxOpt}{Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp}
 
-\item{exactApproximateFirstMaxIter_out}{Used if exactApproximateFirst = 3 and exactApproximateFirst3Optimize > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If exactApproximateFirst =  4, or exactApproximateFirst = 5 this will control the number of outer iteration in optim or solnp .}
+\item{approxMaxIt}{Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .}
 }
 \description{
 The following arguments can be used to adjust the GIST optimization
