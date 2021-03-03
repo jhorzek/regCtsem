@@ -21,7 +21,7 @@
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param KalmanStartValues Optional starting values for the parameters when using Kalman filter
 #' @param optimizeKalman Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE
-#' @param sparseParameters labeled vector with parameter estimates of the most sparse model. Required for exactApproximateFirst = 3
+#' @param sparseParameters labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3
 #' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using T0VAR?
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param returnFitIndices Boolean: should fit indices be returned?
@@ -244,26 +244,26 @@ regCtsem <- function(
   # check setup
   checkSetup(argsIn)
   if(argsIn$optimization == "exact"){
-    if(argsIn$exactApproximateFirst == "auto"){
+    if(argsIn$approxFirst == "auto"){
       if((any(lambdas == "auto")) | !is.null(argsIn$sparseParameters)){
-        argsIn$exactApproximateFirst <- 3
+        argsIn$approxFirst <- 3
       }else{
-        argsIn$exactApproximateFirst <- 4
+        argsIn$approxFirst <- 4
       }
     }
 
-    if(argsIn$exactApproximateFirst == 3){
+    if(argsIn$approxFirst == 3){
       if((!any(argsIn$lambdas == "auto")) & any(is.null(argsIn$sparseParameters))){
-        warning("exactApproximateFirst = 3 requested. This requires either lambdas = 'auto' or the sparseParameters being passed to regCtsem. Setting exactApproximateFirst = 4")
-        argsIn$exactApproximateFirst <- 4
+        warning("approxFirst = 3 requested. This requires either lambdas = 'auto' or the sparseParameters being passed to regCtsem. Setting approxFirst = 4")
+        argsIn$approxFirst <- 4
       }
     }
 
-    if(argsIn$exactApproximateFirstMaxIter_out == "auto"){
-      if(argsIn$exactApproximateFirst == 3){
-        argsIn$exactApproximateFirstMaxIter_out <- 10
+    if(argsIn$approxMaxIt == "auto"){
+      if(argsIn$approxFirst == 3){
+        argsIn$approxMaxIt <- 10
       }else{
-        argsIn$exactApproximateFirstMaxIter_out <- 200
+        argsIn$approxMaxIt <- 200
       }
     }
   }
@@ -372,7 +372,7 @@ regCtsem <- function(
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param KalmanStartValues Optional starting values for the parameters when using Kalman filter
 #' @param optimizeKalman Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE
-#' @param sparseParameters labeled vector with parameter estimates of the most sparse model. Required for exactApproximateFirst = 3
+#' @param sparseParameters labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3
 #' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
 #' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the m,atrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "cpptsem") for more details
 #' @param stepSize GLMNET & GIST: initial step size of the outer iteration
@@ -395,10 +395,10 @@ regCtsem <- function(
 #' @param GISTLinesearchCriterion criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
-#' @param exactApproximateFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas, 3 = ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values.
-#' @param exactApproximateFirst3NumStartingValues Used if exactApproximateFirst = 3. regCtsem will try exactApproximateFirst3NumStartingValues+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param exactApproximateFirst3Optimize Used if exactApproximateFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
-#' @param exactApproximateFirstMaxIter_out Used if exactApproximateFirst = 3 and exactApproximateFirst3Optimize > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If exactApproximateFirst =  4, or exactApproximateFirst = 5 this will control the number of outer iteration in optim or solnp .
+#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas, 3 = ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values.
+#' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+#' @param approxOpt Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
+#' @param approxMaxIt Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param cores how many computer cores should be used?
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
@@ -460,10 +460,10 @@ exact_regCtsem <- function(  # model
   break_outer = .0000000001,
   # general
   scaleLambdaWithN = TRUE,
-  exactApproximateFirst = 0,
-  exactApproximateFirst3NumStartingValues = 10,
-  exactApproximateFirst3Optimize = T,
-  exactApproximateFirstMaxIter_out = 5,
+  approxFirst = 0,
+  numStart = 10,
+  approxOpt = T,
+  approxMaxIt = 5,
   extraTries = 3,
   # additional settings
   cores = 1,
@@ -573,8 +573,8 @@ exact_regCtsem <- function(  # model
                                                  maxIter_in = maxIter_in, maxIter_line = maxIter_line,
                                                  eps_out = eps_out, eps_in = eps_in, eps_WW = eps_WW,
                                                  scaleLambdaWithN = scaleLambdaWithN, sampleSize = sampleSize,
-                                                 exactApproximateFirst = exactApproximateFirst,
-                                                 exactApproximateFirst3NumStartingValues = exactApproximateFirst3NumStartingValues, exactApproximateFirst3Optimize = exactApproximateFirst3Optimize, exactApproximateFirstMaxIter_out = exactApproximateFirstMaxIter_out,
+                                                 approxFirst = approxFirst,
+                                                 numStart = numStart, approxOpt = approxOpt, approxMaxIt = approxMaxIt,
                                                  extraTries = extraTries,
                                                  verbose = verbose, progressBar = progressBar, parallelProgressBar = parallelProgressBar))
     }
@@ -590,8 +590,8 @@ exact_regCtsem <- function(  # model
                                            maxIter_out = maxIter_out, maxIter_in = maxIter_in,
                                            break_outer = break_outer,
                                            scaleLambdaWithN = scaleLambdaWithN, sampleSize = sampleSize,
-                                           exactApproximateFirst = exactApproximateFirst,
-                                           exactApproximateFirst3NumStartingValues = exactApproximateFirst3NumStartingValues, exactApproximateFirst3Optimize = exactApproximateFirst3Optimize, exactApproximateFirstMaxIter_out = exactApproximateFirstMaxIter_out,
+                                           approxFirst = approxFirst,
+                                           numStart = numStart, approxOpt = approxOpt, approxMaxIt = approxMaxIt,
                                            extraTries = extraTries,
                                            differenceApprox = differenceApprox,
                                            verbose = verbose,
@@ -683,10 +683,10 @@ exact_regCtsem <- function(  # model
 #' @param GISTLinesearchCriterion criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
-#' @param exactApproximateFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas
-#' @param exactApproximateFirst3NumStartingValues Used if exactApproximateFirst = 3. regCtsem will try exactApproximateFirst3NumStartingValues+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param exactApproximateFirst3Optimize Used if exactApproximateFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
-#' @param exactApproximateFirstMaxIter_out Used if exactApproximateFirst = 3 and exactApproximateFirst3Optimize > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If exactApproximateFirst =  4, or exactApproximateFirst = 5 this will control the number of outer iteration in optim or solnp .
+#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas
+#' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+#' @param approxOpt Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
+#' @param approxMaxIt Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param cores how many computer cores should be used?
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
@@ -750,10 +750,10 @@ exact_parallelRegCtsem <- function(# model
   break_outer = .0001,
   # general
   scaleLambdaWithN = TRUE,
-  exactApproximateFirst = 3,
-  exactApproximateFirst3NumStartingValues = 10,
-  exactApproximateFirst3Optimize = T,
-  exactApproximateFirstMaxIter_out = 5,
+  approxFirst = 3,
+  numStart = 10,
+  approxOpt = T,
+  approxMaxIt = 5,
   extraTries = 3,
   # additional settings
   cores = 1,

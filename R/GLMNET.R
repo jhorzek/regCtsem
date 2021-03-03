@@ -53,10 +53,10 @@
 #' @param eps_WW Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param sampleSize sample size for scaling lambda with N
-#' @param exactApproximateFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas
-#' @param exactApproximateFirst3NumStartingValues Used if exactApproximateFirst = 3. regCtsem will try exactApproximateFirst3NumStartingValues+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param exactApproximateFirst3Optimize Used if exactApproximateFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
-#' @param exactApproximateFirstMaxIter_out Used if exactApproximateFirst = 3 and exactApproximateFirst3Optimize > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If exactApproximateFirst =  4, or exactApproximateFirst = 5 this will control the number of outer iteration in optim or solnp .
+#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas
+#' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+#' @param approxOpt Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
+#' @param approxMaxIt Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #' @export
@@ -67,10 +67,10 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
                              sig = .2, gam = 0,
                              differenceApprox = "central", initialHessianApproximation = "OpenMx", maxIter_out = 100, maxIter_in = 1000,
                              maxIter_line = 100, eps_out = .0000000001, eps_in = .0000000001, eps_WW = .0001,
-                             scaleLambdaWithN = TRUE, sampleSize, exactApproximateFirst = 0,
-                             exactApproximateFirst3NumStartingValues = 10,
-                             exactApproximateFirst3Optimize = T,
-                             exactApproximateFirstMaxIter_out = 5, extraTries = 3, verbose = 0, progressBar = TRUE, parallelProgressBar = NULL){
+                             scaleLambdaWithN = TRUE, sampleSize, approxFirst = 0,
+                             numStart = 10,
+                             approxOpt = T,
+                             approxMaxIt = 5, extraTries = 3, verbose = 0, progressBar = TRUE, parallelProgressBar = NULL){
   # Setup
   ## hessianModel is a models which returns the gradients and the Hessian:
   computeHessian <- !is.matrix(initialHessianApproximation) & is.null(mxObject$output$hessian)
@@ -198,10 +198,10 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*samplesize
 
     # should the results first be approximated?
-    if((exactApproximateFirst == 1 & lambda == lambdas[1]) |
-       exactApproximateFirst == 2 |
-       (exactApproximateFirst == 4 & is.null(gradientModelcpp)) |
-       (exactApproximateFirst == 5 & is.null(gradientModelcpp))){
+    if((approxFirst == 1 & lambda == lambdas[1]) |
+       approxFirst == 2 |
+       (approxFirst == 4 & is.null(gradientModelcpp)) |
+       (approxFirst == 5 & is.null(gradientModelcpp))){
       startingValues <- as.vector(theta_kp1)
       names(startingValues) <- rownames(theta_kp1)
 
@@ -218,7 +218,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
       theta_kp1 <- as.matrix(omxGetParameters(approxModel))
     }
 
-    if(exactApproximateFirst == 3){
+    if(approxFirst == 3){
       startingValues <- as.vector(theta_kp1)
       names(startingValues) <- rownames(theta_kp1)
       temp_startValues <- try(exact_tryStartingValues(gradientModel = gradientModel,
@@ -230,13 +230,13 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
                                                       newLambda = lambda,
                                                       adaptiveLassoWeights = adaptiveLassoWeights,
                                                       differenceApprox = differenceApprox,
-                                                      numStartingValues = exactApproximateFirst3NumStartingValues, optimize = exactApproximateFirst3Optimize,
-                                                      numOuter = exactApproximateFirstMaxIter_out), silent = TRUE)
+                                                      numStartingValues = numStart, optimize = approxOpt,
+                                                      numOuter = approxMaxIt), silent = TRUE)
       if(!any(class(temp_startValues) == "try-error")){
         theta_kp1 <- as.matrix(temp_startValues)
       }
     }
-    if(exactApproximateFirst == 4 & !is.null(gradientModelcpp)){
+    if(approxFirst == 4 & !is.null(gradientModelcpp)){
       startingValues <- as.vector(theta_kp1)
       names(startingValues) <- rownames(theta_kp1)
       optimized <- try(approx_cpptsemOptim(cpptsemmodel = gradientModelcpp,
@@ -249,13 +249,13 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
                                            N = 1, lambda = lambda,
                                            regIndicators = regIndicators,
                                            epsilon = 10^(-8),
-                                           maxit = exactApproximateFirstMaxIter_out,
+                                           maxit = approxMaxIt,
                                            objective, testGradients = TRUE), silent = TRUE)
       if(!any(class(optimized) == "try-error")){
         theta_kp1 <- as.matrix(optimized$parameters)
       }
     }
-    if(exactApproximateFirst == 5 & !is.null(gradientModelcpp)){
+    if(approxFirst == 5 & !is.null(gradientModelcpp)){
       startingValues <- as.vector(theta_kp1)
       names(startingValues) <- rownames(theta_kp1)
       optimized <- try(approx_cpptsemSolnp(cpptsemmodel = gradientModelcpp,
@@ -268,7 +268,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
                                            N = 1, lambda = lambda,
                                            regIndicators = regIndicators,
                                            epsilon = 10^(-8),
-                                           maxit = exactApproximateFirstMaxIter_out,
+                                           maxit = approxMaxIt,
                                            objective = objective), silent = TRUE)
       if(!any(class(optimized) == "try-error")){
         theta_kp1 <- as.matrix(optimized$parameters)
