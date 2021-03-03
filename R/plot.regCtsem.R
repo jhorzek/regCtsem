@@ -19,7 +19,12 @@ plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xla
     drifts <- regCtsemObject$parameters[grepl("drift", rownames(regCtsemObject$parameters)),]
     regIndicators <- regCtsemObject$setup$regIndicators
     drifts_regularized <- drifts[regIndicators,]
-    regValues <- regCtsemObject$setup$regValues
+    if(!is.null(regCtsemObject$setup$lambdas)){
+      lambdas <- regCtsemObject$setup$lambdas
+    }else if(!is.null(regCtsemObject$setup$regValues)){
+      # for compatability with older versions
+      lambdas <- regCtsemObject$setup$regValues
+    }
 
     colsWithNA <- apply(regCtsemObject$parameters,2,function(x) any(is.na(x)))
 
@@ -27,19 +32,19 @@ plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xla
 
     par(mar=c(4, 3, 5, 2), xpd=TRUE)
 
-    matplot(x = regValues[!colsWithNA], t(drifts[,!colsWithNA]), lty = 2,
+    matplot(x = lambdas[!colsWithNA], t(drifts[,!colsWithNA]), lty = 2,
             lwd = 2, type = "l",
             col = color, xlab = ifelse(skiptXlabComp, xlab,
                                        ifelse(xlab == "auto",expression(lambda),ylab)),
             ylab = ifelse(skiptYlabComp, ylab,
                           ifelse(ylab == "auto","drift",ylab)))
-    matplot(x = regValues[!colsWithNA], t(drifts_regularized[,!colsWithNA]), lty = 1, lwd = 2, type = "l", col = "#2166AC", add = TRUE)
-    tickat <- seq(1, length(regValues[!colsWithNA]), length.out = 10)
-    axis(3, at = regValues[tickat],
+    matplot(x = lambdas[!colsWithNA], t(drifts_regularized[,!colsWithNA]), lty = 1, lwd = 2, type = "l", col = "#2166AC", add = TRUE)
+    tickat <- seq(1, length(lambdas[!colsWithNA]), length.out = 10)
+    axis(3, at = lambdas[tickat],
          labels=apply(drifts == 0,2,sum)[tickat],
          outer= F,
          line=1,col="black",col.ticks="black",col.axis="black")
-    mtext("# zeroed parameters",3,line=3,at=mean(regValues),col="black", cex = 1)
+    mtext("# zeroed parameters",3,line=3,at=mean(lambdas),col="black", cex = 1)
 
     par(mar=c(5, 4, 4, 2) + 0.1, xpd=TRUE)
     plotted <- TRUE
@@ -53,12 +58,17 @@ plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xla
 
     colsWithNA <- apply(regCtsemObject$parameters,2,function(x) any(is.na(x)))
 
-    regValues <- regCtsemObject$setup$regValues
-    matplot(x = regValues[!colsWithNA], y = t(regCtsemObject$parameters[,!colsWithNA]),
+    if(!is.null(regCtsemObject$setup$lambdas)){
+      lambdas <- regCtsemObject$setup$lambdas
+    }else if(!is.null(regCtsemObject$setup$regValues)){
+      # for compatability with older versions
+      lambdas <- regCtsemObject$setup$regValues
+    }
+    matplot(x = lambdas[!colsWithNA], y = t(regCtsemObject$parameters[,!colsWithNA]),
             ylab = ifelse(skiptYlabComp, ylab,
                           ifelse(ylab == "auto","parameter values",ylab)),
             xlab = ifelse(skiptXlabComp, xlab,
-                          ifelse(xlab == "auto","regValue",xlab)),
+                          ifelse(xlab == "auto","lambda",xlab)),
             type = "l", ...)
     plotted <- TRUE
   }
@@ -67,8 +77,13 @@ plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xla
     lty <- c(1,2,3,4, rep(1,5))
     # cross-validation:
     if((!"fitAndParameters" %in% names(regCtsemObject)) & ("fit" %in% names(regCtsemObject))){
-      regValues <- regCtsemObject$setup$regValues
-      plot(x = regValues, y = regCtsemObject$fit["mean CV fit",],
+      if(!is.null(regCtsemObject$setup$lambdas)){
+        lambdas <- regCtsemObject$setup$lambdas
+      }else if(!is.null(regCtsemObject$setup$regValues)){
+        # for compatability with older versions
+        lambdas <- regCtsemObject$setup$regValues
+      }
+      plot(x = lambdas, y = regCtsemObject$fit["mean CV fit",],
            ylab = ifelse(skiptYlabComp, ylab,
                          ifelse(ylab == "auto","mean CV fit",ylab)),
            xlab = ifelse(skiptXlabComp, xlab,
@@ -85,9 +100,14 @@ plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xla
 
       colsWithNA <- apply(regCtsemObject$fit,2,function(x) any(is.na(x)))
 
-      regValues <- regCtsemObject$setup$regValues
+      if(!is.null(regCtsemObject$setup$lambdas)){
+        lambdas <- regCtsemObject$setup$lambdas
+      }else if(!is.null(regCtsemObject$setup$regValues)){
+        # for compatability with older versions
+        lambdas <- regCtsemObject$setup$regValues
+      }
 
-      matplot(x = regValues[!colsWithNA], y = t(matrix(regCtsemObject$fit[criterion,!colsWithNA],
+      matplot(x = lambdas[!colsWithNA], y = t(matrix(regCtsemObject$fit[criterion,!colsWithNA],
                                                        nrow = length(criterion))),
               ylab = ifelse(skiptYlabComp, ylab,
                             ifelse(ylab == "auto","fit values",ylab)),

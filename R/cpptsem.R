@@ -521,14 +521,14 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
 
   # MANIFESTVAR
   if(!is.null(mxObject$MANIFESTVARbase$values)){
-    cat("MANIFESTVARbase ")
+    cat("MANIFESTVARbase.")
     MANIFESTVARbase <- list("values" = NULL, "names" = NULL)
     MANIFESTVARbase$values <- deepCopyNumericMatrix(mxObject$MANIFESTVARbase$values)
     MANIFESTVARbase$names <- deepCopyStringMatrix(mxObject$MANIFESTVARbase$labels)
     ctMatrices[["MANIFESTVARbase"]] <- MANIFESTVARbase
   }
 
-  cat(".\n")
+  cat("\n")
   return(ctMatrices)
 
 }

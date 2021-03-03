@@ -11,8 +11,8 @@ regCtsem(
   dataset = NULL,
   regOn = "DRIFT",
   regIndicators,
-  regValues = "auto",
-  regValuesAutoLength = 50,
+  lambdas = "auto",
+  lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
   elastic_alpha = NULL,
@@ -50,9 +50,9 @@ regCtsem(
 
 \item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
 
-\item{regValues}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, regValues can be set to "auto"; however, this is still experimental.}
+\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto"; however, this is still experimental.}
 
-\item{regValuesAutoLength}{if regValues == "auto", regValuesAutoLength will determine the number of regValues tested.}
+\item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
 
 \item{penalty}{type. Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
 
@@ -160,8 +160,8 @@ regIndicators = matrix(c(0,1,
 regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
                                regOn = regOn,
                                regIndicators = regIndicators,
-                               regValues = "auto",
-                               regValuesAutoLength = 15)
+                               lambdas = "auto",
+                               lambdasAutoLength = 15)
 
 summary(regModel, criterion = "BIC")
 plot(regModel, what = "drift")
@@ -171,8 +171,8 @@ plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
                                regOn = regOn,
                                regIndicators = regIndicators,
-                               regValues = "auto",
-                               regValuesAutoLength = 15,
+                               lambdas = "auto",
+                               lambdasAutoLength = 15,
                                optimizer = "GLMNET")
 
 summary(regModel, criterion = "BIC")
@@ -184,8 +184,8 @@ plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
                                      regOn = regOn,
                                      regIndicators = regIndicators,
-                                     regValues = "auto",
-                                     regValuesAutoLength = 15,
+                                     lambdas = "auto",
+                                     lambdasAutoLength = 15,
                                      optimization = "approx",
                                      control = list(
                                        epsilon = .001, # epsilon is used to transform the non-differentiable
@@ -243,8 +243,8 @@ regModel <- regCtsem::regCtsem(# important: We now have to pass the ctModel obje
   dataset = traindata,
   regOn = regOn,
   regIndicators = regIndicators,
-  regValues = "auto",
-  regValuesAutoLength = 15,
+  lambdas = "auto",
+  lambdasAutoLength = 15,
   cvSample = testdata,
   objective = "Kalman",
   cores = 2

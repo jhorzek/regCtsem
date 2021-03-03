@@ -10,8 +10,8 @@ approx_regCtsem(
   dataset = NULL,
   regOn = "DRIFT",
   regIndicators,
-  regValues,
-  regValuesAutoLength = 50,
+  lambdas,
+  lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
   elastic_alpha = NULL,
@@ -46,9 +46,9 @@ approx_regCtsem(
 
 \item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
 
-\item{regValues}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
+\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
 
-\item{regValuesAutoLength}{if regValues == "auto", regValuesAutoLength will determine the number of regValues tested.}
+\item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
 
 \item{penalty}{Currently supported are lasso, adaptiveLasso, and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
 

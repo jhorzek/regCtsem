@@ -9,8 +9,8 @@
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
-#' @param regValues vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, regValues can be set to "auto"; however, this is still experimental.
-#' @param regValuesAutoLength if regValues == "auto", regValuesAutoLength will determine the number of regValues tested.
+#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto"; however, this is still experimental.
+#' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty type. Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the unregularized parameter estimates.
 #' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
@@ -86,8 +86,8 @@
 #' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
 #'                                regOn = regOn,
 #'                                regIndicators = regIndicators,
-#'                                regValues = "auto",
-#'                                regValuesAutoLength = 15)
+#'                                lambdas = "auto",
+#'                                lambdasAutoLength = 15)
 #'
 #' summary(regModel, criterion = "BIC")
 #' plot(regModel, what = "drift")
@@ -97,8 +97,8 @@
 #' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
 #'                                regOn = regOn,
 #'                                regIndicators = regIndicators,
-#'                                regValues = "auto",
-#'                                regValuesAutoLength = 15,
+#'                                lambdas = "auto",
+#'                                lambdasAutoLength = 15,
 #'                                optimizer = "GLMNET")
 #'
 #' summary(regModel, criterion = "BIC")
@@ -110,8 +110,8 @@
 #' regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
 #'                                      regOn = regOn,
 #'                                      regIndicators = regIndicators,
-#'                                      regValues = "auto",
-#'                                      regValuesAutoLength = 15,
+#'                                      lambdas = "auto",
+#'                                      lambdasAutoLength = 15,
 #'                                      optimization = "approx",
 #'                                      control = list(
 #'                                        epsilon = .001, # epsilon is used to transform the non-differentiable
@@ -169,8 +169,8 @@
 #'   dataset = traindata,
 #'   regOn = regOn,
 #'   regIndicators = regIndicators,
-#'   regValues = "auto",
-#'   regValuesAutoLength = 15,
+#'   lambdas = "auto",
+#'   lambdasAutoLength = 15,
 #'   cvSample = testdata,
 #'   objective = "Kalman",
 #'   cores = 2
@@ -188,8 +188,8 @@ regCtsem <- function(
   # penalty settings
   regOn = "DRIFT",
   regIndicators,
-  regValues = "auto",
-  regValuesAutoLength = 50,
+  lambdas = "auto",
+  lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
   elastic_alpha = NULL,
@@ -245,7 +245,7 @@ regCtsem <- function(
   checkSetup(argsIn)
   if(argsIn$optimization == "exact"){
     if(argsIn$exactApproximateFirst == "auto"){
-      if((any(regValues == "auto")) | !is.null(argsIn$sparseParameters)){
+      if((any(lambdas == "auto")) | !is.null(argsIn$sparseParameters)){
         argsIn$exactApproximateFirst <- 3
       }else{
         argsIn$exactApproximateFirst <- 4
@@ -253,8 +253,8 @@ regCtsem <- function(
     }
 
     if(argsIn$exactApproximateFirst == 3){
-      if((!any(argsIn$regValues == "auto")) & any(is.null(argsIn$sparseParameters))){
-        warning("exactApproximateFirst = 3 requested. This requires either regValues = 'auto' or the sparseParameters being passed to regCtsem. Setting exactApproximateFirst = 4")
+      if((!any(argsIn$lambdas == "auto")) & any(is.null(argsIn$sparseParameters))){
+        warning("exactApproximateFirst = 3 requested. This requires either lambdas = 'auto' or the sparseParameters being passed to regCtsem. Setting exactApproximateFirst = 4")
         argsIn$exactApproximateFirst <- 4
       }
     }
@@ -358,8 +358,8 @@ regCtsem <- function(
 #' @param dataset only required if objective = "Kalman" and ctsemObject ist of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
-#' @param regValues vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
-#' @param regValuesAutoLength if regValues == "auto", regValuesAutoLength will determine the number of regValues tested.
+#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
+#' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty Currently supported are lasso, adaptiveLasso, and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
@@ -395,7 +395,7 @@ regCtsem <- function(
 #' @param GISTLinesearchCriterion criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
-#' @param exactApproximateFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first regValue, 2 = for all regValues, 3 = ensures that the fit will not be worse than in the sparse model if regValues = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values.
+#' @param exactApproximateFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas, 3 = ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values.
 #' @param exactApproximateFirst3NumStartingValues Used if exactApproximateFirst = 3. regCtsem will try exactApproximateFirst3NumStartingValues+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
 #' @param exactApproximateFirst3Optimize Used if exactApproximateFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
 #' @param exactApproximateFirstMaxIter_out Used if exactApproximateFirst = 3 and exactApproximateFirst3Optimize > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If exactApproximateFirst =  4, or exactApproximateFirst = 5 this will control the number of outer iteration in optim or solnp .
@@ -416,8 +416,8 @@ exact_regCtsem <- function(  # model
   # penalty settings
   regOn = "DRIFT",
   regIndicators,
-  regValues,
-  regValuesAutoLength = 50,
+  lambdas,
+  lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
   elastic_alpha = NULL,
@@ -522,22 +522,22 @@ exact_regCtsem <- function(  # model
   adaptiveLassoWeights <- getAdaptiveLassoWeights(mxObject = mxObject, penalty = penalty, adaptiveLassoWeights = adaptiveLassoWeights, standardizeDrift = standardizeDrift)
   returnList$setup$adaptiveLassoWeights <- adaptiveLassoWeights
 
-  # set regValues if regValues == "auto"
-  if(any(regValues == "auto")){
-    maxRegValue <- getMaxRegValue(mxObject = mxObject,
+  # set lambdas if lambdas == "auto"
+  if(any(lambdas == "auto")){
+    maxLambda <- getMaxLambda(mxObject = mxObject,
                                   regIndicators = regIndicators,
                                   differenceApprox = differenceApprox,
                                   adaptiveLassoWeights = adaptiveLassoWeights)
-    sparseParameters <- maxRegValue$sparseParameters
-    maxRegValue <- maxRegValue$maxRegValue
-    regValues <- seq(0,maxRegValue, length.out = regValuesAutoLength)
+    sparseParameters <- maxLambda$sparseParameters
+    maxLambda <- maxLambda$maxLambda
+    lambdas <- seq(0,maxLambda, length.out = lambdasAutoLength)
     # if scaleLambdaWithN = TRUE, the lambda values will be multiplied with N later on
     # we need to ensure that this will not change the values:
     if(scaleLambdaWithN){
-      regValues <- regValues/sampleSize
+      lambdas <- lambdas/sampleSize
     }
-    returnList$setup$regValues <- regValues
-    exactArgsIn$regValues <- regValues
+    returnList$setup$lambdas <- lambdas
+    exactArgsIn$lambdas <- lambdas
     returnList$setup$sparseParameters <- sparseParameters
     exactArgsIn$sparseParameters <- sparseParameters
   }
@@ -554,14 +554,14 @@ exact_regCtsem <- function(  # model
     # prepare table with results
     fitAndParameters <- matrix(NA,
                                nrow = length(c(fits, parameterLabels)),
-                               ncol = length(regValues),
+                               ncol = length(lambdas),
                                dimnames = list(c(fits, parameterLabels),
-                                               regValues))
+                                               lambdas))
 
     # start fitting models
     if(tolower(optimizer) == "glmnet"){
       regModel <- try(regCtsem::exact_bfgsGLMNET(ctsemObject = ctsemObject, dataset = dataset, objective = objective,
-                                                 mxObject = mxObject, regOn = regOn, regIndicators = regIndicators, regValues = regValues,
+                                                 mxObject = mxObject, regOn = regOn, regIndicators = regIndicators, lambdas = lambdas,
                                                  adaptiveLassoWeights = adaptiveLassoWeights,
                                                  # additional settings
                                                  sparseParameters = sparseParameters,
@@ -580,7 +580,7 @@ exact_regCtsem <- function(  # model
     }
     if(tolower(optimizer) == "gist"){
       regModel <- try(regCtsem::exact_GIST(ctsemObject = ctsemObject, dataset = dataset, objective = objective,
-                                           mxObject = mxObject, regOn = regOn, regIndicators = regIndicators, regValues = regValues,
+                                           mxObject = mxObject, regOn = regOn, regIndicators = regIndicators, lambdas = lambdas,
                                            adaptiveLassoWeights = adaptiveLassoWeights,
                                            # additional settings
                                            sparseParameters = sparseParameters,
@@ -607,7 +607,7 @@ exact_regCtsem <- function(  # model
     # save fit indices
     if(returnFitIndices & !(any(class(regModel) == "try-error"))){
       fitIndicesTable <- regCtsem::exact_getFitIndices(mxObject = mxObject, parameterLabels = parameterLabels,
-                                                       fitAndParameters = fitAndParameters, regValues = regValues, sampleSize = sampleSize)
+                                                       fitAndParameters = fitAndParameters, lambdas = lambdas, sampleSize = sampleSize)
 
       fitAndParameters[rownames(fitIndicesTable),] <- fitIndicesTable[rownames(fitIndicesTable),]
     }
@@ -617,8 +617,8 @@ exact_regCtsem <- function(  # model
     if(!is.null(cvSample)){
 
       fitCVTable <- regCtsem::exact_getCVFit(objective = objective, ctsemObject = ctsemObject, mxObject = mxObject, parameterLabels = parameterLabels,
-                                             parameterValuesTable = as.matrix(fitAndParameters[parameterLabels,], ncol = length(regValues)),
-                                             regValues = regValues, cvSample = cvSample)
+                                             parameterValuesTable = as.matrix(fitAndParameters[parameterLabels,], ncol = length(lambdas)),
+                                             lambdas = lambdas, cvSample = cvSample)
 
       fitAndParameters["cvM2LL",] <- fitCVTable["cvM2LL",]
     }
@@ -647,8 +647,8 @@ exact_regCtsem <- function(  # model
 #' @param dataset only required if objective = "Kalman" and ctsemObject ist of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
-#' @param regValues vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
-#' @param regValuesAutoLength if regValues == "auto", regValuesAutoLength will determine the number of regValues tested.
+#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
+#' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty Currently supported are lasso, adaptiveLasso, and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
@@ -683,7 +683,7 @@ exact_regCtsem <- function(  # model
 #' @param GISTLinesearchCriterion criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
-#' @param exactApproximateFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first regValue, 2 = for all regValues
+#' @param exactApproximateFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas
 #' @param exactApproximateFirst3NumStartingValues Used if exactApproximateFirst = 3. regCtsem will try exactApproximateFirst3NumStartingValues+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
 #' @param exactApproximateFirst3Optimize Used if exactApproximateFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
 #' @param exactApproximateFirstMaxIter_out Used if exactApproximateFirst = 3 and exactApproximateFirst3Optimize > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If exactApproximateFirst =  4, or exactApproximateFirst = 5 this will control the number of outer iteration in optim or solnp .
@@ -706,8 +706,8 @@ exact_parallelRegCtsem <- function(# model
   # penalty settings
   regOn = "DRIFT",
   regIndicators,
-  regValues,
-  regValuesAutoLength = 50,
+  lambdas,
+  lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
   elastic_alpha = NULL,
@@ -786,10 +786,10 @@ exact_parallelRegCtsem <- function(# model
   doSNOW::registerDoSNOW(regCtsemClusterVariable)
 
 
-  # Split the regValues in equal regValueBins:
+  # Split the lambdas in equal lambdaBins:
 
-  regValueBins <- split(regValues,
-                        cut(x = 1:length(regValues),
+  lambdaBins <- split(lambdas,
+                        cut(x = 1:length(lambdas),
                             breaks = cores,
                             labels = paste0("core", 1:cores)))
 
@@ -802,7 +802,7 @@ exact_parallelRegCtsem <- function(# model
     write.csv2(0,parallelTempFiles[[core]], row.names = FALSE)
   }
 
-  maxItSum <- length(regValues)
+  maxItSum <- length(lambdas)
 
   printProgress <- function(parallelTempFiles, maxItSum, cores){
     itSum <- 0
@@ -819,25 +819,25 @@ exact_parallelRegCtsem <- function(# model
   }
 
 
-  fitAndParameters_combined <- foreach::foreach(iteration = 1:length(regValueBins), .combine = cbind,
+  fitAndParameters_combined <- foreach::foreach(iteration = 1:length(lambdaBins), .combine = cbind,
                                                 .multicombine = TRUE,.packages = c("OpenMx","regCtsem"),
                                                 .inorder = TRUE,
                                                 .errorhandling = "remove",
                                                 .verbose = FALSE
   ) %dopar% {
-    # regValues in this core
-    regValueBin <- regValueBins[[iteration]]
+    # lambdas in this core
+    lambdaBin <- lambdaBins[[iteration]]
 
     # expected results
-    fitTable <- matrix(NA, nrow = length(parameterLabels)+length(fitLabels), ncol = length(regValueBin))
+    fitTable <- matrix(NA, nrow = length(parameterLabels)+length(fitLabels), ncol = length(lambdaBin))
     rownames(fitTable) <- c(parameterLabels, fitLabels)
-    colnames(fitTable) <- regValueBin
+    colnames(fitTable) <- lambdaBin
 
     initialModel <- mxObject
 
     iterationExactArgsIn <- fun_call
     iterationExactArgsIn$mxObject <- initialModel
-    iterationExactArgsIn$regValues <- regValueBin
+    iterationExactArgsIn$lambdas <- lambdaBin
     iterationExactArgsIn$cores <- 1
     iterationExactArgsIn$progressBar <- FALSE
     iterationExactArgsIn$parallelProgressBar = list("printProgress" = printProgress,
@@ -878,8 +878,8 @@ exact_parallelRegCtsem <- function(# model
 #' @param dataset only required if objective = "Kalman" and ctsemObject ist of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
-#' @param regValues vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
-#' @param regValuesAutoLength if regValues == "auto", regValuesAutoLength will determine the number of regValues tested.
+#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
+#' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty Currently supported are lasso, adaptiveLasso, and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
@@ -912,8 +912,8 @@ approx_regCtsem <- function(  # model
   # penalty settings
   regOn = "DRIFT",
   regIndicators,
-  regValues,
-  regValuesAutoLength = 50,
+  lambdas,
+  lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
   elastic_alpha = NULL,
@@ -988,29 +988,29 @@ approx_regCtsem <- function(  # model
   adaptiveLassoWeights <- getAdaptiveLassoWeights(mxObject = mxObject, penalty = penalty, adaptiveLassoWeights = adaptiveLassoWeights, standardizeDrift = standardizeDrift)
   returnList$setup$adaptiveLassoWeights <- adaptiveLassoWeights
 
-  # set regValues if regValues == "auto"
-  if(any(regValues == "auto")){
+  # set lambdas if lambdas == "auto"
+  if(any(lambdas == "auto")){
     regIndicatorsString <- mxObject[[regOn]]$labels[regIndicators==1]
-    maxRegValue <- getMaxRegValue(mxObject = mxObject,
+    maxLambda <- getMaxLambda(mxObject = mxObject,
                                   regIndicators = regIndicatorsString,
                                   differenceApprox = "central",
                                   adaptiveLassoWeights = adaptiveLassoWeights)
-    regValues <- seq(0,maxRegValue$maxRegValue, length.out = regValuesAutoLength)
+    lambdas <- seq(0,maxLambda$maxLambda, length.out = lambdasAutoLength)
     # if scaleLambdaWithN = TRUE, the lambda values will be multiplied with N later on
     # we need to ensure that this will not change the values:
     if(scaleLambdaWithN){
-      regValues <- regValues/sampleSize
+      lambdas <- lambdas/sampleSize
     }
-    returnList$setup$regValues <- regValues
-    approxArgsIn$regValues <- regValues
+    returnList$setup$lambdas <- lambdas
+    approxArgsIn$lambdas <- lambdas
   }
 
   if(cores == 1){
 
     # start fitting models
-    fitAndParameters <- try(regCtsem::approx_iterateOverRegValues(ctsemObject = ctsemObject, mxObject = mxObject, sampleSize = sampleSize,
+    fitAndParameters <- try(regCtsem::approx_iterateOverLambdas(ctsemObject = ctsemObject, mxObject = mxObject, sampleSize = sampleSize,
                                                                   # penalty settings
-                                                                  regOn = regOn, regIndicators = regIndicators, regValues = regValues,
+                                                                  regOn = regOn, regIndicators = regIndicators, lambdas = lambdas,
                                                                   penalty = penalty, elastic_alpha = elastic_alpha, elastic_gamma = elastic_gamma,
                                                                   adaptiveLassoWeights = adaptiveLassoWeights,
                                                                   # fit settings
@@ -1047,8 +1047,8 @@ approx_regCtsem <- function(  # model
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
-#' @param regValues vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
-#' @param regValuesAutoLength if regValues == "auto", regValuesAutoLength will determine the number of regValues tested.
+#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
+#' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
@@ -1085,8 +1085,8 @@ approx_parallelRegCtsem <- function(
   # penalty settings
   regOn = "DRIFT",
   regIndicators,
-  regValues,
-  regValuesAutoLength = 50,
+  lambdas,
+  lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
   elastic_alpha = NULL,
@@ -1123,10 +1123,10 @@ approx_parallelRegCtsem <- function(
   doSNOW::registerDoSNOW(regCtsemClusterVariable)
 
 
-  # Split the regValues in equal regValueBins:
+  # Split the lambdas in equal lambdaBins:
 
-  regValueBins <- split(regValues,
-                        cut(x = 1:length(regValues),
+  lambdaBins <- split(lambdas,
+                        cut(x = 1:length(lambdas),
                             breaks = cores,
                             labels = paste0("core", 1:cores)))
 
@@ -1139,7 +1139,7 @@ approx_parallelRegCtsem <- function(
     write.csv2(0,parallelTempFiles[[core]], row.names = FALSE)
   }
 
-  maxItSum <- length(regValues)
+  maxItSum <- length(lambdas)
 
   printProgress <- function(parallelTempFiles, maxItSum, cores){
     itSum <- 0
@@ -1157,14 +1157,14 @@ approx_parallelRegCtsem <- function(
   }
 
 
-  fitAndParameters_combined <- foreach::foreach(iteration = 1:length(regValueBins), .combine = cbind,
+  fitAndParameters_combined <- foreach::foreach(iteration = 1:length(lambdaBins), .combine = cbind,
                                                 .multicombine = TRUE,.packages = c("OpenMx","regCtsem"),
                                                 .inorder = TRUE,
                                                 .errorhandling = "remove",
                                                 .verbose = FALSE
   ) %dopar% {
-    # regValues in this core
-    regValueBin <- regValueBins[[iteration]]
+    # lambdas in this core
+    lambdaBin <- lambdaBins[[iteration]]
 
     # set up model
     iterationParallelProgressBar = list("printProgress" = printProgress,
@@ -1175,7 +1175,7 @@ approx_parallelRegCtsem <- function(
 
     iterationResult <- approx_regCtsem(ctsemObject = ctsemObject, mxObject = mxObject, dataset = dataset,
                                        # penalty settings
-                                       regOn = regOn, regIndicators = regIndicators, regValues = regValueBin,
+                                       regOn = regOn, regIndicators = regIndicators, lambdas = lambdaBin,
                                        penalty = penalty, elastic_alpha = elastic_alpha, elastic_gamma = elastic_gamma,
                                        standardizeDrift = standardizeDrift,
                                        adaptiveLassoWeights = adaptiveLassoWeights,
@@ -1208,13 +1208,13 @@ approx_parallelRegCtsem <- function(
 #' NOTE: Function located in file regCtsem.R
 #'
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
-#' @param regValues vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
+#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
 #' @author Jannik Orzek
 #' @export
-createCVFitTable <- function(k, regValues){
-  CVFitTable <- matrix(NA, nrow = k+1, ncol = length(regValues))
+createCVFitTable <- function(k, lambdas){
+  CVFitTable <- matrix(NA, nrow = k+1, ncol = length(lambdas))
   rownames(CVFitTable) <- c(paste0("fold", 1:k), "mean CV fit")
-  colnames(CVFitTable) <- regValues
+  colnames(CVFitTable) <- lambdas
   return(CVFitTable)
 }
 
@@ -1300,9 +1300,9 @@ iterateOverCVFolds <- function(argsIn, objective = "ML", optimization){
   trainSets <- cvFoldsAndModels$trainSets
   cvModels <-  cvFoldsAndModels$cvModels
 
-  # get regValues if regValues == "auto"
-  if(any(argsIn$regValues == "auto")){
-    maxRegValue <- getMaxRegValueCV(ctsemObject = argsIn$ctsemObject,
+  # get lambdas if lambdas == "auto"
+  if(any(argsIn$lambdas == "auto")){
+    maxLambda <- getMaxLambdaCV(ctsemObject = argsIn$ctsemObject,
                                     mxObject = argsIn$mxObject,
                                     fullData = fullData,
                                     trainSets = trainSets,
@@ -1320,14 +1320,14 @@ iterateOverCVFolds <- function(argsIn, objective = "ML", optimization){
                                     differenceApprox = ifelse(is.null(argsIn$differenceApprox), "central", argsIn$differenceApprox)
     )
     if(optimization == "exact"){
-      sparseParameterMatrix <- maxRegValue$sparseParameterMatrix
+      sparseParameterMatrix <- maxLambda$sparseParameterMatrix
     }
-    maxRegValue <- maxRegValue$maxRegValue
-    argsIn$regValues <- seq(0, maxRegValue, length.out = argsIn$regValuesAutoLength)
+    maxLambda <- maxLambda$maxLambda
+    argsIn$lambdas <- seq(0, maxLambda, length.out = argsIn$lambdasAutoLength)
   }
 
   # create fit table
-  fit <- createCVFitTable(k = argsIn$k, regValues = argsIn$regValues)
+  fit <- createCVFitTable(k = argsIn$k, lambdas = argsIn$lambdas)
 
   for(foldNumber in 1:argsIn$k){
     if(is.vector(fullData[cvFolds[[foldNumber]],])){
@@ -1478,8 +1478,8 @@ checkSetup <- function(argsIn){
       stop("Combination of automatic standardization and adaptive lasso is not implemented. Standardization is a special variant of the adaptive lasso. Use penalty = 'lasso' or standardizeDrift = FALSE.")
     }
   }
-  #if(any(argsIn$regValues == "auto") & (tolower(argsIn$penalty) == "adaptivelasso" | argsIn$standardizeDrift)){
-  #  stop("regValues = 'auto' currently not supported for adative lasso or automatic standardization of drift parameters.")
+  #if(any(argsIn$lambdas == "auto") & (tolower(argsIn$penalty) == "adaptivelasso" | argsIn$standardizeDrift)){
+  #  stop("lambdas = 'auto' currently not supported for adative lasso or automatic standardization of drift parameters.")
   #}
 }
 
@@ -1673,17 +1673,17 @@ getAdaptiveLassoWeights <- function(mxObject, penalty, adaptiveLassoWeights, sta
 getFinalParameters <- function(regCtsemObject, criterion = NULL){
   if(!regCtsemObject$setup$autoCV){
     minCriterionValue <- max(which(regCtsemObject$fit[criterion,] == min(regCtsemObject$fit[criterion,], na.rm = TRUE)))
-    regValues <- regCtsemObject$setup$regValues
-    bestRegValue <- regValues[minCriterionValue]
+    lambdas <- regCtsemObject$setup$lambdas
+    bestLambda <- lambdas[minCriterionValue]
     return(list("criterion" = criterion,
-                "lambda" = bestRegValue,
-                "parameters" = regCtsemObject$parameters[,as.character(bestRegValue)]))
+                "lambda" = bestLambda,
+                "parameters" = regCtsemObject$parameters[,as.character(bestLambda)]))
   }
   minCriterionValue <- max(which(regCtsemObject$fit["mean CV fit",] == min(regCtsemObject$fit["mean CV fit",], na.rm = TRUE)))
-  regValues <- regCtsemObject$setup$regValues
-  bestRegValue <- regValues[minCriterionValue]
+  lambdas <- regCtsemObject$setup$lambdas
+  bestLambda <- lambdas[minCriterionValue]
   return(list("criterion" = "mean CV fit",
-              "lambda" = bestRegValue))
+              "lambda" = bestLambda))
 }
 
 
@@ -1710,9 +1710,9 @@ getFlatStdizer <- function(T0VAR, driftLabels){
 
 
 
-#' getMaxRegValue
+#' getMaxLambda
 #'
-#' computes an approximation of the lowest regValue which will set all regularized parameters to zero. This function is adapted from Murphy (2012) Machine learning: a probabilistic perspective. See p. 434 for more details.
+#' computes an approximation of the lowest lambda which will set all regularized parameters to zero. This function is adapted from Murphy (2012) Machine learning: a probabilistic perspective. See p. 434 for more details.
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
@@ -1723,9 +1723,9 @@ getFlatStdizer <- function(T0VAR, driftLabels){
 #' @author Jannik Orzek
 #' @import OpenMx
 #' @export
-getMaxRegValue <- function(mxObject, regIndicators, differenceApprox, adaptiveLassoWeights){
+getMaxLambda <- function(mxObject, regIndicators, differenceApprox, adaptiveLassoWeights){
   # This function is adapted from Murphy (2012) Machine learning: a probabilistic perspective. See p. 434 for more details.
-  cat("Computing maximally required regValue ... ")
+  cat("Computing maximally required lambda ... ")
 
   converged <- FALSE
   # warning("automatically determining the maximal lambda with getLambdaMax is still experimental! It only produces an approximation of the required lambdaMax which can be too large or too small.")
@@ -1734,7 +1734,7 @@ getMaxRegValue <- function(mxObject, regIndicators, differenceApprox, adaptiveLa
 
   while(!converged){
     if(it == length(regIndicators)){
-      stop("Error while automatically setting the regValues: The models did not converge. Try setting the regValues manually.")
+      stop("Error while automatically setting the lambdas: The models did not converge. Try setting the lambdas manually.")
     }
     # extract parameter vector
     param <- OpenMx::omxGetParameters(mxObject)
@@ -1744,7 +1744,7 @@ getMaxRegValue <- function(mxObject, regIndicators, differenceApprox, adaptiveLa
     # Problem: setting all regularized parameters to zero might result in an impossible model
     # if this error occurs, regCtsem will iteratively try to set a subset of the parameters to zero
     # the size of the parameters determines the order in which they are set to zero
-    # however, this is only a rough approximation and might result in an unsatisfactory maxRegValue
+    # however, this is only a rough approximation and might result in an unsatisfactory maxLambda
     regIndicatorsCurrent <- names(sort(abs(param[regIndicators]))[1:numberRegularized])
 
     # step 1: set the regularized parameters to zero and estimate the model:
@@ -1766,7 +1766,7 @@ getMaxRegValue <- function(mxObject, regIndicators, differenceApprox, adaptiveLa
     }
     if(any(class(sparseModel) == "try-error") | sparseModel$output$status$code == 10){
       if(it ==  0){
-        warning("Error when determining the regValues automatically: Setting all regularized parameters to zero resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to zero; however, this might result in a wrong maximum for the regValues! Consider setting the regValues manually.")
+        warning("Error when determining the lambdas automatically: Setting all regularized parameters to zero resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to zero; however, this might result in a wrong maximum for the lambdas! Consider setting the lambdas manually.")
       }
       it <- it + 1
       next
@@ -1787,7 +1787,7 @@ getMaxRegValue <- function(mxObject, regIndicators, differenceApprox, adaptiveLa
 
     if(any(class(gradientModel) == "try-error")){
       if(it ==  0){
-        warning("Error when determining the regValues automatically: Setting all regularized parameters to zero resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to zero; however, this might result in a wrong maximum for the regValues! Consider setting the regValues manually.")
+        warning("Error when determining the lambdas automatically: Setting all regularized parameters to zero resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to zero; however, this might result in a wrong maximum for the lambdas! Consider setting the lambdas manually.")
       }
       it <- it + 1
       next
@@ -1802,23 +1802,23 @@ getMaxRegValue <- function(mxObject, regIndicators, differenceApprox, adaptiveLa
     converged <- TRUE
   }
   if(it > 0){
-    warning(paste0("regCtsem did set ", numberRegularized, " of the ", length(regIndicators), " regularized parameters to zero when determining the maximal regValue."))
+    warning(paste0("regCtsem did set ", numberRegularized, " of the ", length(regIndicators), " regularized parameters to zero when determining the maximal lambda."))
   }
-  # define maxRegValue as the maximal gradient of the regularized parameters
-  maxRegValue <- max(abs(grad[regIndicators]) * adaptiveLassoWeights[regIndicators]^(-1))
+  # define maxLambda as the maximal gradient of the regularized parameters
+  maxLambda <- max(abs(grad[regIndicators]) * adaptiveLassoWeights[regIndicators]^(-1))
 
   cat("DONE \n")
 
-  return(list("maxRegValue" = maxRegValue, "sparseParameters" = param))
+  return(list("maxLambda" = maxLambda, "sparseParameters" = param))
 }
 
 
 
 
-#' getMaxRegValueCV
+#' getMaxLambdaCV
 #'
 #'
-#' computes an approximation of the lowest regValue which will set all regularized parameters to zero. This function is adapted from Murphy (2012) Machine learning: a probabilistic perspective. See p. 434 for more details.
+#' computes an approximation of the lowest lambda which will set all regularized parameters to zero. This function is adapted from Murphy (2012) Machine learning: a probabilistic perspective. See p. 434 for more details.
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
@@ -1845,9 +1845,9 @@ getMaxRegValue <- function(mxObject, regIndicators, differenceApprox, adaptiveLa
 #' @import OpenMx
 #' @export
 
-getMaxRegValueCV <- function(ctsemObject, mxObject, fullData, KalmanStartValues, regOn, regIndicators, penalty, adaptiveLassoWeights, standardizeDrift, k, cvFolds, trainSets, scaleLambdaWithN, objective, optimization, differenceApprox = "central"){
+getMaxLambdaCV <- function(ctsemObject, mxObject, fullData, KalmanStartValues, regOn, regIndicators, penalty, adaptiveLassoWeights, standardizeDrift, k, cvFolds, trainSets, scaleLambdaWithN, objective, optimization, differenceApprox = "central"){
 
-  maxRegValue <- 0
+  maxLambda <- 0
 
   for(foldNumber in 1:k){
     cat(paste0("Sample ", foldNumber, ": "))
@@ -1880,19 +1880,19 @@ getMaxRegValueCV <- function(ctsemObject, mxObject, fullData, KalmanStartValues,
     }
     if(tolower(optimization) == "approx"){
       regIndicatorsString <- mxObject[[regOn]]$labels[regIndicators == 1]
-      currentMaxRegValue <- getMaxRegValue(mxObject = currentModel,
+      currentMaxLambda <- getMaxLambda(mxObject = currentModel,
                                            regIndicators = regIndicatorsString,
                                            differenceApprox = differenceApprox,
-                                           adaptiveLassoWeights = currentAdaptiveLassoWeights)$maxRegValue
+                                           adaptiveLassoWeights = currentAdaptiveLassoWeights)$maxLambda
       sparseParameterMatrix <- NULL
     }else{
       parameterLabels <- names(OpenMx::omxGetParameters(currentModel))
-      currentMaxRegValue <- getMaxRegValue(mxObject = currentModel,
+      currentMaxLambda <- getMaxLambda(mxObject = currentModel,
                                            regIndicators = regIndicators,
                                            differenceApprox = differenceApprox,
                                            adaptiveLassoWeights = currentAdaptiveLassoWeights)
-      currentSparseParameters <- currentMaxRegValue$sparseParameters
-      currentMaxRegValue <- currentMaxRegValue$maxRegValue
+      currentSparseParameters <- currentMaxLambda$sparseParameters
+      currentMaxLambda <- currentMaxLambda$maxLambda
       if(foldNumber == 1){
         sparseParameterMatrix <- matrix(NA, nrow = length(parameterLabels), ncol = k)
         rownames(sparseParameterMatrix) <- parameterLabels
@@ -1904,14 +1904,14 @@ getMaxRegValueCV <- function(ctsemObject, mxObject, fullData, KalmanStartValues,
     }
 
     if(scaleLambdaWithN){
-      currentMaxRegValue <- currentMaxRegValue/sampleSize
+      currentMaxLambda <- currentMaxLambda/sampleSize
     }
 
-    maxRegValue <- max(maxRegValue,
-                       currentMaxRegValue)
+    maxLambda <- max(maxLambda,
+                       currentMaxLambda)
   }
 
-  return(list("maxRegValue" = maxRegValue, "sparseParameterMatrix" = sparseParameterMatrix))
+  return(list("maxLambda" = maxLambda, "sparseParameterMatrix" = sparseParameterMatrix))
 }
 
 
@@ -1977,18 +1977,18 @@ getVariancesInParameterEstimates <- function(mxObject, parameterEstimates){
   latentNames <- sub(x = latentNames, pattern = "drift_", replacement = "")
   manifestNames <- rownames(mxObject$LAMBDA$values)
 
-  for(regValue in 1:ncol(parameterEstimates)){
+  for(lambda in 1:ncol(parameterEstimates)){
     tempMxObject <- mxObject
     tempMxObject <- OpenMx::omxSetParameters(model = tempMxObject,
                                              labels = rownames(parameterEstimates),
-                                             values = parameterEstimates[,regValue]
+                                             values = parameterEstimates[,lambda]
     )
 
     # T0VAR
     if(any(mxObject$T0VARbase$free)){
       T0VAR <- regCtsem::getVarianceFromVarianceBase2(varianceBaseValues = tempMxObject$T0VARbase$values)
 
-      if(regValue == 1){
+      if(lambda == 1){
         T0VARBaseLabels <- tempMxObject$T0VARbase$labels[!is.na(tempMxObject$T0VARbase$labels)]
         T0VARLabels <- paste0("T0VAR_",rep(latentNames, each = length(latentNames)),
                               "_",
@@ -2010,7 +2010,7 @@ getVariancesInParameterEstimates <- function(mxObject, parameterEstimates){
     if(any(mxObject$DIFFUSIONbase$free)){
       DIFFUSION <- regCtsem::getVarianceFromVarianceBase2(varianceBaseValues = tempMxObject$DIFFUSIONbase$values)
 
-      if(regValue == 1){
+      if(lambda == 1){
         DIFFUSIONBaseLabels <- tempMxObject$DIFFUSIONbase$labels[!is.na(tempMxObject$DIFFUSIONbase$labels)]
         DIFFUSIONLabels <- paste0("DIFFUSION_",rep(latentNames, each = length(latentNames)),
                                   "_",
@@ -2032,7 +2032,7 @@ getVariancesInParameterEstimates <- function(mxObject, parameterEstimates){
     if(any(mxObject$MANIFESTVARbase$free)){
       MANIFESTVAR <- regCtsem::getVarianceFromVarianceBase2(varianceBaseValues = tempMxObject$MANIFESTVARbase$values)
 
-      if(regValue == 1){
+      if(lambda == 1){
         MANIFESTVARBaseLabels <- tempMxObject$MANIFESTVARbase$labels[!is.na(tempMxObject$MANIFESTVARbase$labels)]
         MANIFESTVARLabels <- paste0("MANIFESTVAR_",rep(manifestNames, each = length(manifestNames)),
                                     "_",
@@ -2055,7 +2055,7 @@ getVariancesInParameterEstimates <- function(mxObject, parameterEstimates){
       asymDIFFUSIONalg <- -solve(DRIFTHATCH) %*% cvectorize(DIFFUSION)
       T0VAR <- matrix(asymDIFFUSIONalg, nrow = length(latentNames), byrow = F)
 
-      if(regValue == 1){
+      if(lambda == 1){
         T0VARBaseLabels <- c()
         T0VARLabels <- paste0("T0VAR_",rep(latentNames, each = length(latentNames)),
                               "_",
@@ -2196,7 +2196,7 @@ generateDRIFTPlot <- function(model, ylab = "auto", xlab = "auto", skiptYlabComp
   drifts <- model$parameters[grepl("drift", rownames(model$parameters)),]
   regIndicators <- model$setup$regIndicators
   drifts_regularized <- drifts[regIndicators,]
-  regValues <- model$setup$regValues
+  lambdas <- model$setup$lambdas
 
   colsWithNA <- apply(model$parameters,2,function(x) any(is.na(x)))
 
@@ -2204,19 +2204,19 @@ generateDRIFTPlot <- function(model, ylab = "auto", xlab = "auto", skiptYlabComp
 
   par(mar=c(4, 3, 5, 2), xpd=TRUE)
 
-  matplot(x = regValues[!colsWithNA], t(drifts[!colsWithNA]), lty = 2,
+  matplot(x = lambdas[!colsWithNA], t(drifts[!colsWithNA]), lty = 2,
           lwd = 2, type = "l",
           col = color, xlab = ifelse(skiptXlabComp, xlab,
                                      ifelse(xlab == "auto",expression(lambda),ylab)),
           ylab = ifelse(skiptYlabComp, ylab,
                         ifelse(ylab == "auto","drift",ylab)))
-  matplot(x = regValues[!colsWithNA], t(drifts_regularized[!colsWithNA]), lty = 1, lwd = 2, type = "l", col = "#2166AC", add = TRUE)
-  tickat <- seq(1, length(regValues[!colsWithNA]), length.out = 10)
-  axis(3, at = regValues[tickat],
+  matplot(x = lambdas[!colsWithNA], t(drifts_regularized[!colsWithNA]), lty = 1, lwd = 2, type = "l", col = "#2166AC", add = TRUE)
+  tickat <- seq(1, length(lambdas[!colsWithNA]), length.out = 10)
+  axis(3, at = lambdas[tickat],
        labels=apply(drifts == 0,2,sum)[tickat],
        outer= F,
        line=1,col="black",col.ticks="black",col.axis="black")
-  mtext("# zeroed parameters",3,line=3,at=mean(regValues),col="black", cex = 1)
+  mtext("# zeroed parameters",3,line=3,at=mean(lambdas),col="black", cex = 1)
 
   par(mar=c(5, 4, 4, 2) + 0.1, xpd=TRUE)
 }

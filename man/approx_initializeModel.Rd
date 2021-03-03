@@ -10,7 +10,7 @@ approx_initializeModel(
   sampleSize = NULL,
   regOn = "DRIFT",
   regIndicators,
-  regValue,
+  lambda,
   penalty = "lasso",
   elastic_alpha = NULL,
   elastic_gamma = NULL,
@@ -69,7 +69,7 @@ approx_initializeModel(
 
 \item{parallelProgressBar}{list: used internally to display progress when executing in parallel}
 
-\item{regValues}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
+\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
 }
 \description{
 sets up an approximate regularized ctsem

@@ -13,7 +13,7 @@
 #' @param sampleSize sample size
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
-#' @param regValues vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
+#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
 #' @param penalty type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact
 #' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
 #' @param elastic_gamma placehoder for elastic net. NOT YET IMPLEMENTED
@@ -40,7 +40,7 @@ approx_initializeModel <- function(  # model
   # penalty settings
   regOn = "DRIFT",
   regIndicators,
-  regValue,
+  lambda,
   penalty = "lasso",
   elastic_alpha = NULL,
   elastic_gamma = NULL,
@@ -73,9 +73,9 @@ approx_initializeModel <- function(  # model
   regFitAlgebra <- OpenMx::mxAlgebraFromString(fitFunString, name = "regFitAlgebra")
   regFitFunction <- OpenMx::mxFitFunctionAlgebra("regFitAlgebra")
 
-  # Add regValue and regIndicator
+  # Add lambda and regIndicator
   selectedDRIFTValues <- OpenMx::mxMatrix(type = "Full", values = regIndicators, free = F, name = "selectedDRIFTValues")
-  regValue <- OpenMx::mxMatrix(type = "Full", values = regValue, nrow = 1, ncol = 1, free = F, name = "regValue")
+  lambda <- OpenMx::mxMatrix(type = "Full", values = lambda, nrow = 1, ncol = 1, free = F, name = "lambda")
 
   # Add Drift weights
   driftWeights <- adaptiveLassoWeights[grepl("drift", names(adaptiveLassoWeights))]
@@ -89,7 +89,7 @@ approx_initializeModel <- function(  # model
                                    mxNumObs,
                                    selectedDRIFTValues,
                                    rowVecDriftWeights,
-                                   regValue,
+                                   lambda,
                                    regFitAlgebra,
                                    regFitFunction)
 
@@ -99,9 +99,9 @@ approx_initializeModel <- function(  # model
   return(internalModel)
 }
 
-#' approx_iterateOverRegValues
+#' approx_iterateOverLambdas
 #'
-#' loops over regValues if optimization = "approx"
+#' loops over lambdas if optimization = "approx"
 #'
 #' NOTE: Function located in file approx_optimization.R
 #'
@@ -110,7 +110,7 @@ approx_initializeModel <- function(  # model
 #' @param sampleSize sample size
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
-#' @param regValues vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
+#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
 #' @param penalty type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact
 #' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
 #' @param elastic_gamma placehoder for elastic net. NOT YET IMPLEMENTED
@@ -133,14 +133,14 @@ approx_initializeModel <- function(  # model
 #' @author Jannik Orzek
 #' @import ctsemOMX
 #' @export
-approx_iterateOverRegValues <- function(  # model
+approx_iterateOverLambdas <- function(  # model
   ctsemObject = NULL,
   mxObject = NULL,
   sampleSize = NULL,
   # penalty settings
   regOn = "DRIFT",
   regIndicators,
-  regValues,
+  lambdas,
   penalty = "lasso",
   elastic_alpha = NULL,
   elastic_gamma = NULL,
@@ -172,19 +172,19 @@ approx_iterateOverRegValues <- function(  # model
     fitLabels <- c(fitLabels, "cvM2LL")
   }
 
-  fitAndParameters <- matrix(NA, nrow = length(parameterLabels)+length(fitLabels), ncol = length(regValues))
+  fitAndParameters <- matrix(NA, nrow = length(parameterLabels)+length(fitLabels), ncol = length(lambdas))
   rownames(fitAndParameters) <- c(fitLabels, parameterLabels)
-  colnames(fitAndParameters) <- regValues
+  colnames(fitAndParameters) <- lambdas
 
   if(progressBar){
-    pbar <- txtProgressBar(min = 0, max = length(regValues), initial = 0, style = 3)
+    pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
   }
-  for(iteration in 1:length(regValues)){
+  for(iteration in 1:length(lambdas)){
 
     # create model
     regModel <- regCtsem::approx_initializeModel(ctsemObject = ctsemObject, mxObject = mxObject, sampleSize = ifelse(scaleLambdaWithN,sampleSize,1),
                                                  # penalty settings
-                                                 regOn = regOn, regIndicators = regIndicators, regValue = regValues[iteration],
+                                                 regOn = regOn, regIndicators = regIndicators, lambda = lambdas[iteration],
                                                  penalty = penalty, elastic_alpha = elastic_alpha, elastic_gamma = elastic_gamma,
                                                  adaptiveLassoWeights = adaptiveLassoWeights,
                                                  # fit settings
@@ -210,7 +210,7 @@ approx_iterateOverRegValues <- function(  # model
     mxObject <- regModel$submodel
 
     # extract parameter estimates
-    fitAndParameters[parameterLabels, as.character(regValues[iteration])] <- OpenMx::cvectorize(OpenMx::omxGetParameters(regModel$submodel))
+    fitAndParameters[parameterLabels, as.character(lambdas[iteration])] <- OpenMx::cvectorize(OpenMx::omxGetParameters(regModel$submodel))
     fits <- regCtsem::approx_getFitIndices(fittedRegModel = regModel, ctsemObject = ctsemObject, sampleSize = sampleSize,
                                            # penalty settings
                                            regOn = regOn, regIndicators = regIndicators,
@@ -219,13 +219,13 @@ approx_iterateOverRegValues <- function(  # model
                                            # optimization settings
                                            zeroThresh = zeroThresh, objective = objective)
     # extract fit
-    fitAndParameters[fitLabels,as.character(regValues[iteration])] <- fits[fitLabels,]
+    fitAndParameters[fitLabels,as.character(lambdas[iteration])] <- fits[fitLabels,]
 
     # set progress bar for single core execution
     if(progressBar){setTxtProgressBar(pbar,iteration)}
     # set progress bar for multi core execution
     if(!is.null(parallelProgressBar)){
-      writeProgressError <- try(write.csv2(which(regValues == regValues[iteration]),parallelProgressBar$parallelTempFiles[[parallelProgressBar$iteration]], row.names = FALSE))
+      writeProgressError <- try(write.csv2(which(lambdas == lambdas[iteration]),parallelProgressBar$parallelTempFiles[[parallelProgressBar$iteration]], row.names = FALSE))
       if(!any(class(writeProgressError) == "try-error")){
         parallelProgressBar$printProgress(parallelProgressBar$parallelTempFiles, parallelProgressBar$maxItSum, parallelProgressBar$cores)
       }
@@ -238,7 +238,7 @@ approx_iterateOverRegValues <- function(  # model
     fitAndParameters <- approx_getCVFit(mxObject = mxObject, ctsemObject = ctsemObject,
                                         cvSample = cvSample, objective = objective,
                                         fitAndParameters = fitAndParameters, parameterLabels = parameterLabels,
-                                        regValues = regValues)
+                                        lambdas = lambdas)
   }
 
 
@@ -268,9 +268,9 @@ approx_createFitFunString = function(penalty, elastic_alpha = NULL, elastic_gamm
 
   ## add penalty
   if(tolower(penalty) == "lasso" | tolower(penalty) == "adaptivelasso"){
-    addPenalty <- paste("numObs*(regValue*(omxSelectCols(rowVecDriftWeights,t(cvectorize(selectedDRIFTValues)))%*%omxSelectRows(cvectorize((submodel.DRIFT^2 + ",epsilon,")^(1/2)), cvectorize(selectedDRIFTValues))))", sep = "")
+    addPenalty <- paste("numObs*(lambda*(omxSelectCols(rowVecDriftWeights,t(cvectorize(selectedDRIFTValues)))%*%omxSelectRows(cvectorize((submodel.DRIFT^2 + ",epsilon,")^(1/2)), cvectorize(selectedDRIFTValues))))", sep = "")
   }else if(penalty == "ridge"){
-    addPenalty <- "numObs*(regValue*(omxSelectCols(rowVecDriftWeights,t(cvectorize(selectedDRIFTValues)))%*%omxSelectRows(cvectorize((submodel.DRIFT)^2), cvectorize(selectedDRIFTValues))))"
+    addPenalty <- "numObs*(lambda*(omxSelectCols(rowVecDriftWeights,t(cvectorize(selectedDRIFTValues)))%*%omxSelectRows(cvectorize((submodel.DRIFT)^2), cvectorize(selectedDRIFTValues))))"
 
   }else if(penalty == "elastic"){
     stop("not implemented")
@@ -296,10 +296,10 @@ approx_createFitFunString = function(penalty, elastic_alpha = NULL, elastic_gamm
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param fitAndParameters table with fit results and parameter values
 #' @param parameterLabels vector with parameter labels
-#' @param regValues vector with regValues
+#' @param lambdas vector with lambdas
 #' @author Jannik Orzek
 #' @export
-approx_getCVFit <- function(mxObject, ctsemObject, cvSample, objective, fitAndParameters, parameterLabels, regValues){
+approx_getCVFit <- function(mxObject, ctsemObject, cvSample, objective, fitAndParameters, parameterLabels, lambdas){
   if(tolower(objective) == "kalman"){
     # create Model
     cvModel <- createKalmanMultiSubjectModel(ctsemObject = ctsemObject, dataset = cvSample, useOptimizer = FALSE, silent = TRUE)
@@ -310,7 +310,7 @@ approx_getCVFit <- function(mxObject, ctsemObject, cvSample, objective, fitAndPa
     # replace sample
     cvModel$data <- cvSample
   }
-  for(iteration in 1:length(regValues)){
+  for(iteration in 1:length(lambdas)){
 
     currentParameters <- fitAndParameters[parameterLabels,iteration]
     # set parameters to iteration parameters
@@ -365,7 +365,7 @@ approx_getFitIndices <- function(fittedRegModel,
   }
 
   fitTable <- matrix(NA, nrow = length(fitLabels), ncol = 1)
-  colnames(fitTable) <- fittedRegModel$regValue$values
+  colnames(fitTable) <- fittedRegModel$lambda$values
   rownames(fitTable) <- fitLabels
 
   fitTable["regM2LL",] <- fittedRegModel$fitfunction$result[[1]]
@@ -380,9 +380,9 @@ approx_getFitIndices <- function(fittedRegModel,
     setZero <- abs(currentParameters[regularizedDrifts]) <= zeroThresh
     estimatedParameters <- length(currentParameters)-sum(setZero)
 
-    fitTable["AIC", as.character(fittedRegModel$regValue$values)] <- fitTable["m2LL",] + 2*estimatedParameters
-    fitTable["BIC", as.character(fittedRegModel$regValue$values)] <- fitTable["m2LL",] + log(sampleSize)*estimatedParameters
-    fitTable["estimatedParameters", as.character(fittedRegModel$regValue$values)] <- estimatedParameters
+    fitTable["AIC", as.character(fittedRegModel$lambda$values)] <- fitTable["m2LL",] + 2*estimatedParameters
+    fitTable["BIC", as.character(fittedRegModel$lambda$values)] <- fitTable["m2LL",] + log(sampleSize)*estimatedParameters
+    fitTable["estimatedParameters", as.character(fittedRegModel$lambda$values)] <- estimatedParameters
   }
 
   return(fitTable)

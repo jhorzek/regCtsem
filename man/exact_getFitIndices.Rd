@@ -8,7 +8,7 @@ exact_getFitIndices(
   mxObject,
   parameterLabels,
   fitAndParameters,
-  regValues,
+  lambdas,
   sampleSize
 )
 }
@@ -19,7 +19,7 @@ exact_getFitIndices(
 
 \item{fitAndParameters}{table with fit and parameter values}
 
-\item{regValues}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
+\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
 
 \item{sampleSize}{sample size}
 }

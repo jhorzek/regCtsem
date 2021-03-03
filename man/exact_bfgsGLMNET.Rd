@@ -11,7 +11,7 @@ exact_bfgsGLMNET(
   objective,
   regOn = "DRIFT",
   regIndicators,
-  regValues,
+  lambdas,
   adaptiveLassoWeights,
   sparseParameters = NULL,
   tryCpptsem,
@@ -55,7 +55,7 @@ exact_bfgsGLMNET(
 
 \item{regIndicators}{Vector with names of regularized parameters}
 
-\item{regValues}{Vector with lambda values that should be tried}
+\item{lambdas}{Vector with lambda values that should be tried}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
@@ -95,7 +95,7 @@ exact_bfgsGLMNET(
 
 \item{sampleSize}{sample size for scaling lambda with N}
 
-\item{exactApproximateFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first regValue, 2 = for all regValues}
+\item{exactApproximateFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas}
 
 \item{exactApproximateFirst3NumStartingValues}{Used if exactApproximateFirst = 3. regCtsem will try exactApproximateFirst3NumStartingValues+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
@@ -126,12 +126,12 @@ AnomAuthfit <- ctFit(AnomAuth, AnomAuthmodel, fit = T)
 
 # with GLMNET
 ## with standardization
-reg <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), regValues = rev(seq(0,1,.1)), standardizeDrift = TRUE)
+reg <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = rev(seq(0,1,.1)), standardizeDrift = TRUE)
 reg$regM2LL
 reg$thetas
 
 ## without standardization
-reg2 <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), regValues = seq(0,1,.1), standardizeDrift = FALSE)
+reg2 <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = seq(0,1,.1), standardizeDrift = FALSE)
 reg2$regM2LL
 reg2$thetas
 }

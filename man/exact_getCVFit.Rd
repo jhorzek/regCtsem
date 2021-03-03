@@ -10,7 +10,7 @@ exact_getCVFit(
   mxObject,
   parameterLabels,
   parameterValuesTable,
-  regValues,
+  lambdas,
   cvSample
 )
 }
@@ -25,7 +25,7 @@ exact_getCVFit(
 
 \item{parameterValuesTable}{table with parameter values+}
 
-\item{regValues}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
+\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
 
 \item{cvSample}{cross-validation sample. Has to be of type mxData}
 }

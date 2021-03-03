@@ -32,7 +32,7 @@ exact_tryStartingValues(
 
 \item{regIndicators}{named vector of regularized parameters}
 
-\item{newLambda}{new regValue}
+\item{newLambda}{new lambda}
 
 \item{adaptiveLassoWeights}{named vector with adaptive lasso weights}
 

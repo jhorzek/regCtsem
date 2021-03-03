@@ -12,16 +12,16 @@
 #' @param mxObject Fitted object of class MxObject
 #' @param parameterLabels labels of optimized parameters
 #' @param parameterValuesTable table with parameter values+
-#' @param regValues vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
+#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
 #' @param cvSample cross-validation sample. Has to be of type mxData
 #' @author Jannik Orzek
 #' @import ctsemOMX
 #' @export
 exact_getCVFit <- function(objective, ctsemObject, mxObject, parameterLabels,
-                           parameterValuesTable, regValues,
+                           parameterValuesTable, lambdas,
                            cvSample){
   fits <- c("cvM2LL")
-  fitTable <- matrix(NA, nrow = length(fits), ncol = length(regValues), dimnames = list(fits, regValues))
+  fitTable <- matrix(NA, nrow = length(fits), ncol = length(lambdas), dimnames = list(fits, lambdas))
 
   if(tolower(objective) == "kalman"){
     # create Model
@@ -34,18 +34,18 @@ exact_getCVFit <- function(objective, ctsemObject, mxObject, parameterLabels,
   }
 
 
-  for(regValue in 1:length(regValues)){
-    if(any(is.na(parameterValuesTable[,regValue]))){
+  for(lambda in 1:length(lambdas)){
+    if(any(is.na(parameterValuesTable[,lambda]))){
       next
     }
 
     # set parameters to iteration parameters
-    cvModel <- try(OpenMx::omxSetParameters(model = cvModel, labels = parameterLabels, values = parameterValuesTable[,regValue]))
+    cvModel <- try(OpenMx::omxSetParameters(model = cvModel, labels = parameterLabels, values = parameterValuesTable[,lambda]))
 
     if(!any(class(cvModel) == "try-error")){
       # compute -2LL
       fitCvModel <- OpenMx::mxRun(cvModel, useOptimizer = FALSE, silent = TRUE)
-      fitTable["cvM2LL",regValue] <- fitCvModel$fitfunction$result[[1]]
+      fitTable["cvM2LL",lambda] <- fitCvModel$fitfunction$result[[1]]
     }
 
   }
@@ -62,27 +62,27 @@ exact_getCVFit <- function(objective, ctsemObject, mxObject, parameterLabels,
 #' @param mxObject Fitted object of class MxObject
 #' @param parameterLabels labels of optimized parameters
 #' @param fitAndParameters table with fit and parameter values
-#' @param regValues vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
+#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
 #' @param sampleSize sample size
 #' @author Jannik Orzek
 #' @import ctsemOMX
 #' @export
-exact_getFitIndices <- function(mxObject, parameterLabels, fitAndParameters, regValues, sampleSize){
+exact_getFitIndices <- function(mxObject, parameterLabels, fitAndParameters, lambdas, sampleSize){
   fits <- c("AIC", "BIC", "estimatedParameters")
-  fitTable <- matrix(NA, nrow = length(fits), ncol = length(regValues), dimnames = list(fits, regValues))
+  fitTable <- matrix(NA, nrow = length(fits), ncol = length(lambdas), dimnames = list(fits, lambdas))
 
-  for(regValue in 1:length(regValues)){
+  for(lambda in 1:length(lambdas)){
 
-    currentParameterValues <- fitAndParameters[parameterLabels,regValue]
-    currentM2LL <- fitAndParameters["m2LL",regValue]
+    currentParameterValues <- fitAndParameters[parameterLabels,lambda]
+    currentM2LL <- fitAndParameters["m2LL",lambda]
 
     if(any(is.na(currentParameterValues))){next}
 
     # set free = TRUE to free = FALSE for zeroed parameters
     currentParameterFree <- !(currentParameterValues == 0)
-    fitTable["AIC", regValue] <- currentM2LL + 2*sum(currentParameterFree)
-    fitTable["BIC", regValue] <- currentM2LL + log(sampleSize)*sum(currentParameterFree)
-    fitTable["estimatedParameters", regValue] <- sum(currentParameterFree)
+    fitTable["AIC", lambda] <- currentM2LL + 2*sum(currentParameterFree)
+    fitTable["BIC", lambda] <- currentM2LL + log(sampleSize)*sum(currentParameterFree)
+    fitTable["estimatedParameters", lambda] <- sum(currentParameterFree)
 
 
     #fitModel <- mxObject
@@ -91,9 +91,9 @@ exact_getFitIndices <- function(mxObject, parameterLabels, fitAndParameters, reg
     # run Model
     #fitFitModel <- OpenMx::mxRun(fitModel, useOptimizer = F, silent = T)
 
-    #fitTable["AIC", regValue] <- AIC(fitFitModel)
-    #fitTable["BIC", regValue] <- BIC(fitFitModel)
-    #fitTable["estimatedParameters", regValue] <- length(OpenMx::omxGetParameters(fitFitModel))
+    #fitTable["AIC", lambda] <- AIC(fitFitModel)
+    #fitTable["BIC", lambda] <- BIC(fitFitModel)
+    #fitTable["estimatedParameters", lambda] <- length(OpenMx::omxGetParameters(fitFitModel))
 
   }
 
@@ -125,7 +125,7 @@ exact_getFlatStdizer <- function(T0VAR, thetaNames){
 
 
 
-#' exact_getRegValue
+#' exact_getLambda
 #'
 #' computes sum(lambda*abs(regularized Values))
 #'
@@ -135,7 +135,7 @@ exact_getFlatStdizer <- function(T0VAR, thetaNames){
 #' @param lambda Penaltiy value
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @export
-exact_getRegValue <- function(lambda, theta, regIndicators, adaptiveLassoWeights = NULL){
+exact_getLambda <- function(lambda, theta, regIndicators, adaptiveLassoWeights = NULL){
 
   regVal <- 0
   if(!is.vector(theta)){
@@ -274,7 +274,7 @@ exact_getT0VAR <- function(mxObject, d){
 #' @param currentParameters current parameter values
 #' @param sparseParameters parameters of the sparsest model
 #' @param regIndicators named vector of regularized parameters
-#' @param newLambda new regValue
+#' @param newLambda new lambda
 #' @param adaptiveLassoWeights named vector with adaptive lasso weights
 #' @param differenceApprox difference approximation for gradients (detault should be central)
 #' @param numStartingValues How many starting values should be tried?
@@ -327,7 +327,7 @@ exact_tryStartingValues <- function(gradientModel, cppmodel,
       m2LL_i <- gradientModel$fitfunction$result[[1]]
     }
     # get regularized Likelihood
-    regM2LL_i <- m2LL_i + regCtsem::exact_getRegValue(lambda = newLambda,
+    regM2LL_i <- m2LL_i + regCtsem::exact_getLambda(lambda = newLambda,
                                                       theta = parameterValues_i,
                                                       regIndicators = regIndicators,
                                                       adaptiveLassoWeights = adaptiveLassoWeights)
@@ -470,19 +470,19 @@ exact_initialHessian <- function(mxObject,
 
 #' setStartingValuesFromApprox
 #'
-#' set the parameter values of mxObject to the values in approx_regModel for the specified regValue
+#' set the parameter values of mxObject to the values in approx_regModel for the specified lambda
 #'
 #' NOTE: Function located in file exact_optimization.R
 #'
 #' @param approx_regModel fitted regCtsem with optimization = "approx" and without automatic cross-validation
 #' @param mxObject Fitted object of class MxObject
-#' @param regValue single regValue
+#' @param lambda single lambda
 #' @author Jannik Orzek
 #' @import ctsemOMX
 #' @export
-setStartingValuesFromApprox <- function(approx_regModel, mxObject, regValue){
+setStartingValuesFromApprox <- function(approx_regModel, mxObject, lambda){
   parameterLabels <- names(OpenMx::omxGetParameters(mxObject))
-  parameterValues <- approx_regModel$fitAndParameters[parameterLabels, as.character(regValue)]
+  parameterValues <- approx_regModel$fitAndParameters[parameterLabels, as.character(lambda)]
 
   newModel <- OpenMx::omxSetParameters(model = mxObject, labels = parameterLabels, values = parameterValues)
   return(newModel)

@@ -4,17 +4,17 @@
 \alias{setStartingValuesFromApprox}
 \title{setStartingValuesFromApprox}
 \usage{
-setStartingValuesFromApprox(approx_regModel, mxObject, regValue)
+setStartingValuesFromApprox(approx_regModel, mxObject, lambda)
 }
 \arguments{
 \item{approx_regModel}{fitted regCtsem with optimization = "approx" and without automatic cross-validation}
 
 \item{mxObject}{Fitted object of class MxObject}
 
-\item{regValue}{single regValue}
+\item{lambda}{single lambda}
 }
 \description{
-set the parameter values of mxObject to the values in approx_regModel for the specified regValue
+set the parameter values of mxObject to the values in approx_regModel for the specified lambda
 }
 \details{
 NOTE: Function located in file exact_optimization.R

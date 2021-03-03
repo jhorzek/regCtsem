@@ -16,7 +16,7 @@
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators Vector with names of regularized parameters
-#' @param regValues Vector with lambda values that should be tried
+#' @param lambdas Vector with lambda values that should be tried
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param stepSize Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize \* Stepdirection)
 #' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
@@ -33,14 +33,14 @@
 #' @param verbose set to 1 to print additional information and plot the convergence
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param sampleSize sample size for scaling lambda with N
-#' @param exactApproximateFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first regValue, 2 = for all regValues
+#' @param exactApproximateFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas
 #' @param exactApproximateFirst3NumStartingValues Used if exactApproximateFirst = 3. regCtsem will try exactApproximateFirst3NumStartingValues+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
 #' @param exactApproximateFirst3Optimize Used if exactApproximateFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
 #' @param exactApproximateFirstMaxIter_out Used if exactApproximateFirst = 3 and exactApproximateFirst3Optimize > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If exactApproximateFirst =  4, or exactApproximateFirst = 5 this will control the number of outer iteration in optim or solnp .
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #' @export
-exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT", regIndicators, regValues, adaptiveLassoWeights,
+exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT", regIndicators, lambdas, adaptiveLassoWeights,
                        # additional settings
                        sparseParameters = NULL,
                        tryCpptsem, forceCpptsem = FALSE, eta = 1.5, sig = .2, initialStepsize = 1, stepsizeMin = 0, stepsizeMax = 999999999,
@@ -60,11 +60,11 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
 
   thetas <- matrix(NA,
                    nrow = length(initialParameters),
-                   ncol = length(regValues),
+                   ncol = length(lambdas),
                    dimnames = list(thetaNames,
-                                   regValues))
-  m2LL <- rep(NA, length(regValues))
-  regM2LL <- rep(NA, length(regValues))
+                                   lambdas))
+  m2LL <- rep(NA, length(lambdas))
+  regM2LL <- rep(NA, length(lambdas))
 
   # define gradient model
   ## try cpptsem
@@ -114,20 +114,20 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
 
   # Progress bar
   if(progressBar){
-    pbar <- txtProgressBar(min = 0, max = length(regValues), initial = 0, style = 3)}
+    pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)}
 
   # iterate over lambda values
-  numRegValues <- length(regValues)
+  numLambdas <- length(lambdas)
   iteration <- 1
   retryOnce <- TRUE # will retry optimizing once with new starting values
-  while(iteration <= numRegValues){
-    lambda <- regValues[iteration]
+  while(iteration <= numLambdas){
+    lambda <- lambdas[iteration]
 
     # update progress bar
     if(progressBar){
       setTxtProgressBar(pbar, iteration)
     }else if(!is.null(parallelProgressBar)){
-      writeProgressError <- try(write.csv2(which(regValues == lambda),parallelProgressBar$parallelTempFiles[[parallelProgressBar$iteration]], row.names = FALSE))
+      writeProgressError <- try(write.csv2(which(lambdas == lambda),parallelProgressBar$parallelTempFiles[[parallelProgressBar$iteration]], row.names = FALSE))
       if(!any(class(writeProgressError) == "try-error")){
         parallelProgressBar$printProgress(parallelProgressBar$parallelTempFiles, parallelProgressBar$maxItSum, parallelProgressBar$cores)
       }
@@ -136,7 +136,7 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*samplesize
 
     # should the results first be approximated?
-    if((exactApproximateFirst == 1 & lambda == regValues[1]) |
+    if((exactApproximateFirst == 1 & lambda == lambdas[1]) |
        exactApproximateFirst == 2 |
        (exactApproximateFirst == 3 & is.null(gradientModelcpp)) |
        (exactApproximateFirst == 4 & is.null(gradientModelcpp)) |
@@ -146,7 +146,7 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
                                                       sampleSize = 1, # scaling with N is handled above
                                                       regOn = regOn,
                                                       regIndicators = regIndicatorsFromNameToMatrix(mxObject = mxObject, regOn = regOn, regIndicators = regIndicators),
-                                                      regValue = lambda,
+                                                      lambda = lambda,
                                                       adaptiveLassoWeights = adaptiveLassoWeights,
                                                       penalty = "lasso"
       )
@@ -242,7 +242,7 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
         startingValues <- newValues
         # save fit
         cM2LL <- ifelse(resGIST$convergence, resGIST$model$m2LL, Inf)
-        cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getRegValue(lambda = lambda,
+        cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getLambda(lambda = lambda,
                                                                                      theta = newValues,
                                                                                      regIndicators = regIndicators,
                                                                                      adaptiveLassoWeights = adaptiveLassoWeights), Inf)
@@ -251,7 +251,7 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
         startingValues <- newValues
         # save fit
         cM2LL <- ifelse(resGIST$convergence, resGIST$model$fitfunction$result[[1]], Inf)
-        cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getRegValue(lambda = lambda,
+        cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getLambda(lambda = lambda,
                                                                                      theta = newValues,
                                                                                      regIndicators = regIndicators,
                                                                                      adaptiveLassoWeights = adaptiveLassoWeights), Inf)
@@ -266,7 +266,7 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
     iteration <- iteration + 1
   }
 
-  return(list("regValues" = regValues, "thetas" = thetas, "m2LL" = m2LL,"regM2LL" = regM2LL))
+  return(list("lambdas" = lambdas, "thetas" = thetas, "m2LL" = m2LL,"regM2LL" = regM2LL))
 
 }
 
@@ -353,7 +353,7 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
     m2LL_k <- gradientModel$fitfunction$result[[1]]
   }
 
-  regM2LL_k <- m2LL_k + regCtsem::exact_getRegValue(lambda = lambda,
+  regM2LL_k <- m2LL_k + regCtsem::exact_getLambda(lambda = lambda,
                                                     theta = parameters_k,
                                                     regIndicators = regularizedParameters,
                                                     adaptiveLassoWeights = adaptiveLassoWeights)
@@ -499,7 +499,7 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
         }
 
       }
-      regM2LL_kp1 <- m2LL_kp1 + regCtsem::exact_getRegValue(lambda = lambda,
+      regM2LL_kp1 <- m2LL_kp1 + regCtsem::exact_getLambda(lambda = lambda,
                                                             theta = parameters_kp1,
                                                             regIndicators = regularizedParameters,
                                                             adaptiveLassoWeights = adaptiveLassoWeights)

@@ -11,7 +11,7 @@ approx_getCVFit(
   objective,
   fitAndParameters,
   parameterLabels,
-  regValues
+  lambdas
 )
 }
 \arguments{
@@ -27,7 +27,7 @@ approx_getCVFit(
 
 \item{parameterLabels}{vector with parameter labels}
 
-\item{regValues}{vector with regValues}
+\item{lambdas}{vector with lambdas}
 }
 \description{
 computes cv fit for approximate optimization

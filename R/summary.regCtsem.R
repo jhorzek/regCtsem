@@ -21,13 +21,18 @@ summary.regCtsem <- function(regCtsemObject, criterion = NULL){
         warning("NAs in fit. Only using non-NA results")
       }
       minCriterionValue <- max(which(regCtsemObject$fit[criterion,] == min(regCtsemObject$fit[criterion,], na.rm = TRUE)))
-      regValues <- as.numeric(colnames(regCtsemObject$fit))
-      bestRegValue <- regValues[minCriterionValue]
-      sum2 <- paste("\nThe best ", criterion, " value was observed for lambda = ", bestRegValue,".\n", sep = "")
+      if(!is.null(regCtsemObject$setup$lambdas)){
+        lambdas <- regCtsemObject$setup$lambdas
+      }else if(!is.null(regCtsemObject$setup$regValues)){
+        # for compatability with older versions
+        lambdas <- regCtsemObject$setup$regValues
+      }
+      bestLambda <- lambdas[minCriterionValue]
+      sum2 <- paste("\nThe best ", criterion, " value was observed for lambda = ", bestLambda,".\n", sep = "")
       sum3 <- paste("\n --- Parameter estimates: --- \n")
-      sum4 <- round(regCtsemObject$parameters[,as.character(bestRegValue)],3)
+      sum4 <- round(regCtsemObject$parameters[,as.character(bestLambda)],3)
       sum5 <- paste("\n --- Fit: --- \n")
-      sum6 <- round(regCtsemObject$fit[,as.character(bestRegValue)],3)
+      sum6 <- round(regCtsemObject$fit[,as.character(bestLambda)],3)
       sum7 <- paste0("|",paste0(rep("-", consoleWidth - 2), collapse = ""),"|\n")
       cat(paste0(sum1,sum2,sum3))
       print(sum4)
@@ -58,10 +63,15 @@ summary.regCtsem <- function(regCtsemObject, criterion = NULL){
     }
 
     minCriterionValue <- max(which(regCtsemObject$fit["mean CV fit",] == min(regCtsemObject$fit["mean CV fit",], na.rm = TRUE)))
-    regValues <- as.numeric(colnames(regCtsemObject$fit))
-    bestRegValue <- regValues[minCriterionValue]
-    sum2 <- paste("\nThe best ", "mean CV fit", " value was observed for lambda = ", bestRegValue,".\n", sep = "")
-    sum3 <- paste("To obtain the final parameter estimates, rerun the model with the full data set and regValue = ", bestRegValue,".\n")
+    if(!is.null(regCtsemObject$setup$lambdas)){
+      lambdas <- regCtsemObject$setup$lambdas
+    }else if(!is.null(regCtsemObject$setup$regValues)){
+      # for compatability with older versions
+      lambdas <- regCtsemObject$setup$regValues
+    }
+    bestLambda <- lambdas[minCriterionValue]
+    sum2 <- paste("\nThe best ", "mean CV fit", " value was observed for lambda = ", bestLambda,".\n", sep = "")
+    sum3 <- paste("To obtain the final parameter estimates, rerun the model with the full data set and lambda = ", bestLambda,".\n")
     sum5 <- paste("\n --- Fit: --- \n")
     sum6 <- round(regCtsemObject$fit, 3)
     sum7 <- paste0("|",paste0(rep("-", consoleWidth - 2), collapse = ""),"|\n")

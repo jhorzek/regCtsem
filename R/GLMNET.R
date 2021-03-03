@@ -19,12 +19,12 @@
 #'
 #' # with GLMNET
 #' ## with standardization
-#' reg <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), regValues = rev(seq(0,1,.1)), standardizeDrift = TRUE)
+#' reg <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = rev(seq(0,1,.1)), standardizeDrift = TRUE)
 #' reg$regM2LL
 #' reg$thetas
 #'
 #' ## without standardization
-#' reg2 <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), regValues = seq(0,1,.1), standardizeDrift = FALSE)
+#' reg2 <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = seq(0,1,.1), standardizeDrift = FALSE)
 #' reg2$regM2LL
 #' reg2$thetas
 #' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
@@ -33,7 +33,7 @@
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators Vector with names of regularized parameters
-#' @param regValues Vector with lambda values that should be tried
+#' @param lambdas Vector with lambda values that should be tried
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param stepSize Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize \* Stepdirection)
 #' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
@@ -53,14 +53,14 @@
 #' @param eps_WW Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param sampleSize sample size for scaling lambda with N
-#' @param exactApproximateFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first regValue, 2 = for all regValues
+#' @param exactApproximateFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas
 #' @param exactApproximateFirst3NumStartingValues Used if exactApproximateFirst = 3. regCtsem will try exactApproximateFirst3NumStartingValues+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
 #' @param exactApproximateFirst3Optimize Used if exactApproximateFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
 #' @param exactApproximateFirstMaxIter_out Used if exactApproximateFirst = 3 and exactApproximateFirst3Optimize > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If exactApproximateFirst =  4, or exactApproximateFirst = 5 this will control the number of outer iteration in optim or solnp .
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #' @export
-exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT", regIndicators, regValues, adaptiveLassoWeights,
+exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT", regIndicators, lambdas, adaptiveLassoWeights,
                              # additional settings
                              sparseParameters = NULL,
                              tryCpptsem, forceCpptsem = FALSE, stepSize = 1, lineSearch = "none", c1 = .0001, c2 = .9,
@@ -124,11 +124,11 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
   # define return values
   thetas <- matrix(NA,
                    nrow = length(theta_kp1),
-                   ncol = length(regValues),
+                   ncol = length(lambdas),
                    dimnames = list(names(OpenMx::omxGetParameters(hessianModel)),
-                                   regValues))
-  m2LL <- rep(NA, length(regValues))
-  regM2LL <- rep(NA, length(regValues))
+                                   lambdas))
+  m2LL <- rep(NA, length(lambdas))
+  regM2LL <- rep(NA, length(lambdas))
 
   # define gradient model
   ## try cpptsem
@@ -177,19 +177,19 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
 
   # Progress bar
   if(progressBar){
-    pbar <- txtProgressBar(min = 0, max = length(regValues), initial = 0, style = 3)}
+    pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)}
 
   # iterate over lambda values
-  numRegValues <- length(regValues)
+  numLambdas <- length(lambdas)
   iteration <- 1
   retryOnce <- TRUE # will retry optimizin once with new starting values
-  while(iteration <= numRegValues){
-    lambda <- regValues[iteration]
+  while(iteration <= numLambdas){
+    lambda <- lambdas[iteration]
     # update progress bar
     if(progressBar){
       setTxtProgressBar(pbar, iteration)
     }else if(!is.null(parallelProgressBar)){
-      writeProgressError <- try(write.csv2(which(regValues == lambda),parallelProgressBar$parallelTempFiles[[parallelProgressBar$iteration]], row.names = FALSE))
+      writeProgressError <- try(write.csv2(which(lambdas == lambda),parallelProgressBar$parallelTempFiles[[parallelProgressBar$iteration]], row.names = FALSE))
       if(!any(class(writeProgressError) == "try-error")){
         parallelProgressBar$printProgress(parallelProgressBar$parallelTempFiles, parallelProgressBar$maxItSum, parallelProgressBar$cores)
       }
@@ -198,7 +198,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*samplesize
 
     # should the results first be approximated?
-    if((exactApproximateFirst == 1 & lambda == regValues[1]) |
+    if((exactApproximateFirst == 1 & lambda == lambdas[1]) |
        exactApproximateFirst == 2 |
        (exactApproximateFirst == 4 & is.null(gradientModelcpp)) |
        (exactApproximateFirst == 5 & is.null(gradientModelcpp))){
@@ -209,7 +209,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
                                                       sampleSize = 1, # scaling with N is handled above
                                                       regOn = regOn,
                                                       regIndicators = regIndicatorsFromNameToMatrix(mxObject = mxObject, regOn = regOn, regIndicators = regIndicators),
-                                                      regValue = lambda,
+                                                      lambda = lambda,
                                                       adaptiveLassoWeights = adaptiveLassoWeights,
                                                       penalty = "lasso"
       )
@@ -344,7 +344,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
           g_kp1 <- resGLMNET$g_kp1
           # save fit
           cM2LL <- ifelse(resGLMNET$convergence, gradientModelcpp$m2LL, Inf)
-          cRegM2LL <- ifelse(resGLMNET$convergence, gradientModelcpp$m2LL +  regCtsem::exact_getRegValue(lambda = lambda,
+          cRegM2LL <- ifelse(resGLMNET$convergence, gradientModelcpp$m2LL +  regCtsem::exact_getLambda(lambda = lambda,
                                                                                                          theta = resGLMNET$theta_kp1,
                                                                                                          regIndicators = regIndicators,
                                                                                                          adaptiveLassoWeights = adaptiveLassoWeights), Inf)
@@ -380,7 +380,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
           g_kp1 <- resGLMNET$g_kp1
           # save fit
           cM2LL <- ifelse(resGLMNET$convergence, resGLMNET$gradientModel$fitfunction$result[[1]], Inf)
-          cRegM2LL <- ifelse(resGLMNET$convergence, resGLMNET$gradientModel$fitfunction$result[[1]] +  regCtsem::exact_getRegValue(lambda = lambda,
+          cRegM2LL <- ifelse(resGLMNET$convergence, resGLMNET$gradientModel$fitfunction$result[[1]] +  regCtsem::exact_getLambda(lambda = lambda,
                                                                                                                                    theta = resGLMNET$theta_kp1,
                                                                                                                                    regIndicators = regIndicators,
                                                                                                                                    adaptiveLassoWeights = adaptiveLassoWeights), Inf)
@@ -395,7 +395,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
 
   }
 
-  return(list("regValues" = regValues, "thetas" = thetas, "m2LL" = m2LL,"regM2LL" = regM2LL))
+  return(list("lambdas" = lambdas, "thetas" = thetas, "m2LL" = m2LL,"regM2LL" = regM2LL))
 
 }
 
@@ -465,7 +465,7 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
   }else{
     newM2LL <- gradientModel$fitfunction$result[[1]]
   }
-  newRegM2LL <- newM2LL + exact_getRegValue(lambda = lambda,
+  newRegM2LL <- newM2LL + exact_getLambda(lambda = lambda,
                                             theta = newParameters,
                                             regIndicators = regIndicators,
                                             adaptiveLassoWeights = adaptiveLassoWeights)
@@ -551,7 +551,7 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
 
         # get fit
         newM2LL <- gradientModelcpp$m2LL
-        newRegM2LL <- newM2LL + exact_getRegValue(lambda = lambda,
+        newRegM2LL <- newM2LL + exact_getLambda(lambda = lambda,
                                                   theta = newParameters,
                                                   regIndicators = regIndicators,
                                                   adaptiveLassoWeights = adaptiveLassoWeights)
@@ -565,7 +565,7 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
 
         # get fit
         newM2LL <- gradientModelcpp$m2LL
-        newRegM2LL <- newM2LL + exact_getRegValue(lambda = lambda,
+        newRegM2LL <- newM2LL + exact_getLambda(lambda = lambda,
                                                   theta = newParameters,
                                                   regIndicators = regIndicators,
                                                   adaptiveLassoWeights = adaptiveLassoWeights)
@@ -581,7 +581,7 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
       gradientModel <- suppressWarnings(try(OpenMx::mxRun(gradientModel, silent = TRUE), silent = TRUE))
       # get fit
       newM2LL <- gradientModel$fitfunction$result[[1]]
-      newRegM2LL <- newM2LL + exact_getRegValue(lambda = lambda,
+      newRegM2LL <- newM2LL + exact_getLambda(lambda = lambda,
                                                 theta = newParameters,
                                                 regIndicators = regIndicators,
                                                 adaptiveLassoWeights = adaptiveLassoWeights)

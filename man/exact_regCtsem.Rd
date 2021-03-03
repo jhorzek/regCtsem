@@ -10,8 +10,8 @@ exact_regCtsem(
   dataset = NULL,
   regOn = "DRIFT",
   regIndicators,
-  regValues,
-  regValuesAutoLength = 50,
+  lambdas,
+  lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
   elastic_alpha = NULL,
@@ -72,9 +72,9 @@ exact_regCtsem(
 
 \item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
 
-\item{regValues}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
+\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
 
-\item{regValuesAutoLength}{if regValues == "auto", regValuesAutoLength will determine the number of regValues tested.}
+\item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
 
 \item{penalty}{Currently supported are lasso, adaptiveLasso, and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
 
@@ -146,7 +146,7 @@ exact_regCtsem(
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 
-\item{exactApproximateFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first regValue, 2 = for all regValues, 3 = ensures that the fit will not be worse than in the sparse model if regValues = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values.}
+\item{exactApproximateFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas, 3 = ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values.}
 
 \item{exactApproximateFirst3NumStartingValues}{Used if exactApproximateFirst = 3. regCtsem will try exactApproximateFirst3NumStartingValues+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 

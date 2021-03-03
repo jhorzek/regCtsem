@@ -4,12 +4,12 @@
 \alias{createCVFitTable}
 \title{createCVFitTable}
 \usage{
-createCVFitTable(k, regValues)
+createCVFitTable(k, lambdas)
 }
 \arguments{
 \item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
 
-\item{regValues}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
+\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
 }
 \description{
 sets up a table for CV fit values
