@@ -4,7 +4,13 @@
 \alias{checkNonConvexity}
 \title{checkNonConvexity}
 \usage{
-checkNonConvexity(model, lowerBound = NULL, upperBound = NULL, nSample = 50)
+checkNonConvexity(
+  model,
+  lowerBound = NULL,
+  upperBound = NULL,
+  nSample = 50,
+  sampleWith = "runif"
+)
 }
 \arguments{
 \item{model}{model of type ctsemFit, Rcpp_cpptsemRAMmodel, Rcpp_cpptsemKalmanModel, or MxRAMModel}
@@ -14,9 +20,11 @@ checkNonConvexity(model, lowerBound = NULL, upperBound = NULL, nSample = 50)
 \item{upperBound}{vector of the same length as the number of parameters in the model specifying the upper bound for each parameter}
 
 \item{nSample}{number of sample points between the lower and upper bound}
+
+\item{sampleWith}{possible are runif (random points between lower and upper bound) and seq (equidistant points between lower and upper bound)}
 }
 \value{
-returns the generated samplePoints, a logical vector indicating if the midpoint convexity was given for the comparison of these sample points (isConvex) and the difference f(x1) + f(x2) - 2*f((x1 + x2)/2) for each combination of sample points. This difference should be positive for all comparisons!
+returns the generated samplePoints, fitAtSamplePoints which gives the -2log-Lokelihood at the sample points, a logical vector indicating if the midpoint non-convexity was given for the comparison of these sample points (isNonConvex) and the difference f(x1) + f(x2) - 2*f((x1 + x2)/2) for each combination of sample points. This difference should be positive for all comparisons!
 
 
 }

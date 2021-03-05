@@ -12,9 +12,10 @@
 #' @param lowerBound vector of the same length as the number of parameters in the model specifying the lower bound for each parameter
 #' @param upperBound vector of the same length as the number of parameters in the model specifying the upper bound for each parameter
 #' @param nSample number of sample points between the lower and upper bound
-#' @return returns the generated samplePoints, a logical vector indicating if the midpoint convexity was given for the comparison of these sample points (isConvex) and the difference f(x1) + f(x2) - 2*f((x1 + x2)/2) for each combination of sample points. This difference should be positive for all comparisons!
+#' @param sampleWith possible are runif (random points between lower and upper bound) and seq (equidistant points between lower and upper bound)
+#' @return returns the generated samplePoints, fitAtSamplePoints which gives the -2log-Lokelihood at the sample points, a logical vector indicating if the midpoint non-convexity was given for the comparison of these sample points (isNonConvex) and the difference f(x1) + f(x2) - 2*f((x1 + x2)/2) for each combination of sample points. This difference should be positive for all comparisons!
 #' @return
-checkNonConvexity <- function(model, lowerBound = NULL, upperBound = NULL, nSample = 50){
+checkNonConvexity <- function(model, lowerBound = NULL, upperBound = NULL, nSample = 50, sampleWith = "runif"){
   if(any(class(model) == "ctsemFit")){
     model <- model$mxobj
     pars <- omxGetParameters(model)
@@ -27,9 +28,9 @@ checkNonConvexity <- function(model, lowerBound = NULL, upperBound = NULL, nSamp
     pars <- model$getParameterValues()
     getFit <- function(Rcpp_cpptsemRAMmodel, pars){
       Rcpp_cpptsemRAMmodel$setParameterValues(pars, names(pars))
-      o <- try(Rcpp_cpptsemRAMmodel$computeRAM())
+      invisible(capture.output(o <- try(Rcpp_cpptsemRAMmodel$computeRAM(), silent = T), type = "message"))
       if(any(class(o) == "try-error")){return(NA)}
-      o <- try(Rcpp_cpptsemRAMmodel$fitRAM())
+      invisible(capture.output(o <- try(Rcpp_cpptsemRAMmodel$fitRAM(), silent = T), type = "message"))
       if(any(class(o) == "try-error")){return(NA)}
       return(Rcpp_cpptsemRAMmodel$m2LL)
     }
@@ -37,7 +38,7 @@ checkNonConvexity <- function(model, lowerBound = NULL, upperBound = NULL, nSamp
     pars <- model$getParameterValues()
     getFit <- function(Rcpp_cpptsemKalmanModel, pars){
       Rcpp_cpptsemKalmanModel$setParameterValues(pars, names(pars))
-      o <- try(Rcpp_cpptsemKalmanModel$computeAndFitKalman())
+      invisible(capture.output(o <- try(Rcpp_cpptsemKalmanModel$computeAndFitKalman(), silent = T), type = "message"))
       if(any(class(o) == "try-error")){return(NA)}
       return(Rcpp_cpptsemKalmanModel$m2LL)
     }
@@ -55,10 +56,17 @@ checkNonConvexity <- function(model, lowerBound = NULL, upperBound = NULL, nSamp
 
   # sample points between lower and upper bounds
   bounds <- cbind(lowerBound, upperBound)
-  samplePoints <- apply(bounds, 1,
-                        function(x) runif(n = nSample,
-                                          min = x[1],
-                                          max = x[2]))
+  if(sampleWith == "runif"){
+    samplePoints <- apply(bounds, 1,
+                          function(x) runif(n = nSample,
+                                            min = x[1],
+                                            max = x[2]))
+  }else if(sampleWith == "seq"){
+    samplePoints <- apply(bounds, 1,
+                          function(x) seq(from = x[1],
+                                          to = x[2],
+                                          length.out = nSample))
+  }
 
 
   message("Computing fit at sample points: \n")
@@ -79,7 +87,7 @@ checkNonConvexity <- function(model, lowerBound = NULL, upperBound = NULL, nSamp
   cat("\n")
 
   message("Evaluating midpoint convexity for all pairs of sample points: \n")
-  isConvex <- c()
+  isNonConvex <- c()
   elemNames <- c()
   midpointDifference <- c()
   observedNA <- FALSE
@@ -93,11 +101,12 @@ checkNonConvexity <- function(model, lowerBound = NULL, upperBound = NULL, nSamp
     if(is.na(f_1)){next}
 
     for(samplePoint2 in (samplePoint1+1):nSample){
+      f_2 <- fitAtSamplePoints[samplePoint2]
+
+      if(is.na(f_2)){next}
       it <- it+1
       setTxtProgressBar(pb, it)
 
-      f_2 <- fitAtSamplePoints[samplePoint2]
-      if(is.na(f_2)){next}
       f_3 <- try(getFit(model, pars = (samplePoints[samplePoint1,] + samplePoints[samplePoint2,])/2), silent = T)
       if(any(class(f_3) == "try-error")){
         observedNA <- TRUE
@@ -106,20 +115,103 @@ checkNonConvexity <- function(model, lowerBound = NULL, upperBound = NULL, nSamp
         observedNA <- TRUE
         next}
       # check midpoint convexity
-      isConvex <- c(isConvex, f_1 + f_2 >= 2*f_3)
+      isNonConvex <- c(isNonConvex, !(f_1 + f_2 >= 2*f_3))
       elemNames <- c(elemNames, paste0(samplePoint1, " vs ", samplePoint2))
       midpointDifference <- c(midpointDifference, f_1 + f_2 - 2*f_3)
     }
   }
   cat("\n")
   if(observedNA){warning("Some sample points resulted in errors / NA. Only the results for non-NA evaluations are reported.")}
-  names(isConvex) <- elemNames
+  names(isNonConvex) <- elemNames
   names(midpointDifference) <- elemNames
   rownames(samplePoints) <- 1:nSample
 
-  message(paste0("Of in total ", length(isConvex), " non-NA checks ", sum(!isConvex), " resulted in non-convex evaluations at the mid point."))
-  return(list("samplePoints" = samplePoints, "isConvex" = isConvex, "midpointDifference" = midpointDifference))
+  message(paste0("Of in total ", length(isNonConvex), " non-NA checks ", sum(isNonConvex), " resulted in non-convex evaluations at the mid point."))
+  return(list("samplePoints" = samplePoints,"fitAtSamplePoints" = fitAtSamplePoints ,"isNonConvex" = isNonConvex, "midpointDifference" = midpointDifference))
 }
+
+#' checkNonConvexity3D
+#'
+#' provides a 3D plot of the likelihood surface for two selected variables
+#'
+#' The function generates nSample points within the provided parameter bounds. For each combination of sample point
+#' @param model model of type ctsemFit, Rcpp_cpptsemRAMmodel, Rcpp_cpptsemKalmanModel, or MxRAMModel
+#' @param parnames vector of length 2 with the names of the parameters for which the likelihood surface should be plotted
+#' @param lowerBound1 double: lower bound for the first parameter
+#' @param lowerBound2 double: lower bound for the second parameter
+#' @param upperBound1 double: upper bound for the first parameter
+#' @param upperBound2 double: upper bound for the second parameter
+#' @param nSample number of sample points between the lower and upper bound
+#' @return returns the a list with arguments to pass to plot3D::persp (e.g. do.call(args, plot3D::persp))
+#' @return
+checkNonConvexity3D <- function(model, parnames, lowerBound1, upperBound1, lowerBound2, upperBound2, nSamples){
+  if(any(class(model) == "ctsemFit")){
+    model <- model$mxobj
+    pars <- omxGetParameters(model)
+    getFit <- function(mxObject, pars){
+      mxObject <- omxSetParameters(mxObject, labels = names(pars), values = pars)
+      mxObject <- mxRun(mxObject, useOptimizer = FALSE, silent = TRUE)
+      return(mxObject$fitfunction$result[[1]])
+    }
+  }else if(any(class(model) == "Rcpp_cpptsemRAMmodel")){
+    pars <- model$getParameterValues()
+    getFit <- function(Rcpp_cpptsemRAMmodel, pars){
+      Rcpp_cpptsemRAMmodel$setParameterValues(pars, names(pars))
+      invisible(capture.output(o <- try(Rcpp_cpptsemRAMmodel$computeRAM(), silent = T), type = "message"))
+      if(any(class(o) == "try-error")){return(NA)}
+      invisible(capture.output(o <- try(Rcpp_cpptsemRAMmodel$fitRAM(), silent = T), type = "message"))
+      if(any(class(o) == "try-error")){return(NA)}
+      return(Rcpp_cpptsemRAMmodel$m2LL)
+    }
+  }else if(any(class(model) == "Rcpp_cpptsemKalmanModel")){
+    pars <- model$getParameterValues()
+    getFit <- function(Rcpp_cpptsemKalmanModel, pars){
+      Rcpp_cpptsemKalmanModel$setParameterValues(pars, names(pars))
+      invisible(capture.output(o <- try(Rcpp_cpptsemKalmanModel$computeAndFitKalman(), silent = T), type = "message"))
+      if(any(class(o) == "try-error")){return(NA)}
+      return(Rcpp_cpptsemKalmanModel$m2LL)
+    }
+  }else if(any(class(model) == "MxRAMModel")){
+    pars <- omxGetParameters(model)
+    getFit <- function(mxObject, pars){
+      mxObject <- omxSetParameters(mxObject, labels = names(pars), values = pars)
+      mxObject <- mxRun(mxObject, useOptimizer = FALSE, silent = TRUE)
+      return(mxObject$fitfunction$result[[1]])
+    }
+  }else{stop("model of unknown class")}
+
+  if(!any(parnames %in% names(pars))){stop("parnames not found in model")}
+
+  pars1 <- seq(lowerBound1, upperBound1, length.out = nSamples)
+  pars2 <- seq(lowerBound2, upperBound2, length.out = nSamples)
+
+  fitMatrix <- matrix(NA, nrow = length(pars1), ncol = length(pars2))
+  rownames(fitMatrix) <- paste0(parnames[1], " = ", pars1)
+  colnames(fitMatrix) <- paste0(parnames[2], " = ", pars2)
+
+  pb <- txtProgressBar(min = 0, max = nSamples^2, initial = 0, char = "=",
+                       width = NA, title, label, style = 3, file = "")
+  it <- 1
+  for(par1 in 1:length(pars1)){
+    for(par2 in 1:length(pars2)){
+      it <- it+1
+      setTxtProgressBar(pb, it)
+      pars[parnames[1]] <- pars1[par1]
+      pars[parnames[2]] <- pars2[par2]
+      fitMatrix[par1, par2] <- getFit(model, pars)
+    }
+  }
+  fitMatrix[!is.finite(fitMatrix)] <- NA
+  plotArgs <- list(x = pars1,
+                   y = pars2,
+                   z = fitMatrix, xlab = parnames[1], ylab = parnames[2],
+                   theta = 30,
+                   col = "springgreen", shade = 0.5)
+  try(do.call(persp, plot3D::plotArgs))
+
+  return(plotArgs)
+}
+
 
 #' shinyfy
 #'
