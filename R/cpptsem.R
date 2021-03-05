@@ -268,7 +268,6 @@ cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE){
 #'
 #' Separates data and time intervals. Computes the number of unique time intervals and the unqiue missingness patterns
 #' @param wideData dataset in wide format compatible with ctsem
-#' @import mgcv
 #' @export
 constructDataset <- function(wideData){
   # separate data from time intervals
@@ -287,8 +286,13 @@ constructDataset <- function(wideData){
   # extract unique missingness patterns
 
   isMissing <- is.na(dataset)
-  uniqueMissingPatterns <- mgcv::uniquecombs(isMissing, ordered=FALSE)
-  individualMissingPatternID <- attr(uniqueMissingPatterns,"index")
+  uniqueMissingPatterns <- unique(isMissing)
+  individualMissingPatternID <- c()
+  for(mrow in 1:nrow(isMissing)){
+    rowMissing <- apply(uniqueMissingPatterns, 1, function(x) all(isMissing[mrow,] == x))
+    individualMissingPatternID <- c(individualMissingPatternID,
+                                     (1:nrow(uniqueMissingPatterns))[rowMissing])
+  }
 
   dataList <- list("dataset" = as.matrix(dataset),
                    "dT" = dT,
