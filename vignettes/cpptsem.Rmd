@@ -1,0 +1,587 @@
+---
+title: "cpptsem"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{cpptsem}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+  
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# c<sub>++</sub>tsem
+
+regCtsem will try to internally translate any ctsem object passed to the main function (regCtsem::regCtsem) to a C++ object. The functions for this C++ object are implemented following the naming scheme c<sub>++</sub>tsem. The sole purpose of this translation is speeding up the computation of the -2 log-Likelihood and an approximation of the gradients for continuous time structural equation models. 
+
+**Known limitations**
+
+* Time dependent predictors are not yet supported in c<sub>++</sub>tsem.
+
+## Demonstration of main functions
+
+To demonstrate the application of c<sub>++</sub>tsem, the example from ctsem will be used.
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(ctsemOMX)
+library(regCtsem)
+
+# set up model with ctsem
+data("AnomAuth")
+AnomAuthmodel <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
+                         Tpoints = 5, n.latent = 2, n.manifest = 2, 
+                         MANIFESTVAR=diag(0, 2), TRAITVAR = "auto")
+# the optimizer will not used here because the gradients would otherwise 
+# be very close to zero and the similarity between the OpenMx based 
+# gradients and the cpptsem based gradients would be harder to see:
+AnomAuthfit <- ctFit(AnomAuth, AnomAuthmodel, useOptimizer = F) 
+```
+
+The general workflow with c<sub>++</sub>tsem when using the reticular action model (RAM) is:
+
+1. translate ctsem to c<sub>++</sub>tsem
+2. computeRAM() computes the A, S, and M matrices as well as the expected means and covariances
+3. fitRAM() computes the -2log-likelihood
+4. approxRAMGradients((1.1 * 10\^(-16))\^(1/3)) computes the gradients
+
+The general workflow with c<sub>++</sub>tsem when using the Kalman filter is:
+
+1. translate ctsem to c<sub>++</sub>tsem
+2. computeAndFitKalman() computes the predicted and updated latent scores as well as the -2log-Likelihood. The latent scores can be extracted with $latentScores
+3. approxKalmanGradients((1.1 * 10\^(-16))\^(1/3)) computes the gradients
+
+This will be explained in more detail below using the RAM model. Otherwise, more details can be found with:
+
+```{r, eval = FALSE}
+?cpptsemFromCtsem
+```
+
+
+### Translate ctsem object to c<sub>++</sub>tsem
+
+The function cpptsemFromCtsem translates a fitted ctsem object (e.g., AnomAuthfit in the example above) in a new object of class Rcpp_cpptsemmodel:
+
+```{r}
+cpptsemmodel <- regCtsem::cpptsemFromCtsem(AnomAuthfit)
+```
+
+### Compute the RAM matrices
+
+Once the cpptsem object was created, the RAM matrices with discrete time parameters can be obtained using the computeRAM() function. This will compute the A matrix (directed effects), the S matrix (residual covariances), and the M vector (means) as well as the expected means and expected covariances.
+
+```{r}
+cpptsemmodel$computeRAM()
+```
+
+The elements can be accessed with the $ operator:
+
+```{r eval=FALSE}
+cpptsemmodel$A
+cpptsemmodel$S
+cpptsemmodel$M
+cpptsemmodel$F
+cpptsemmodel$expectedMeans
+cpptsemmodel$expectedCovariance
+```
+
+### Compute the -2 log likelihood
+
+The function fitRAM() computes the -2 log likelihood based on the data and the expected means and covariances.
+
+```{r}
+cpptsemmodel$fitRAM()
+cpptsemmodel$m2LL
+```
+We can now compare this to the results from ctsem:
+
+```{r}
+AnomAuthfit$mxobj$fitfunction$result[[1]]
+```
+
+### Finite difference derivative approximation of the gradients
+
+The derivative of the likelihood with respect to the parameters is computed based on finite differencing. The procedure is as follows:
+
+For each parameter (1.1) take a minimal step forward (parameter + epsilon), (1.2) compute the -2 log likelihood, (2.1) take a minimal step backward (parameter - epsilon), (2.2) compute the -2 log likelihood, (3) compute the difference in the likelihoods and divide by 2*epsilon.
+
+This so-called central differencing is performed by the approxRAMGradients function:
+```{r}
+cpptsemGradients <- cpptsemmodel$approxRAMGradients((1.1 * 10^(-16))^(1/3)) 
+# epsilon = (1.1 * 10^(-16))^(1/3) sets the precision of the numerical approximation. 
+# Smaller numbers result in higher precision, but might also result in 
+# errors due to the numerical precision of the computer. The value used here is recommended
+# in Nocedal, J., & Wright, S. J. (2006). Numerical optimization (2nd ed). Springer. See p. 197.
+```
+
+Again, the results can be compared to the values from OpenMx:
+```{r, results="hide", message=FALSE}
+gradientModel <- OpenMx::mxRun(OpenMx::mxModel(AnomAuthfit$mxobj,
+                                               OpenMx::mxComputeSequence(steps=list(
+                                                 OpenMx::mxComputeNumericDeriv(
+                                                   checkGradient = FALSE,
+                                                   hessian = FALSE))
+                                               )))
+ctsemGradients <- gradientModel$compute$steps[[1]]$output[["gradient"]][,"central"]
+names(ctsemGradients) <- rownames(gradientModel$compute$steps[[1]]$output[["gradient"]])
+```
+
+```{r}
+cpptsemGradients[names(ctsemGradients)]
+ctsemGradients
+```
+
+
+### Changing parameter values
+
+Finally, setParameterValues() can be used to change the parameter values of a cpptsem model.
+
+```{r results='hide', message=FALSE, warning=FALSE}
+# to have a second set of parameter values the ctsem model is fitted again.
+# However, this time the optimizer is used:
+AnomAuthfit2 <- ctFit(AnomAuth, AnomAuthmodel, useOptimizer = T) 
+# extract parameters:
+newParameters <- OpenMx::omxGetParameters(AnomAuthfit2$mxobj)
+
+cpptsemmodel$setParameterValues(newParameters, names(newParameters))
+cpptsemmodel$getParameterValues()[names(newParameters)]
+```
+
+## Application Example 1: Time differences in gradient computation
+
+The main motivation for c<sub>++</sub>tsem was to have a faster way to compute the gradients of a ctsem. This is only necessary in very specific situations, however we found that when working with the mxObject from ctsem computing just the gradients can be quite slow. The reason for this might be that the model has to be set up every time we computed the gradients. It is possible that there is a faster way to compute the gradients with ctsem / OpenMx, but we couldn't find it. In the following a short demonstration of the time differences between my approach with ctsem / OpenMx and the computation with c<sub>++</sub>tsem is demonstrated:
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(ctsemOMX)
+library(regCtsem)
+
+set.seed(64356)
+
+## define the population model:
+
+# set the drift matrix
+ct_drift <- matrix(c(-.3,.2,0,-.5), ncol = 2)
+
+generatingModel<-ctsem::ctModel(Tpoints=10,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+                                MANIFESTVAR=diag(0,2),
+                                LAMBDA=diag(1,2),
+                                DRIFT=ct_drift,
+                                DIFFUSION=matrix(c(.5,0,0,.5),2),
+                                CINT=matrix(c(0,0),nrow=2),
+                                T0MEANS=matrix(0,ncol=1,nrow=2),
+                                T0VAR=diag(1,2), type = "omx")
+
+# simulate a training data set
+dat <- ctsem::ctGenerate(generatingModel,n.subjects = 100, wide = TRUE)
+
+## Build the analysis model. 
+myModel <- ctsem::ctModel(Tpoints=10,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+                          LAMBDA=diag(1,2),
+                          MANIFESTVAR=diag(0,2),
+                          CINT=matrix(c(0,0),nrow=2),
+                          DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
+                          T0MEANS=matrix(0,ncol=1,nrow=2),
+                          T0VAR="auto", type = "omx")
+
+# fit the model using ctsemOMX:
+fit_myModel <- ctsemOMX::ctFit(dat, myModel)
+
+repetitions <- 100
+
+# set up the gradient model for ctsem / OpenMx
+
+gradientModel <- OpenMx::mxModel(fit_myModel$mxobj,
+                                 OpenMx::mxComputeSequence(steps=list(
+                                   OpenMx::mxComputeNumericDeriv(
+                                     checkGradient = FALSE,
+                                     hessian = FALSE))
+                                 ))
+
+# set up the model for cpptsem
+cpptsemGradientDemonstation <- regCtsem::cpptsemFromCtsem(fit_myModel)
+cpptsemGradientDemonstation$computeRAM()
+cpptsemGradientDemonstation$fitRAM()
+
+OpenMxStart <- Sys.time()
+for(i in 1:repetitions){
+  gradientModel <- mxRun(gradientModel, silent = TRUE)
+}
+OpenMxEnd <- Sys.time()
+
+CpptsemStart <- Sys.time()
+for(i in 1:repetitions){
+  cpptsemGradients <- cpptsemGradientDemonstation$approxRAMGradients((1.1 * 10^(-16))^(1/3)) 
+}
+CpptsemEnd <- Sys.time()
+```
+For `r repetitions` repetitive computations of the gradients, ctsem / OpenMx took `r difftime(OpenMxEnd, OpenMxStart, units = "s")` seconds, while c<sub>++</sub>tsem took `r difftime(CpptsemEnd, CpptsemStart, units = "s")` seconds. Importantly this does **not** mean that c<sub>++</sub>tsem is always faster! It is only faster in this very specific application. The differences also tend to become smaller with more missings in the data set. However c<sub>++</sub>tsem still tends to outperform the ctsem / OpenMx approach by a factor of around 10.
+
+
+## Application Example 2: General purpose optimizer with RAM
+
+c<sub>++</sub>tsem can be used in general purpose optimizers such as solnp or optim. In the following the use with optim is demonstrated:
+
+```{r, results='hide', message=FALSE, warning=FALSE}
+library(ctsemOMX)
+library(regCtsem)
+
+# set up model with ctsem
+data("AnomAuth")
+AAmodel <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
+                   Tpoints = 5, n.latent = 2, n.manifest = 2, 
+                   MANIFESTVAR=diag(0, 2), TRAITVAR = "auto")
+# generate ctsem object, but don't optimize:
+AANotOptimized <- ctFit(AnomAuth, AAmodel, useOptimizer = F) 
+# for later comparison: optimized ctsem object:
+AACtsemFit <- ctFit(AnomAuth, AAmodel, useOptimizer = T) 
+
+# translate to cpptsem:
+AACpptsem <- regCtsem::cpptsemFromCtsem(AANotOptimized)
+
+startingValues <- omxGetParameters(AANotOptimized$mxobj)
+
+m2LLCpptsem <- function(parameters, cpptsemmodel){
+  cpptsemmodel$setParameterValues(parameters, names(parameters))
+  # catching all errors from cpptsemmodel 
+  # when parameter values are impossible
+  invisible(capture.output(RAM <- try(cpptsemmodel$computeRAM(), 
+                                      silent = TRUE), 
+                           type = "message"))
+  invisible(capture.output(FIT <- try(cpptsemmodel$fitRAM(),
+                                      silent = TRUE), 
+                           type = "message"))
+  
+  if(class(RAM) == "try-error" | class(FIT) == "try-error"){
+    return(NA)
+  }
+  return(cpptsemmodel$m2LL)
+}
+
+gradCpptsem <- function(parameters, cpptsemmodel){
+  invisible(capture.output(grad <- try(cpptsemmodel$approxRAMGradients((1.1 * 10^(-16))^(1/3)), 
+                                       silent = TRUE), 
+                           type = "message"))
+  if(class(grad) == "try-error"){
+    return(NA)
+  }
+  return(grad[names(parameters)])
+}
+
+# compute 
+AACpptsemFit <- optim(par = startingValues, 
+                      fn = m2LLCpptsem, 
+                      gr = gradCpptsem,  
+                      AACpptsem, 
+                      method = "BFGS")
+```
+Comparison of parameter estimates:
+
+**ctsem**
+```{r}
+omxGetParameters(AACtsemFit$mxobj)
+```
+
+**c<sub>++</sub>tsem**
+```{r}
+AACpptsemFit$par
+```
+Comparison of fit:
+
+**ctsem**
+```{r}
+# ctsem:
+AACtsemFit$mxobj$fitfunction$result[[1]]
+```
+
+**c<sub>++</sub>tsem**
+```{r}
+AACpptsemFit$value
+```
+
+**A quick note on optimization**: SEMs are quite difficult to optimize because the objective function is not convex. In my (very limited) experience with c<sub>++</sub>tsem and optim, I have observed that sometimes the optim approach outperforms ctsem and sometimes it's the other way around. This seems to come down to whichever of the two optimizers ends up in a bad spot due to local minima. 
+
+
+## Application Example 3: General purpose optimizer with Kalman filter
+
+Similar to example 2, c<sub>++</sub>tsem can be used in general purpose optimizers such as solnp or optim when using the Kalman filter. In the following the use with solnp is demonstrated:
+
+```{r, results='hide', message=FALSE, warning=FALSE}
+library(regCtsem)
+library(ctsemOMX)
+set.seed(175446)
+## define the population model:
+
+# set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
+ct_drift <- matrix(c(-.3,.2,0,-.5), ncol = 2)
+
+generatingModel<-ctsem::ctModel(Tpoints=20,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+                                MANIFESTVAR=diag(0,2),
+                                LAMBDA=diag(1,2),
+                                DRIFT=ct_drift,
+                                DIFFUSION=matrix(c(.5,0,0,.5),2),
+                                CINT=matrix(0,nrow = 2, ncol = 1),
+                                T0MEANS=matrix(0,ncol=1,nrow=2),
+                                T0VAR=diag(1,2), type = "omx")
+
+# simulate a training data and testing data set
+traindata <- ctsem::ctGenerate(generatingModel,n.subjects = 50, wide = TRUE)
+
+## Build the analysis model. Note that drift eta1_eta2 is freely estimated
+# although it is 0 in the population.
+kalmanModel <- ctsem::ctModel(Tpoints=20,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+                              LAMBDA=diag(1,2),
+                              MANIFESTVAR=diag(0,2),
+                              CINT=matrix(0,nrow = 2, ncol = 1),
+                              DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
+                              T0MEANS=matrix(0,ncol=1,nrow=2),
+                              T0VAR="auto", type = "omx")
+kalmanModelNotOptimized <- ctFit(kalmanModel, dat = traindata, 
+                                 objective = "Kalman", useOptimizer = F)
+# fitted model for later comparison:
+kalmanModelOptimized <- ctFit(kalmanModel, dat = traindata, 
+                              objective = "Kalman", useOptimizer = T)
+## with cpptsem
+kalmanCpptsemmodel <- regCtsem::cpptsemFromCtsem(ctsemModel = kalmanModelNotOptimized,
+                                                 wideData = traindata)
+
+startingValues <- omxGetParameters(kalmanModelNotOptimized$mxobj)
+
+m2LLCpptsem <- function(parameters, cpptsemmodel){
+  cpptsemmodel$setParameterValues(parameters, names(parameters))
+  # catching all errors from cpptsemmodel 
+  # when parameter values are impossible
+  invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(), 
+                                         silent = TRUE), 
+                           type = "message"))
+  
+  if(class(KALMAN) == "try-error" | is.na(cpptsemmodel$m2LL)){
+    return(99999999)
+  }
+  return(cpptsemmodel$m2LL)
+}
+
+# compute 
+kalmanCpptsemFit <- Rsolnp::solnp(pars = startingValues, 
+                                  fun = m2LLCpptsem, 
+                                  eqfun = NULL, eqB = NULL, ineqfun = NULL, ineqLB = NULL, 
+                                  ineqUB = NULL, LB = NULL, UB = NULL, control = list(trace = 0),
+                                  kalmanCpptsemmodel)
+```
+Comparison of parameter estimates:
+
+**ctsem**
+```{r}
+omxGetParameters(kalmanModelOptimized$mxobj)
+```
+
+**c<sub>++</sub>tsem**
+```{r}
+kalmanCpptsemFit$pars
+```
+Comparison of fit:
+
+**ctsem**
+```{r}
+# ctsem:
+kalmanModelOptimized$mxobj$fitfunction$result[[1]]
+```
+
+**c<sub>++</sub>tsem**
+```{r}
+kalmanCpptsemFit$values
+```
+
+When comparing the speed of optimizing the model using OpenMx and c<sub>++</sub>tsem using solnp, the Kalman filter implementation in c<sub>++</sub>tsem appears to be slightly faster:
+
+```{r}
+system.time(replicate(10, Rsolnp::solnp(pars = startingValues, 
+                                        fun = m2LLCpptsem, 
+                                        eqfun = NULL, eqB = NULL, 
+                                        ineqfun = NULL, ineqLB = NULL, 
+                                        ineqUB = NULL, LB = NULL, 
+                                        UB = NULL, control = list(trace = 0),
+                                        kalmanCpptsemmodel)))
+system.time(replicate(10, mxRun(kalmanModelNotOptimized$mxobj, 
+                                silent = TRUE)))
+```
+
+
+## Advanced: How it works
+
+### Translation from ctsem
+
+The cpptsemFromCtsem function automatically translates a fitted ctsem model to  c<sub>++</sub>tsem. In the following, the steps for doing so are discussed in more detail.
+
+#### Step 1: Extract data
+
+##### RAM:
+
+First, the constructDataset function will separate observations from discrete time intervals. It will also identify unique missingness patterns. In the next step, prepareRAMData will group individuals with identical missingness patterns in subsamples. These subsamples will later be used by fitRAM() to speed up the likelihood computation.
+
+```{r, eval=F}
+dataInformation <- regCtsem::constructDataset(wideData = AnomAuthfit$mxobj$data$observed)
+dataForRAM <- regCtsem::prepareRAMData(dataset = dataInformation$dataset,
+                                       individualMissingPatternID = dataInformation$individualMissingPatternID,
+                                       uniqueMissingPatterns = dataInformation$uniqueMissingPatterns)
+```
+
+##### Kalman:
+
+For the Kalman filter, the functions are constructDataset and prepareKalmanData. In contrast to prepareRAMData, prepareKalmanData will not identify unique missingness patterns, as this will not speed up the computation.
+
+```{r, eval=F}
+dataInformation <- regCtsem::constructDataset(wideData = wideData)
+dataForKalman <- regCtsem::prepareKalmanData(dataset = dataInformation$dataset,
+                                             nlatent = nlatent, nmanifest = nmanifest,
+                                             dtIndicators = dataInformation$dtIndicators,
+                                             Tpoints = Tpoints)
+```
+
+##### Limitations
+
+In ctsem datasets it is possible to have different time intervals within a single column:
+
+```{r}
+data("Oscillating")
+head(Oscillating[,grepl("dT", colnames(Oscillating))])
+```
+
+At the moment, c<sub>++</sub>tsem only supports this data format when using the Kalman filter. In RAM models time intervals in the data set have to be the same for all individuals. However, individually varying time intervals of observations are allwed by means of missingness. For instance, in the AnomAuth data set individual 6 has missings between observations to account for individually differing time intervals:
+
+```{r}
+head(AnomAuth)
+```
+
+### Step 2: Extract continuous time matrices
+
+The function extractCtsemMatrices searches for the typical matrices of a ctsem. These are (see ctsem for more details):
+
+For the latent part:
+
+* T0MEANS
+* T0VARbase
+* DRIFT
+* DIFFUSIONbase
+* TRAITVARbase
+* T0TRAITEFFECT
+* CINT
+
+For the manifest part:
+
+* MANIFESTMEANS
+* LAMBDA
+* MANIFESTVARbase
+
+Note that time dependent predictors are currently not supported. For each of these matrices, c<sub>++</sub>tsem saves the values and the parameter names. For example:
+
+```{r, echo=T}
+ctMatrices <- regCtsem::extractCtsemMatrices(AnomAuthfit$mxobj, 
+                                             AnomAuthfit$ctmodelobj$n.latent,
+                                             AnomAuthfit$ctmodelobj$n.manifest)
+```
+
+```{r}
+ctMatrices$DRIFT
+```
+
+### Step 3: Extract parameter table
+
+The most important part of c<sub>++</sub>tsem is the option to change the parameter values. To this end, c<sub>++</sub>tsem uses the parameter table which can be extracted from the mxobj of a ctsem:
+
+```{r}
+OpenMx::omxLocateParameters(AnomAuthfit$mxobj)
+```
+Note that the **matrix** column in this table tells us in which of the ctMatrices a parameter value belongs including a specification of the row and column in this matrix. Similar to OpenMx, c<sub>++</sub>tsem uses this information to change the parameter values. As demonstrated above, this can be done with the setParameterValues() function.
+
+#### Limiation
+
+Lower and upper bounds for parameters are currently not supported!
+
+### Step 4-1: Prepare RAM matrices
+
+Now that the parameter values and their location in ctMatrices are known, the next step is to relate the continuous time parameters to the data using structural equation models. The following matrices are required:
+
+* the **A** matrix holds the directed effects between manifest and latent variables
+* the **S** matrix holds (residual) covariances between manifest and latent variables
+* the **M** vector holds the intercepts
+* the **F** matrix separates manifest and latent variables
+
+These matrices are generated with the prepareAMatrix, prepareSMatrix, and prepareMMatrix functions. The F matrix is directly exported from ctsem. In the following, the prepareAMatrix function will be used as an example; prepareSMatrix, prepareMMatrix work similarly.
+
+The prepareAMatrix function returns a list with 4-5 objects (depending on the model). In our AnomAuthfit example, these are:
+
+```{r}
+mxObject  <- AnomAuthfit$mxobj
+dataInformation <- constructDataset(wideData = mxObject$data$observed)
+Amatrix <- regCtsem::prepareAMatrix(mxObject = mxObject, 
+                                    ctMatrices = ctMatrices, 
+                                    nlatent = AnomAuthfit$ctmodelobj$n.latent, 
+                                    nmanifest = AnomAuthfit$ctmodelobj$n.manifest,
+                                    Tpoints = AnomAuthfit$ctmodelobj$Tpoints, 
+                                    dT = dataInformation$dT)
+names(Amatrix)
+```
+
+**cppAParameterIndicators** is a data frame similar to the parameter table explained before. However, there is one important distinction: The cppAParameterIndicators matrix shows how to put the *discrete time parameters* in the A matrix:
+
+```{r}
+Amatrix$cppAParameterIndicators
+```
+
+The labels column shows the names of the discrete time matrices. For instance, discreteDRIFT_1 refers to the discrete time drift values for the unique time interval 1. That is, when extracting the data from ctsem, c<sub>++</sub>tsem automtically locates repeated time intervals and computes the corresponding discrete time parameters just once. The rest of the columns indicate the location of discreteDRIFT_1 in the A matrix. **Important**: Subsetting matrices in C++ is slightly different from R. In R mymatrix[1,1] accesses the element in row 1, column 1 of mymatrix. However, in C++ counting starts with 0. Therefore mymatrix[0,0] accesses the element in row 1, column 1 of mymatrix. This is why prepareAMatrix returns an AParameterIndicators and a cppAParameterIndicators object.
+
+**discreteDRIFTUnique** is a list which is best explained by first looking at it:
+
+```{r}
+Amatrix$discreteDRIFTUnique
+```
+The labels correspond to the unique discrete drift labels in the cppAParameterIndicators data frame shown before. dT refers to the discrete time interval of the discrete drift. Finally, there is a matrix for each of the unique discrete drifts where the results will be stored. 
+
+**discreteTRAITUnique** works similarly to discreteDRIFTUnique. The cppAParameterIndicators data frame also indicates the position of LAMBDA in the A matrix. As LAMBDA can be directly exported from the ctMatrices object and requires no prior computaion, there is no discreteLAMBDAUnique object.
+
+Finally, **AInitializer** is a matrix of the same size as the A matrix. Here c<sub>++</sub>tsem simply uses the A matrix from the mxObject as a starting point.
+
+### Step 4-2: Prepare Kalman matrices
+
+In the first step, the discrete time elements (e.g., discreteDRIFTUnique) are generated using the prepareDiscreteElements function. In contrast to the RAM specification, there is no need for an A, S, M or F matrix. The discrete time elements work as described in the previus section. The function prepareDiscreteElementNames simlply generates for each discrete time element a string vector with as many elements as there are time intervals indicating which of the unique discrete time parameters to use (e.g. dT = c(1, 2, 1, 1) results in discreteDRIFT_1, discreteDRIFT_2, discreteDRIFT_1, discreteDRIFT_1).
+
+Finally, prepareKalmanMatrices initializes a matrix for the latent scores and for the predicted manifest values. 
+
+### Step 5-1: computeRAM
+
+When calling computeRAM(), c<sub>++</sub>tsem will:
+
+1. extract the continuous time matrices from ctMatrices
+2. compute all discrete time parameters (e.g., discreteDRIFTUnique)
+3. fill the A, S, and M matrix with the discrete time parameters as well as LAMBDA, T0MEANS, ... using the cppAParameterIndicators, cppMParameterIndicators, cppSParameterIndicators
+4. compute the expected means and covariancs
+
+### Step 5-2: fitRAM
+
+**NOTE**: Github does not support mathematical equations. To properly format the equations, compy them in an RMarkdown file or in LaTeX.
+
+When calling fitRAM(), c<sub>++</sub>tsem will compute the -2 log likelihood. To this end it will iterate through the subsamples with identical missingness patterns which were identified by prepareRAMData() (see above). 
+
+If there is only a single person in the subsample, the -2 log likelihood for this sample is given by:
+
+$$-2\ln\mathcal{L}(\mathbf{x}_i) = k_i\ln(2\pi)+\ln(|\boldsymbol\Sigma_i|)+(\mathbf{x}_i-\boldsymbol\mu_i)^T\boldsymbol\Sigma^{-1}_i(\mathbf{x}_i-\boldsymbol\mu_i)$$
+where $i$ refers to the person, $k_i$ is the number of non-missing observations for this person, $\boldsymbol \Simga_i$ is the filtered expected covariance matrix (all rows and columns for which no data is available from person i are removed) and $\mu_i$ is the filtered expected means vector (similar to filtered covariance).
+
+If there are multiple persons in the subset, the simplified likelihood function will be used:
+
+$$\begin{aligned}
+-2\ln\mathcal{L}(\mathbf D_g) = N_gk_g\ln(2\pi)+N_g\ln(|\boldsymbol\Sigma_g|)+ N_g\text{tr}(\mathbf S_g\boldsymbol\Sigma^{-1}_g)+ N_g(\bar{\mathbf x}-\boldsymbol\mu)^T\boldsymbol\Sigma^{-1}_g(\bar{\mathbf x}_g-\boldsymbol\mu_g)
+\end{aligned}$$
+
+where $g$ stands for the subset $g$, $N_g$ is the sample size of said subset, $k_g$ the number of non-missing observations for a person in subset $g$, $\boldsymbol \Simga_g$ denotes the filtered expected covariance matrix and $\mu_g$ the filtered expected means vector. Finally, $\mathbf S_g = \frac{1}{N_g}\sum_{i \in g}(\mathbf{x}_i-\bar{\mathbf x}_g)(\mathbf{x_i}-\bar{\mathbf x}_g)^T$ and $\bar{\mathbf x}_g$ is the empirical mean vector of subsample g. 
+
+Finally, the -2log-Likelihoods of all subsamples are summed up and returned.
+
+### Step 5-3: computeAndFitKalman
+
+For each person, the latent scores and latent state residual covariances are first predicted and the updated. Furthermore the manifest values and manifest residual covariances are predicted from the latent scores. These predictions are then used in the single subject -2 log likelihood function described in the previous equation. For more information on the Kalman filter procedure see doc/KalmanFilter.html.
+
+

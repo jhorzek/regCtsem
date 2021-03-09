@@ -1,0 +1,39 @@
+---
+title: "MatrixExponential"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{MatrixExponential}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Matrix exponential in c<sub>++</sub>tsem
+
+c<sub>++</sub>tsem relies heavily on the RcppArmadillo library. This can sometimes lead to results which deviate from ctsem. Especially the matrix exponential can be prone to numerical precision problems.
+
+Example:
+
+```{r}
+library(Rcpp)
+library(OpenMx)
+set.seed(53455)
+cppFunction('arma::mat expMat(arma::mat matrix){
+             return(arma::expmat( matrix));}
+            ',depends="RcppArmadillo")
+randMat <- matrix(rnorm(n = 64, 
+                        mean = 0, 
+                        sd = 10), 
+                  nrow = 8, ncol = 8)
+
+expMat(randMat) - OpenMx::expm(randMat)
+```
+
+Note that there are huge differences in the matrix exponential using RcppArmadillo and OpenMx.
+
