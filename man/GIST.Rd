@@ -21,7 +21,7 @@ GIST(
   GISTNonMonotoneNBack = 5,
   maxIter_out = 100,
   maxIter_in = 100,
-  break_outer = 1e-08,
+  break_outer,
   differenceApprox,
   verbose = 0,
   silent = FALSE

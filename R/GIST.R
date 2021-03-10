@@ -58,6 +58,15 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
   startingValues <- initialParameters
   gradientModel <- NULL
 
+  break_crit <- names(break_outer)
+  if(is.null(break_crit) || !(break_crit %in% c("parameterChange", "gradient"))){stop("Unknown breaking criterion. The value passed to break_crit has to be named (either 'parameterChange' or 'gradient') See ?controlGIST for details on break_outer")}
+  if(is.character(break_outer)){
+    if(break_crit == "parameterChange"){stop("break_outer has to be numeric if parameterChange is used as criterion")}
+    break_outer <- eval(parse(text = break_outer))
+    names(break_outer) <- break_crit
+    if(verbose > 0){message(paste0("Breaking criterion: max(abs(gradient)) < ", break_outer))}
+  }
+
   thetas <- matrix(NA,
                    nrow = length(initialParameters),
                    ncol = length(lambdas),
@@ -236,7 +245,8 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
                  eta = 1.5, sig = .2, initialStepsize = 1, stepsizeMin = 0, stepsizeMax = 999999999,
                  GISTLinesearchCriterion = "monotone", GISTNonMonotoneNBack = 5,
                  maxIter_out = 100, maxIter_in = 100,
-                 break_outer = .00000001, differenceApprox, verbose = 0, silent = FALSE){
+                 break_outer, differenceApprox, verbose = 0, silent = FALSE){
+  break_crit <- names(break_outer)
   # iteration counter
   k_out <- 1
   convergence <- TRUE
@@ -298,8 +308,9 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
   if(verbose == 2){
     convergencePlotValues <- matrix(NA, nrow = length(parameters_k), ncol = maxIter_out, dimnames = list(parameterNames, 1:maxIter_out))
   }
+
   resetStepSize <- TRUE
-  resetIteration <- -1
+  #resetIteration <- -1
   while(k_out < maxIter_out){
     k <- 0
     # set initial step size
@@ -527,22 +538,26 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
       matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
     }
 
-    # Gradient based break condition: Problem: gradients extremely dependent on the epsilon in the approximation
-    #parameterMatrix <- matrix(parameters_k[parameterNames], ncol = 1)
-    #rownames(parameterMatrix) <- parameterNames
-    #gradientMatrix <- matrix(gradients_k[parameterNames], ncol = 1)
-    #rownames(gradientMatrix) <- parameterNames
-    #subgradients <- exact_getSubgradients(theta = parameterMatrix, jacobian = gradientMatrix,
-    #                                      regIndicators = regularizedParameters, lambda = lambda,
-    #                                      lineSearch = NULL, adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
+    if(break_crit == "gradient"){
 
-    #breakOuter <- max(abs(subgradients)) < break_outer
+      # Gradient based break condition: Problem: gradients extremely dependent on the epsilon in the approximation
+      parameterMatrix <- matrix(parameters_k[parameterNames], ncol = 1)
+      rownames(parameterMatrix) <- parameterNames
+      gradientMatrix <- matrix(gradients_k[parameterNames], ncol = 1)
+      rownames(gradientMatrix) <- parameterNames
+      subgradients <- exact_getSubgradients(theta = parameterMatrix, jacobian = gradientMatrix,
+                                            regIndicators = regularizedParameters, lambda = lambda,
+                                            lineSearch = NULL, adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
 
-    breakOuter <- (sqrt(sum((parameters_k - parameters_km1)^2))/sqrt(sum((parameters_km1)^2))) < break_outer
+      breakOuter <- max(abs(subgradients)) < break_outer
+    }else if(break_crit == "parameterChange"){
 
-    #hessianApprox <- diag(x = as.vector(stepsize), nrow = length(parameters_k))
-    #d <- matrix(-1*gradients_k, ncol = 1)
-    #breakOuter <- max(hessianApprox%*%d^2) < break_outer
+      breakOuter <- (sqrt(sum((parameters_k - parameters_km1)^2))/sqrt(sum((parameters_km1)^2))) < break_outer
+
+    }else{
+      stop("Unknown breaking criterion. The value passed to break_crit has to be named (either 'parameterChange' or 'gradient') See ?controlGIST for details on break_outer")
+      }
+
     if(breakOuter){
       break
     }
@@ -559,23 +574,6 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
       warning("Maximal number of outer iterations used by GIST. Consider increasing the number of outer iterations.")}
   }
 
-  adaptiveLassoWeightsMatrix <- diag(adaptiveLassoWeights[parameterNames])
-  rownames(adaptiveLassoWeightsMatrix) <- parameterNames
-  colnames(adaptiveLassoWeightsMatrix) <- parameterNames
-  parameterMatrix <- matrix(parameters_k[parameterNames], ncol = 1)
-  rownames(parameterMatrix) <- parameterNames
-  gradientMatrix <- matrix(gradients_k[parameterNames], ncol = 1)
-  rownames(gradientMatrix) <- parameterNames
-  subgradients <- exact_getSubgradients(theta = parameterMatrix, jacobian = gradientMatrix,
-                                        regIndicators = regularizedParameters, lambda = lambda,
-                                        lineSearch = NULL, adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
-
-  if(any(abs(subgradients)>1)){
-    # Problem: gradients extremely dependent on the epsilon in the approximation
-    if(!silent){
-      #warning("Model did not reach convergence")
-    }
-  }
   if(!is.null(cppmodel)){
     return(list("type" = "cpptsem",
                 "model" = cppmodel,
