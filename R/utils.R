@@ -1,3 +1,57 @@
+#' checkIdentification
+#'
+#' Checks the local identification of a model around the provided parameters
+#'
+#' The function is based on the procedure described in Huang, P.-H. (2020). lslx: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood. Journal of Statistical Software, 93(7). https://doi.org/10.18637/jss.v093.i07
+#' @param model model of type ctsemFit, Rcpp_cpptsemRAMmodel, or MxRAMModel. WARNING: Currently only supported for RAM based models
+#' @param pars named vector with parameter values
+#' @return TRUE if identified, FALSE otherwise
+#' @export
+checkIdentification <- function(model, pars){
+  if(any(class(model) == "ctsemFit")){
+    model <- model$mxobj
+    if(OpenMx::imxHasDefinitionVariable(model)){stop("Model has definition variables")}
+    model <- OpenMx::omxSetParameters(model, labels = names(pars), values = pars)
+    getMoments <- function(model, pars){
+      model <- omxSetParameters(model, labels = names(pars), values = pars)
+      model <- mxRun(model, useOptimizer = FALSE, silent = TRUE)
+      moments <- c(OpenMx::mxGetExpected(model, "means"), OpenMx::mxGetExpected(model, "covariance"))
+      return(moments)
+    }
+  }else if(any(class(model) == "Rcpp_cpptsemRAMmodel")){
+    model$setParameterValues(pars, names(pars))
+    getMoments <- function(model, pars){
+      model$setParameterValues(pars, names(pars))
+      invisible(capture.output(o <- try(model$computeRAM(), silent = T), type = "message"))
+      if(any(class(o) == "try-error")){return(NA)}
+      invisible(capture.output(o <- try(model$fitRAM(), silent = T), type = "message"))
+      if(any(class(o) == "try-error")){return(NA)}
+      moments <- c(model$expectedMeans, model$expectedCovariance)
+      return(moments)
+    }
+  }else if(any(class(model) == "Rcpp_cpptsemKalmanModel")){
+    stop("Currently only implemented for RAM models")
+  }else if(any(class(model) == "MxModel")){
+    if(OpenMx::imxHasDefinitionVariable(model)){stop("Model has definition variables")}
+    model <- OpenMx::omxSetParameters(model, labels = names(pars), values = pars)
+    getMoments <- function(model, pars){
+      model <- omxSetParameters(model, labels = names(pars), values = pars)
+      model <- mxRun(model, useOptimizer = FALSE, silent = TRUE)
+      moments <- c(OpenMx::mxGetExpected(model, "means"), OpenMx::mxGetExpected(model, "covariance"))
+      return(moments)
+    }
+  }else{stop("model of unknown class")}
+
+  parsNonZero <- pars != 0
+
+  jac <- numDeriv::jacobian(func = getMoments, x = pars, model = model)
+
+  jacSubset <- jac[,parsNonZero]
+
+  return(min(svd(jacSubset)$d) > 0)
+}
+
+
 #' checkNonConvexity
 #'
 #' checks the non-convexity of a provided model within the provided parameter bounds numerically.
