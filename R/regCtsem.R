@@ -497,6 +497,7 @@ exact_regCtsem <- function(  # model
     # fit model
     resultsCV <- iterateOverCVFolds(exactArgsIn, objective = objective, optimization = "exact")
     fit <- resultsCV$fit
+    returnList$setup$lambdas <- resultsCV$folds$models$fold1$setup$lambdas
 
     fit["mean CV fit",] <- apply(fit,2,mean,na.rm =TRUE)
     if(any(is.na(fit))){

@@ -77,8 +77,9 @@ plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xla
     lty <- c(1,2,3,4, rep(1,5))
     # cross-validation:
     if((!"fitAndParameters" %in% names(regCtsemObject)) & ("fit" %in% names(regCtsemObject))){
+      criterion <- "mean CV fit"
       if(!is.null(regCtsemObject$setup$lambdas)){
-          lambdas <- regCtsemObject$folds$models$fold1$setup$lambdas
+          lambdas <- regCtsemObject$setup$lambdas
       }else if(!is.null(regCtsemObject$setup$regValues)){
         # for compatibility with older versions
         lambdas <- regCtsemObject$folds$models$fold1$setup$regValues
