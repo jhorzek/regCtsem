@@ -274,7 +274,7 @@ constructDataset <- function(wideData){
   dT <- subset(wideData, select = grepl("dT", colnames(wideData)))
 
   if(any(apply(dT, 2, function(x) length(unique(x)))>1)){
-    stop("Observed columns with more than one unqiue dT. This is not possible")
+    stop("Individuals in data set have different dTs. This is currently not supported by cpptsem when using MX fitting. Use Kalman instead.")
   }
   dT <- apply(dT, 2, unique)
 

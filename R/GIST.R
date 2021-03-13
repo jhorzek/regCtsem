@@ -518,26 +518,11 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
     m2LL_k <- m2LL_kp1
     regM2LL_k <- regM2LL_kp1
 
-    # break outer loop if stopping criterion is satisfied
     k_out <- k_out + 1
     regM2LL[k_out] <- regM2LL_k
-    if(verbose == 1){
-      plot(x=1:maxIter_out, y = regM2LL, xlab = "iteration", ylab = "f(theta)", type = "l", main = "Convergence Plot")
-      cat(paste0("\r",
-                 "## [", sprintf("%*d", 3, k_out),
-                 "] m2LL: ", sprintf('%.3f',m2LL_k),
-                 " | regM2LL:  ", sprintf('%.3f',regM2LL_k),
-                 " | zeroed: ", sprintf("%*d", 3, sum(parameters_k[regularizedParameters] == 0)),
-                 " ##"
-      )
-      )
-    }
 
-    if(verbose == 2){
-      convergencePlotValues[,k_out] <- parameters_k
-      matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
-    }
 
+    # break outer loop if stopping criterion is satisfied
     if(break_crit == "gradient"){
 
       # Gradient based break condition: Problem: gradients extremely dependent on the epsilon in the approximation
@@ -550,9 +535,45 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
                                             lineSearch = NULL, adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
 
       breakOuter <- max(abs(subgradients)) < break_outer
+
+      if(verbose == 1){
+        plot(x=1:maxIter_out, y = regM2LL, xlab = "iteration", ylab = "f(theta)", type = "l", main = "Convergence Plot")
+        cat(paste0("\r",
+                   "## [", sprintf("%*d", 3, k_out),
+                   "] m2LL: ", sprintf('%.3f',m2LL_k),
+                   " | regM2LL:  ", sprintf('%.3f',regM2LL_k),
+                   " | zeroed: ", sprintf("%*d", 3, sum(parameters_k[regularizedParameters] == 0)),
+                   " | max(abs(grad)): ", sprintf("%.3f", max(abs(subgradients))),
+                   " ##"
+        )
+        )
+      }
+
+      if(verbose == 2){
+        convergencePlotValues[,k_out] <- parameters_k
+        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+      }
+
     }else if(break_crit == "parameterChange"){
 
       breakOuter <- (sqrt(sum((parameters_k - parameters_km1)^2))/sqrt(sum((parameters_km1)^2))) < break_outer
+
+      if(verbose == 1){
+        plot(x=1:maxIter_out, y = regM2LL, xlab = "iteration", ylab = "f(theta)", type = "l", main = "Convergence Plot")
+        cat(paste0("\r",
+                   "## [", sprintf("%*d", 3, k_out),
+                   "] m2LL: ", sprintf('%.3f',m2LL_k),
+                   " | regM2LL:  ", sprintf('%.3f',regM2LL_k),
+                   " | zeroed: ", sprintf("%*d", 3, sum(parameters_k[regularizedParameters] == 0)),
+                   " ##"
+        )
+        )
+      }
+
+      if(verbose == 2){
+        convergencePlotValues[,k_out] <- parameters_k
+        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+      }
 
     }else{
       stop("Unknown breaking criterion. The value passed to break_crit has to be named (either 'parameterChange' or 'gradient') See ?controlGIST for details on break_outer")
