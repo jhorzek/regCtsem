@@ -153,14 +153,48 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
                                      regOn = regOn, regIndicators = regIndicators, adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters =sparseParameters,
                                      extraTries = extraTries)
     # use Gist
-    resGIST <- try(regCtsem::GIST(gradientModel = gradientModel, cppmodel = gradientModelcpp, startingValues = startingValues,
-                                  objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
-                                  regularizedParameters = regIndicators,
-                                  eta = eta, sig = sig, initialStepsize = initialStepsize, stepsizeMin = stepsizeMin, stepsizeMax = stepsizeMax,
-                                  GISTLinesearchCriterion = GISTLinesearchCriterion, GISTNonMonotoneNBack = GISTNonMonotoneNBack,
-                                  maxIter_out = maxIter_out, maxIter_in = maxIter_in,
-                                  break_outer = break_outer, differenceApprox = differenceApprox, verbose = verbose))
+    if(!is.null(gradientModelcpp) && verbose == -1){
+      # The cpptsem objects come with a C++ implementation of GIST which will be used if
+      # verbose is set to 0
 
+      defaultPrecision <- OpenMx::imxAutoOptionValue("Gradient step size")
+      defaultPrecision2 <- (1.1 * 10^(-16))^(1/3)
+      precisions <- rev(seq(defaultPrecision, defaultPrecision2, length.out = 5))
+
+      lambdas2 = rep(lambda, length(startingValues))
+      names(lambdas2) = names(startingValues)
+      lambdas2 <- lambdas2*adaptiveLassoWeights[names(lambdas2)]
+
+      invisible(capture.output(optPars <- try(gradientModelcpp$GIST(
+        startingValues, # starting values
+        regIndicators,
+        lambdas2,
+        eta, sig,
+        precisions, # step sizes for numerical approximation of gradients
+        initialStepsize,
+        stepsizeMin,
+        stepsizeMax,
+        "monotone", # line search criterion
+        GISTNonMonotoneNBack, # number of N backs for non-monotone line search
+        maxIter_out,# maximum outer iterations
+        maxIter_in, # maximum inner iterations
+        break_outer, # value for breaking outer iterations
+        names(break_outer),# criterion for breaking outer iterations
+        0 # verbose
+      ), silent = T), type = "message"))
+      resGIST <- list()
+      resGIST$type <- "cpptsem"
+      resGIST$model <- gradientModelcpp
+      resGIST$convergence <- ifelse(any(class(optPars) == "try-error"), FALSE, TRUE)
+    }else{
+      resGIST <- try(regCtsem::GIST(gradientModel = gradientModel, cppmodel = gradientModelcpp, startingValues = startingValues,
+                                    objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
+                                    regularizedParameters = regIndicators,
+                                    eta = eta, sig = sig, initialStepsize = initialStepsize, stepsizeMin = stepsizeMin, stepsizeMax = stepsizeMax,
+                                    GISTLinesearchCriterion = GISTLinesearchCriterion, GISTNonMonotoneNBack = GISTNonMonotoneNBack,
+                                    maxIter_out = maxIter_out, maxIter_in = maxIter_in,
+                                    break_outer = break_outer, differenceApprox = differenceApprox, verbose = verbose))
+    }
 
 
     if(any(class(resGIST) == "try-error") || !resGIST$convergence){
@@ -577,7 +611,7 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
 
     }else{
       stop("Unknown breaking criterion. The value passed to break_crit has to be named (either 'parameterChange' or 'gradient') See ?controlGIST for details on break_outer")
-      }
+    }
 
     if(breakOuter){
       break

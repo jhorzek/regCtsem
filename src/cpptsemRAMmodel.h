@@ -79,6 +79,28 @@ class cpptsemRAMmodel{
   void fitRAM();
   Rcpp::NumericVector approxRAMGradients(double epsilon);
 
+  double computePenalty(Rcpp::NumericVector pars,
+                        Rcpp::StringVector regIndicators,
+                        Rcpp::NumericVector lambda);
+
+  Rcpp::NumericVector computeSubgradients(Rcpp::NumericVector pars,
+                                          Rcpp::NumericVector gradients,
+                                          Rcpp::StringVector regIndicators,
+                                          Rcpp::NumericVector lambdas);
+
+  Rcpp::List GIST(
+      Rcpp::NumericVector pars,
+      Rcpp::StringVector regIndicators,
+      Rcpp::NumericVector lambda,
+      double eta, double sig,
+      Rcpp::NumericVector gradient_epsilons,
+      double initialStepsize, double stepsizeMin = 0, double stepsizeMax = 999999999,
+      std::string GISTLinesearchCriterion = "monotone",
+      int GISTNonMonotoneNBack = 5,
+      int maxIter_out = 100, int maxIter_in = 100,
+      double break_outer = .00000001,
+      std::string break_crit = "parameterChange", int verbose = 0);
+
   // getter
   Rcpp::NumericVector getParameterValues();
 

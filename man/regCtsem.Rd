@@ -92,7 +92,7 @@ regCtsem(
 
 \item{cores}{how many computer cores should be used?}
 
-\item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress}
+\item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (which is not considerably faster which is why the easier to understand R implementation is the default)}
 
 \item{silent}{silent execution}
 
@@ -161,7 +161,7 @@ regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
                                regOn = regOn,
                                regIndicators = regIndicators,
                                lambdas = "auto",
-                               lambdasAutoLength = 15)
+                               lambdasAutoLength = 20)
 
 summary(regModel, criterion = "BIC")
 plot(regModel, what = "drift")
@@ -179,7 +179,7 @@ regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
                                regOn = regOn,
                                regIndicators = regIndicators,
                                lambdas = "auto",
-                               lambdasAutoLength = 15,
+                               lambdasAutoLength = 20,
                                optimizer = "GLMNET")
 
 summary(regModel, criterion = "BIC")
@@ -192,7 +192,7 @@ regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
                                      regOn = regOn,
                                      regIndicators = regIndicators,
                                      lambdas = "auto",
-                                     lambdasAutoLength = 15,
+                                     lambdasAutoLength = 20,
                                      optimization = "approx",
                                      control = list(
                                        epsilon = .001, # epsilon is used to transform the non-differentiable
@@ -251,7 +251,7 @@ regModel <- regCtsem::regCtsem(# important: We now have to pass the ctModel obje
   regOn = regOn,
   regIndicators = regIndicators,
   lambdas = "auto",
-  lambdasAutoLength = 15,
+  lambdasAutoLength = 20,
   cvSample = testdata,
   objective = "Kalman",
   cores = 2

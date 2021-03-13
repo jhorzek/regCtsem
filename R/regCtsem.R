@@ -30,7 +30,7 @@
 #' @param control List with control arguments for the optimizer. See ?controlGIST, ?controlGLMNET and ?controlApprox for the respective parameters
 #' @param extraTries number of extra tries in mxTryHard
 #' @param cores how many computer cores should be used?
-#' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
+#' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (which is not considerably faster which is why the easier to understand R implementation is the default)
 #' @param silent silent execution
 #' @param progressBar Boolean: Should a progress bar be displayed
 #' @param parallelProgressBar list: used internally to display progress when executing in parallel. Do not pass values to parallelProgressBar
@@ -87,7 +87,7 @@
 #'                                regOn = regOn,
 #'                                regIndicators = regIndicators,
 #'                                lambdas = "auto",
-#'                                lambdasAutoLength = 15)
+#'                                lambdasAutoLength = 20)
 #'
 #' summary(regModel, criterion = "BIC")
 #' plot(regModel, what = "drift")
@@ -105,7 +105,7 @@
 #'                                regOn = regOn,
 #'                                regIndicators = regIndicators,
 #'                                lambdas = "auto",
-#'                                lambdasAutoLength = 15,
+#'                                lambdasAutoLength = 20,
 #'                                optimizer = "GLMNET")
 #'
 #' summary(regModel, criterion = "BIC")
@@ -118,7 +118,7 @@
 #'                                      regOn = regOn,
 #'                                      regIndicators = regIndicators,
 #'                                      lambdas = "auto",
-#'                                      lambdasAutoLength = 15,
+#'                                      lambdasAutoLength = 20,
 #'                                      optimization = "approx",
 #'                                      control = list(
 #'                                        epsilon = .001, # epsilon is used to transform the non-differentiable
@@ -177,7 +177,7 @@
 #'   regOn = regOn,
 #'   regIndicators = regIndicators,
 #'   lambdas = "auto",
-#'   lambdasAutoLength = 15,
+#'   lambdasAutoLength = 20,
 #'   cvSample = testdata,
 #'   objective = "Kalman",
 #'   cores = 2
