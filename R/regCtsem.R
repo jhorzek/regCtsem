@@ -537,7 +537,7 @@ exact_regCtsem <- function(  # model
                                   differenceApprox = differenceApprox,
                                   adaptiveLassoWeights = adaptiveLassoWeights)
     sparseParameters <- maxLambda$sparseParameters
-    maxLambda <- maxLambda$maxLambda
+    maxLambda <- maxLambda$maxLambda + maxLambda$maxLambda/10 # adding some wiggle room as there will always be some deviations
     lambdas <- seq(0,maxLambda, length.out = lambdasAutoLength)
     # if scaleLambdaWithN = TRUE, the lambda values will be multiplied with N later on
     # we need to ensure that this will not change the values:
@@ -1003,7 +1003,7 @@ approx_regCtsem <- function(  # model
                                   regIndicators = regIndicatorsString,
                                   differenceApprox = "central",
                                   adaptiveLassoWeights = adaptiveLassoWeights)
-    lambdas <- seq(0,maxLambda$maxLambda, length.out = lambdasAutoLength)
+    lambdas <- seq(0,maxLambda$maxLambda + maxLambda$maxLambda/10, length.out = lambdasAutoLength)
     # if scaleLambdaWithN = TRUE, the lambda values will be multiplied with N later on
     # we need to ensure that this will not change the values:
     if(scaleLambdaWithN){
@@ -1330,7 +1330,7 @@ iterateOverCVFolds <- function(argsIn, objective = "ML", optimization){
     if(optimization == "exact"){
       sparseParameterMatrix <- maxLambda$sparseParameterMatrix
     }
-    maxLambda <- maxLambda$maxLambda
+    maxLambda <- maxLambda$maxLambda + maxLambda$maxLambda/10 #adding some wiggle room
     argsIn$lambdas <- seq(0, maxLambda, length.out = argsIn$lambdasAutoLength)
   }
 
