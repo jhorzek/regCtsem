@@ -17,7 +17,6 @@ controlApprox <- function(){
 #'
 #' The following arguments can be used to adjust the GIST optimization
 #'
-#' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
 #' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param stepSize initial step size of the outer iteration
@@ -44,7 +43,7 @@ controlGIST <- function(){
     "sig" = 10^(-5), # sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
     "maxIter_out" = 100, # Maximal number of outer iterations
     "maxIter_in" = 1000, # Maximal number of inner iterations
-    "break_outer" = c("gradient" = "max(max(abs(startingValues))*.001, .001)"), # Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)
+    "break_outer" = c("parameterChange" = 10^(-5)), # Stopping criterion for outer iterations. It has to be a named value. By default, the change in parameters is used as breaking criterion c("parameterChange" = .00001). Alternatively (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Example: c("gradient" = "max(max(abs(startingValues))*.001, .001)") . Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)).
     "eta" = 2, # if the current step size fails, eta will decrease the step size. Must be > 1
     "stepsizeMin" = 1/(10^30), # Minimal acceptable step size. Must be > 0. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)
     "stepsizeMax" = 10^30, # Maximal acceptable step size. Must be > stepsizeMin. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)

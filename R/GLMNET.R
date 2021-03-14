@@ -202,12 +202,12 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
     names(startingValues) <- rownames(theta_kp1)
 
     theta_kp1 <- tryApproxFirst(startingValues = startingValues, returnAs = "matrix",
-                               approxFirst = approxFirst, numStart = numStart, approxOpt = approxOpt, approxMaxIt = approxMaxIt,
-                               lambda = lambda, lambdas = lambdas,
-                               gradientModelcpp = gradientModelcpp,
-                               mxObject = mxObject,
-                               regOn = regOn, regIndicators = regIndicators, adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
-                               extraTries = extraTries)
+                                approxFirst = approxFirst, numStart = numStart, approxOpt = approxOpt, approxMaxIt = approxMaxIt,
+                                lambda = lambda, lambdas = lambdas,
+                                gradientModelcpp = gradientModelcpp,
+                                mxObject = mxObject,
+                                regOn = regOn, regIndicators = regIndicators, adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
+                                extraTries = extraTries)
 
     # outer loop: optimize parameters
     resGLMNET <- try(regCtsem::exact_outerGLMNET(mxObject = mxObject, objective =objective,
@@ -278,10 +278,10 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
           g_kp1 <- resGLMNET$g_kp1
           # save fit
           cM2LL <- ifelse(resGLMNET$convergence, gradientModelcpp$m2LL, Inf)
-          cRegM2LL <- ifelse(resGLMNET$convergence, gradientModelcpp$m2LL +  regCtsem::exact_getLambda(lambda = lambda,
-                                                                                                         theta = resGLMNET$theta_kp1,
-                                                                                                         regIndicators = regIndicators,
-                                                                                                         adaptiveLassoWeights = adaptiveLassoWeights), Inf)
+          cRegM2LL <- ifelse(resGLMNET$convergence, gradientModelcpp$m2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
+                                                                                                             theta = resGLMNET$theta_kp1,
+                                                                                                             regIndicators = regIndicators,
+                                                                                                             adaptiveLassoWeights = adaptiveLassoWeights), Inf)
           # save results
           thetas[,iteration] <- resGLMNET$theta_kp1[rownames(thetas),]
           m2LL[iteration] <- cM2LL
@@ -314,10 +314,10 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
           g_kp1 <- resGLMNET$g_kp1
           # save fit
           cM2LL <- ifelse(resGLMNET$convergence, resGLMNET$gradientModel$fitfunction$result[[1]], Inf)
-          cRegM2LL <- ifelse(resGLMNET$convergence, resGLMNET$gradientModel$fitfunction$result[[1]] +  regCtsem::exact_getLambda(lambda = lambda,
-                                                                                                                                   theta = resGLMNET$theta_kp1,
-                                                                                                                                   regIndicators = regIndicators,
-                                                                                                                                   adaptiveLassoWeights = adaptiveLassoWeights), Inf)
+          cRegM2LL <- ifelse(resGLMNET$convergence, resGLMNET$gradientModel$fitfunction$result[[1]] +  regCtsem::exact_getPenaltyValue(lambda = lambda,
+                                                                                                                                       theta = resGLMNET$theta_kp1,
+                                                                                                                                       regIndicators = regIndicators,
+                                                                                                                                       adaptiveLassoWeights = adaptiveLassoWeights), Inf)
           # save results
           thetas[,iteration] <- resGLMNET$theta_kp1[rownames(thetas),]
           m2LL[iteration] <- cM2LL
@@ -399,10 +399,10 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
   }else{
     newM2LL <- gradientModel$fitfunction$result[[1]]
   }
-  newRegM2LL <- newM2LL + exact_getLambda(lambda = lambda,
-                                            theta = newParameters,
-                                            regIndicators = regIndicators,
-                                            adaptiveLassoWeights = adaptiveLassoWeights)
+  newRegM2LL <- newM2LL + exact_getPenaltyValue(lambda = lambda,
+                                                theta = newParameters,
+                                                regIndicators = regIndicators,
+                                                adaptiveLassoWeights = adaptiveLassoWeights)
 
   while(iter_out < maxIter_out){
     iter_out <- iter_out +1
@@ -485,10 +485,10 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
 
         # get fit
         newM2LL <- gradientModelcpp$m2LL
-        newRegM2LL <- newM2LL + exact_getLambda(lambda = lambda,
-                                                  theta = newParameters,
-                                                  regIndicators = regIndicators,
-                                                  adaptiveLassoWeights = adaptiveLassoWeights)
+        newRegM2LL <- newM2LL + exact_getPenaltyValue(lambda = lambda,
+                                                      theta = newParameters,
+                                                      regIndicators = regIndicators,
+                                                      adaptiveLassoWeights = adaptiveLassoWeights)
 
         # extract gradients:
         newGradients <-  gradientModelcpp$approxRAMGradients(eps_numericDerivative)[parameterNames]
@@ -499,10 +499,10 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
 
         # get fit
         newM2LL <- gradientModelcpp$m2LL
-        newRegM2LL <- newM2LL + exact_getLambda(lambda = lambda,
-                                                  theta = newParameters,
-                                                  regIndicators = regIndicators,
-                                                  adaptiveLassoWeights = adaptiveLassoWeights)
+        newRegM2LL <- newM2LL + exact_getPenaltyValue(lambda = lambda,
+                                                      theta = newParameters,
+                                                      regIndicators = regIndicators,
+                                                      adaptiveLassoWeights = adaptiveLassoWeights)
 
         # extract gradients:
         newGradients <-  gradientModelcpp$approxKalmanGradients(eps_numericDerivative)[parameterNames]
@@ -515,10 +515,10 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
       gradientModel <- suppressWarnings(try(OpenMx::mxRun(gradientModel, silent = TRUE), silent = TRUE))
       # get fit
       newM2LL <- gradientModel$fitfunction$result[[1]]
-      newRegM2LL <- newM2LL + exact_getLambda(lambda = lambda,
-                                                theta = newParameters,
-                                                regIndicators = regIndicators,
-                                                adaptiveLassoWeights = adaptiveLassoWeights)
+      newRegM2LL <- newM2LL + exact_getPenaltyValue(lambda = lambda,
+                                                    theta = newParameters,
+                                                    regIndicators = regIndicators,
+                                                    adaptiveLassoWeights = adaptiveLassoWeights)
 
       # extract gradients:
       newGradients <- gradientModel$compute$steps[[1]]$output[["gradient"]]

@@ -125,7 +125,7 @@ exact_getFlatStdizer <- function(T0VAR, thetaNames){
 
 
 
-#' exact_getLambda
+#' exact_getPenaltyValue
 #'
 #' computes sum(lambda*abs(regularized Values))
 #'
@@ -135,7 +135,7 @@ exact_getFlatStdizer <- function(T0VAR, thetaNames){
 #' @param lambda Penaltiy value
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @export
-exact_getLambda <- function(lambda, theta, regIndicators, adaptiveLassoWeights = NULL){
+exact_getPenaltyValue <- function(lambda, theta, regIndicators, adaptiveLassoWeights = NULL){
 
   regVal <- 0
   if(!is.vector(theta)){
@@ -327,10 +327,10 @@ exact_tryStartingValues <- function(gradientModel, cppmodel,
       m2LL_i <- gradientModel$fitfunction$result[[1]]
     }
     # get regularized Likelihood
-    regM2LL_i <- m2LL_i + regCtsem::exact_getLambda(lambda = newLambda,
-                                                      theta = parameterValues_i,
-                                                      regIndicators = regIndicators,
-                                                      adaptiveLassoWeights = adaptiveLassoWeights)
+    regM2LL_i <- m2LL_i + regCtsem::exact_getPenaltyValue(lambda = newLambda,
+                                                          theta = parameterValues_i,
+                                                          regIndicators = regIndicators,
+                                                          adaptiveLassoWeights = adaptiveLassoWeights)
     regM2LLs[i] <- regM2LL_i
 
     if((optimize > 0) & !is.na(m2LL_i)){

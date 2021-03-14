@@ -220,19 +220,19 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
         startingValues <- newValues
         # save fit
         cM2LL <- ifelse(resGIST$convergence, resGIST$model$m2LL, Inf)
-        cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getLambda(lambda = lambda,
-                                                                                   theta = newValues,
-                                                                                   regIndicators = regIndicators,
-                                                                                   adaptiveLassoWeights = adaptiveLassoWeights), Inf)
+        cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
+                                                                                         theta = newValues,
+                                                                                         regIndicators = regIndicators,
+                                                                                         adaptiveLassoWeights = adaptiveLassoWeights), Inf)
       }else{
         newValues <- OpenMx::omxGetParameters(resGIST$model)
         startingValues <- newValues
         # save fit
         cM2LL <- ifelse(resGIST$convergence, resGIST$model$fitfunction$result[[1]], Inf)
-        cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getLambda(lambda = lambda,
-                                                                                   theta = newValues,
-                                                                                   regIndicators = regIndicators,
-                                                                                   adaptiveLassoWeights = adaptiveLassoWeights), Inf)
+        cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
+                                                                                         theta = newValues,
+                                                                                         regIndicators = regIndicators,
+                                                                                         adaptiveLassoWeights = adaptiveLassoWeights), Inf)
       }
     }
 
@@ -332,10 +332,10 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
     m2LL_k <- gradientModel$fitfunction$result[[1]]
   }
 
-  regM2LL_k <- m2LL_k + regCtsem::exact_getLambda(lambda = lambda,
-                                                  theta = parameters_k,
-                                                  regIndicators = regularizedParameters,
-                                                  adaptiveLassoWeights = adaptiveLassoWeights)
+  regM2LL_k <- m2LL_k + regCtsem::exact_getPenaltyValue(lambda = lambda,
+                                                        theta = parameters_k,
+                                                        regIndicators = regularizedParameters,
+                                                        adaptiveLassoWeights = adaptiveLassoWeights)
   regM2LL <- rep(NA, maxIter_out)
   regM2LL[1] <- regM2LL_k
 
@@ -479,10 +479,10 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
         }
 
       }
-      regM2LL_kp1 <- m2LL_kp1 + regCtsem::exact_getLambda(lambda = lambda,
-                                                          theta = parameters_kp1,
-                                                          regIndicators = regularizedParameters,
-                                                          adaptiveLassoWeights = adaptiveLassoWeights)
+      regM2LL_kp1 <- m2LL_kp1 + regCtsem::exact_getPenaltyValue(lambda = lambda,
+                                                                theta = parameters_kp1,
+                                                                regIndicators = regularizedParameters,
+                                                                adaptiveLassoWeights = adaptiveLassoWeights)
 
       if(verbose == 2){
         cat(paste0("\r",
