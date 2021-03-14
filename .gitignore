@@ -5,3 +5,10 @@
 inst/doc
 doc
 Meta
+src/*.o
+src/*.so
+src/*.dll
+src/*/*.o
+src/*/*.so
+src/*/*.dll
+src/Makevars
