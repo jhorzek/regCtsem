@@ -402,7 +402,7 @@ server <- function(input, output) {
                lty=ifelse(edges[,"weight"]>0,1,5),
                edge.labels=T, font = 2,
                edge.color=edge.color)
-        regCtsem::plot.regCtsem(regCtsemObject = regCtsemObject, what = "fit", criterion = criterion)
+        plot(regCtsemObject = regCtsemObject, what = "fit", criterion = criterion)
         }else{
         edges <- makeEdges(mat = DRIFTvalues)
 
@@ -430,7 +430,7 @@ server <- function(input, output) {
                lty=ifelse(edges[,"weight"]>0,1,5),
                edge.labels=T, font = 2,
                edge.color=edge.color)
-        regCtsem::plot.regCtsem(regCtsemObject = regCtsemObject, what = "fit", criterion = criterion)
+        plot(regCtsemObject = regCtsemObject, what = "fit", criterion = criterion)
 
         }
     }, height = ', figHeight, ')

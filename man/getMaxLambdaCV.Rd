@@ -24,9 +24,9 @@ getMaxLambdaCV(
 )
 }
 \arguments{
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
+\item{mxObject}{Fitted object of class mxObject}
 
-\item{fullData}{Dataset for all samples combined}
+\item{fullData}{Data set for all samples combined}
 
 \item{KalmanStartValues}{Optional starting values for the parameters when using Kalman filter}
 

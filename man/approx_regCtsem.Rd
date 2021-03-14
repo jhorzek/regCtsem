@@ -36,11 +36,11 @@ approx_regCtsem(
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted object of class ctsemOMX}
+\item{ctsemObject}{Fitted object of class ctsem.}
 
 \item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
 
-\item{dataset}{only required if objective = "Kalman" and ctsemObject ist of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
+\item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
 
 \item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
 

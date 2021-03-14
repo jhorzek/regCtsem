@@ -9,7 +9,7 @@ createFolds(mxObject, dataset = NULL, k)
 \arguments{
 \item{mxObject}{Object of class mxModel}
 
-\item{dataset}{only required if objective = "Kalman" and ctsemObject ist of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
+\item{dataset}{data set}
 
 \item{k}{number of cross-validation folds (k-fold cross-validation)}
 }

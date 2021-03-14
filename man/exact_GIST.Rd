@@ -16,20 +16,20 @@ exact_GIST(
   sparseParameters = NULL,
   tryCpptsem,
   forceCpptsem = FALSE,
-  eta = 1.5,
-  sig = 0.2,
+  eta = 2,
+  sig = 10^(-5),
   initialStepsize = 1,
-  stepsizeMin = 0,
-  stepsizeMax = 999999999,
+  stepsizeMin = 1/(10^30),
+  stepsizeMax = 10^30,
   GISTLinesearchCriterion = "monotone",
   GISTNonMonotoneNBack = 5,
   maxIter_out = 100,
-  maxIter_in = 100,
-  break_outer = 1e-08,
+  maxIter_in = 1000,
+  break_outer = c(parameterChange = 10^(-5)),
   scaleLambdaWithN = TRUE,
   sampleSize,
   approxFirst = 0,
-  numStart = 10,
+  numStart = 3,
   approxOpt = T,
   approxMaxIt = 5,
   extraTries = 3,
@@ -42,9 +42,9 @@ exact_GIST(
 \arguments{
 \item{ctsemObject}{if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel}
 
-\item{mxObject}{Object of type MxModel}
+\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.}
 
-\item{dataset}{only required if objective = "Kalman" and ctsemObject ist of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
+\item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
@@ -58,15 +58,15 @@ exact_GIST(
 
 \item{tryCpptsem}{should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models}
 
-\item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the m,atrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "cpptsem") for more details}
+\item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details}
 
 \item{eta}{if the current step size fails, eta will decrease the step size. Must be > 1}
 
-\item{sig}{GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.}
+\item{sig}{Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 < sigma < 1}
 
-\item{stepsizeMin}{the initial step size is an integer randomly selected between stepsizeMin and stepsizeMax. All subsequent step sizes will be computed as described by Gong et al. (2013)}
+\item{stepsizeMin}{Minimal acceptable step size. Must be > 0. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)}
 
-\item{stepsizeMax}{the initial step size is an integer randomly selected between stepsizeMin and stepsizeMax. All subsequent step sizes will be computed as described by Gong et al. (2013)}
+\item{stepsizeMax}{Maximal acceptable step size. Must be > stepsizeMin. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)}
 
 \item{GISTLinesearchCriterion}{criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.}
 
@@ -76,7 +76,7 @@ exact_GIST(
 
 \item{maxIter_in}{maximal number of inner iterations}
 
-\item{break_outer}{stopping criterion for the outer iteration.}
+\item{break_outer}{Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)}
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 
@@ -92,9 +92,9 @@ exact_GIST(
 
 \item{extraTries}{number of extra tries in mxTryHard for warm start}
 
-\item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress}
+\item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)}
 
-\item{stepSize}{Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize \* Stepdirection)}
+\item{stepSize}{Initial stepSize of the outer iteration}
 }
 \description{
 General Iterative Shrinkage and Thresholding Algorithm based on Gong, P., Zhang, C., Lu, Z., Huang, J., & Ye, J. (2013). A General Iterative Shrinkage and Thresholding Algorithm for Non-convex Regularized Optimization Problems. In S. Dasgupta & D. McAllester (Eds.), Proceedings of Machine Learning Research (PMLR; Vol. 28, Issue 2, pp. 37--45). PMLR. http://proceedings.mlr.press

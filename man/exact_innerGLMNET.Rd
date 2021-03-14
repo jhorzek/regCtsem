@@ -23,7 +23,7 @@ exact_innerGLMNET(
 
 \item{regIndicators}{Names of regularized parameters}
 
-\item{lambda}{Penaltiy value}
+\item{lambda}{Penalty value}
 
 \item{theta_kp1}{Theta at iteration k+1}
 

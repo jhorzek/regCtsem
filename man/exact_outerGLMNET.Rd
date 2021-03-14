@@ -21,12 +21,12 @@ exact_outerGLMNET(
   lineSearch = "none",
   c1 = 1e-04,
   c2 = 0.9,
-  sig = 0.2,
+  sig = 10^(-5),
   gam = 0,
   differenceApprox = "central",
   maxIter_out,
   maxIter_in,
-  maxIter_line = 100,
+  maxIter_line = 500,
   eps_out,
   eps_in,
   eps_WW,
@@ -44,9 +44,9 @@ exact_outerGLMNET(
 
 \item{sampleSize}{sample size}
 
-\item{gradientModel}{Object of Type MxModel which specifies how the gradients of the likelihood-function are computed (the jacobian)}
+\item{gradientModel}{Object of Type MxModel which specifies how the gradients of the likelihood-function are computed}
 
-\item{gradientModelcpp}{cpptsem object which specifies how the gradients of the likelihood-function are computed (the jacobian)}
+\item{gradientModelcpp}{cpptsem object which specifies how the gradients of the likelihood-function are computed}
 
 \item{parameterNames}{Vector with names of theta-parameters}
 
@@ -62,15 +62,15 @@ exact_outerGLMNET(
 
 \item{stepSize}{initial Stepsize of the outer iteration (theta_{k+1} = theta_k + stepSize \* Stepdirection) in case of lineSearch}
 
-\item{lineSearch}{String indicating if Wolfe conditions (lineSearch = "Wolfe") should be used in the outer iteration. Set lineSearch = "dynamic" to only use line search if optimization without line search fails.}
+\item{lineSearch}{String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.}
 
 \item{c1}{c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"}
 
 \item{c2}{c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"}
 
-\item{sig}{GLMNET & GIST: GLMNET: only relevant when lineSearch = 'GLMNET' | GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.}
+\item{sig}{only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.}
 
-\item{gam}{GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.}
+\item{gam}{Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.}
 
 \item{differenceApprox}{Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
 

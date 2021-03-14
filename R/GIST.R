@@ -11,26 +11,26 @@
 #' NOTE: Function located in file GIST.R
 #'
 #' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
-#' @param mxObject Object of type MxModel
-#' @param dataset only required if objective = "Kalman" and ctsemObject ist of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
+#' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.
+#' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators Vector with names of regularized parameters
 #' @param lambdas Vector with lambda values that should be tried
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
-#' @param stepSize Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize \* Stepdirection)
+#' @param stepSize Initial stepSize of the outer iteration
 #' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
-#' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the m,atrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "cpptsem") for more details
+#' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param eta if the current step size fails, eta will decrease the step size. Must be > 1
-#' @param sig GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
-#' @param stepsizeMin the initial step size is an integer randomly selected between stepsizeMin and stepsizeMax. All subsequent step sizes will be computed as described by Gong et al. (2013)
-#' @param stepsizeMax the initial step size is an integer randomly selected between stepsizeMin and stepsizeMax. All subsequent step sizes will be computed as described by Gong et al. (2013)
+#' @param sig Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 < sigma < 1
+#' @param stepsizeMin Minimal acceptable step size. Must be > 0. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)
+#' @param stepsizeMax Maximal acceptable step size. Must be > stepsizeMin. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)
 #' @param GISTLinesearchCriterion criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
 #' @param maxIter_out maximal number of outer iterations
 #' @param maxIter_in maximal number of inner iterations
-#' @param break_outer stopping criterion for the outer iteration.
-#' @param verbose set to 1 to print additional information and plot the convergence
+#' @param break_outer Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)
+#' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param sampleSize sample size for scaling lambda with N
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas
@@ -38,17 +38,17 @@
 #' @param approxOpt Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
 #' @param approxMaxIt Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .
 #' @param extraTries number of extra tries in mxTryHard for warm start
-#' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
+#' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)
 #' @export
 exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT", regIndicators, lambdas, adaptiveLassoWeights,
                        # additional settings
                        sparseParameters = NULL,
-                       tryCpptsem, forceCpptsem = FALSE, eta = 1.5, sig = .2, initialStepsize = 1, stepsizeMin = 0, stepsizeMax = 999999999,
+                       tryCpptsem, forceCpptsem = FALSE, eta = 2, sig = 10^(-5), initialStepsize = 1, stepsizeMin = 1/(10^30), stepsizeMax = 10^30,
                        GISTLinesearchCriterion = "monotone", GISTNonMonotoneNBack = 5,
-                       maxIter_out = 100, maxIter_in = 100,
-                       break_outer = .00000001,
+                       maxIter_out = 100, maxIter_in = 1000,
+                       break_outer = c("parameterChange" = 10^(-5)),
                        scaleLambdaWithN = TRUE, sampleSize, approxFirst = 0,
-                       numStart = 10, approxOpt = T, approxMaxIt = 5,
+                       numStart = 3, approxOpt = T, approxMaxIt = 5,
                        extraTries = 3, differenceApprox = "central", verbose = 0,
                        progressBar = TRUE, parallelProgressBar = NULL){
   # Setup
@@ -257,14 +257,15 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
 #'
 #' NOTE: Function located in file GIST.R
 #'
-#' @param cppmodel model of type cpptsemmodel
+#' @param gradientModel model of type MxObject to compute the gradients
+#' @param cppmodel model of type cpptsemmodel to compute the gradients
 #' @param startingValues named vector with starting values
 #' @param objective "ML" for maximum likelihood SEM, "Kalman" for Kalman filter
 #' @param lambda penalty value
 #' @param adaptiveLassoWeights named vector with adaptive lasso weights
 #' @param regularizedParameters named vector of regularized parameters
 #' @param eta if the current step size fails, eta will decrease the step size. Must be > 1
-#' @param sig GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
+#' @param sig Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 < sigma < 1
 #' @param initialStepsize initial stepsize to be tried in the outer iteration
 #' @param stepsizeMin Minimal acceptable step size. Must be > 0. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)
 #' @param stepsizeMax Maximal acceptable step size. Must be > stepsizeMin. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)
@@ -272,14 +273,14 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
 #' @param maxIter_out maximal number of outer iterations
 #' @param maxIter_in maximal number of inner iterations
-#' @param break_outer stopping criterion for the outer iteration.
-#' @param verbose set to 1 to print additional information and plot the convergence
+#' @param break_outer Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)
+#' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
 #' @export
 GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, adaptiveLassoWeights, regularizedParameters,
-                 eta = 1.5, sig = .2, initialStepsize = 1, stepsizeMin = 0, stepsizeMax = 999999999,
+                 eta = 2, sig = 10^(-5), initialStepsize = 1, stepsizeMin = 1/(10^30), stepsizeMax = 10^30,
                  GISTLinesearchCriterion = "monotone", GISTNonMonotoneNBack = 5,
-                 maxIter_out = 100, maxIter_in = 100,
-                 break_outer, differenceApprox, verbose = 0, silent = FALSE){
+                 maxIter_out = 100, maxIter_in = 1000,
+                 break_outer = c("parameterChange" = 10^(-5)), differenceApprox = "central", verbose = 0, silent = FALSE){
   break_crit <- names(break_outer)
   # iteration counter
   k_out <- 1

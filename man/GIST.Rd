@@ -12,23 +12,25 @@ GIST(
   lambda,
   adaptiveLassoWeights,
   regularizedParameters,
-  eta = 1.5,
-  sig = 0.2,
+  eta = 2,
+  sig = 10^(-5),
   initialStepsize = 1,
-  stepsizeMin = 0,
-  stepsizeMax = 999999999,
+  stepsizeMin = 1/(10^30),
+  stepsizeMax = 10^30,
   GISTLinesearchCriterion = "monotone",
   GISTNonMonotoneNBack = 5,
   maxIter_out = 100,
-  maxIter_in = 100,
-  break_outer,
-  differenceApprox,
+  maxIter_in = 1000,
+  break_outer = c(parameterChange = 10^(-5)),
+  differenceApprox = "central",
   verbose = 0,
   silent = FALSE
 )
 }
 \arguments{
-\item{cppmodel}{model of type cpptsemmodel}
+\item{gradientModel}{model of type MxObject to compute the gradients}
+
+\item{cppmodel}{model of type cpptsemmodel to compute the gradients}
 
 \item{startingValues}{named vector with starting values}
 
@@ -42,7 +44,7 @@ GIST(
 
 \item{eta}{if the current step size fails, eta will decrease the step size. Must be > 1}
 
-\item{sig}{GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.}
+\item{sig}{Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 < sigma < 1}
 
 \item{initialStepsize}{initial stepsize to be tried in the outer iteration}
 
@@ -58,9 +60,9 @@ GIST(
 
 \item{maxIter_in}{maximal number of inner iterations}
 
-\item{break_outer}{stopping criterion for the outer iteration.}
+\item{break_outer}{Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)}
 
-\item{verbose}{set to 1 to print additional information and plot the convergence}
+\item{verbose}{set to 1 to print additional information and plot the convergence and 2 for further details.}
 }
 \description{
 General Iterative Shrinkage and Thresholding Algorithm based on Gong, P., Zhang, C., Lu, Z., Huang, J., & Ye, J. (2013). A General Iterative Shrinkage and Thresholding Algorithm for Non-convex Regularized Optimization Problems. In S. Dasgupta & D. McAllester (Eds.), Proceedings of Machine Learning Research (PMLR; Vol. 28, Issue 2, pp. 37--45). PMLR. http://proceedings.mlr.press

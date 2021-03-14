@@ -27,24 +27,24 @@
 #' reg2 <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = seq(0,1,.1), standardizeDrift = FALSE)
 #' reg2$regM2LL
 #' reg2$thetas
-#' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
+#' @param ctsemObject Fitted ctsem object
 #' @param mxObject Object of type MxModel
-#' @param dataset only required if objective = "Kalman" and ctsemObject ist of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
+#' @param dataset only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators Vector with names of regularized parameters
 #' @param lambdas Vector with lambda values that should be tried
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
-#' @param stepSize Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize \* Stepdirection)
+#' @param stepSize Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize * Stepdirection)
 #' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
-#' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the m,atrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "cpptsem") for more details
-#' @param lineSearch String indicating if Wolfe conditions (lineSearch = "Wolfe") should be used in the outer iteration. Set lineSearch = "dynamic" to only use line search if optimization without line search fails.
+#' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
+#' @param lineSearch String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.
 #' @param c1 c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"
 #' @param c2 c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
-#' @param sig GLMNET & GIST: GLMNET: only relevant when lineSearch = 'GLMNET' | GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
-#' @param gam GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
+#' @param sig only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.
+#' @param gam Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
 #' @param differenceApprox Which approximation should be used for calculating the gradients in the gradientModel. central is recommended
-#' @param initialHessianApproximation Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and OpenMx (here the hessian approxmiation from the mxObject is used)
+#' @param initialHessianApproximation Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian
 #' @param maxIter_out Maximal number of outer iterations
 #' @param maxIter_in Maximal number of inner iterations
 #' @param maxIter_line Maximal number of iterations for the lineSearch procedure
@@ -53,7 +53,7 @@
 #' @param eps_WW Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param sampleSize sample size for scaling lambda with N
-#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas
+#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first lambda, 2 = optimization for all lambdas. 3 ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or OpenMx if cpptsem is not available, 5 = optimizing using Rsolnp or OpenMx if cpptsem is not available (requires installation of Rsolnp). "auto" will default to 3 if lambdas = "auto" and 4 otherwise
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
 #' @param approxOpt Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
 #' @param approxMaxIt Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .
@@ -64,11 +64,11 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
                              # additional settings
                              sparseParameters = NULL,
                              tryCpptsem, forceCpptsem = FALSE, stepSize = 1, lineSearch = "none", c1 = .0001, c2 = .9,
-                             sig = .2, gam = 0,
+                             sig = 10^(-5), gam = 0,
                              differenceApprox = "central", initialHessianApproximation = "OpenMx", maxIter_out = 100, maxIter_in = 1000,
-                             maxIter_line = 100, eps_out = .0000000001, eps_in = .0000000001, eps_WW = .0001,
+                             maxIter_line = 500, eps_out = .0000000001, eps_in = .0000000001, eps_WW = .0001,
                              scaleLambdaWithN = TRUE, sampleSize, approxFirst = 0,
-                             numStart = 10,
+                             numStart = 0,
                              approxOpt = T,
                              approxMaxIt = 5, extraTries = 3, verbose = 0, progressBar = TRUE, parallelProgressBar = NULL){
   # Setup
@@ -344,8 +344,8 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param sampleSize sample size
-#' @param gradientModel Object of Type MxModel which specifies how the gradients of the likelihood-function are computed (the jacobian)
-#' @param gradientModelcpp cpptsem object which specifies how the gradients of the likelihood-function are computed (the jacobian)
+#' @param gradientModel Object of Type MxModel which specifies how the gradients of the likelihood-function are computed
+#' @param gradientModelcpp cpptsem object which specifies how the gradients of the likelihood-function are computed
 #' @param parameterNames Vector with names of theta-parameters
 #' @param initialParameters initial parameter estimates
 #' @param initialGradients initial gradients of the likelihood function
@@ -353,11 +353,11 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
 #' @param lambda Penalty value
 #' @param regIndicators Names of regularized parameters
 #' @param stepSize initial Stepsize of the outer iteration (theta_{k+1} = theta_k + stepSize \* Stepdirection) in case of lineSearch
-#' @param lineSearch String indicating if Wolfe conditions (lineSearch = "Wolfe") should be used in the outer iteration. Set lineSearch = "dynamic" to only use line search if optimization without line search fails.
+#' @param lineSearch String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.
 #' @param c1 c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"
 #' @param c2 c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
-#' @param sig GLMNET & GIST: GLMNET: only relevant when lineSearch = 'GLMNET' | GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
-#' @param gam GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
+#' @param sig only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.
+#' @param gam Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
 #' @param differenceApprox Which approximation should be used for calculating the gradients in the gradientModel. central is recommended
 #' @param maxIter_out Maximal number of outer iterations
 #' @param maxIter_in Maximal number of inner iterations
@@ -372,9 +372,9 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
 #' @export
 exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleSize, gradientModel, gradientModelcpp = NULL, parameterNames, initialParameters, initialGradients, initialHessian,
                               lambda, regIndicators,
-                              stepSize = 1, lineSearch = "none", c1 = .0001, c2 = .9, sig = .2, gam = 0,
+                              stepSize = 1, lineSearch = "none", c1 = .0001, c2 = .9, sig = 10^(-5), gam = 0,
                               differenceApprox = "central",
-                              maxIter_out, maxIter_in, maxIter_line = 100, eps_out, eps_in, eps_WW, eps_numericDerivative = (1.1 * 10^(-16))^(1/3),
+                              maxIter_out, maxIter_in, maxIter_line = 500, eps_out, eps_in, eps_WW, eps_numericDerivative = (1.1 * 10^(-16))^(1/3),
                               scaleLambdaWithN,
                               verbose = 0){
   # outer loop: optimize parameters
@@ -578,7 +578,7 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param thetaNames Vector with names of theta-parameters
 #' @param regIndicators Names of regularized parameters
-#' @param lambda Penaltiy value
+#' @param lambda Penalty value
 #' @param theta_kp1 Theta at iteration k+1
 #' @param g_kp1 Gradients of the likelihood function at iteration k+1
 #' @param H_kp1 Hessian of the likelihood function at iteration k+1
@@ -732,9 +732,9 @@ exact_armijoLineSearch <- function(gradientModel, adaptiveLassoWeights, thetaNam
 #'
 #' NOTE: Function located in file GLMNET.R
 #'
-#' @param gradientModel Object of Type MxModel which specifies how the gradients of the likelihood-function are computed (the jacobian)
+#' @param gradientModel Object of Type MxModel which specifies how the gradients of the likelihood-function are computed
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
-#' @param gradientModelcpp cpptsem object which specifies how the gradients of the likelihood-function are computed (the jacobian)
+#' @param gradientModelcpp cpptsem object which specifies how the gradients of the likelihood-function are computed
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param thetaNames names of the parameter estimates
 #' @param regIndicators vector with names of parameters to regularize
@@ -746,8 +746,8 @@ exact_armijoLineSearch <- function(gradientModel, adaptiveLassoWeights, thetaNam
 #' @param differenceApprox which approximation for the gradients should be used? Recommended is central
 #' @param eps_numericDerivative controls the precision of the central gradient approximation. The default (1.1 * 10^(-16))^(1/3) is derived in Nocedal, J., & Wright, S. J. (2006). Numerical optimization (2nd ed), p. 197
 #' @param stepSize Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)
-#' @param sig GLMNET & GIST: GLMNET: only relevant when lineSearch = 'GLMNET' | GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
-#' @param gam GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
+#' @param sig only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.
+#' @param gam Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
 #' @param maxIter_line maximal number of iterations for line search
 #' @export
 exact_GLMNETLineSearch <- function(gradientModel, objective, gradientModelcpp,

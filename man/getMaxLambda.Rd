@@ -7,7 +7,7 @@
 getMaxLambda(mxObject, regIndicators, differenceApprox, adaptiveLassoWeights)
 }
 \arguments{
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
+\item{mxObject}{Fitted object of class mxObject}
 
 \item{regIndicators}{Labels of the regularized parameters (e.g. drift_eta1_eta2)}
 

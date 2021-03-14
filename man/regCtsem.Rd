@@ -42,21 +42,21 @@ regCtsem(
 \arguments{
 \item{ctsemObject}{if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel}
 
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
+\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.}
 
 \item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
 
 \item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
 
-\item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
+\item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of the same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
 
-\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto"; however, this is still experimental.}
+\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values}
 
 \item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
 
-\item{penalty}{type. Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
+\item{penalty}{Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
 
-\item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the unregularized parameter estimates.}
+\item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
 
 \item{elastic_alpha}{placehoder for elastic net. NOT YET IMPLEMENTED}
 
@@ -74,11 +74,11 @@ regCtsem(
 
 \item{optimizeKalman}{Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE}
 
-\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3}
+\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.}
 
-\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using T0VAR?}
+\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using the T0VAR?}
 
-\item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
+\item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent}
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 
@@ -90,9 +90,9 @@ regCtsem(
 
 \item{extraTries}{number of extra tries in mxTryHard}
 
-\item{cores}{how many computer cores should be used?}
+\item{cores}{how many computer cores should be used? Currently corse = 1 is recommended.}
 
-\item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (which is not considerably faster which is why the easier to understand R implementation is the default)}
+\item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)}
 
 \item{silent}{silent execution}
 
@@ -101,6 +101,9 @@ regCtsem(
 \item{parallelProgressBar}{list: used internally to display progress when executing in parallel. Do not pass values to parallelProgressBar}
 
 \item{calledInternally}{Boolean: used internally for skipping checks}
+}
+\value{
+returns an object of class regCtsem. Without cross-validation, this object will have the fields setup (all arguments passed to the function), fitAndParameters (used internally to store the fit and the raw (i.e., untransformed) parameters), fit (fit indices, ect.), parameterEstimatesRaw (raw, i.e. untransformed parameters; used internally), and parameters (transformed parameters)#'
 }
 \description{
 main function: performs regularized ctsem

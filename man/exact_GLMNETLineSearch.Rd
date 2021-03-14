@@ -26,11 +26,11 @@ exact_GLMNETLineSearch(
 )
 }
 \arguments{
-\item{gradientModel}{Object of Type MxModel which specifies how the gradients of the likelihood-function are computed (the jacobian)}
+\item{gradientModel}{Object of Type MxModel which specifies how the gradients of the likelihood-function are computed}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
-\item{gradientModelcpp}{cpptsem object which specifies how the gradients of the likelihood-function are computed (the jacobian)}
+\item{gradientModelcpp}{cpptsem object which specifies how the gradients of the likelihood-function are computed}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
@@ -54,9 +54,9 @@ exact_GLMNETLineSearch(
 
 \item{stepSize}{Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)}
 
-\item{sig}{GLMNET & GIST: GLMNET: only relevant when lineSearch = 'GLMNET' | GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.}
+\item{sig}{only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.}
 
-\item{gam}{GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.}
+\item{gam}{Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.}
 
 \item{maxIter_line}{maximal number of iterations for line search}
 }
