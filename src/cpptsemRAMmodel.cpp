@@ -334,6 +334,47 @@ Rcpp::NumericVector cpptsemRAMmodel::approxRAMGradients(double epsilon){
   return(Rcpp::clone(gradients));
 }
 
+// compute single gradient value. Returns the central gradient approximation
+Rcpp::NumericVector cpptsemRAMmodel::approxRAMGradient(double epsilon, Rcpp::String parName){
+  Rcpp::NumericVector parameterValues = getParameterValues();
+  Rcpp::StringVector parameterNames = parameterValues.names();
+  Rcpp::NumericMatrix likelihoods( 1 , 2 );
+  Rcpp::NumericVector gradient(1);
+
+  Rcpp::StringVector colNames = {"stepBackward", "stepForward"};
+  colnames(likelihoods) = colNames;
+  gradient.names() = parName;
+
+  // avoid changing the parameterValues by reference:
+  Rcpp::NumericVector currentParameterValues = Rcpp::clone( parameterValues );
+
+  // forward step
+  currentParameterValues(parName) = currentParameterValues(parName) + epsilon;
+  setParameterValues(currentParameterValues, parameterNames);
+  computeRAM();
+  fitRAM();
+  likelihoods(0,0) = m2LL;
+
+  // reset parameter
+  currentParameterValues(parName) = currentParameterValues(parName) - epsilon;
+  setParameterValues(currentParameterValues, parameterNames);
+
+  // backward step
+  currentParameterValues(parName) = currentParameterValues(parName) - epsilon;
+  setParameterValues(currentParameterValues, parameterNames);
+  computeRAM();
+  fitRAM();
+  likelihoods(0,1) = m2LL;
+
+  // reset parameter
+  currentParameterValues(parName) = currentParameterValues(parName) + epsilon;
+  setParameterValues(currentParameterValues, parameterNames);
+  gradient(0) = (likelihoods(0,0) - likelihoods(0,1))/(2*epsilon);
+
+  return(Rcpp::clone(gradient));
+}
+
+
 Rcpp::List cpptsemRAMmodel::GIST(
     Rcpp::NumericVector pars,
     Rcpp::StringVector regIndicators,
@@ -690,7 +731,8 @@ RCPP_MODULE(cpptsemRAMmodel_cpp){
   .method( "setRAMData", &cpptsemRAMmodel::setRAMData, "Set up the dataset for RAM models. Expects a list with sampleSize, nObservedVariables, rawData, observedMeans, observedCov, expectedSelector, expectedMeans, expectedCovariance, m2LL for each missingness pattern")
   .method( "computeRAM", &cpptsemRAMmodel::computeRAM, "Computes the RAM matrices")
   .method( "fitRAM", &cpptsemRAMmodel::fitRAM, "Fit the RAM model: outputs the -2log likelihood")
-  .method( "approxRAMGradients", &cpptsemRAMmodel::approxRAMGradients, "Returns a central approximation of the gradients (Jacobian).")
+  .method( "approxRAMGradients", &cpptsemRAMmodel::approxRAMGradients, "Returns a central approximation of the gradients.")
+  .method( "approxRAMGradient", &cpptsemRAMmodel::approxRAMGradient, "Returns a central approximation of a single gradient.")
   .method( "GIST", &cpptsemRAMmodel::GIST, "Optimizes with GIST")
   .method( "computePenalty", &cpptsemRAMmodel::computePenalty, "Computes penalty value")
   .method( "computeSubgradients", &cpptsemRAMmodel::computeSubgradients, "Computes subgradients")

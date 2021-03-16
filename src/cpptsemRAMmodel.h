@@ -78,6 +78,7 @@ class cpptsemRAMmodel{
   void computeRAM();
   void fitRAM();
   Rcpp::NumericVector approxRAMGradients(double epsilon);
+  Rcpp::NumericVector approxRAMGradient(double epsilon, Rcpp::String parName);
 
   double computePenalty(Rcpp::NumericVector pars,
                         Rcpp::StringVector regIndicators,

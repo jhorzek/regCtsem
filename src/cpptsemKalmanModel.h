@@ -63,6 +63,8 @@ public:
   void computeAndFitKalman();
   Rcpp::NumericVector approxKalmanGradients(double epsilon = .000001);
 
+  Rcpp::NumericVector approxKalmanGradient(double epsilon, Rcpp::String parName);
+
   double computePenalty(Rcpp::NumericVector pars,
                         Rcpp::StringVector regIndicators,
                         Rcpp::NumericVector lambda);

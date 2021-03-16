@@ -317,6 +317,44 @@ Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradients(double epsilon){
   return(Rcpp::clone(gradients));
 }
 
+// compute single gradient value. Returns the central gradient approximation
+Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradient(double epsilon, Rcpp::String parName){
+  Rcpp::NumericVector parameterValues = getParameterValues();
+  Rcpp::StringVector parameterNames = parameterValues.names();
+  Rcpp::NumericMatrix likelihoods( 1 , 2 );
+  Rcpp::NumericVector gradient(1);
+
+  Rcpp::StringVector colNames = {"stepBackward", "stepForward"};
+  colnames(likelihoods) = colNames;
+  gradient.names() = parName;
+
+  // avoid changing the parameterValues by reference:
+  Rcpp::NumericVector currentParameterValues = Rcpp::clone( parameterValues );
+
+  // forward step
+  currentParameterValues(parName) = currentParameterValues(parName) + epsilon;
+  setParameterValues(currentParameterValues, parameterNames);
+  computeAndFitKalman();
+  likelihoods(0,0) = m2LL;
+
+  // reset parameter
+  currentParameterValues(parName) = currentParameterValues(parName) - epsilon;
+  setParameterValues(currentParameterValues, parameterNames);
+
+  // backward step
+  currentParameterValues(parName) = currentParameterValues(parName) - epsilon;
+  setParameterValues(currentParameterValues, parameterNames);
+  computeAndFitKalman();
+  likelihoods(0,1) = m2LL;
+
+  // reset parameter
+  currentParameterValues(parName) = currentParameterValues(parName) + epsilon;
+  setParameterValues(currentParameterValues, parameterNames);
+  gradient(0) = (likelihoods(0,0) - likelihoods(0,1))/(2*epsilon);
+
+
+  return(Rcpp::clone(gradient));
+}
 
 Rcpp::List cpptsemKalmanModel::GIST(
     Rcpp::NumericVector pars,
@@ -617,11 +655,11 @@ Rcpp::NumericVector cpptsemKalmanModel::computeSubgradients(Rcpp::NumericVector 
       penaltyGradientUpper = lambdas[currentParLabel];
       // check if likelihood gradient is within interval:
       setZero = (subgradient[currentParLabel] > penaltyGradientLower) & (subgradient[currentParLabel] < penaltyGradientUpper);
-        if(setZero){
-          subgradient[currentParLabel] = 0;
-        }else{
-          subgradient[currentParLabel] = std::copysign(1.0, subgradient[currentParLabel])*(std::abs(subgradient[currentParLabel]) - lambdas[currentParLabel]);
-        }
+      if(setZero){
+        subgradient[currentParLabel] = 0;
+      }else{
+        subgradient[currentParLabel] = std::copysign(1.0, subgradient[currentParLabel])*(std::abs(subgradient[currentParLabel]) - lambdas[currentParLabel]);
+      }
     } // end is zero
   } // end for
   return(subgradient);
@@ -667,7 +705,8 @@ RCPP_EXPOSED_CLASS(cpptsemKalmanModel)
     .method( "setKalmanData", &cpptsemKalmanModel::setKalmanData, "Set up the dataset for Kalman models. Expects a list with sampleSize, nObservedVariables, rawData, observedMeans, observedCov, expectedSelector, expectedMeans, expectedCovariance, m2LL for each missingness pattern")
     .method( "setDiscreteTimeParameterNames", &cpptsemKalmanModel::setDiscreteTimeParameterNames, "Set up the names of the discrete time parameters of the Kalman model")
     .method( "computeAndFitKalman", &cpptsemKalmanModel::computeAndFitKalman, "Computes the Kalman matrices")
-    .method( "approxKalmanGradients", &cpptsemKalmanModel::approxKalmanGradients, "Returns a central approximation of the gradients (Jacobian).")
+    .method( "approxKalmanGradients", &cpptsemKalmanModel::approxKalmanGradients, "Returns a central approximation of the gradients.")
+    .method( "approxKalmanGradient", &cpptsemKalmanModel::approxKalmanGradient, "Returns a central approximation of a single gradient.")
     .method( "GIST", &cpptsemKalmanModel::GIST, "Optimizes with GIST")
     .method( "computePenalty", &cpptsemKalmanModel::computePenalty, "Computes penalty value")
     .method( "computeSubgradients", &cpptsemKalmanModel::computeSubgradients, "Computes subgradients")
