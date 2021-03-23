@@ -59,9 +59,9 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
   gradientModel <- NULL
 
   break_crit <- names(break_outer)
-  if(is.null(break_crit) || !(break_crit %in% c("parameterChange", "gradient"))){stop("Unknown breaking criterion. The value passed to break_crit has to be named (either 'parameterChange' or 'gradient') See ?controlGIST for details on break_outer")}
+  if(is.null(break_crit) || !(break_crit %in% c("parameterChange", "gradient", "fitChange"))){stop("Unknown breaking criterion. The value passed to break_crit has to be named (either 'parameterChange' or 'gradient') See ?controlGIST for details on break_outer")}
   if(is.character(break_outer)){
-    if(break_crit == "parameterChange"){stop("break_outer has to be numeric if parameterChange is used as criterion")}
+    if(break_crit == "parameterChange" || break_crit == "fitChange"){stop("break_outer has to be numeric if parameterChange or fitChange is used as criterion")}
     break_outer <- eval(parse(text = break_outer))
     names(break_outer) <- break_crit
     if(verbose > 0){message(paste0("Breaking criterion: max(abs(gradient)) < ", break_outer))}
@@ -609,6 +609,28 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
         convergencePlotValues[,k_out] <- parameters_k
         matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
+
+    }else if(break_crit == "fitChange"){
+      breakOuter <- abs(regM2LL[k_out] - regM2LL[k_out-1]) < break_outer
+
+      if(verbose == 1){
+        plot(x=1:maxIter_out, y = regM2LL, xlab = "iteration", ylab = "f(theta)", type = "l", main = "Convergence Plot")
+        cat(paste0("\r",
+                   "## [", sprintf("%*d", 3, k_out),
+                   "] m2LL: ", sprintf('%.3f',m2LL_k),
+                   " | regM2LL:  ", sprintf('%.3f',regM2LL_k),
+                   " | zeroed: ", sprintf("%*d", 3, sum(parameters_k[regularizedParameters] == 0)),
+                   " | fitChange: ", sprintf("%.5f", abs(regM2LL[k_out] - regM2LL[k_out-1])),
+                   " ##"
+        )
+        )
+      }
+
+      if(verbose == 2){
+        convergencePlotValues[,k_out] <- parameters_k
+        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+      }
+
 
     }else{
       stop("Unknown breaking criterion. The value passed to break_crit has to be named (either 'parameterChange' or 'gradient') See ?controlGIST for details on break_outer")

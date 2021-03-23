@@ -21,7 +21,7 @@ controlGIST()
 
 \item{maxIter_in}{Maximal number of inner iterations}
 
-\item{break_outer}{Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)}
+\item{break_outer}{Stopping criterion for outer iterations; has to be a named value. By default the change in fit is used, with c("fitChange" = 1e-5) meaning that this change should be smaller than 1e-5. Additionally, a relative change in parameters is used as breaking criterion c("parameterChange" = .00001). Alternatively (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Example: c("gradient" = "max(max(abs(startingValues))*.001, .001)") . Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)).}
 
 \item{eta}{if the current step size fails, eta will decrease the step size. Must be > 1}
 
