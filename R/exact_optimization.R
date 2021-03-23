@@ -3,7 +3,7 @@
 
 #' exact_getCVFit
 #'
-#' computes cross-validation fit for exact optimization
+#' computes cross-validation fit for exact optimization.
 #'
 #' NOTE: Function located in file exact_optimization.R
 #'
