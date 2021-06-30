@@ -11,6 +11,7 @@ exact_GIST(
   objective,
   regOn = "DRIFT",
   regIndicators,
+  targetVector,
   lambdas,
   adaptiveLassoWeights,
   sparseParameters = NULL,
@@ -51,6 +52,8 @@ exact_GIST(
 \item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
 
 \item{regIndicators}{Vector with names of regularized parameters}
+
+\item{targetVector}{named vector with values towards which the parameters are regularized}
 
 \item{lambdas}{Vector with lambda values that should be tried}
 

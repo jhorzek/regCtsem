@@ -102,7 +102,55 @@ exact_getFitIndices <- function(mxObject, parameterLabels, fitAndParameters, lam
 }
 
 
+#' exact_getFitIndicesWithTarget
+#'
+#' computes fit indices for optimization = "exact"
+#'
+#' NOTE: Function located in file exact_optimization.R
+#'
+#' @param mxObject Fitted object of class MxObject
+#' @param parameterLabels labels of optimized parameters
+#' @param fitAndParameters table with fit and parameter values
+#' @param regIndicators Vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
+#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
+#' @param sampleSize sample size
+#' @author Jannik Orzek
+#' @import ctsemOMX
+#' @export
+exact_getFitIndicesWithTarget <- function(mxObject, parameterLabels, regIndicators, fitAndParameters, targetVector, lambdas, sampleSize){
+  fits <- c("AIC", "BIC", "estimatedParameters")
+  fitTable <- matrix(NA, nrow = length(fits), ncol = length(lambdas), dimnames = list(fits, lambdas))
 
+  for(lambda in 1:length(lambdas)){
+
+    currentParameterValues <- fitAndParameters[parameterLabels,lambda]
+    currentM2LL <- fitAndParameters["m2LL",lambda]
+
+    if(any(is.na(currentParameterValues))){next}
+
+    # set free = TRUE to free = FALSE for zeroed parameters
+    currentParameterFree <- length(currentParameterValues) - sum(currentParameterValues[regIndicators] == targetVector[regIndicators])
+    fitTable["AIC", lambda] <- currentM2LL + 2*sum(currentParameterFree)
+    fitTable["BIC", lambda] <- currentM2LL + log(sampleSize)*sum(currentParameterFree)
+    fitTable["estimatedParameters", lambda] <- sum(currentParameterFree)
+
+
+    #fitModel <- mxObject
+    #fitModel <- OpenMx::omxSetParameters(model = fitModel, labels = parameterLabels, free = currentParameterFree, values = currentParameterValues)
+
+    # run Model
+    #fitFitModel <- OpenMx::mxRun(fitModel, useOptimizer = F, silent = T)
+
+    #fitTable["AIC", lambda] <- AIC(fitFitModel)
+    #fitTable["BIC", lambda] <- BIC(fitFitModel)
+    #fitTable["estimatedParameters", lambda] <- length(OpenMx::omxGetParameters(fitFitModel))
+
+  }
+
+  return(fitTable)
+
+}
 
 #' exact_getFlatStdizer
 #'
@@ -132,7 +180,7 @@ exact_getFlatStdizer <- function(T0VAR, thetaNames){
 #' NOTE: Function located in file exact_optimization.R
 #'
 #' @param regIndicators Names of regularized parameters
-#' @param lambda Penaltiy value
+#' @param lambda Penalty value
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @export
 exact_getPenaltyValue <- function(lambda, theta, regIndicators, adaptiveLassoWeights = NULL){
@@ -163,7 +211,44 @@ exact_getPenaltyValue <- function(lambda, theta, regIndicators, adaptiveLassoWei
   return(regVal)
 }
 
+#' exact_getPenaltyValue
+#'
+#' computes sum(lambda*abs(regularized Values))
+#'
+#' NOTE: Function located in file exact_optimization.R
+#'
+#' @param regIndicators Names of regularized parameters
+#' @param lambda Penalty value
+#' @param adaptiveLassoWeights weights for the adaptive lasso.
+#' @param targetVector named vector with values towards which the parameters are regularized
+#' @export
+exact_getPenaltyValueWithTarget <- function(lambda, theta, regIndicators, targetVector, adaptiveLassoWeights = NULL){
 
+  regVal <- 0
+  if(!is.vector(theta)){
+    thetaNames <- rownames(theta)
+    # iterate over theta
+    for(th in thetaNames){
+      # if theta is regularized
+      if(th %in% regIndicators){
+        regVal <- regVal + lambda*abs(theta[th,] - targetVector[th])*ifelse(is.null(adaptiveLassoWeights),1,adaptiveLassoWeights[th])
+      }
+    }
+    names(regVal) <- NULL
+    return(regVal)
+  }
+
+  thetaNames <- names(theta)
+  # iterate over theta
+  for(th in thetaNames){
+    # if theta is regularized
+    if(th %in% regIndicators){
+      regVal <- regVal + lambda*abs(theta[th] - targetVector[th])*ifelse(is.null(adaptiveLassoWeights),1,adaptiveLassoWeights[th])
+    }
+  }
+  names(regVal) <- NULL
+  return(regVal)
+}
 
 
 #' exact_getSubgradients

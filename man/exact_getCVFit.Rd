@@ -30,7 +30,7 @@ exact_getCVFit(
 \item{cvSample}{cross-validation sample. Has to be of type mxData}
 }
 \description{
-computes cross-validation fit for exact optimization
+computes cross-validation fit for exact optimization.
 }
 \details{
 NOTE: Function located in file exact_optimization.R

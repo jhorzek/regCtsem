@@ -11,6 +11,7 @@ regCtsem(
   dataset = NULL,
   regOn = "DRIFT",
   regIndicators,
+  targetVector = NULL,
   lambdas = "auto",
   lambdasAutoLength = 50,
   penalty = "lasso",
@@ -49,6 +50,8 @@ regCtsem(
 \item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
 
 \item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of the same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
+
+\item{targetVector}{named vector with values towards which the parameters are regularized}
 
 \item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values}
 
