@@ -14,7 +14,6 @@
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.
 #' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
-#' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators Vector with names of regularized parameters
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas Vector with lambda values that should be tried
@@ -34,22 +33,21 @@
 #' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param sampleSize sample size for scaling lambda with N
-#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas
+#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param approxOpt Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
-#' @param approxMaxIt Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .
+#' @param approxMaxIt Used if approxFirst. How many outer iterations should be given to each starting values vector?
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)
 #' @export
-exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT", regIndicators, targetVector, lambdas, adaptiveLassoWeights,
+exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regIndicators, targetVector, lambdas, adaptiveLassoWeights,
                        # additional settings
                        sparseParameters = NULL,
                        tryCpptsem, forceCpptsem = FALSE, eta = 2, sig = 10^(-5), initialStepsize = 1, stepsizeMin = 1/(10^30), stepsizeMax = 10^30,
                        GISTLinesearchCriterion = "monotone", GISTNonMonotoneNBack = 5,
                        maxIter_out = 100, maxIter_in = 1000,
                        break_outer = c("parameterChange" = 10^(-5)),
-                       scaleLambdaWithN = TRUE, sampleSize, approxFirst = 0,
-                       numStart = 3, approxOpt = T, approxMaxIt = 5,
+                       scaleLambdaWithN = TRUE, sampleSize, approxFirst = F,
+                       numStart = 3, approxMaxIt = 5,
                        extraTries = 3, differenceApprox = "central", verbose = 0,
                        progressBar = TRUE, parallelProgressBar = NULL){
   # Setup
@@ -146,15 +144,13 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*samplesize
 
     # should the results first be approximated?
-    if(!is.null(targetVector) && approxFirst > 0){warning("approxFirst > 0 not yet implemented when using a targetVector. Settin approxFirst = 0")
-      approxFirst <- 0
-    }
     startingValues <- tryApproxFirst(startingValues = startingValues, returnAs = "vector",
-                                     approxFirst = approxFirst, numStart = numStart, approxOpt = approxOpt, approxMaxIt = approxMaxIt,
+                                     approxFirst = approxFirst, numStart = numStart, approxMaxIt = approxMaxIt,
                                      lambda = lambda, lambdas = lambdas,
                                      gradientModelcpp = gradientModelcpp,
                                      mxObject = mxObject,
-                                     regOn = regOn, regIndicators = regIndicators, adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters =sparseParameters,
+                                     regIndicators = regIndicators, targetVector = targetVector, adaptiveLassoWeights = adaptiveLassoWeights,
+                                     objective = objective, sparseParameters =sparseParameters,
                                      extraTries = extraTries)
     # use Gist
     if(!is.null(gradientModelcpp) && verbose == -1){

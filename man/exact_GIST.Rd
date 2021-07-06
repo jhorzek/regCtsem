@@ -9,7 +9,6 @@ exact_GIST(
   mxObject,
   dataset,
   objective,
-  regOn = "DRIFT",
   regIndicators,
   targetVector,
   lambdas,
@@ -29,9 +28,8 @@ exact_GIST(
   break_outer = c(parameterChange = 10^(-5)),
   scaleLambdaWithN = TRUE,
   sampleSize,
-  approxFirst = 0,
+  approxFirst = F,
   numStart = 3,
-  approxOpt = T,
   approxMaxIt = 5,
   extraTries = 3,
   differenceApprox = "central",
@@ -48,8 +46,6 @@ exact_GIST(
 \item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
-
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
 
 \item{regIndicators}{Vector with names of regularized parameters}
 
@@ -85,13 +81,11 @@ exact_GIST(
 
 \item{sampleSize}{sample size for scaling lambda with N}
 
-\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas}
+\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization?}
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{approxOpt}{Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp}
-
-\item{approxMaxIt}{Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .}
+\item{approxMaxIt}{Used if approxFirst. How many outer iterations should be given to each starting values vector?}
 
 \item{extraTries}{number of extra tries in mxTryHard for warm start}
 

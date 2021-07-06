@@ -9,7 +9,6 @@ regCtsem(
   ctsemObject = NULL,
   mxObject = NULL,
   dataset = NULL,
-  regOn = "DRIFT",
   regIndicators,
   targetVector = NULL,
   lambdas = "auto",
@@ -47,9 +46,7 @@ regCtsem(
 
 \item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
 
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
-
-\item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of the same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
+\item{regIndicators}{Labels of the regularized parameters (e.g. drift_eta1_eta2). For optimization = "approx" a matrix has to be provided which indicates the regularized drift values with 1 and unregularitzed ones with 0. Only drift parameters can be regularized in this case}
 
 \item{targetVector}{named vector with values towards which the parameters are regularized}
 
@@ -157,14 +154,12 @@ myModel <- ctsem::ctModel(Tpoints=10,n.latent=2,n.TDpred=0,
 fit_myModel <- ctsemOMX::ctFit(dat, myModel)
 
 # select DRIFT values for regularization:
-regOn = "DRIFT"
 regIndicators = matrix(c(0,1,
                          1,0),
                        byrow = T, nrow = 2)
 
 # Optimize model using GIST with lasso penalty
 regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
-                               regOn = regOn,
                                regIndicators = regIndicators,
                                lambdas = "auto",
                                lambdasAutoLength = 20)
@@ -182,7 +177,6 @@ plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 
 # Optimize model using GLMNET with lasso penalty
 regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
-                               regOn = regOn,
                                regIndicators = regIndicators,
                                lambdas = "auto",
                                lambdasAutoLength = 20,
@@ -195,7 +189,6 @@ plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 # The same regularization can be performed with the approximate optimization:
 # Note that we are using extraTries to get better parameter estimates
 regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
-                                     regOn = regOn,
                                      regIndicators = regIndicators,
                                      lambdas = "auto",
                                      lambdasAutoLength = 20,
@@ -246,7 +239,6 @@ myModel <- ctsem::ctModel(Tpoints=100,n.latent=2,n.TDpred=0,
                           T0VAR="auto", type = "omx")
 
 # select DRIFT values:
-regOn = "DRIFT"
 regIndicators = matrix(c(0,1,1,0), byrow = T, ncol = 2)
 
 ## Optimization with GIST:
@@ -254,7 +246,6 @@ regModel <- regCtsem::regCtsem(# important: We now have to pass the ctModel obje
   ctsemObject = myModel,
   # Furthermore, the data has to be passed to regCtsem
   dataset = traindata,
-  regOn = regOn,
   regIndicators = regIndicators,
   lambdas = "auto",
   lambdasAutoLength = 20,

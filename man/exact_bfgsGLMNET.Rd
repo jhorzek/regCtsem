@@ -9,7 +9,6 @@ exact_bfgsGLMNET(
   mxObject,
   dataset,
   objective,
-  regOn = "DRIFT",
   regIndicators,
   lambdas,
   adaptiveLassoWeights,
@@ -50,8 +49,6 @@ exact_bfgsGLMNET(
 \item{dataset}{only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
-
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
 
 \item{regIndicators}{Vector with names of regularized parameters}
 

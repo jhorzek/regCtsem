@@ -11,6 +11,7 @@ approx_gradCpptsem(
   N,
   lambda,
   regIndicators,
+  targetVector,
   epsilon,
   objective,
   failureReturns
@@ -26,6 +27,8 @@ approx_gradCpptsem(
 \item{lambda}{tuning parameter lambda}
 
 \item{regIndicators}{string vector with names of regularized parameters}
+
+\item{targetVector}{named vector with values towards which the parameters are regularized}
 
 \item{epsilon}{tuning parameter for epsL1 approximation}
 

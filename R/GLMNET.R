@@ -31,7 +31,6 @@
 #' @param mxObject Object of type MxModel
 #' @param dataset only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
-#' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators Vector with names of regularized parameters
 #' @param lambdas Vector with lambda values that should be tried
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
@@ -60,7 +59,7 @@
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #' @export
-exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = "DRIFT", regIndicators, lambdas, adaptiveLassoWeights,
+exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndicators, lambdas, adaptiveLassoWeights,
                              # additional settings
                              sparseParameters = NULL,
                              tryCpptsem, forceCpptsem = FALSE, stepSize = 1, lineSearch = "none", c1 = .0001, c2 = .9,
@@ -206,7 +205,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regOn = 
                                 lambda = lambda, lambdas = lambdas,
                                 gradientModelcpp = gradientModelcpp,
                                 mxObject = mxObject,
-                                regOn = regOn, regIndicators = regIndicators, adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
+                                regIndicators = regIndicators, adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
                                 extraTries = extraTries)
 
     # outer loop: optimize parameters

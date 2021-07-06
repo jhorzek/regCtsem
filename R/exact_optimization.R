@@ -361,17 +361,15 @@ exact_getT0VAR <- function(mxObject, d){
 #' @param regIndicators named vector of regularized parameters
 #' @param newLambda new lambda
 #' @param adaptiveLassoWeights named vector with adaptive lasso weights
-#' @param differenceApprox difference approximation for gradients (detault should be central)
 #' @param numStartingValues How many starting values should be tried?
-#' @param optimize 1 = optimization with optim, 2 = optimization with Rsolnp
 #' @param numOuter number of outer iterations of optim or Rsolnp
 #' @export
 exact_tryStartingValues <- function(gradientModel, cppmodel,
                                     objective, currentParameters,
                                     sparseParameters, regIndicators,
                                     newLambda,
-                                    adaptiveLassoWeights, differenceApprox,
-                                    numStartingValues, optimize, numOuter){
+                                    adaptiveLassoWeights,
+                                    numStartingValues, numOuter){
   if(is.null(sparseParameters)){
     stop()
   }
@@ -418,8 +416,7 @@ exact_tryStartingValues <- function(gradientModel, cppmodel,
                                                           adaptiveLassoWeights = adaptiveLassoWeights)
     regM2LLs[i] <- regM2LL_i
 
-    if((optimize > 0) & !is.na(m2LL_i)){
-      if(optimize == 1){
+    if(!is.na(m2LL_i)){
         optimized <- try(approx_cpptsemOptim(cpptsemmodel = cppmodel,
                                              regM2LLCpptsem = ifelse(tolower(objective) == "ml",
                                                                      regCtsem::approx_RAMRegM2LLCpptsem,
@@ -433,21 +430,6 @@ exact_tryStartingValues <- function(gradientModel, cppmodel,
                                              maxit = numOuter,
                                              objective,
                                              testGradients = TRUE), silent = TRUE)
-      }else{
-        optimized <- try(approx_cpptsemSolnp(cpptsemmodel = cppmodel,
-                                             regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                     regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                     regCtsem::approx_KalmanRegM2LLCpptsem),
-                                             gradCpptsem = regCtsem::approx_gradCpptsem,
-                                             startingValues = parameterValues_i,
-                                             adaptiveLassoWeights = adaptiveLassoWeights,
-                                             N = 1, lambda = newLambda,
-                                             regIndicators = regIndicators,
-                                             epsilon = 10^(-8),
-                                             maxit = numOuter,
-                                             objective,
-                                             testGradients = TRUE), silent = TRUE)
-      }
 
       if(any(class(optimized) == "try-error")){
         next
@@ -472,7 +454,7 @@ exact_tryStartingValues <- function(gradientModel, cppmodel,
                                                                       regIndicators = regIndicators,
                                                                       epsilon = 10^(-8), objective = objective,
                                                                       failureReturns = NA)))
-      if(!any(class(regM2LLTemp) == "try-error") && regM2LLTemp < optimized$regM2LL && regM2LLTemp > 0){
+      if(!any(class(regM2LLTemp) == "try-error") && regM2LLTemp < optimized$regM2LL && regM2LLTemp > -99999){
         optimized$regM2LL <- regM2LLTemp
         optimized$parameters <- pars[parameterNames]
       }
@@ -582,22 +564,23 @@ setStartingValuesFromApprox <- function(approx_regModel, mxObject, lambda){
 #' @import ctsemOMX
 #' @export
 tryApproxFirst <- function(startingValues, returnAs,
-                           approxFirst, numStart, approxOpt, approxMaxIt,
+                           approxFirst, numStart, approxMaxIt,
                            lambda, lambdas,
                            gradientModelcpp,
                            mxObject,
-                           regOn, regIndicators, adaptiveLassoWeights, objective, sparseParameters,
+                           regIndicators, targetVector = NULL, adaptiveLassoWeights, objective, sparseParameters,
                            extraTries){
-  if((approxFirst == 1 & lambda == lambdas[1]) |
-     approxFirst == 2 |
-     (approxFirst == 3 & is.null(gradientModelcpp)) |
-     (approxFirst == 4 & is.null(gradientModelcpp)) |
-     (approxFirst == 5 & is.null(gradientModelcpp))){
+  if(approxFirst && is.null(gradientModelcpp)){
+    if(any(! (regIndicators %in% mxObject$DRIFT$labels))){
+      stop("Requested approxFirst for a model where no C++ model could be built and non-drift parameters are regularized. Cannot build the approximation for non-drift regularization.")
+    }
 
     approxModel <- regCtsem::approx_initializeModel(mxObject = mxObject,
                                                     sampleSize = 1, # scaling with N is handled above
-                                                    regOn = regOn,
-                                                    regIndicators = regIndicatorsFromNameToMatrix(mxObject = mxObject, regOn = regOn, regIndicators = regIndicators),
+                                                    regOn = "DRIFT",
+                                                    regIndicators = regIndicatorsFromNameToMatrix(mxObject = mxObject,
+                                                                                                  regOn = regOn,
+                                                                                                  regIndicators = regIndicators),
                                                     lambda = lambda,
                                                     adaptiveLassoWeights = adaptiveLassoWeights,
                                                     penalty = "lasso"
@@ -606,10 +589,21 @@ tryApproxFirst <- function(startingValues, returnAs,
     if(!any(class(approxModel) == "try-error")){
       startingValues <- omxGetParameters(approxModel)
     }
-
+    if(returnAs == "vector"){
+      return(startingValues)
+    }else{
+      startingValues <- as.matrix(startingValues)
+      return(startingValues)
+    }
   }
 
-  if(approxFirst == 3 & !is.null(gradientModelcpp)){
+  # define a target vector if none is provided
+  if(is.null(targetVector)){
+    targetVector <- rep(0, length(regIndicators))
+    names(targetVector) <- regIndicators
+  }
+
+  if(approxFirst && !is.null(sparseParameters)){
     temp_startValues <- try(exact_tryStartingValues(gradientModel = gradientModel,
                                                     cppmodel = gradientModelcpp,
                                                     objective = objective,
@@ -618,14 +612,19 @@ tryApproxFirst <- function(startingValues, returnAs,
                                                     regIndicators = regIndicators,
                                                     newLambda = lambda,
                                                     adaptiveLassoWeights = adaptiveLassoWeights,
-                                                    differenceApprox = differenceApprox,
-                                                    numStartingValues = numStart, optimize = approxOpt,
+                                                    numStartingValues = numStart,
                                                     numOuter = approxMaxIt), silent = TRUE)
     if(!any(class(temp_startValues) == "try-error")){
       startingValues <- temp_startValues
     }
+    if(returnAs == "vector"){
+      return(startingValues)
+    }else{
+      startingValues <- as.matrix(startingValues)
+      return(startingValues)
+    }
   }
-  if(approxFirst == 4 & !is.null(gradientModelcpp)){
+  if(approxFirst && !is.null(gradientModelcpp)){
     optimized <- try(approx_cpptsemOptim(cpptsemmodel = gradientModelcpp,
                                          regM2LLCpptsem = ifelse(tolower(objective) == "ml",
                                                                  regCtsem::approx_RAMRegM2LLCpptsem,
@@ -635,35 +634,21 @@ tryApproxFirst <- function(startingValues, returnAs,
                                          adaptiveLassoWeights = adaptiveLassoWeights,
                                          N = 1, lambda = lambda,
                                          regIndicators = regIndicators,
+                                         targetVector = targetVector,
                                          epsilon = 10^(-8),
                                          maxit = approxMaxIt,
                                          objective, testGradients = TRUE), silent = TRUE)
     if(!any(class(optimized) == "try-error")){
       startingValues <- optimized$parameters
     }
-  }
-  if(approxFirst == 5 & !is.null(gradientModelcpp)){
-    optimized <- try(approx_cpptsemSolnp(cpptsemmodel = gradientModelcpp,
-                                         regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                 regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                 regCtsem::approx_KalmanRegM2LLCpptsem),
-                                         gradCpptsem = regCtsem::approx_gradCpptsem,
-                                         startingValues = startingValues,
-                                         adaptiveLassoWeights = adaptiveLassoWeights,
-                                         N = 1, lambda = lambda,
-                                         regIndicators = regIndicators,
-                                         epsilon = 10^(-8),
-                                         maxit = approxMaxIt,
-                                         objective), silent = TRUE)
-    if(!any(class(optimized) == "try-error")){
-      startingValues <- optimized$parameters
+    if(returnAs == "vector"){
+      return(startingValues)
+    }else{
+      startingValues <- as.matrix(startingValues)
+      return(startingValues)
     }
   }
-  if(returnAs == "vector"){
-    return(startingValues)
-  }else{
-    startingValues <- as.matrix(startingValues)
-    return(startingValues)
-  }
+
+  stop("Error in tryApproxFirst")
 
 }

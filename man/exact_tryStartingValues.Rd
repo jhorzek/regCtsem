@@ -13,9 +13,7 @@ exact_tryStartingValues(
   regIndicators,
   newLambda,
   adaptiveLassoWeights,
-  differenceApprox,
   numStartingValues,
-  optimize,
   numOuter
 )
 }
@@ -36,11 +34,7 @@ exact_tryStartingValues(
 
 \item{adaptiveLassoWeights}{named vector with adaptive lasso weights}
 
-\item{differenceApprox}{difference approximation for gradients (detault should be central)}
-
 \item{numStartingValues}{How many starting values should be tried?}
-
-\item{optimize}{1 = optimization with optim, 2 = optimization with Rsolnp}
 
 \item{numOuter}{number of outer iterations of optim or Rsolnp}
 }

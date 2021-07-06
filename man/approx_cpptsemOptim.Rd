@@ -13,6 +13,7 @@ approx_cpptsemOptim(
   N,
   lambda,
   regIndicators,
+  targetVector,
   epsilon,
   maxit,
   objective,
@@ -36,6 +37,8 @@ approx_cpptsemOptim(
 \item{lambda}{tuning parameter lambda}
 
 \item{regIndicators}{string vector with names of regularized parameters}
+
+\item{targetVector}{named vector with values towards which the parameters are regularized}
 
 \item{epsilon}{tuning parameter for epsL1 approximation}
 

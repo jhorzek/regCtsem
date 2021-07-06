@@ -7,8 +7,7 @@
 #' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
 #' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.
-#' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
-#' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of the same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
+#' @param regIndicators Labels of the regularized parameters (e.g. drift_eta1_eta2). For optimization = "approx" a matrix has to be provided which indicates the regularized drift values with 1 and unregularitzed ones with 0. Only drift parameters can be regularized in this case
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
@@ -78,14 +77,12 @@
 #' fit_myModel <- ctsemOMX::ctFit(dat, myModel)
 #'
 #' # select DRIFT values for regularization:
-#' regOn = "DRIFT"
 #' regIndicators = matrix(c(0,1,
 #'                          1,0),
 #'                        byrow = T, nrow = 2)
 #'
 #' # Optimize model using GIST with lasso penalty
 #' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
-#'                                regOn = regOn,
 #'                                regIndicators = regIndicators,
 #'                                lambdas = "auto",
 #'                                lambdasAutoLength = 20)
@@ -103,7 +100,6 @@
 #'
 #' # Optimize model using GLMNET with lasso penalty
 #' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
-#'                                regOn = regOn,
 #'                                regIndicators = regIndicators,
 #'                                lambdas = "auto",
 #'                                lambdasAutoLength = 20,
@@ -116,7 +112,6 @@
 #' # The same regularization can be performed with the approximate optimization:
 #' # Note that we are using extraTries to get better parameter estimates
 #' regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
-#'                                      regOn = regOn,
 #'                                      regIndicators = regIndicators,
 #'                                      lambdas = "auto",
 #'                                      lambdasAutoLength = 20,
@@ -167,7 +162,6 @@
 #'                           T0VAR="auto", type = "omx")
 #'
 #' # select DRIFT values:
-#' regOn = "DRIFT"
 #' regIndicators = matrix(c(0,1,1,0), byrow = T, ncol = 2)
 #'
 #' ## Optimization with GIST:
@@ -175,7 +169,6 @@
 #'   ctsemObject = myModel,
 #'   # Furthermore, the data has to be passed to regCtsem
 #'   dataset = traindata,
-#'   regOn = regOn,
 #'   regIndicators = regIndicators,
 #'   lambdas = "auto",
 #'   lambdasAutoLength = 20,
@@ -194,7 +187,6 @@ regCtsem <- function(
   # model
   ctsemObject = NULL,  mxObject = NULL, dataset = NULL,
   # penalty settings
-  regOn = "DRIFT",
   regIndicators,
   targetVector = NULL,
   lambdas = "auto",
@@ -230,9 +222,16 @@ regCtsem <- function(
   # save input in list
   argsIn <- as.list(environment())
 
+  if(tolower(optimization) == "approx"){
+    if(!is.matrix(regIndicators)){
+      stop("For approx optimization, a matrix has to be given which marks the regularized drift parameters with ones. Non-drift parameters cannot be regularized with approx optimization")
+    }
+    argsIn$regOn <- "DRIFT"
+  }
+
   if(!is.null(targetVector)){
     if(optimizer == "GLMNET"){
-      warning("Optimzer = GLMENT does not support a target vector. Switching to GIST")
+      warning("Optimzer = GLMNET does not support a target vector. Switching to GIST")
       optimizer <- "GIST"
       argsIn$optimizer <- "GIST"
     }
@@ -263,37 +262,6 @@ regCtsem <- function(
 
   # check setup
   checkSetup(argsIn)
-  if(argsIn$optimization == "exact"){
-    if(argsIn$approxFirst == "auto"){
-      if((any(lambdas == "auto")) | !is.null(argsIn$sparseParameters)){
-        argsIn$approxFirst <- 3
-      }else{
-        argsIn$approxFirst <- 4
-      }
-    }
-
-    if(argsIn$approxFirst == 3){
-      if((!any(argsIn$lambdas == "auto")) & any(is.null(argsIn$sparseParameters))){
-        warning("approxFirst = 3 requested. This requires either lambdas = 'auto' or the sparseParameters being passed to regCtsem. Setting approxFirst = 4")
-        argsIn$approxFirst <- 4
-      }
-    }
-
-    if(argsIn$approxMaxIt == "auto"){
-      if(argsIn$approxFirst == 3){
-        argsIn$approxMaxIt <- 10
-      }else{
-        argsIn$approxMaxIt <- 200
-      }
-    }
-  }
-
-  if(!is.null(targetVector)){
-    if(argsIn$approxFirst > 0){
-      warning("approxFirst > 0 does not support a target vector. Switching to approxFirst = 0")
-      argsIn$approxFirst <- 0
-    }
-  }
 
   if(is.null(argsIn$mxObject)){
     argsIn$mxObject <- argsIn$ctsemObject$mxobj
@@ -308,14 +276,25 @@ regCtsem <- function(
 
   if(argsIn$optimization == "exact" && is.numeric(argsIn$regIndicators)){
     if(tolower(argsIn$objective) == "kalman"){
-      argsIn$regIndicators <- argsIn$ctsemObject[[argsIn$regOn]][argsIn$regIndicators == 1]
+      argsIn$regIndicators <- argsIn$ctsemObject[["DRIFT"]][argsIn$regIndicators == 1]
     }else{
-      argsIn$regIndicators <- argsIn$mxObject[[argsIn$regOn]]$labels[argsIn$regIndicators == 1]
+      argsIn$regIndicators <- argsIn$mxObject[["DRIFT"]]$labels[argsIn$regIndicators == 1]
     }
+    warning(paste0("Exact optimization requested and regIndicators given as matrix. Interpreting as regularization of drifts. The following parameters will be regularized: ",
+                   paste0(argsIn$regIndicators, collapse = ", ")))
   }
+
+  # check if all targets are in the regIndicators
+  if(!is.null(targetVector)){
+    if((!all(names(targetVector) %in% regIndicators)) ||
+       (!all(regIndicators %in% names(targetVector)))
+       )
+    stop("Names of targetVector and regIndicators do not match.")
+  }
+
   if(argsIn$optimization == "approx" & is.character(argsIn$regIndicators)){
     if(tolower(argsIn$objective) == "kalman"){stop("Please provide regIndicators as matrix")}
-    argsIn$regIndicators <- regIndicatorsFromNameToMatrix(mxObject = argsIn$mxObject, regOn = argsIn$regOn,
+    argsIn$regIndicators <- regIndicatorsFromNameToMatrix(mxObject = argsIn$mxObject, regOn = "DRIFT",
                                                           regIndicators = argsIn$regIndicators)
   }
 
@@ -383,8 +362,7 @@ regCtsem <- function(
 #' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
 #' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.
-#' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
-#' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of the same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
+#' @param regIndicators Labels for the regularized parameters (e.g. drift_eta1_eta2)
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
@@ -423,10 +401,9 @@ regCtsem <- function(
 #' @param GISTLinesearchCriterion criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent
-#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first lambda, 2 = optimization for all lambdas. 3 ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or OpenMx if cpptsem is not available, 5 = optimizing using Rsolnp or OpenMx if cpptsem is not available (requires installation of Rsolnp). "auto" will default to 3 if lambdas = "auto" and 4 otherwise
+#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param approxOpt Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
-#' @param approxMaxIt Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .
+#' @param approxMaxIt Used if approxFirst. How many outer iterations should be given to each starting values vector?
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param cores how many computer cores should be used?
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
@@ -442,7 +419,6 @@ exact_regCtsem <- function(  # model
   mxObject = NULL,
   dataset = NULL,
   # penalty settings
-  regOn = "DRIFT",
   regIndicators,
   targetVector,
   lambdas = "auto",
@@ -489,10 +465,9 @@ exact_regCtsem <- function(  # model
   break_outer = c("parameterChange" = 10^(-5)),
   # general
   scaleLambdaWithN = TRUE,
-  approxFirst = "auto",
+  approxFirst = F,
   numStart = 0,
-  approxOpt = 1,
-  approxMaxIt = "auto",
+  approxMaxIt = 5,
   extraTries = 3,
   # additional settings
   cores = 1,
@@ -591,7 +566,7 @@ exact_regCtsem <- function(  # model
     # start fitting models
     if(tolower(optimizer) == "glmnet"){
       regModel <- try(regCtsem::exact_bfgsGLMNET(ctsemObject = ctsemObject, dataset = dataset, objective = objective,
-                                                 mxObject = mxObject, regOn = regOn, regIndicators = regIndicators, lambdas = lambdas,
+                                                 mxObject = mxObject, regIndicators = regIndicators, lambdas = lambdas,
                                                  adaptiveLassoWeights = adaptiveLassoWeights,
                                                  # additional settings
                                                  sparseParameters = sparseParameters,
@@ -610,7 +585,7 @@ exact_regCtsem <- function(  # model
     }
     if(tolower(optimizer) == "gist"){
       regModel <- try(regCtsem::exact_GIST(ctsemObject = ctsemObject, dataset = dataset, objective = objective,
-                                           mxObject = mxObject, regOn = regOn, regIndicators = regIndicators, targetVector = targetVector,
+                                           mxObject = mxObject, regIndicators = regIndicators, targetVector = targetVector,
                                            lambdas = lambdas, adaptiveLassoWeights = adaptiveLassoWeights,
                                            # additional settings
                                            sparseParameters = sparseParameters,
@@ -621,7 +596,7 @@ exact_regCtsem <- function(  # model
                                            break_outer = break_outer,
                                            scaleLambdaWithN = scaleLambdaWithN, sampleSize = sampleSize,
                                            approxFirst = approxFirst,
-                                           numStart = numStart, approxOpt = approxOpt, approxMaxIt = approxMaxIt,
+                                           numStart = numStart, approxMaxIt = approxMaxIt,
                                            extraTries = extraTries,
                                            differenceApprox = differenceApprox,
                                            verbose = verbose,
@@ -681,8 +656,7 @@ exact_regCtsem <- function(  # model
 #' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.
 #' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
-#' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
-#' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of the same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
+#' @param regIndicators Labels for the regularized parameters (e.g. drift_eta1_eta2)
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
@@ -720,10 +694,9 @@ exact_regCtsem <- function(  # model
 #' @param GISTLinesearchCriterion criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent
-#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first lambda, 2 = optimization for all lambdas. 3 ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or OpenMx if cpptsem is not available, 5 = optimizing using Rsolnp or OpenMx if cpptsem is not available (requires installation of Rsolnp). "auto" will default to 3 if lambdas = "auto" and 4 otherwise
+#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param approxOpt Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
-#' @param approxMaxIt Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .
+#' @param approxMaxIt Used if approxFirst. How many outer iterations should be given to each starting values vector?
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param cores how many computer cores should be used?
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
@@ -741,7 +714,6 @@ exact_parallelRegCtsem <- function(# model
   mxObject = NULL,
   dataset = NULL,
   # penalty settings
-  regOn = "DRIFT",
   regIndicators,
   targetVector,
   lambdas,
@@ -788,10 +760,9 @@ exact_parallelRegCtsem <- function(# model
   break_outer = c("parameterChange" = 10^(-5)),
   # general
   scaleLambdaWithN = TRUE,
-  approxFirst,
+  approxFirst = FALSE,
   numStart = 0,
-  approxOpt = 1,
-  approxMaxIt,
+  approxMaxIt = 5,
   extraTries = 3,
   # additional settings
   cores = 1,
