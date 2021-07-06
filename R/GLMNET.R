@@ -52,10 +52,9 @@
 #' @param eps_WW Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param sampleSize sample size for scaling lambda with N
-#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first lambda, 2 = optimization for all lambdas. 3 ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or OpenMx if cpptsem is not available, 5 = optimizing using Rsolnp or OpenMx if cpptsem is not available (requires installation of Rsolnp). "auto" will default to 3 if lambdas = "auto" and 4 otherwise
+#' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param approxOpt Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp
-#' @param approxMaxIt Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .
+#' @param approxMaxIt Used if approxFirst. How many outer iterations should be given to each starting values vector?
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #' @export
@@ -66,9 +65,8 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
                              sig = 10^(-5), gam = 0,
                              differenceApprox = "central", initialHessianApproximation = "OpenMx", maxIter_out = 100, maxIter_in = 1000,
                              maxIter_line = 500, eps_out = .0000000001, eps_in = .0000000001, eps_WW = .0001,
-                             scaleLambdaWithN = TRUE, sampleSize, approxFirst = 0,
+                             scaleLambdaWithN = TRUE, sampleSize, approxFirst = T,
                              numStart = 0,
-                             approxOpt = T,
                              approxMaxIt = 5, extraTries = 3, verbose = 0, progressBar = TRUE, parallelProgressBar = NULL){
   # Setup
   ## hessianModel is a models which returns the gradients and the Hessian:
@@ -199,13 +197,16 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
     # should the results first be approximated?
     startingValues <- as.vector(theta_kp1)
     names(startingValues) <- rownames(theta_kp1)
+    targetVector <- rep(0, length(regIndicators))
+    names(targetVector) <- regIndicators
 
     theta_kp1 <- tryApproxFirst(startingValues = startingValues, returnAs = "matrix",
-                                approxFirst = approxFirst, numStart = numStart, approxOpt = approxOpt, approxMaxIt = approxMaxIt,
+                                approxFirst = approxFirst, numStart = numStart, approxMaxIt = approxMaxIt,
                                 lambda = lambda, lambdas = lambdas,
                                 gradientModelcpp = gradientModelcpp,
                                 mxObject = mxObject,
-                                regIndicators = regIndicators, adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
+                                regIndicators = regIndicators, targetVector = targetVector,
+                                adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
                                 extraTries = extraTries)
 
     # outer loop: optimize parameters

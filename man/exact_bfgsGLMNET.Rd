@@ -31,9 +31,8 @@ exact_bfgsGLMNET(
   eps_WW = 1e-04,
   scaleLambdaWithN = TRUE,
   sampleSize,
-  approxFirst = 0,
+  approxFirst = T,
   numStart = 0,
-  approxOpt = T,
   approxMaxIt = 5,
   extraTries = 3,
   verbose = 0,
@@ -92,13 +91,11 @@ exact_bfgsGLMNET(
 
 \item{sampleSize}{sample size for scaling lambda with N}
 
-\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first lambda, 2 = optimization for all lambdas. 3 ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or OpenMx if cpptsem is not available, 5 = optimizing using Rsolnp or OpenMx if cpptsem is not available (requires installation of Rsolnp). "auto" will default to 3 if lambdas = "auto" and 4 otherwise}
+\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization?}
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{approxOpt}{Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp}
-
-\item{approxMaxIt}{Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .}
+\item{approxMaxIt}{Used if approxFirst. How many outer iterations should be given to each starting values vector?}
 
 \item{extraTries}{number of extra tries in mxTryHard for warm start}
 

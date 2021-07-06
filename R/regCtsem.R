@@ -579,7 +579,7 @@ exact_regCtsem <- function(  # model
                                                  eps_out = eps_out, eps_in = eps_in, eps_WW = eps_WW,
                                                  scaleLambdaWithN = scaleLambdaWithN, sampleSize = sampleSize,
                                                  approxFirst = approxFirst,
-                                                 numStart = numStart, approxOpt = approxOpt, approxMaxIt = approxMaxIt,
+                                                 numStart = numStart, approxMaxIt = approxMaxIt,
                                                  extraTries = extraTries,
                                                  verbose = verbose, progressBar = progressBar, parallelProgressBar = parallelProgressBar))
     }
