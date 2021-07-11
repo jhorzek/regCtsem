@@ -125,6 +125,78 @@
 #' cpptsemmodel3$latentScores[1,]
 #' cpptsemmodel3$approxKalmanGradients((1.1 * 10^(-16))^(1/3))[names(centralGrandients)]
 #'
+#' ## Example 4: Kalman Filter with group or person specific parameter values
+#' set.seed(175446)
+#' ## define the population model:
+#' addCINT <- FALSE
+#' if(addCINT){
+#' CINT = matrix(c("cint1", "cint2"), nrow = 2, ncol = 1)
+#' }else{
+#' CINT = matrix(c(0,0), nrow = 2, ncol = 1)
+#' }
+#' stationary <- c('T0TRAITEFFECT','T0TIPREDEFFECT')
+#' # set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
+#' ct_drift1 <- matrix(c(-.3,.2,0,-.5), ncol = 2)
+#' ct_drift2 <- matrix(c(-.5,.1,.1,-.2), ncol = 2)
+#' generatingModel1<-ctsem::ctModel(Tpoints=200,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+#'                                  MANIFESTVAR=diag(0,2),
+#'                                  LAMBDA=diag(1,2),
+#'                                  DRIFT=ct_drift1,
+#'                                  DIFFUSION=matrix(c(.5,0,0,.5),2),
+#'                                  CINT=matrix(0,nrow = 2, ncol = 1),
+#'                                  T0MEANS=matrix(0,ncol=1,nrow=2),
+#'                                  T0VAR=diag(1,2), type = "omx")
+#' generatingModel2<-ctsem::ctModel(Tpoints=200,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+#'                                  MANIFESTVAR=diag(0,2),
+#'                                  LAMBDA=diag(1,2),
+#'                                  DRIFT=ct_drift2,
+#'                                  DIFFUSION=matrix(c(.5,0,0,.5),2),
+#'                                  CINT=matrix(0,nrow = 2, ncol = 1),
+#'                                  T0MEANS=matrix(0,ncol=1,nrow=2),
+#'                                  T0VAR=diag(1,2), type = "omx")
+# simulate a training data and testing data set
+#' traindata1 <- ctsem::ctGenerate(generatingModel1,n.subjects = 10, wide = TRUE)
+#' traindata2 <- ctsem::ctGenerate(generatingModel2,n.subjects = 10, wide = TRUE)
+#' traindata <- rbind(traindata1, traindata2)
+#' ## Build the analysis model.
+#' myModel <- ctsem::ctModel(Tpoints=200,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+#'                           LAMBDA=diag(1,2),
+#'                           MANIFESTVAR=diag(0,2),
+#'                           CINT=CINT,
+#'                           DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
+#'                           T0MEANS=matrix(0,ncol=1,nrow=2),
+#'                           T0VAR="auto", type = "omx")
+#' myModel <- ctFit(myModel, dat = traindata, objective = "Kalman", useOptimizer = F, stationary = stationary)
+#'
+#' ## with cpptsem
+#' cpptsemmodel3 <- cpptsemFromCtsem(ctsemModel = myModel, wideData = traindata, group = c(rep(1,10), rep(2,10)), groupSpecificParameters = c(myModel$mxobj$DRIFT$labels))
+#'
+#' startingValues <- cpptsemmodel3$getParameterValues()
+#'
+#' m2LLCpptsem <- function(parameters, cpptsemmodel){
+#'   cpptsemmodel$setParameterValues(parameters, names(parameters))
+#'   # catching all errors from cpptsemmodel
+#' # when parameter values are impossible
+#'   invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(),
+#'                                          silent = TRUE),
+#'                            type = "message"))
+#'
+#'   if(class(KALMAN) == "try-error" | is.na(cpptsemmodel$m2LL)){
+#'     return(99999999)
+#'   }
+#'   return(cpptsemmodel$m2LL)
+#' }
+#'
+#' # compute
+#' kalmanCpptsemFit <- Rsolnp::solnp(pars = startingValues,
+#'                                   fun = m2LLCpptsem,
+#'                                   eqfun = NULL, eqB = NULL, ineqfun = NULL, ineqLB = NULL,
+#'                                   ineqUB = NULL, LB = NULL, UB = NULL, control = list(trace = 0),
+#'                                   cpptsemmodel3)
+#' kalmanCpptsemFit$pars
+#' ct_drift1
+#'
+#'
 #' @export
 
 cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE, group = NULL, groupSpecificParameters = NULL){
