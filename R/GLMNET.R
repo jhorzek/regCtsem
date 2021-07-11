@@ -200,14 +200,16 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
     targetVector <- rep(0, length(regIndicators))
     names(targetVector) <- regIndicators
 
-    theta_kp1 <- tryApproxFirst(startingValues = startingValues, returnAs = "matrix",
-                                approxFirst = approxFirst, numStart = numStart, approxMaxIt = approxMaxIt,
-                                lambda = lambda, lambdas = lambdas,
-                                gradientModelcpp = gradientModelcpp,
-                                mxObject = mxObject,
-                                regIndicators = regIndicators, targetVector = targetVector,
-                                adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
-                                extraTries = extraTries)
+    if(approxFirst > 0){
+      theta_kp1 <- tryApproxFirst(startingValues = startingValues, returnAs = "matrix",
+                                  approxFirst = approxFirst, numStart = numStart, approxMaxIt = approxMaxIt,
+                                  lambda = lambda, lambdas = lambdas,
+                                  gradientModelcpp = gradientModelcpp,
+                                  mxObject = mxObject,
+                                  regIndicators = regIndicators, targetVector = targetVector,
+                                  adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
+                                  extraTries = extraTries)
+    }
 
     # outer loop: optimize parameters
     resGLMNET <- try(regCtsem::exact_outerGLMNET(mxObject = mxObject, objective =objective,

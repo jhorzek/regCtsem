@@ -144,14 +144,16 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regIndicators,
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*samplesize
 
     # should the results first be approximated?
-    startingValues <- tryApproxFirst(startingValues = startingValues, returnAs = "vector",
-                                     approxFirst = approxFirst, numStart = numStart, approxMaxIt = approxMaxIt,
-                                     lambda = lambda, lambdas = lambdas,
-                                     gradientModelcpp = gradientModelcpp,
-                                     mxObject = mxObject,
-                                     regIndicators = regIndicators, targetVector = targetVector, adaptiveLassoWeights = adaptiveLassoWeights,
-                                     objective = objective, sparseParameters =sparseParameters,
-                                     extraTries = extraTries)
+    if(approxFirst > 0){
+      startingValues <- tryApproxFirst(startingValues = startingValues, returnAs = "vector",
+                                       approxFirst = approxFirst, numStart = numStart, approxMaxIt = approxMaxIt,
+                                       lambda = lambda, lambdas = lambdas,
+                                       gradientModelcpp = gradientModelcpp,
+                                       mxObject = mxObject,
+                                       regIndicators = regIndicators, targetVector = targetVector, adaptiveLassoWeights = adaptiveLassoWeights,
+                                       objective = objective, sparseParameters =sparseParameters,
+                                       extraTries = extraTries)
+    }
     # use Gist
     if(!is.null(gradientModelcpp) && verbose == -1){
       # The cpptsem objects come with a C++ implementation of GIST which will be used if
