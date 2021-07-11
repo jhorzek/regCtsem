@@ -127,7 +127,7 @@
 #'
 #' @export
 
-cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE){
+cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE, group = NULL, groupSpecificParameters = NULL){
   if(!"T0TRAITEFFECT" %in% ctsemModel$ctfitargs$stationary){
     stop("Non-stationary trait effect not yet implemented")
   }
@@ -147,6 +147,10 @@ cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE){
   # step 2: prepare dataset
 
   if(tolower(ctsemModel$ctfitargs$objective) == "mxram"){
+    if(!is.null(group) || !is.null(groupSpecificParameters)){
+      stop("Group specific parameters can only be used with the Kalman filter.")
+    }
+
     dataInformation <- constructDataset(wideData = mxObject$data$observed)
     dataForRAM <- prepareRAMData(dataset = dataInformation$dataset,
                                  individualMissingPatternID = dataInformation$individualMissingPatternID,
@@ -179,6 +183,31 @@ cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE){
       # implementation used by cpptsem simply adds the manifestmeans to the predicted observed variables.
       parameterTable <- subset(parameterTable, !parameterTable$matrix == "D")
     }
+
+    # add columns for person specific parameters
+    parameterTable$groupID <- 0
+
+    if(!is.null(group) || !is.null(groupSpecificParameters)){
+      uniqueGroups <- unique(group)
+      for(gr in uniqueGroups){
+        grParameterTable <- parameterTable
+        grSpecificParameterTable <- subset(grParameterTable, label %in% groupSpecificParameters)
+        grSpecificParameterTable$label <- paste0(grSpecificParameterTable$label, paste0("_G", gr))
+        grParameterTable <- rbind(subset(grParameterTable, !label %in% groupSpecificParameters),
+              grSpecificParameterTable)
+        grParameterTable$groupID <- gr
+        if(gr == uniqueGroups[1]){
+          combinedGrParameterTable <- grParameterTable
+        }else{
+          combinedGrParameterTable <- rbind(combinedGrParameterTable, grParameterTable)
+        }
+      }
+      parameterTable <- combinedGrParameterTable
+    }else{
+      group <- rep(0, nrow(wideData))
+      parameterTable$groupID <- rep(0, nrow(parameterTable))
+    }
+    parameterTable$changed <- rep(TRUE, nrow(parameterTable))
   }
 
   if(tolower(ctsemModel$ctfitargs$objective) == "mxram"){
@@ -250,7 +279,9 @@ cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE){
 
     cpptsem$setDiscreteTimeParameterNames(discreteTimeParameterNames)
 
-    cpptsem$setKalmanData(dataForKalman)
+    cpptsem$setKalmanData(dataForKalman, FALSE)
+
+    cpptsem$setKalmanGroupings(0:(nrow(wideData)-1), group)
 
     cpptsem$setKalmanMatrices(KalmanMatrices)
 

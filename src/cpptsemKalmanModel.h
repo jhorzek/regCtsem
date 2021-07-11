@@ -24,7 +24,7 @@ public:
   arma::mat DRIFTValues;
   arma::mat DIFFUSIONValues;
   arma::mat T0VARValues;
-  arma::colvec T0MEANSValues, indM2LL;
+  arma::colvec T0MEANSValues, indM2LL, persons, group;
   arma::mat TRAITVARValues;
   arma::mat MANIFESTVARValues;
   arma::mat LAMBDAValues;
@@ -36,7 +36,8 @@ public:
     hasDiscreteCINTUnique = false,
     computeWasCalled = false,
     stationaryT0VAR = false,
-    stationaryT0MEANS = false;
+    stationaryT0MEANS = false,
+    hasDefinitionVariables = false;
 
   double m2LL;
 
@@ -49,13 +50,15 @@ public:
 
   // setter
   void setParameterValues(Rcpp::NumericVector mParameters, Rcpp::StringVector parameterLabels);
+  void setKalmanMatrixValues(int selectedGroup);
   void setDiscreteDRIFTUnique(Rcpp::List mDiscreteDRIFTUnique);
   void setDiscreteTRAITUnique(Rcpp::List mDiscreteTRAITUnique);
   void setDRIFTHASHExponentialUnique(Rcpp::List mDRIFTHASHExponentialUnique);
   void setDiscreteDIFFUSIONUnique(Rcpp::List mDiscreteDIFFUSIONUnique);
   void setDiscreteCINTUnique(Rcpp::List mDiscreteCINTUnique);
 
-  void setKalmanData(Rcpp::List mKalmanData);
+  void setKalmanData(Rcpp::List mKalmanData, bool mhasDefinitionVariables);
+  void setKalmanGroupings(arma::colvec mPersons, arma::colvec mGroup);
   void setDiscreteTimeParameterNames(Rcpp::List mDiscreteTimeParameterNames);
   void setKalmanMatrices(Rcpp::List mKalmanMatrices);
 

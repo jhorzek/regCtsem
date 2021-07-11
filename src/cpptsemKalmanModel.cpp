@@ -60,8 +60,17 @@ void cpptsemKalmanModel::setDiscreteCINTUnique(Rcpp::List mDiscreteCINTUnique){
   hasDiscreteCINTUnique = true;
 }
 
+void cpptsemKalmanModel::setKalmanGroupings(arma::colvec mPersons, arma::colvec mGroup){
+  persons = mPersons;
+  group = mGroup;
+}
+
 void cpptsemKalmanModel::setParameterValues(Rcpp::NumericVector mParameters, Rcpp::StringVector parameterLabels){
-  // change status of RAM computation and RAM fitting
+  Rcpp::StringVector personExpectedParameterLabels, personMatrixLabels;
+  Rcpp::NumericVector personCurrentParameters, personRow, personCol;
+  Rcpp::LogicalVector groupSelector, personChanged;
+
+  // change status of Kalman computation and Kalman fitting
   computeWasCalled = false;
   // set the parameters in (1) the parameterTable (2) the ctMatrices
   bool wasSet; // checks if all parameters were changed
@@ -70,28 +79,82 @@ void cpptsemKalmanModel::setParameterValues(Rcpp::NumericVector mParameters, Rcp
   Rcpp::NumericVector currentParameters = parameterTable["value"]; // values before change
   Rcpp::NumericVector row =  parameterTable["row"];
   Rcpp::NumericVector col =  parameterTable["col"];
+  Rcpp::NumericVector groupID =  parameterTable["groupID"];
+  Rcpp::NumericVector uniqueIDs = unique(groupID);
+  Rcpp::LogicalVector changed = parameterTable["changed"];
 
-  for(int i = 0; i < expectedParameterLabels.size(); i++){
-    wasSet = false;
-    for(int j = 0; j < parameterLabels.size(); j++){
-      if(parameterLabels(j) == expectedParameterLabels(i)){
-        wasSet = true;
-        currentParameters(i) = mParameters(j);
+  for(int group = 0; group < uniqueIDs.length(); group++){
+    // select the rows of the specified group
+    groupSelector = (groupID==uniqueIDs[group]);
+
+    personExpectedParameterLabels = expectedParameterLabels[groupSelector];
+    personMatrixLabels = matrixLabels[groupSelector];
+    personCurrentParameters = currentParameters[groupSelector];
+    personRow = row[groupSelector];
+    personCol = col[groupSelector];
+    personChanged = changed[groupSelector];
+
+    for(int i = 0; i < personExpectedParameterLabels.size(); i++){
+      wasSet = false;
+      for(int j = 0; j < parameterLabels.size(); j++){
+        if(parameterLabels(j) == personExpectedParameterLabels(i)){
+          wasSet = true;
+          if(!(personCurrentParameters(i) == mParameters(j))){
+            personChanged.fill(true);
+          }
+          personCurrentParameters(i) = mParameters(j);
+        }
+      }
+
+      if(!wasSet){
+        Rcpp::stop("Error while setting parameters: The parameter" +  personExpectedParameterLabels(i) + " was not found!");
       }
     }
 
-    if(!wasSet){
-      Rcpp::Rcout << "Error while setting parameters: The parameter " << expectedParameterLabels(i) << " was not found!" << std::endl;
-    }
+    currentParameters[groupSelector] = personCurrentParameters;
+    changed[groupSelector] = personChanged;
   }
 
-  for(int i = 0; i < expectedParameterLabels.size(); i++){
-    Rcpp::String matrixLabel = matrixLabels(i); // matrix in which parameter i is situated
+  // set parameters to values of last group
+  for(int i = 0; i < personExpectedParameterLabels.size(); i++){
+    Rcpp::String matrixLabel = personMatrixLabels(i); // matrix in which parameter i is situated
     Rcpp::List currentMatrixList = ctMatrixList[matrixLabel]; // values and labels of this matrix
     Rcpp::NumericMatrix currentMatrixValues = currentMatrixList["values"]; // values of this matrix
-    currentMatrixValues(row(i), col(i)) = currentParameters(i); // set the values to the new parameter values
+    currentMatrixValues(personRow(i), personCol(i)) = personCurrentParameters(i); // set the values to the new parameter values
   }
 
+}
+
+void cpptsemKalmanModel::setKalmanMatrixValues(int selectedGroup){
+  // sets the values of the drift, diffusion, etc matrices to the values of a specific group.
+  Rcpp::StringVector personExpectedParameterLabels, personMatrixLabels;
+  Rcpp::NumericVector personCurrentParameters, personRow, personCol;
+  Rcpp::LogicalVector groupSelector;
+
+  // set the parameters in the ctMatrices
+  Rcpp::StringVector expectedParameterLabels = parameterTable["label"];
+  Rcpp::StringVector matrixLabels = parameterTable["matrix"]; // vector with labels of the ct matrices
+  Rcpp::NumericVector currentParameters = parameterTable["value"]; // values before change
+  Rcpp::NumericVector row =  parameterTable["row"];
+  Rcpp::NumericVector col =  parameterTable["col"];
+  Rcpp::NumericVector groupID =  parameterTable["groupID"];
+
+  // select the rows of the specified group
+  groupSelector = (groupID==selectedGroup);
+
+  personExpectedParameterLabels = expectedParameterLabels[groupSelector];
+  personMatrixLabels = matrixLabels[groupSelector];
+  personCurrentParameters = currentParameters[groupSelector];
+  personRow = row[groupSelector];
+  personCol = col[groupSelector];
+
+  // set parameters to values of last group
+  for(int i = 0; i < personExpectedParameterLabels.size(); i++){
+    Rcpp::String matrixLabel = personMatrixLabels(i); // matrix in which parameter i is situated
+    Rcpp::List currentMatrixList = ctMatrixList[matrixLabel]; // values and labels of this matrix
+    Rcpp::NumericMatrix currentMatrixValues = currentMatrixList["values"]; // values of this matrix
+    currentMatrixValues(personRow(i), personCol(i)) = personCurrentParameters(i); // set the values to the new parameter values
+  }
 }
 
 // returns the parameter values of a cpptsemKalmanModel
@@ -125,12 +188,16 @@ void cpptsemKalmanModel::setKalmanMatrices(Rcpp::List mKalmanMatrices){
 
 }
 
-void cpptsemKalmanModel::setKalmanData(Rcpp::List mKalmanData){
+void cpptsemKalmanModel::setKalmanData(Rcpp::List mKalmanData, bool mhasDefinitionVariables){
   kalmanData = Rcpp::as<arma::mat>(mKalmanData["dataset"]);
   sampleSize = mKalmanData["sampleSize"];
   Tpoints = mKalmanData["Tpoints"];
   nlatent = mKalmanData["nlatent"];
   nmanifest = mKalmanData["nmanifest"];
+  hasDefinitionVariables = mhasDefinitionVariables;
+  arma::colvec tempIndM2ll(sampleSize);
+  tempIndM2ll.fill(arma::datum::nan);
+  indM2LL = tempIndM2ll;
 }
 
 void cpptsemKalmanModel::setDiscreteTimeParameterNames(Rcpp::List mDiscreteTimeParameterNames){
@@ -142,136 +209,167 @@ void cpptsemKalmanModel::computeAndFitKalman(){
   arma::mat DRIFTInverseValues;
   arma::mat DRIFTHASH;
   arma::mat DRIFTHASHInverse;
+  arma::uvec currentPersonRows;
+  int currentSampleSize;
+  arma::mat currentDataSet, currentLatentScores, currentPredictedManifest, currentIndM2LL;
 
-  if( ctMatrixList.containsElementNamed("DRIFT") ){
-    // get Drift
-    Rcpp::List DRIFTList = ctMatrixList["DRIFT"];
-    DRIFTValues = Rcpp::as<arma::mat> (DRIFTList["values"]);
+  // iterate over all unique sets of parameters
+  Rcpp::LogicalVector changed = parameterTable["changed"];
+  Rcpp::LogicalVector currentParameters, currentChange;
+  Rcpp::NumericVector groupID =  parameterTable["groupID"];
+  Rcpp::NumericVector uniqueIDs = unique(groupID);
 
-    // get drift inverse
-    DRIFTInverseValues = arma::inv(DRIFTValues);
-
-    // get DRIFTHASH
-    DRIFTHASH = computeDRIFTHASH(DRIFTValues);
-    DRIFTHASHInverse = arma::inv(DRIFTHASH);
-
-  }else{
-    Rcpp::Rcout << "Could not find a DRIFT!" << std::endl;
-  }
-
-  if( ctMatrixList.containsElementNamed("DIFFUSIONbase") ){
-    // get DIFFUSION
-    Rcpp::List DIFFUSIONbaseList = ctMatrixList["DIFFUSIONbase"];
-    arma::mat DIFFUSIONbaseValues = DIFFUSIONbaseList["values"];
-    DIFFUSIONValues = getVarianceFromVarianceBase(DIFFUSIONbaseValues);
-  }else{
-    Rcpp::Rcout << "Could not find a DIFFUSION!" << std::endl;
-  }
-
-  if( ctMatrixList.containsElementNamed("T0VARbase") ){
-    // get T0VAR
-    Rcpp::List T0VARbaseList = ctMatrixList["T0VARbase"];
-    arma::mat T0VARbaseValues = T0VARbaseList["values"];
-    T0VARValues = getVarianceFromVarianceBase(T0VARbaseValues);
-  }
-
-  if(stationaryT0VAR){
-    // compute asymptotic diffusion
-    arma::uword nrows = DIFFUSIONValues.n_rows;
-    arma::uword ncols = DIFFUSIONValues.n_cols;
-    arma::mat asymptoticDIFFUSION = -1*arma::inv(DRIFTHASH) * arma::vectorise(DIFFUSIONValues);
-    T0VARValues = asymptoticDIFFUSION;
-    T0VARValues.reshape(nrows, ncols);
-  }
-
-  if( ctMatrixList.containsElementNamed("TRAITVARbase") ){
-    // get TRAITVAR
-    Rcpp::List TRAITVARbaseList = ctMatrixList["TRAITVARbase"];
-    arma::mat TRAITVARbaseValues = TRAITVARbaseList["values"];
-    TRAITVARValues = getVarianceFromVarianceBase(TRAITVARbaseValues);
-  }
-
-  if( ctMatrixList.containsElementNamed("MANIFESTVARbase") ){
-    // MANIFESTVAR
-    Rcpp::List MANIFESTVARbaseList = ctMatrixList["MANIFESTVARbase"];
-    arma::mat MANIFESTVARbaseValues = MANIFESTVARbaseList["values"];
-    MANIFESTVARValues = getVarianceFromVarianceBase(MANIFESTVARbaseValues);
-  }
-
-  // Manifest Means and T0MEANS
-  Rcpp::List MANIFESTMEANSList = ctMatrixList["MANIFESTMEANS"];
-  MANIFESTMEANSValues = Rcpp::as<arma::colvec> (MANIFESTMEANSList["values"]);
-
-  if(stationaryT0MEANS){
-    Rcpp::List CINTList = ctMatrixList["CINT"];
-    arma::colvec CINTValues = Rcpp::as<arma::colvec> (CINTList["values"]);
-    T0MEANSValues = -1*DRIFTInverseValues * CINTValues;
-  }else{
-    Rcpp::List T0MEANSList = ctMatrixList["T0MEANS"];
-    T0MEANSValues = Rcpp::as<arma::colvec> (T0MEANSList["values"]);
-  }
-
-  Rcpp::List LAMBDAList = ctMatrixList["LAMBDA"];
-  LAMBDAValues = Rcpp::as<arma::mat> (LAMBDAList["values"]);
-
-  // compute discrete time drift
-  if(hasDiscreteDRIFTUnique){
-    discreteDRIFTUnique = computeDiscreteDRIFTs(DRIFTValues, discreteDRIFTUnique);
-  }else{
-    Rcpp::Rcout << "discreteDRIFTUnique seems to be missing!" << std::endl;
-  }
-
-  // compute discrete time traits
-  if(hasDiscreteTRAITUnique){
-    discreteTRAITUnique = computeDiscreteTRAITs(discreteDRIFTUnique, discreteTRAITUnique);
-  }
-
-  // compute discrete DRIFTHASHs
-  if(hasDRIFTHASHExponentialUnique){
-    DRIFTHASHExponentialUnique = computeDRIFTHASHExponentials(DRIFTHASH, DRIFTHASHExponentialUnique);
-  }else{
-    Rcpp::Rcout << "DRIFTHASHExponentialUnique seems to be missing!" << std::endl;
-  }
-
-  // compute discreteDIFFUSION
-  if(hasDiscreteDIFFUSIONUnique){
-    if(!hasDiscreteDIFFUSIONUnique){
-      Rcpp::Rcout << "Error: DRIFTHASHExponentialUnique missing!" << std::endl;
+  for(int idIndex = 0; idIndex < uniqueIDs.length(); idIndex++){
+    // check if the parameters of the current id-group changed. If not, we can reuse the previous -2log Likelihood
+    currentParameters = groupID == uniqueIDs[idIndex];
+    currentChange = changed[currentParameters];
+    if(Rcpp::is_false(Rcpp::any(currentChange))){
+      // if none of the parameters changed: skip to next group
+      continue;
     }
-    discreteDIFFUSIONUnique = computeDiscreteDIFFUSIONs(DRIFTHASHInverse, DIFFUSIONValues,
-                                                        DRIFTHASHExponentialUnique, discreteDIFFUSIONUnique);
-  }
+    // set parameters to values of persons with current id
+    setKalmanMatrixValues(uniqueIDs[idIndex]);
+    currentPersonRows = arma::find(group == uniqueIDs[idIndex]);
+    currentSampleSize = currentPersonRows.n_elem;
+    currentDataSet = kalmanData.rows(currentPersonRows);
 
-  // compute discreteCINT
-  if(hasDiscreteCINTUnique){
-    if(!hasDiscreteDRIFTUnique){
-      Rcpp::Rcout << "Error: hasDiscreteDRIFTUnique missing!" << std::endl;
+    if( ctMatrixList.containsElementNamed("DRIFT") ){
+      // get Drift
+      Rcpp::List DRIFTList = ctMatrixList["DRIFT"];
+      DRIFTValues = Rcpp::as<arma::mat> (DRIFTList["values"]);
+
+      // get drift inverse
+      DRIFTInverseValues = arma::inv(DRIFTValues);
+
+      // get DRIFTHASH
+      DRIFTHASH = computeDRIFTHASH(DRIFTValues);
+      DRIFTHASHInverse = arma::inv(DRIFTHASH);
+
+    }else{
+      Rcpp::stop("Could not find a DRIFT!");
     }
-    Rcpp::List CINTList = ctMatrixList["CINT"];
-    arma::colvec CINTValues = Rcpp::as<arma::colvec>(CINTList["values"]);
 
-    discreteCINTUnique = computeDiscreteCINTs(discreteCINTUnique, DRIFTInverseValues, discreteDRIFTUnique, CINTValues);
+    if( ctMatrixList.containsElementNamed("DIFFUSIONbase") ){
+      // get DIFFUSION
+      Rcpp::List DIFFUSIONbaseList = ctMatrixList["DIFFUSIONbase"];
+      arma::mat DIFFUSIONbaseValues = DIFFUSIONbaseList["values"];
+      DIFFUSIONValues = getVarianceFromVarianceBase(DIFFUSIONbaseValues);
+    }else{
+      Rcpp::stop("Could not find a DIFFUSION!");
+    }
+
+    if( ctMatrixList.containsElementNamed("T0VARbase") ){
+      // get T0VAR
+      Rcpp::List T0VARbaseList = ctMatrixList["T0VARbase"];
+      arma::mat T0VARbaseValues = T0VARbaseList["values"];
+      T0VARValues = getVarianceFromVarianceBase(T0VARbaseValues);
+    }
+
+    if(stationaryT0VAR){
+      // compute asymptotic diffusion
+      arma::uword nrows = DIFFUSIONValues.n_rows;
+      arma::uword ncols = DIFFUSIONValues.n_cols;
+      arma::mat asymptoticDIFFUSION = -1*arma::inv(DRIFTHASH) * arma::vectorise(DIFFUSIONValues);
+      T0VARValues = asymptoticDIFFUSION;
+      T0VARValues.reshape(nrows, ncols);
+    }
+
+    if( ctMatrixList.containsElementNamed("TRAITVARbase") ){
+      // get TRAITVAR
+      Rcpp::List TRAITVARbaseList = ctMatrixList["TRAITVARbase"];
+      arma::mat TRAITVARbaseValues = TRAITVARbaseList["values"];
+      TRAITVARValues = getVarianceFromVarianceBase(TRAITVARbaseValues);
+    }
+
+    if( ctMatrixList.containsElementNamed("MANIFESTVARbase") ){
+      // MANIFESTVAR
+      Rcpp::List MANIFESTVARbaseList = ctMatrixList["MANIFESTVARbase"];
+      arma::mat MANIFESTVARbaseValues = MANIFESTVARbaseList["values"];
+      MANIFESTVARValues = getVarianceFromVarianceBase(MANIFESTVARbaseValues);
+    }
+
+    // Manifest Means and T0MEANS
+    Rcpp::List MANIFESTMEANSList = ctMatrixList["MANIFESTMEANS"];
+    MANIFESTMEANSValues = Rcpp::as<arma::colvec> (MANIFESTMEANSList["values"]);
+
+    if(stationaryT0MEANS){
+      Rcpp::List CINTList = ctMatrixList["CINT"];
+      arma::colvec CINTValues = Rcpp::as<arma::colvec> (CINTList["values"]);
+      T0MEANSValues = -1*DRIFTInverseValues * CINTValues;
+    }else{
+      Rcpp::List T0MEANSList = ctMatrixList["T0MEANS"];
+      T0MEANSValues = Rcpp::as<arma::colvec> (T0MEANSList["values"]);
+    }
+
+    Rcpp::List LAMBDAList = ctMatrixList["LAMBDA"];
+    LAMBDAValues = Rcpp::as<arma::mat> (LAMBDAList["values"]);
+
+    // compute discrete time drift
+    if(hasDiscreteDRIFTUnique){
+      discreteDRIFTUnique = computeDiscreteDRIFTs(DRIFTValues, discreteDRIFTUnique);
+    }else{
+      Rcpp::stop("discreteDRIFTUnique seems to be missing!");
+    }
+
+    // compute discrete time traits
+    if(hasDiscreteTRAITUnique){
+      discreteTRAITUnique = computeDiscreteTRAITs(discreteDRIFTUnique, discreteTRAITUnique);
+    }
+
+    // compute discrete DRIFTHASHs
+    if(hasDRIFTHASHExponentialUnique){
+      DRIFTHASHExponentialUnique = computeDRIFTHASHExponentials(DRIFTHASH, DRIFTHASHExponentialUnique);
+    }else{
+      Rcpp::stop("DRIFTHASHExponentialUnique seems to be missing!");
+    }
+
+    // compute discreteDIFFUSION
+    if(hasDiscreteDIFFUSIONUnique){
+      if(!hasDiscreteDIFFUSIONUnique){
+        Rcpp::stop("Error: DRIFTHASHExponentialUnique missing!");
+      }
+      discreteDIFFUSIONUnique = computeDiscreteDIFFUSIONs(DRIFTHASHInverse, DIFFUSIONValues,
+                                                          DRIFTHASHExponentialUnique, discreteDIFFUSIONUnique);
+    }
+
+    // compute discreteCINT
+    if(hasDiscreteCINTUnique){
+      if(!hasDiscreteDRIFTUnique){
+        Rcpp::stop("Error: hasDiscreteDRIFTUnique missing!");
+      }
+      Rcpp::List CINTList = ctMatrixList["CINT"];
+      arma::colvec CINTValues = Rcpp::as<arma::colvec>(CINTList["values"]);
+
+      discreteCINTUnique = computeDiscreteCINTs(discreteCINTUnique, DRIFTInverseValues, discreteDRIFTUnique, CINTValues);
+    }
+
+    currentLatentScores.resize(currentSampleSize, latentScores.n_cols);
+    currentLatentScores.fill(arma::datum::nan);
+    currentPredictedManifest.resize(currentSampleSize, predictedManifestValues.n_cols);
+    currentPredictedManifest.fill(arma::datum::nan);
+
+    // Kalman filter: Prediction and Updating
+    currentIndM2LL = kalmanFit(currentSampleSize,
+                               Tpoints,
+                               nlatent,
+                               nmanifest,
+                               currentDataSet,
+                               currentLatentScores,
+                               currentPredictedManifest,
+                               discreteTimeParameterNames,
+                               T0MEANSValues,
+                               T0VARValues,
+                               discreteDRIFTUnique,
+                               discreteCINTUnique,
+                               discreteTRAITUnique,
+                               discreteDIFFUSIONUnique,
+                               LAMBDAValues,
+                               MANIFESTMEANSValues,
+                               MANIFESTVARValues);
+    indM2LL.rows(currentPersonRows) = currentIndM2LL;
+    latentScores.rows(currentPersonRows) = currentLatentScores;
+    predictedManifestValues.rows(currentPersonRows) = currentPredictedManifest;
   }
-
-
-  // Kalman filter: Prediction and Updating
-  indM2LL = kalmanFit(sampleSize,
-                      Tpoints,
-                      nlatent,
-                      nmanifest,
-                      kalmanData,
-                      latentScores,
-                      predictedManifestValues,
-                      discreteTimeParameterNames,
-                      T0MEANSValues,
-                      T0VARValues,
-                      discreteDRIFTUnique,
-                      discreteCINTUnique,
-                      discreteTRAITUnique,
-                      discreteDIFFUSIONUnique,
-                      LAMBDAValues,
-                      MANIFESTMEANSValues,
-                      MANIFESTVARValues);
   m2LL = sum(indM2LL);
 
 }
@@ -703,6 +801,7 @@ RCPP_EXPOSED_CLASS(cpptsemKalmanModel)
     .method( "getParameterValues", &cpptsemKalmanModel::getParameterValues, "Get current parameter values")
     .method( "setKalmanMatrices", &cpptsemKalmanModel::setKalmanMatrices, "Set up the Kalman matrices. Requires numeric matrices for A, S, M, F and DataFrames with cpp compatible row and column indicators for A, S, M which specify where in the matrices the discrete time parameters go.")
     .method( "setKalmanData", &cpptsemKalmanModel::setKalmanData, "Set up the dataset for Kalman models. Expects a list with sampleSize, nObservedVariables, rawData, observedMeans, observedCov, expectedSelector, expectedMeans, expectedCovariance, m2LL for each missingness pattern")
+    .method( "setKalmanGroupings", &cpptsemKalmanModel::setKalmanGroupings, "Set groups. Expects a vector with person-indices from 0 to nPersons and a vector with group indices")
     .method( "setDiscreteTimeParameterNames", &cpptsemKalmanModel::setDiscreteTimeParameterNames, "Set up the names of the discrete time parameters of the Kalman model")
     .method( "computeAndFitKalman", &cpptsemKalmanModel::computeAndFitKalman, "Computes the Kalman matrices")
     .method( "approxKalmanGradients", &cpptsemKalmanModel::approxKalmanGradients, "Returns a central approximation of the gradients.")

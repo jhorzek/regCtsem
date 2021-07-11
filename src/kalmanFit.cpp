@@ -6,23 +6,23 @@
 // Performs the prediciton and updating step for the Kalman Filter
 using namespace Rcpp;
 // [[Rcpp::export]]
-arma::colvec kalmanFit(int sampleSize,
-                 int Tpoints,
-                 int nlatent,
+arma::colvec kalmanFit(const int sampleSize,
+                 const int Tpoints,
+                 const int nlatent,
                  int nmanifest,
-                 arma::mat kalmanData,
+                 const arma::mat kalmanData,
                  arma::mat &latentScores,
                  arma::mat &predictedManifestValues,
-                 Rcpp::List discreteTimeParameterNames,
-                 arma::colvec T0MEANSValues,
-                 arma::mat T0VARValues,
-                 Rcpp::List discreteDRIFTUnique,
-                 Rcpp::List discreteCINTUnique,
-                 Rcpp::List discreteTRAITUnique,
-                 Rcpp::List discreteDIFFUSIONUnique,
-                 arma::mat LAMBDAValues,
-                 arma::colvec MANIFESTMEANSValues,
-                 arma::mat MANIFESTVARValues) {
+                 const Rcpp::List& discreteTimeParameterNames,
+                 const arma::colvec& T0MEANSValues,
+                 const arma::mat& T0VARValues,
+                 const Rcpp::List& discreteDRIFTUnique,
+                 const Rcpp::List& discreteCINTUnique,
+                 const Rcpp::List& discreteTRAITUnique,
+                 const Rcpp::List& discreteDIFFUSIONUnique,
+                 const arma::mat& LAMBDAValues,
+                 const arma::colvec& MANIFESTMEANSValues,
+                 const arma::mat& MANIFESTVARValues) {
 
   double m2LL = 0; // -2 log likelihood
   double currentM2LL = 0;
@@ -53,7 +53,6 @@ arma::colvec kalmanFit(int sampleSize,
     predictedManifest = computeKalmanManifestPrediction(LAMBDAValues,
                                                         currentLatentScores,
                                                         MANIFESTMEANSValues);
-
     // find non-missing
     nonmissing = arma::find_finite(observed);
     missing = arma::find_nonfinite(observed);
@@ -98,7 +97,6 @@ arma::colvec kalmanFit(int sampleSize,
     // Iterate over all following time points
     for(int Tpoint = 1; Tpoint < Tpoints; Tpoint++){
       //Step 0: prepare
-
       predictedLatentVariance_tMinus1 = predictedLatentVariance;
       latentScore_tMinus1 = currentLatentScores;
 

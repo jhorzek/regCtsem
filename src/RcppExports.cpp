@@ -353,28 +353,28 @@ BEGIN_RCPP
 END_RCPP
 }
 // kalmanFit
-arma::colvec kalmanFit(int sampleSize, int Tpoints, int nlatent, int nmanifest, arma::mat kalmanData, arma::mat& latentScores, arma::mat& predictedManifestValues, Rcpp::List discreteTimeParameterNames, arma::colvec T0MEANSValues, arma::mat T0VARValues, Rcpp::List discreteDRIFTUnique, Rcpp::List discreteCINTUnique, Rcpp::List discreteTRAITUnique, Rcpp::List discreteDIFFUSIONUnique, arma::mat LAMBDAValues, arma::colvec MANIFESTMEANSValues, arma::mat MANIFESTVARValues);
+arma::colvec kalmanFit(const int sampleSize, const int Tpoints, const int nlatent, int nmanifest, const arma::mat kalmanData, arma::mat& latentScores, arma::mat& predictedManifestValues, const Rcpp::List& discreteTimeParameterNames, const arma::colvec& T0MEANSValues, const arma::mat& T0VARValues, const Rcpp::List& discreteDRIFTUnique, const Rcpp::List& discreteCINTUnique, const Rcpp::List& discreteTRAITUnique, const Rcpp::List& discreteDIFFUSIONUnique, const arma::mat& LAMBDAValues, const arma::colvec& MANIFESTMEANSValues, const arma::mat& MANIFESTVARValues);
 RcppExport SEXP _regCtsem_kalmanFit(SEXP sampleSizeSEXP, SEXP TpointsSEXP, SEXP nlatentSEXP, SEXP nmanifestSEXP, SEXP kalmanDataSEXP, SEXP latentScoresSEXP, SEXP predictedManifestValuesSEXP, SEXP discreteTimeParameterNamesSEXP, SEXP T0MEANSValuesSEXP, SEXP T0VARValuesSEXP, SEXP discreteDRIFTUniqueSEXP, SEXP discreteCINTUniqueSEXP, SEXP discreteTRAITUniqueSEXP, SEXP discreteDIFFUSIONUniqueSEXP, SEXP LAMBDAValuesSEXP, SEXP MANIFESTMEANSValuesSEXP, SEXP MANIFESTVARValuesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type sampleSize(sampleSizeSEXP);
-    Rcpp::traits::input_parameter< int >::type Tpoints(TpointsSEXP);
-    Rcpp::traits::input_parameter< int >::type nlatent(nlatentSEXP);
+    Rcpp::traits::input_parameter< const int >::type sampleSize(sampleSizeSEXP);
+    Rcpp::traits::input_parameter< const int >::type Tpoints(TpointsSEXP);
+    Rcpp::traits::input_parameter< const int >::type nlatent(nlatentSEXP);
     Rcpp::traits::input_parameter< int >::type nmanifest(nmanifestSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type kalmanData(kalmanDataSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type kalmanData(kalmanDataSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type latentScores(latentScoresSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type predictedManifestValues(predictedManifestValuesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type discreteTimeParameterNames(discreteTimeParameterNamesSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type T0MEANSValues(T0MEANSValuesSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type T0VARValues(T0VARValuesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type discreteDRIFTUnique(discreteDRIFTUniqueSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type discreteCINTUnique(discreteCINTUniqueSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type discreteTRAITUnique(discreteTRAITUniqueSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type discreteDIFFUSIONUnique(discreteDIFFUSIONUniqueSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type LAMBDAValues(LAMBDAValuesSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type MANIFESTMEANSValues(MANIFESTMEANSValuesSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type MANIFESTVARValues(MANIFESTVARValuesSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type discreteTimeParameterNames(discreteTimeParameterNamesSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type T0MEANSValues(T0MEANSValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type T0VARValues(T0VARValuesSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type discreteDRIFTUnique(discreteDRIFTUniqueSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type discreteCINTUnique(discreteCINTUniqueSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type discreteTRAITUnique(discreteTRAITUniqueSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type discreteDIFFUSIONUnique(discreteDIFFUSIONUniqueSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type LAMBDAValues(LAMBDAValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type MANIFESTMEANSValues(MANIFESTMEANSValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type MANIFESTVARValues(MANIFESTVARValuesSEXP);
     rcpp_result_gen = Rcpp::wrap(kalmanFit(sampleSize, Tpoints, nlatent, nmanifest, kalmanData, latentScores, predictedManifestValues, discreteTimeParameterNames, T0MEANSValues, T0VARValues, discreteDRIFTUnique, discreteCINTUnique, discreteTRAITUnique, discreteDIFFUSIONUnique, LAMBDAValues, MANIFESTMEANSValues, MANIFESTVARValues));
     return rcpp_result_gen;
 END_RCPP

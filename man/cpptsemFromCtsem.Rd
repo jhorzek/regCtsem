@@ -4,7 +4,13 @@
 \alias{cpptsemFromCtsem}
 \title{cpptsemFromCtsem}
 \usage{
-cpptsemFromCtsem(ctsemModel, wideData = NULL, removeD = TRUE)
+cpptsemFromCtsem(
+  ctsemModel,
+  wideData = NULL,
+  removeD = TRUE,
+  group = NULL,
+  groupSpecificParameters = NULL
+)
 }
 \arguments{
 \item{ctsemModel}{fittet ctsem object}
