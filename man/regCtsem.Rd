@@ -40,11 +40,11 @@ regCtsem(
 )
 }
 \arguments{
-\item{ctsemObject}{if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel}
+\item{ctsemObject}{Fitted object of class ctsem}
 
 \item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.}
 
-\item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
+\item{dataset}{only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX}
 
 \item{regIndicators}{Labels of the regularized parameters (e.g. drift_eta1_eta2). For optimization = "approx" a matrix has to be provided which indicates the regularized drift values with 1 and unregularitzed ones with 0. Only drift parameters can be regularized in this case}
 

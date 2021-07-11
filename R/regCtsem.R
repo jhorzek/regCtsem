@@ -4,8 +4,8 @@
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
-#' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
-#' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
+#' @param ctsemObject Fitted object of class ctsem
+#' @param dataset only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.
 #' @param regIndicators Labels of the regularized parameters (e.g. drift_eta1_eta2). For optimization = "approx" a matrix has to be provided which indicates the regularized drift values with 1 and unregularitzed ones with 0. Only drift parameters can be regularized in this case
 #' @param targetVector named vector with values towards which the parameters are regularized
@@ -276,7 +276,7 @@ regCtsem <- function(
 
   if(argsIn$optimization == "exact" && is.numeric(argsIn$regIndicators)){
     if(tolower(argsIn$objective) == "kalman"){
-      argsIn$regIndicators <- argsIn$ctsemObject[["DRIFT"]][argsIn$regIndicators == 1]
+      argsIn$regIndicators <- argsIn$ctsemObject$mxobj[["DRIFT"]]$labels[argsIn$regIndicators == 1]
     }else{
       argsIn$regIndicators <- argsIn$mxObject[["DRIFT"]]$labels[argsIn$regIndicators == 1]
     }
@@ -288,8 +288,8 @@ regCtsem <- function(
   if(!is.null(targetVector)){
     if((!all(names(targetVector) %in% regIndicators)) ||
        (!all(regIndicators %in% names(targetVector)))
-       )
-    stop("Names of targetVector and regIndicators do not match.")
+    )
+      stop("Names of targetVector and regIndicators do not match.")
   }
 
   if(argsIn$optimization == "approx" & is.character(argsIn$regIndicators)){
@@ -299,16 +299,14 @@ regCtsem <- function(
   }
 
   if(tolower(argsIn$objective) == "kalman"){
-    # create individual models
-    # Note that we assume all persons to have the same parameter values
-    if(argsIn$autoCV){
-      # if autoCV, we only need the model to extract the parameter labels. No need to use the entire data set
-      argsIn$mxObject <- createKalmanMultiSubjectModel(ctsemObject = argsIn$ctsemObject, dataset = t(as.matrix(argsIn$dataset[1,])),
-                                                       useOptimizer = FALSE, silent = TRUE)
-    }else{
-      argsIn$mxObject <- createKalmanMultiSubjectModel(ctsemObject = argsIn$ctsemObject, dataset = argsIn$dataset,
-                                                       useOptimizer = FALSE, KalmanStartValues = argsIn$KalmanStartValues)
-    }
+    # switch to wide data
+    suppressMessages(invisible(capture.output(ctsemObjectTemp <- ctFit(dat = argsIn$dataset,
+                                                                       ctmodelobj = argsIn$ctsemObject$ctmodelobj,
+                                                                       useOptimizer = FALSE,
+                                                                       objective = "Kalman"))))
+    argsIn$mxObject <- OpenMx::omxSetParameters(ctsemObjectTemp$mxobj,
+                                                labels = names(omxGetParameters(argsIn$ctsemObject$mxobj)),
+                                                values = omxGetParameters(argsIn$ctsemObject$mxobj))
   }
 
   if(argsIn$optimization == "exact"){
@@ -509,14 +507,6 @@ exact_regCtsem <- function(  # model
 
   # if Kalman: fit initial model
   if(tolower(objective) == "kalman"){
-    if(optimizeKalman){
-      mxObject <- OpenMx::mxTryHardctsem(mxObject, silent = TRUE, extraTries = extraTries)
-      exactArgsIn$KalmanStartValues <- omxGetParameters(mxObject)
-      exactArgsIn$optimizeKalman <- FALSE
-    }else{
-      mxObject <- OpenMx::mxRun(mxObject, silent = TRUE, useOptimizer = FALSE)
-    }
-    exactArgsIn$mxObject <- mxObject
     sampleSize <- nrow(dataset)
   }else{
     sampleSize <- mxObject$data$numObs
@@ -1382,10 +1372,11 @@ iterateOverCVFolds <- function(argsIn, objective = "ML", optimization){
       currentModelArgsIn$dataset <- trainSets[[foldNumber]]
       currentModelArgsIn$cvSample <- testSets[[foldNumber]]
       currentModelArgsIn$returnFitIndices <- FALSE
-      currentModelArgsIn$mxObject <- createKalmanMultiSubjectModel(ctsemObject = argsIn$ctsemObject,
-                                                                   dataset = trainSets[[foldNumber]],
-                                                                   useOptimizer = FALSE,
-                                                                   KalmanStartValues = argsIn$KalmanStartValues)
+      suppressMessages(invisible(capture.output(currentModelArgsIn$mxObject <- ctFit(ctmodelobj = argsIn$ctsemObject$ctmodelobj,
+                                                                                     dat = trainSets[[foldNumber]],
+                                                                                     useOptimizer = FALSE,
+                                                                                     omxStartValues = OpenMx::omxGetParameters(argsIn$ctsemObject$mxobj),
+                                                                                     objective = "Kalman")$mxobj)))
 
       if(optimization == "exact"){
         if(exists("sparseParameterMatrix")){
@@ -1437,12 +1428,6 @@ checkSetup <- function(argsIn){
     stop("Both ctsemObject and mxObect are missing. You need to provide at least one")
   }
 
-  if(any(class(argsIn$ctsemObject)=="ctsemFit")){
-    # check if ctsemObject is estimated with Kalman
-    if(argsIn$ctsemObject$ctfitargs$objective == "Kalman"){
-      stop("It seems like the provided ctsemObject was fitted with Kalman filter. To use the Kalman filter, provide the object of type ctsemInit from ctModel instead of the fitted model. Set the objective = 'Kalman' and provide a dataset")
-    }
-  }
   if(!is.null(argsIn$mxObject) & any(class(argsIn$mxObject)=="MxModel")){
     # check if ctsemObject is estimated with Kalman
     if(any(class(argsIn$mxObject$expectation) == "MxExpectationStateSpace") &  !any(class(argsIn$ctsemObject)=="ctsemInit")){
@@ -1466,7 +1451,7 @@ checkSetup <- function(argsIn){
 
   if(tolower(argsIn$objective) == "kalman"){
     if(is.null(argsIn$ctsemObject)){stop("Kalman filter requires a ctsemObject. Set up the model in ctsemOMX first")}
-    if(!any(class(argsIn$ctsemObject) == "ctsemInit")){stop("ctsemObject has to be of class ctsemInit. You can get the ctsemInit object from ctModel.")}
+    #if(!any(class(argsIn$ctsemObject) == "ctsemInit")){stop("ctsemObject has to be of class ctsemInit. You can get the ctsemInit object from ctModel.")}
     if(is.null(argsIn$dataset)){stop("No dataset was provided")}
   }
 
@@ -1903,10 +1888,11 @@ getMaxLambdaCV <- function(ctsemObject, mxObject, fullData, KalmanStartValues, r
 
     }else if(tolower(objective) == "kalman"){
       # set input arguments
-      currentModel <- createKalmanMultiSubjectModel(ctsemObject = ctsemObject,
-                                                    dataset = trainSets[[foldNumber]],
-                                                    useOptimizer = TRUE,
-                                                    KalmanStartValues = KalmanStartValues)
+      suppressMessages(invisible(capture.output(currentModel <- ctFit(ctmodelobj = ctsemObject$ctmodelobj,
+                                                                      dat = trainSets[[foldNumber]],
+                                                                      useOptimizer = FALSE,
+                                                                      omxStartValues = OpenMx::omxGetParameters(argsIn$ctsemObject$mxobj),
+                                                                      objective = "Kalman")$mxobj)))
 
       currentAdaptiveLassoWeights <- getAdaptiveLassoWeights(mxObject = currentModel,
                                                              penalty = penalty,

@@ -146,16 +146,14 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
         }
       }
     }else if (tolower(objective)  == "kalman"){
-      tempCtsemObject <- ctFit(ctmodelobj = ctsemObject, dat = dataset, fit = FALSE, objective = "Kalman")
-      tempCtsemObject$mxobj <- mxObject
-      gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = tempCtsemObject, wideData = dataset))
+      gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
       if (any(class(gradientModelcpp) == "try-error")){
         message("Using OpenMx. This can slow down the computation considerably.")
         gradientModelcpp <- NULL
       }else{
         gradientModelcpp$computeAndFitKalman()
         m2LLcpp <- gradientModelcpp$m2LL
-        testM2LL <- round(tempCtsemObject$mxobj$fitfunction$result[[1]] - m2LLcpp,3) == 0
+        testM2LL <- round(ctsemObject$mxobj$fitfunction$result[[1]] - m2LLcpp,3) == 0
         if (!testM2LL & !forceCpptsem){
           message("Using OpenMx. This can slow down the computation considerably. If you want to use cpptsem nevertheless, set forceCpptsem = TRUE")
           gradientModelcpp <- NULL

@@ -15,9 +15,9 @@ exact_getCVFit(
 )
 }
 \arguments{
-\item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
+\item{objective}{Kalman or mx}
 
-\item{ctsemObject}{if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel}
+\item{ctsemObject}{ctsemObject}
 
 \item{mxObject}{Fitted object of class MxObject}
 

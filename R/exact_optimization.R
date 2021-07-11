@@ -7,8 +7,8 @@
 #'
 #' NOTE: Function located in file exact_optimization.R
 #'
-#' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
-#' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
+#' @param objective Kalman or mx
+#' @param ctsemObject ctsemObject
 #' @param mxObject Fitted object of class MxObject
 #' @param parameterLabels labels of optimized parameters
 #' @param parameterValuesTable table with parameter values+
@@ -24,15 +24,14 @@ exact_getCVFit <- function(objective, ctsemObject, mxObject, parameterLabels,
   fitTable <- matrix(NA, nrow = length(fits), ncol = length(lambdas), dimnames = list(fits, lambdas))
 
   if(tolower(objective) == "kalman"){
-    # create Model
-    cvModel <- createKalmanMultiSubjectModel(ctsemObject = ctsemObject, dataset = cvSample, useOptimizer = FALSE, silent = TRUE)
+    suppressMessages(invisible(capture.output(ctsemTemp <- ctFit(dat = cvSample, ctmodelobj = ctsemObject$ctmodelobj, objective = "Kalman", useOptimizer = FALSE))))
+    cvModel <- ctsemTemp$mxobj
   }else{
     # create Model
     cvModel <- mxObject
     # replace sample
     cvModel$data <- cvSample
   }
-
 
   for(lambda in 1:length(lambdas)){
     if(any(is.na(parameterValuesTable[,lambda]))){
@@ -417,19 +416,19 @@ exact_tryStartingValues <- function(gradientModel, cppmodel,
     regM2LLs[i] <- regM2LL_i
 
     if(!is.na(m2LL_i)){
-        optimized <- try(approx_cpptsemOptim(cpptsemmodel = cppmodel,
-                                             regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                     regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                     regCtsem::approx_KalmanRegM2LLCpptsem),
-                                             gradCpptsem = regCtsem::approx_gradCpptsem,
-                                             startingValues = parameterValues_i,
-                                             adaptiveLassoWeights = adaptiveLassoWeights,
-                                             N = 1, lambda = newLambda,
-                                             regIndicators = regIndicators,
-                                             epsilon = 10^(-8),
-                                             maxit = numOuter,
-                                             objective,
-                                             testGradients = TRUE), silent = TRUE)
+      optimized <- try(approx_cpptsemOptim(cpptsemmodel = cppmodel,
+                                           regM2LLCpptsem = ifelse(tolower(objective) == "ml",
+                                                                   regCtsem::approx_RAMRegM2LLCpptsem,
+                                                                   regCtsem::approx_KalmanRegM2LLCpptsem),
+                                           gradCpptsem = regCtsem::approx_gradCpptsem,
+                                           startingValues = parameterValues_i,
+                                           adaptiveLassoWeights = adaptiveLassoWeights,
+                                           N = 1, lambda = newLambda,
+                                           regIndicators = regIndicators,
+                                           epsilon = 10^(-8),
+                                           maxit = numOuter,
+                                           objective,
+                                           testGradients = TRUE), silent = TRUE)
 
       if(any(class(optimized) == "try-error")){
         next
