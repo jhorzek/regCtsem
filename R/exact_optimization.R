@@ -8,7 +8,7 @@
 #' NOTE: Function located in file exact_optimization.R
 #'
 #' @param objective Kalman or mx
-#' @param ctsemObject ctsemObject
+#' @param ctsemObject Fitted object of class ctsemFit
 #' @param mxObject Fitted object of class MxObject
 #' @param parameterLabels labels of optimized parameters
 #' @param parameterValuesTable table with parameter values+

@@ -21,8 +21,6 @@ exact_parallelRegCtsem(
   k = 5,
   optimizer = "GIST",
   objective,
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
   sparseParameters = NULL,
   tryCpptsem = TRUE,
   forceCpptsem = FALSE,
@@ -59,7 +57,7 @@ exact_parallelRegCtsem(
 )
 }
 \arguments{
-\item{ctsemObject}{if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel}
+\item{ctsemObject}{Fitted object of class ctsemFit}
 
 \item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.}
 
@@ -88,10 +86,6 @@ exact_parallelRegCtsem(
 \item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
-
-\item{KalmanStartValues}{Optional starting values for the parameters when using Kalman filter}
-
-\item{optimizeKalman}{Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE}
 
 \item{tryCpptsem}{should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models}
 

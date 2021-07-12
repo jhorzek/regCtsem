@@ -21,8 +21,6 @@ exact_regCtsem(
   k = 5,
   optimizer = "GIST",
   objective,
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
   sparseParameters = NULL,
   tryCpptsem = TRUE,
   forceCpptsem = FALSE,
@@ -59,9 +57,9 @@ exact_regCtsem(
 )
 }
 \arguments{
-\item{ctsemObject}{if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel}
+\item{ctsemObject}{Fitted object of class ctsemFit}
 
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.}
+\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject.}
 
 \item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
 
@@ -88,10 +86,6 @@ exact_regCtsem(
 \item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
-
-\item{KalmanStartValues}{Optional starting values for the parameters when using Kalman filter}
-
-\item{optimizeKalman}{Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE}
 
 \item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.}
 

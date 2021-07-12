@@ -39,7 +39,7 @@ exact_GIST(
 )
 }
 \arguments{
-\item{ctsemObject}{if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel}
+\item{ctsemObject}{Fitted object of class ctsemFit}
 
 \item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.}
 

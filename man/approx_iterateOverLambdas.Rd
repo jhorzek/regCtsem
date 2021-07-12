@@ -30,7 +30,7 @@ approx_iterateOverLambdas(
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted object of class ctsemOMX}
+\item{ctsemObject}{Fitted object of class ctsemFit}
 
 \item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
 

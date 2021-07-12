@@ -20,8 +20,6 @@ approx_regCtsem(
   autoCV = FALSE,
   k = 5,
   objective = "ML",
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
   epsilon = 0.001,
   zeroThresh = 0.001,
   extraTries = 1,
@@ -34,7 +32,7 @@ approx_regCtsem(
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted object of class ctsem.}
+\item{ctsemObject}{Fitted object of class ctsemFit}
 
 \item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
 
@@ -63,10 +61,6 @@ approx_regCtsem(
 \item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
-
-\item{KalmanStartValues}{Optional starting values for the parameters when using Kalman filter}
-
-\item{optimizeKalman}{Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE}
 
 \item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
 

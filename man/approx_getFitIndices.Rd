@@ -6,20 +6,16 @@
 \usage{
 approx_getFitIndices(
   fittedRegModel,
-  ctsemObject = NULL,
   sampleSize,
   regOn = "DRIFT",
   regIndicators,
   returnFitIndices = TRUE,
   cvSample = NULL,
-  zeroThresh = 0.001,
-  objective = "ML"
+  zeroThresh = 0.001
 )
 }
 \arguments{
 \item{fittedRegModel}{fitted regCtsem object}
-
-\item{ctsemObject}{Only for Kalman: Model to set up the Kalman object}
 
 \item{sampleSize}{sample size}
 
@@ -32,8 +28,6 @@ approx_getFitIndices(
 \item{cvSample}{cross-validation sample. Has to be of type mxData}
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
-
-\item{objective}{Kalman or ML}
 }
 \description{
 computes fit indices

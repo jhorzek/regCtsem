@@ -10,7 +10,7 @@
 #'
 #' NOTE: Function located in file GIST.R
 #'
-#' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
+#' @param ctsemObject Fitted object of class ctsemFit
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.
 #' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)

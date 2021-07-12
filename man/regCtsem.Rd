@@ -7,7 +7,6 @@
 \usage{
 regCtsem(
   ctsemObject = NULL,
-  mxObject = NULL,
   dataset = NULL,
   regIndicators,
   targetVector = NULL,
@@ -18,9 +17,6 @@ regCtsem(
   cvSample = NULL,
   autoCV = FALSE,
   k = 5,
-  objective = "ML",
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
   sparseParameters = NULL,
   standardizeDrift = FALSE,
   scaleLambdaWithN = TRUE,
@@ -34,13 +30,12 @@ regCtsem(
   silent = FALSE,
   progressBar = TRUE,
   parallelProgressBar = NULL,
-  calledInternally = FALSE
+  mxObject = NULL,
+  objective = NULL
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted object of class ctsem}
-
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.}
+\item{ctsemObject}{Fitted object of class ctsemFit}
 
 \item{dataset}{only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX}
 
@@ -61,12 +56,6 @@ regCtsem(
 \item{autoCV}{Boolean: Should automatic cross-validation be used?}
 
 \item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
-
-\item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
-
-\item{KalmanStartValues}{Optional starting values for the parameters when using Kalman filter}
-
-\item{optimizeKalman}{Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE}
 
 \item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.}
 
@@ -94,7 +83,9 @@ regCtsem(
 
 \item{parallelProgressBar}{list: used internally to display progress when executing in parallel. Do not pass values to parallelProgressBar}
 
-\item{calledInternally}{Boolean: used internally for skipping checks}
+\item{mxObject}{FOR INTERNAL USE ONLY. Don't pass a mxObject}
+
+\item{objective}{FOR INTERNAL USE ONLY. "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 }
 \value{
 returns an object of class regCtsem. Without cross-validation, this object will have the fields setup (all arguments passed to the function), fitAndParameters (used internally to store the fit and the raw (i.e., untransformed) parameters), fit (fit indices, ect.), parameterEstimatesRaw (raw, i.e. untransformed parameters; used internally), and parameters (transformed parameters)#'

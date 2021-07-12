@@ -17,7 +17,7 @@ exact_getCVFit(
 \arguments{
 \item{objective}{Kalman or mx}
 
-\item{ctsemObject}{ctsemObject}
+\item{ctsemObject}{Fitted object of class ctsemFit}
 
 \item{mxObject}{Fitted object of class MxObject}
 

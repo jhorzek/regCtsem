@@ -17,7 +17,7 @@ approx_getCVFit(
 \arguments{
 \item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
 
-\item{ctsemObject}{Fitted object of class ctsemOMX}
+\item{ctsemObject}{Fitted object of class ctsemFit}
 
 \item{cvSample}{only required if objective = "Kalman" and ctsemObject ist of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
 

@@ -8,7 +8,7 @@
 #'
 #' NOTE: Function located in file approx_optimization.R
 #'
-#' @param ctsemObject Fitted object of class ctsemOMX
+#' @param ctsemObject Fitted object of class ctsemFit
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
 #' @param sampleSize sample size
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
@@ -101,7 +101,7 @@ approx_initializeModel <- function(  # model
 #'
 #' NOTE: Function located in file approx_optimization.R
 #'
-#' @param ctsemObject Fitted object of class ctsemOMX
+#' @param ctsemObject Fitted object of class ctsemFit
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
 #' @param sampleSize sample size
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
@@ -202,13 +202,13 @@ approx_iterateOverLambdas <- function(  # model
 
     # extract parameter estimates
     fitAndParameters[parameterLabels, as.character(lambdas[iteration])] <- OpenMx::cvectorize(OpenMx::omxGetParameters(regModel$submodel))
-    fits <- regCtsem::approx_getFitIndices(fittedRegModel = regModel, ctsemObject = ctsemObject, sampleSize = sampleSize,
+    fits <- regCtsem::approx_getFitIndices(fittedRegModel = regModel, sampleSize = sampleSize,
                                            # penalty settings
                                            regOn = regOn, regIndicators = regIndicators,
                                            # fit settings
                                            returnFitIndices = returnFitIndices, cvSample = cvSample,
                                            # optimization settings
-                                           zeroThresh = zeroThresh, objective = objective)
+                                           zeroThresh = zeroThresh)
     # extract fit
     fitAndParameters[fitLabels,as.character(lambdas[iteration])] <- fits[fitLabels,]
 
@@ -279,7 +279,7 @@ approx_createFitFunString = function(penalty, epsilon = .00001, silent = FALSE){
 #'
 #' NOTE: Function located in file approx_optimization.R
 #'
-#' @param ctsemObject Fitted object of class ctsemOMX
+#' @param ctsemObject Fitted object of class ctsemFit
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
 #' @param cvSample only required if objective = "Kalman" and ctsemObject ist of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
@@ -324,18 +324,15 @@ approx_getCVFit <- function(mxObject, ctsemObject, cvSample, objective, fitAndPa
 #' NOTE: Function located in file approx_optimization.R
 #'
 #' @param fittedRegModel fitted regCtsem object
-#' @param ctsemObject Only for Kalman: Model to set up the Kalman object
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param cvSample cross-validation sample. Has to be of type mxData
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
 #' @param sampleSize sample size
-#' @param objective Kalman or ML
 #' @author Jannik Orzek
 #' @export
 approx_getFitIndices <- function(fittedRegModel,
-                                 ctsemObject = NULL,
                                  sampleSize,
                                  # penalty settings
                                  regOn = "DRIFT",
@@ -344,8 +341,7 @@ approx_getFitIndices <- function(fittedRegModel,
                                  returnFitIndices = TRUE,
                                  cvSample = NULL,
                                  # optimization settings
-                                 zeroThresh = .001,
-                                 objective = "ML"){
+                                 zeroThresh = .001){
   fitLabels <- c("regM2LL", "m2LL")
   if(returnFitIndices){
     fitLabels <- c(fitLabels, "AIC", "BIC", "estimatedParameters")

@@ -27,7 +27,7 @@
 #' reg2 <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = seq(0,1,.1), standardizeDrift = FALSE)
 #' reg2$regM2LL
 #' reg2$thetas
-#' @param ctsemObject Fitted ctsem object
+#' @param ctsemObject Fitted object of class ctsemFit
 #' @param mxObject Object of type MxModel
 #' @param dataset only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)

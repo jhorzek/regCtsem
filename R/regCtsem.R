@@ -4,9 +4,8 @@
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
-#' @param ctsemObject Fitted object of class ctsem
+#' @param ctsemObject Fitted object of class ctsemFit
 #' @param dataset only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX
-#' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.
 #' @param regIndicators Labels of the regularized parameters (e.g. drift_eta1_eta2). For optimization = "approx" a matrix has to be provided which indicates the regularized drift values with 1 and unregularitzed ones with 0. Only drift parameters can be regularized in this case
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values
@@ -17,8 +16,6 @@
 #' @param autoCV Boolean: Should automatic cross-validation be used?
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
-#' @param KalmanStartValues Optional starting values for the parameters when using Kalman filter
-#' @param optimizeKalman Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE
 #' @param sparseParameters labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.
 #' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using the T0VAR?
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent
@@ -32,7 +29,8 @@
 #' @param silent silent execution
 #' @param progressBar Boolean: Should a progress bar be displayed
 #' @param parallelProgressBar list: used internally to display progress when executing in parallel. Do not pass values to parallelProgressBar
-#' @param calledInternally Boolean: used internally for skipping checks
+#' @param mxObject FOR INTERNAL USE ONLY. Don't pass a mxObject
+#' @param objective FOR INTERNAL USE ONLY. "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @return returns an object of class regCtsem. Without cross-validation, this object will have the fields setup (all arguments passed to the function), fitAndParameters (used internally to store the fit and the raw (i.e., untransformed) parameters), fit (fit indices, ect.), parameterEstimatesRaw (raw, i.e. untransformed parameters; used internally), and parameters (transformed parameters)#'
 #' @examples
 #' set.seed(17046)
@@ -183,7 +181,7 @@
 #' @export
 regCtsem <- function(
   # model
-  ctsemObject = NULL,  mxObject = NULL, dataset = NULL,
+  ctsemObject = NULL,  dataset = NULL,
   # penalty settings
   regIndicators,
   targetVector = NULL,
@@ -194,9 +192,6 @@ regCtsem <- function(
   cvSample = NULL,
   autoCV = FALSE,
   k = 5,
-  objective = "ML",
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
   sparseParameters = NULL,
 
   standardizeDrift = FALSE,
@@ -213,10 +208,15 @@ regCtsem <- function(
   silent = FALSE,
   progressBar = TRUE,
   parallelProgressBar = NULL,
-  calledInternally = FALSE
+  mxObject = NULL,
+  objective = NULL
 ){
   # save input in list
   argsIn <- as.list(environment())
+
+  # set objective
+  argsIn$objective <- ifelse(ctsemObject$ctfitargs$objective == "Kalman", "Kalman", "ML")
+  cat(paste0("Object with objective = ", ifelse(ctsemObject$ctfitargs$objective == "Kalman", "Kalman", "ML"), " detected.\n"))
 
   if(tolower(optimization) == "approx"){
     if(!is.matrix(regIndicators)){
@@ -296,8 +296,7 @@ regCtsem <- function(
 
   if(argsIn$optimization == "exact"){
     regCtsemObject <- do.call(regCtsem::exact_regCtsem, rlist::list.remove(argsIn, c("optimization",
-                                                                                     "control",
-                                                                                     "calledInternally")))
+                                                                                     "control")))
 
 
     if(!argsIn$autoCV){
@@ -318,7 +317,7 @@ regCtsem <- function(
     return(regCtsemObject)
   }
 
-  regCtsemObject <- do.call(regCtsem::approx_regCtsem, rlist::list.remove(argsIn, c("optimization", "sparseParameters", "optimizer", "control", "calledInternally", "targetVector")))
+  regCtsemObject <- do.call(regCtsem::approx_regCtsem, rlist::list.remove(argsIn, c("optimization", "sparseParameters", "optimizer", "control", "targetVector")))
   if(!autoCV){
     fitAndParametersSeparated <- try(separateFitAndParameters(regCtsemObject))
     if(!any(class(fitAndParametersSeparated) == "try-error")){
@@ -340,9 +339,9 @@ regCtsem <- function(
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
-#' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
+#' @param ctsemObject Fitted object of class ctsemFit
 #' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
-#' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.
+#' @param mxObject Fitted object of class MxObject extracted from ctsemObject.
 #' @param regIndicators Labels for the regularized parameters (e.g. drift_eta1_eta2)
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values
@@ -355,8 +354,6 @@ regCtsem <- function(
 #' @param autoCV Boolean: Should automatic cross-validation be used?
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
-#' @param KalmanStartValues Optional starting values for the parameters when using Kalman filter
-#' @param optimizeKalman Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE
 #' @param sparseParameters labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.
 #' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
 #' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
@@ -413,8 +410,6 @@ exact_regCtsem <- function(  # model
   # optimization settings
   optimizer = "GIST",
   objective,
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
   sparseParameters = NULL,
   tryCpptsem = TRUE,
   forceCpptsem = FALSE,
@@ -622,7 +617,7 @@ exact_regCtsem <- function(  # model
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
-#' @param ctsemObject if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel
+#' @param ctsemObject Fitted object of class ctsemFit
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.
 #' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param regIndicators Labels for the regularized parameters (e.g. drift_eta1_eta2)
@@ -637,8 +632,6 @@ exact_regCtsem <- function(  # model
 #' @param autoCV Boolean: Should automatic cross-validation be used?
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
-#' @param KalmanStartValues Optional starting values for the parameters when using Kalman filter
-#' @param optimizeKalman Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE
 #' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
 #' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param stepSize GLMNET & GIST: initial step size of the outer iteration
@@ -696,8 +689,6 @@ exact_parallelRegCtsem <- function(# model
   # optimization settings
   optimizer = "GIST",
   objective,
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
   sparseParameters = NULL,
   tryCpptsem = TRUE,
   forceCpptsem = FALSE,
@@ -856,7 +847,7 @@ exact_parallelRegCtsem <- function(# model
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
-#' @param ctsemObject Fitted object of class ctsem.
+#' @param ctsemObject Fitted object of class ctsemFit
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
 #' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
@@ -871,8 +862,6 @@ exact_parallelRegCtsem <- function(# model
 #' @param autoCV Boolean: Should automatic cross-validation be used?
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
-#' @param KalmanStartValues Optional starting values for the parameters when using Kalman filter
-#' @param optimizeKalman Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
 #' @param extraTries number of extra tries in mxTryHard
@@ -905,8 +894,6 @@ approx_regCtsem <- function(  # model
   k = 5,
   # optimization settings
   objective = "ML",
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
   epsilon = .001,
   zeroThresh = .001,
   extraTries = 1,
@@ -1013,7 +1000,7 @@ approx_regCtsem <- function(  # model
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
-#' @param ctsemObject Fitted object of class ctsemOMX
+#' @param ctsemObject Fitted object of class ctsemFit
 #' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
@@ -1027,8 +1014,6 @@ approx_regCtsem <- function(  # model
 #' @param autoCV Boolean: Should automatic cross-validation be used?
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
-#' @param KalmanStartValues Optional starting values for the parameters when using Kalman filter
-#' @param optimizeKalman Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
 #' @param extraTries number of extra tries in mxTryHard
@@ -1065,8 +1050,6 @@ approx_parallelRegCtsem <- function(
   k = 5,
   # optimization settings
   objective = "ML",
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
   epsilon = .001,
   zeroThresh = .001,
   extraTries = 1,
@@ -1271,7 +1254,6 @@ iterateOverCVFolds <- function(argsIn, objective = "ML", optimization){
                                 mxObject = argsIn$mxObject,
                                 fullData = fullData,
                                 trainSets = trainSets,
-                                KalmanStartValues = argsIn$KalmanStartValues,
                                 regOn = argsIn$regOn,
                                 regIndicators = argsIn$regIndicators,
                                 penalty = argsIn$penalty,
@@ -1744,7 +1726,6 @@ getMaxLambda <- function(mxObject, regIndicators, differenceApprox, adaptiveLass
 #'
 #' @param mxObject Fitted object of class mxObject
 #' @param fullData Data set for all samples combined
-#' @param KalmanStartValues Optional starting values for the parameters when using Kalman filter
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
 #' @param penalty type. Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact
@@ -1765,7 +1746,7 @@ getMaxLambda <- function(mxObject, regIndicators, differenceApprox, adaptiveLass
 #' @import OpenMx
 #' @export
 
-getMaxLambdaCV <- function(ctsemObject, mxObject, fullData, KalmanStartValues, regOn, regIndicators, penalty, adaptiveLassoWeights, standardizeDrift, k, cvFolds, trainSets, scaleLambdaWithN, objective, optimization, differenceApprox = "central"){
+getMaxLambdaCV <- function(ctsemObject, mxObject, fullData, regOn, regIndicators, penalty, adaptiveLassoWeights, standardizeDrift, k, cvFolds, trainSets, scaleLambdaWithN, objective, optimization, differenceApprox = "central"){
 
   maxLambda <- 0
 

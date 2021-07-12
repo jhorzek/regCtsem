@@ -41,7 +41,7 @@ exact_bfgsGLMNET(
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted ctsem object}
+\item{ctsemObject}{Fitted object of class ctsemFit}
 
 \item{mxObject}{Object of type MxModel}
 

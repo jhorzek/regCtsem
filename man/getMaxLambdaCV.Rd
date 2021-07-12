@@ -8,7 +8,6 @@ getMaxLambdaCV(
   ctsemObject,
   mxObject,
   fullData,
-  KalmanStartValues,
   regOn,
   regIndicators,
   penalty,
@@ -27,8 +26,6 @@ getMaxLambdaCV(
 \item{mxObject}{Fitted object of class mxObject}
 
 \item{fullData}{Data set for all samples combined}
-
-\item{KalmanStartValues}{Optional starting values for the parameters when using Kalman filter}
 
 \item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
 
