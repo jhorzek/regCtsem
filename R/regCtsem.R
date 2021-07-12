@@ -298,16 +298,6 @@ regCtsem <- function(
                                                           regIndicators = argsIn$regIndicators)
   }
 
-  #if(tolower(argsIn$objective) == "kalman"){
-  #  # switch to wide data
-  #  suppressMessages(invisible(capture.output(ctsemObjectTemp <- ctFit(dat = argsIn$dataset,
-  #                                                                     ctmodelobj = argsIn$ctsemObject$ctmodelobj,
-  #                                                                     useOptimizer = FALSE,
-  #                                                                     objective = "Kalman",
-  #                                                                     omxStartValues = omxGetParameters(argsIn$ctsemObject$mxobj)))))
-  #  argsIn$mxObject <- ctsemObjectTemp$mxobj
-  #}
-
   if(argsIn$optimization == "exact"){
     regCtsemObject <- do.call(regCtsem::exact_regCtsem, rlist::list.remove(argsIn, c("optimization",
                                                                                      "control",
@@ -1372,11 +1362,12 @@ iterateOverCVFolds <- function(argsIn, objective = "ML", optimization){
       currentModelArgsIn$dataset <- trainSets[[foldNumber]]
       currentModelArgsIn$cvSample <- testSets[[foldNumber]]
       currentModelArgsIn$returnFitIndices <- FALSE
-      suppressMessages(invisible(capture.output(currentModelArgsIn$mxObject <- ctFit(ctmodelobj = argsIn$ctsemObject$ctmodelobj,
+      suppressMessages(invisible(capture.output(currentModelArgsIn$ctsemObject <- ctFit(ctmodelobj = argsIn$ctsemObject$ctmodelobj,
                                                                                      dat = trainSets[[foldNumber]],
                                                                                      useOptimizer = FALSE,
                                                                                      omxStartValues = OpenMx::omxGetParameters(argsIn$ctsemObject$mxobj),
-                                                                                     objective = "Kalman")$mxobj)))
+                                                                                     objective = "Kalman"))))
+      currentModelArgsIn$mxObject <- currentModelArgsIn$ctsemObject$mxobj
 
       if(optimization == "exact"){
         if(exists("sparseParameterMatrix")){
@@ -1824,7 +1815,7 @@ getMaxLambdaCV <- function(ctsemObject, mxObject, fullData, KalmanStartValues, r
       suppressMessages(invisible(capture.output(currentModel <- ctFit(ctmodelobj = ctsemObject$ctmodelobj,
                                                                       dat = trainSets[[foldNumber]],
                                                                       useOptimizer = FALSE,
-                                                                      omxStartValues = OpenMx::omxGetParameters(argsIn$ctsemObject$mxobj),
+                                                                      omxStartValues = OpenMx::omxGetParameters(ctsemObject$mxobj),
                                                                       objective = "Kalman")$mxobj)))
 
       currentAdaptiveLassoWeights <- getAdaptiveLassoWeights(mxObject = currentModel,
