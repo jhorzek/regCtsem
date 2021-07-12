@@ -14,8 +14,6 @@ approx_regCtsem(
   lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   standardizeDrift = FALSE,
   returnFitIndices = TRUE,
   cvSample = NULL,
@@ -53,10 +51,6 @@ approx_regCtsem(
 \item{penalty}{Currently supported are lasso, adaptiveLasso, and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
-
-\item{elastic_alpha}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{elastic_gamma}{placehoder for elastic net. NOT YET IMPLEMENTED}
 
 \item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using T0VAR?}
 

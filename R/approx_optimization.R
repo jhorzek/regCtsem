@@ -15,8 +15,6 @@
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
 #' @param penalty type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact
-#' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
-#' @param elastic_gamma placehoder for elastic net. NOT YET IMPLEMENTED
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param cvSample cross-validation sample. Has to be of type mxData
@@ -42,8 +40,6 @@ approx_initializeModel <- function(  # model
   regIndicators,
   lambda,
   penalty = "lasso",
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   adaptiveLassoWeights = NULL,
   # fit settings
   returnFitIndices = TRUE,
@@ -67,7 +63,7 @@ approx_initializeModel <- function(  # model
   submodel <- OpenMx::mxModel(mxObject, name = "submodel") # has all the parameters and the base fit function (FML or FIML)
 
   # create fitFunString
-  fitFunString <- approx_createFitFunString(penalty = penalty, elastic_alpha = elastic_alpha, elastic_gamma = elastic_gamma, epsilon = epsilon, silent = silent)
+  fitFunString <- approx_createFitFunString(penalty = penalty, epsilon = epsilon, silent = silent)
 
   # define fitfunction:
   regFitAlgebra <- OpenMx::mxAlgebraFromString(fitFunString, name = "regFitAlgebra")
@@ -112,8 +108,6 @@ approx_initializeModel <- function(  # model
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
 #' @param penalty type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact
-#' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
-#' @param elastic_gamma placehoder for elastic net. NOT YET IMPLEMENTED
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param cvSample cross-validation sample. Has to be of type mxData
@@ -142,8 +136,6 @@ approx_iterateOverLambdas <- function(  # model
   regIndicators,
   lambdas,
   penalty = "lasso",
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   adaptiveLassoWeights = NULL,
   # fit settings
   returnFitIndices = TRUE,
@@ -185,8 +177,7 @@ approx_iterateOverLambdas <- function(  # model
     regModel <- regCtsem::approx_initializeModel(ctsemObject = ctsemObject, mxObject = mxObject, sampleSize = ifelse(scaleLambdaWithN,sampleSize,1),
                                                  # penalty settings
                                                  regOn = regOn, regIndicators = regIndicators, lambda = lambdas[iteration],
-                                                 penalty = penalty, elastic_alpha = elastic_alpha, elastic_gamma = elastic_gamma,
-                                                 adaptiveLassoWeights = adaptiveLassoWeights,
+                                                 penalty = penalty, adaptiveLassoWeights = adaptiveLassoWeights,
                                                  # fit settings
                                                  returnFitIndices = returnFitIndices, cvSample = cvSample,
                                                  autoCV = autoCV, k = k,
@@ -255,14 +246,12 @@ approx_iterateOverLambdas <- function(  # model
 #' NOTE: Function located in file approx_optimization.R
 #'
 #' @param penalty type of penalty. Currently supported are lasso and ridge
-#' @param elastic_alpha PLACEHOLDER. Used in elastic net. Not yet implemented
-#' @param elastic_gamma PLACEHOLDER. Used in elastic net. Not yet implemented
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentible one
 #' @param silent Boolean indicating if print statements will be suppressed
 #' @author Jannik Orzek
 #' @keywords internal
 #' @export
-approx_createFitFunString = function(penalty, elastic_alpha = NULL, elastic_gamma = NULL, epsilon = .00001, silent = FALSE){
+approx_createFitFunString = function(penalty, epsilon = .00001, silent = FALSE){
   ## unregularized fitfunction:
   fitFunString <- "submodel.fitfunction"
 

@@ -12,8 +12,6 @@ approx_iterateOverLambdas(
   regIndicators,
   lambdas,
   penalty = "lasso",
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   adaptiveLassoWeights = NULL,
   returnFitIndices = TRUE,
   cvSample = NULL,
@@ -45,10 +43,6 @@ approx_iterateOverLambdas(
 \item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
 
 \item{penalty}{type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact}
-
-\item{elastic_alpha}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{elastic_gamma}{placehoder for elastic net. NOT YET IMPLEMENTED}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 

@@ -14,8 +14,6 @@ exact_regCtsem(
   lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   standardizeDrift = FALSE,
   returnFitIndices = TRUE,
   cvSample = NULL,
@@ -78,10 +76,6 @@ exact_regCtsem(
 \item{penalty}{Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
-
-\item{elastic_alpha}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{elastic_gamma}{placehoder for elastic net. NOT YET IMPLEMENTED}
 
 \item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using the T0VAR?}
 

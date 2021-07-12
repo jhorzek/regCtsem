@@ -15,8 +15,6 @@ regCtsem(
   lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   cvSample = NULL,
   autoCV = FALSE,
   k = 5,
@@ -57,10 +55,6 @@ regCtsem(
 \item{penalty}{Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
-
-\item{elastic_alpha}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{elastic_gamma}{placehoder for elastic net. NOT YET IMPLEMENTED}
 
 \item{cvSample}{cross-validation sample. Has to be of type mxData}
 

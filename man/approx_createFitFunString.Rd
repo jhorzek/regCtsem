@@ -4,20 +4,10 @@
 \alias{approx_createFitFunString}
 \title{approx_createFitFunString}
 \usage{
-approx_createFitFunString(
-  penalty,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
-  epsilon = 1e-05,
-  silent = FALSE
-)
+approx_createFitFunString(penalty, epsilon = 1e-05, silent = FALSE)
 }
 \arguments{
 \item{penalty}{type of penalty. Currently supported are lasso and ridge}
-
-\item{elastic_alpha}{PLACEHOLDER. Used in elastic net. Not yet implemented}
-
-\item{elastic_gamma}{PLACEHOLDER. Used in elastic net. Not yet implemented}
 
 \item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentible one}
 

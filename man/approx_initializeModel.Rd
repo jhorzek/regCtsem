@@ -12,8 +12,6 @@ approx_initializeModel(
   regIndicators,
   lambda,
   penalty = "lasso",
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   adaptiveLassoWeights = NULL,
   returnFitIndices = TRUE,
   cvSample = NULL,
@@ -40,10 +38,6 @@ approx_initializeModel(
 \item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
 
 \item{penalty}{type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact}
-
-\item{elastic_alpha}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{elastic_gamma}{placehoder for elastic net. NOT YET IMPLEMENTED}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 

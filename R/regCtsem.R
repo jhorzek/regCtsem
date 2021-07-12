@@ -13,8 +13,6 @@
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
-#' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
-#' @param elastic_gamma placehoder for elastic net. NOT YET IMPLEMENTED
 #' @param cvSample cross-validation sample. Has to be of type mxData
 #' @param autoCV Boolean: Should automatic cross-validation be used?
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
@@ -193,8 +191,6 @@ regCtsem <- function(
   lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   cvSample = NULL,
   autoCV = FALSE,
   k = 5,
@@ -301,8 +297,6 @@ regCtsem <- function(
   if(argsIn$optimization == "exact"){
     regCtsemObject <- do.call(regCtsem::exact_regCtsem, rlist::list.remove(argsIn, c("optimization",
                                                                                      "control",
-                                                                                     "elastic_alpha",
-                                                                                     "elastic_gamma",
                                                                                      "calledInternally")))
 
 
@@ -355,8 +349,6 @@ regCtsem <- function(
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
-#' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
-#' @param elastic_gamma placehoder for elastic net. NOT YET IMPLEMENTED
 #' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using the T0VAR?
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param cvSample cross-validation sample. Has to be of type mxData
@@ -412,8 +404,6 @@ exact_regCtsem <- function(  # model
   lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   standardizeDrift = FALSE,
   # fit settings
   returnFitIndices = TRUE,
@@ -641,8 +631,6 @@ exact_regCtsem <- function(  # model
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
-#' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
-#' @param elastic_gamma placehoder for elastic net. NOT YET IMPLEMENTED
 #' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using the T0VAR?
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param cvSample cross-validation sample. Has to be of type mxData
@@ -699,8 +687,6 @@ exact_parallelRegCtsem <- function(# model
   lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   standardizeDrift = FALSE,
   # fit settings
   returnFitIndices = TRUE,
@@ -879,8 +865,6 @@ exact_parallelRegCtsem <- function(# model
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty Currently supported are lasso, adaptiveLasso, and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
-#' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
-#' @param elastic_gamma placehoder for elastic net. NOT YET IMPLEMENTED
 #' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using T0VAR?
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param cvSample cross-validation sample. Has to be of type mxData
@@ -913,8 +897,6 @@ approx_regCtsem <- function(  # model
   lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   standardizeDrift = FALSE,
   # fit settings
   returnFitIndices = TRUE,
@@ -1000,8 +982,7 @@ approx_regCtsem <- function(  # model
     fitAndParameters <- try(regCtsem::approx_iterateOverLambdas(ctsemObject = ctsemObject, mxObject = mxObject, sampleSize = sampleSize,
                                                                 # penalty settings
                                                                 regOn = regOn, regIndicators = regIndicators, lambdas = lambdas,
-                                                                penalty = penalty, elastic_alpha = elastic_alpha, elastic_gamma = elastic_gamma,
-                                                                adaptiveLassoWeights = adaptiveLassoWeights,
+                                                                penalty = penalty, adaptiveLassoWeights = adaptiveLassoWeights,
                                                                 # fit settings
                                                                 returnFitIndices = returnFitIndices, cvSample = cvSample,
                                                                 autoCV = autoCV, k = k,
@@ -1040,8 +1021,6 @@ approx_regCtsem <- function(  # model
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
-#' @param elastic_alpha placehoder for elastic net. NOT YET IMPLEMENTED
-#' @param elastic_gamma placehoder for elastic net. NOT YET IMPLEMENTED
 #' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using T0VAR?
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param cvSample cross-validation sample. Has to be of type mxData
@@ -1078,8 +1057,6 @@ approx_parallelRegCtsem <- function(
   lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   standardizeDrift = FALSE,
   # fit settings
   returnFitIndices = TRUE,
@@ -1165,8 +1142,7 @@ approx_parallelRegCtsem <- function(
     iterationResult <- approx_regCtsem(ctsemObject = ctsemObject, mxObject = mxObject, dataset = dataset,
                                        # penalty settings
                                        regOn = regOn, regIndicators = regIndicators, lambdas = lambdaBin,
-                                       penalty = penalty, elastic_alpha = elastic_alpha, elastic_gamma = elastic_gamma,
-                                       standardizeDrift = standardizeDrift,
+                                       penalty = penalty, standardizeDrift = standardizeDrift,
                                        adaptiveLassoWeights = adaptiveLassoWeights,
                                        # fit settings
                                        returnFitIndices = returnFitIndices, cvSample = cvSample,
