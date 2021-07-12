@@ -298,16 +298,15 @@ regCtsem <- function(
                                                           regIndicators = argsIn$regIndicators)
   }
 
-  if(tolower(argsIn$objective) == "kalman"){
-    # switch to wide data
-    suppressMessages(invisible(capture.output(ctsemObjectTemp <- ctFit(dat = argsIn$dataset,
-                                                                       ctmodelobj = argsIn$ctsemObject$ctmodelobj,
-                                                                       useOptimizer = FALSE,
-                                                                       objective = "Kalman"))))
-    argsIn$mxObject <- OpenMx::omxSetParameters(ctsemObjectTemp$mxobj,
-                                                labels = names(omxGetParameters(argsIn$ctsemObject$mxobj)),
-                                                values = omxGetParameters(argsIn$ctsemObject$mxobj))
-  }
+  #if(tolower(argsIn$objective) == "kalman"){
+  #  # switch to wide data
+  #  suppressMessages(invisible(capture.output(ctsemObjectTemp <- ctFit(dat = argsIn$dataset,
+  #                                                                     ctmodelobj = argsIn$ctsemObject$ctmodelobj,
+  #                                                                     useOptimizer = FALSE,
+  #                                                                     objective = "Kalman",
+  #                                                                     omxStartValues = omxGetParameters(argsIn$ctsemObject$mxobj)))))
+  #  argsIn$mxObject <- ctsemObjectTemp$mxobj
+  #}
 
   if(argsIn$optimization == "exact"){
     regCtsemObject <- do.call(regCtsem::exact_regCtsem, rlist::list.remove(argsIn, c("optimization",
@@ -833,9 +832,18 @@ exact_parallelRegCtsem <- function(# model
     colnames(fitTable) <- lambdaBin
 
     initialModel <- mxObject
+    if(!is.null(ctsemObject)){
+      ctsemObject$mxobj <- mxObject
+    }
 
     iterationExactArgsIn <- fun_call
-    iterationExactArgsIn$mxObject <- initialModel
+    iterationExactArgsIn$ctsemObject <- ctsemObject
+    if(tolower(objective) == "kalman"){
+      iterationExactArgsIn$mxObject <- NULL
+    }else{
+      iterationExactArgsIn$mxObject <- initialModel
+    }
+
     iterationExactArgsIn$lambdas <- lambdaBin
     iterationExactArgsIn$cores <- 1
     iterationExactArgsIn$progressBar <- FALSE
@@ -969,14 +977,6 @@ approx_regCtsem <- function(  # model
 
   # if Kalman: fit initial model
   if(tolower(objective) == "kalman"){
-    if(optimizeKalman){
-      mxObject <- OpenMx::mxTryHardctsem(mxObject, silent = TRUE, extraTries = extraTries)
-      approxArgsIn$KalmanStartValues <- omxGetParameters(mxObject)
-      approxArgsIn$optimizeKalman <- FALSE
-    }else{
-      mxObject <- OpenMx::mxRun(mxObject, silent = TRUE, useOptimizer = FALSE)
-    }
-    approxArgsIn$mxObject <- mxObject
     sampleSize <- nrow(dataset)
   }else{
     sampleSize <- mxObject$data$numObs
@@ -1427,13 +1427,16 @@ checkSetup <- function(argsIn){
   if(is.null(argsIn$ctsemObject) & is.null(argsIn$mxObject)){
     stop("Both ctsemObject and mxObect are missing. You need to provide at least one")
   }
-
-  if(!is.null(argsIn$mxObject) & any(class(argsIn$mxObject)=="MxModel")){
-    # check if ctsemObject is estimated with Kalman
-    if(any(class(argsIn$mxObject$expectation) == "MxExpectationStateSpace") &  !any(class(argsIn$ctsemObject)=="ctsemInit")){
-      stop("It seems like the provided mxObject was fitted with Kalman filter. To use the Kalman filter, provide the object of type ctsemInit from ctModel instead of the fitted model. Set the objective = 'Kalman' and provide a dataset")
-    }
+  if(!any(class(argsIn$ctsemObject) == "ctsemFit")){
+    stop("ctsemObject has to be of class ctsemFit")
   }
+
+  #if(!is.null(argsIn$mxObject) & any(class(argsIn$mxObject)=="MxModel")){
+  #  # check if ctsemObject is estimated with Kalman
+  #  if(any(class(argsIn$mxObject$expectation) == "MxExpectationStateSpace") &  !any(class(argsIn$ctsemObject)=="ctsemInit")){
+  #    stop("It seems like the provided mxObject was fitted with Kalman filter. To use the Kalman filter, provide the object of type ctsemInit from ctModel instead of the fitted model. Set the objective = 'Kalman' and provide a dataset")
+  #  }
+  #}
 
   if(!(argsIn$optimization == "exact" || argsIn$optimization == "approx")){
     stop(paste("Optimization was set to", optimization, "however only exact or approx are supported."))
@@ -1476,76 +1479,6 @@ checkSetup <- function(argsIn){
   #  stop("lambdas = 'auto' currently not supported for adative lasso or automatic standardization of drift parameters.")
   #}
 }
-
-
-
-#' createKalmanMultiSubjectModel
-#'
-#' Creates an mxModel Object for N >= 1 individuals using the Kalman filter
-#'
-#' NOTE: Function located in file regCtsem.R
-#'
-#' @param ctsemObject object of type ctsemInit from ctModel
-#' @param dataset data set in wide format compatible to ctsem
-#' @param useOptimizer Boolean: should the model be optimized
-#' @export
-createKalmanMultiSubjectModel <- function(ctsemObject, dataset, useOptimizer, silent = FALSE, KalmanStartValues = NULL){
-
-
-  suppressMessages(invisible(capture.output(fit_kalmanModels <- ctsemOMX::ctFit(ctmodelobj = ctsemObject,
-                                                                                dat = dataset,
-                                                                                objective = "Kalman",
-                                                                                fit = useOptimizer))))
-  mxObject <- fit_kalmanModels$mxobj
-  if(!is.null(KalmanStartValues)){
-    parameterLabels <- names(OpenMx::omxGetParameters(mxObject))
-    if(!all(names(KalmanStartValues)%in%parameterLabels)){
-      stop("KalmanStartValues must have the same labels as the parameters in the model.")
-    }
-    mxObject <- OpenMx::omxSetParameters(mxObject, labels = parameterLabels, values = KalmanStartValues[parameterLabels])
-  }
-  return(mxObject)
-
-  ######## Not used #######
-  # create individual models
-  # Note that we assume all persons to have the same parameter values
-  individualModels <- vector("list", length = nrow(dataset))
-  individualModelNames <- paste0("person", 1:nrow(dataset))
-
-  for(person in 1:nrow(dataset)){
-    if(!silent){
-      cat('\r',paste0("Setting up the Kalman model: ", person, " of ", nrow(dataset)))
-      flush.console()}
-    suppressMessages(invisible(capture.output(individualModels[[person]] <- OpenMx::mxModel(name = individualModelNames[person],
-                                                                                            ctsemOMX::ctFit(dat = t(as.matrix(dataset[person,])),
-                                                                                                            ctmodelobj = ctsemObject,
-                                                                                                            objective = 'Kalman',
-                                                                                                            useOptimizer = FALSE)$mxobj))))
-  }
-
-  pointersToMatricesAndAlgebras <- vector("list", length = (length(individualModels[[1]]$algebras) + length(individualModels[[1]]$matrices)))
-  namesOfMatricesAndAlgebras <- c(names(individualModels[[1]]$algebras), names(individualModels[[1]]$matrices))
-  names(pointersToMatricesAndAlgebras) <- namesOfMatricesAndAlgebras
-  for(i in 1:length(namesOfMatricesAndAlgebras)){
-    pointersToMatricesAndAlgebras[[i]] <- mxAlgebraFromString(name = namesOfMatricesAndAlgebras[i], algString = paste0("person1.", namesOfMatricesAndAlgebras[i]))
-  }
-
-  mxIndividualModels <- OpenMx::mxModel(name = "MultiModel",
-                                        submodels  = individualModels,
-                                        # OpenMx::mxData(dataset, type = "raw"),
-                                        OpenMx::mxFitFunctionMultigroup(individualModelNames),
-                                        # for easy access to the matrices and algebras:
-                                        pointersToMatricesAndAlgebras
-  )
-
-  mxIndividualModels <- OpenMx::omxAssignFirstParameters(mxIndividualModels)
-
-  fit.mxIndividualModels <- mxRun(mxIndividualModels, silent = TRUE, useOptimizer = useOptimizer)
-  cat("\n")
-  return(fit.mxIndividualModels)
-}
-
-
 
 
 #' getAdaptiveLassoWeights

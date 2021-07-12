@@ -133,7 +133,7 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
     if(tolower(objective)  == "ml"){
       gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
       if (any(class(gradientModelcpp) == "try-error")){
-        message("Using OpenMx. This can slow down the computation considerably.")
+        stop("Setting up the cpptsem model failed. Try using the argument control = list('tryCpptsem' = FALSE). This will slow down the computation considerably.")
         gradientModelcpp <- NULL
       }else{
         gradientModelcpp$computeRAM()
@@ -141,21 +141,21 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
         m2LLcpp <- gradientModelcpp$m2LL
         testM2LL <- round(ctsemObject$mxobj$fitfunction$result[[1]] - m2LLcpp,3) == 0
         if (!testM2LL & !forceCpptsem){
-          message("Using OpenMx. This can slow down the computation considerably. If you want to use cpptsem nevertheless, set forceCpptsem = TRUE")
+          stop(paste0("Differences in fit between ctsem and cpptsem object: ", ctsemObject$mxobj$fitfunction$result[[1]], " vs ", m2LLcpp, ". Try using the argument control = list('tryCpptsem' = FALSE) or This will slow down the computation considerably. Alternatively use control = list('forceCpptsem' = TRUE)"))
           gradientModelcpp <- NULL
         }
       }
     }else if (tolower(objective)  == "kalman"){
       gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
       if (any(class(gradientModelcpp) == "try-error")){
-        message("Using OpenMx. This can slow down the computation considerably.")
+        stop("Setting up the cpptsem model failed. Try using the argument control = list('tryCpptsem' = FALSE). This will slow down the computation considerably.")
         gradientModelcpp <- NULL
       }else{
         gradientModelcpp$computeAndFitKalman()
         m2LLcpp <- gradientModelcpp$m2LL
         testM2LL <- round(ctsemObject$mxobj$fitfunction$result[[1]] - m2LLcpp,3) == 0
         if (!testM2LL & !forceCpptsem){
-          message("Using OpenMx. This can slow down the computation considerably. If you want to use cpptsem nevertheless, set forceCpptsem = TRUE")
+          stop(paste0("Differences in fit between ctsem and cpptsem object: ", ctsemObject$mxobj$fitfunction$result[[1]], " vs ", m2LLcpp, ". Try using the argument control = list('tryCpptsem' = FALSE) or This will slow down the computation considerably. Alternatively use control = list('forceCpptsem' = TRUE)"))
           gradientModelcpp <- NULL
         }
       }

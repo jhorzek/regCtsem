@@ -302,7 +302,8 @@ approx_createFitFunString = function(penalty, elastic_alpha = NULL, elastic_gamm
 approx_getCVFit <- function(mxObject, ctsemObject, cvSample, objective, fitAndParameters, parameterLabels, lambdas){
   if(tolower(objective) == "kalman"){
     # create Model
-    cvModel <- createKalmanMultiSubjectModel(ctsemObject = ctsemObject, dataset = cvSample, useOptimizer = FALSE, silent = TRUE)
+    suppressMessages(invisible(capture.output(ctsemTemp <- ctFit(dat = cvSample, ctmodelobj = ctsemObject$ctmodelobj, objective = "Kalman", useOptimizer = FALSE))))
+    cvModel <- ctsemTemp$mxobj
 
   }else{
     # create Model
