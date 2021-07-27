@@ -74,9 +74,19 @@ approx_initializeModel <- function(  # model
   lambda <- OpenMx::mxMatrix(type = "Full", values = lambda, nrow = 1, ncol = 1, free = F, name = "lambda")
 
   # Add Drift weights
-  driftWeights <- adaptiveLassoWeights[grepl("drift", names(adaptiveLassoWeights))]
+  driftWeights <- mxObject$DRIFT$values
+  driftWeights[] <- 0
+  driftWeights[!is.na(mxObject$DRIFT$labels)] <- adaptiveLassoWeights[mxObject$DRIFT$labels[!is.na(mxObject$DRIFT$labels)]]
+  driftLables <- mxObject$DRIFT$labels
+  for(i in seq_len(nrow(driftLables))){
+    for(j in seq_len(ncol(driftLables))){
+      if(is.na(driftLables[i,j])){
+        driftLables[i,j] <- paste0("DRIFT_autolabel_", i, "_", j)
+      }
+    }
+  }
   rowVecDriftWeights <- matrix(driftWeights, nrow = 1)
-  rowVecDriftWeights <- OpenMx::mxMatrix(type = "Full", values = rowVecDriftWeights, labels = paste0("stdizer_",names(driftWeights)), free = F, name = "rowVecDriftWeights")
+  rowVecDriftWeights <- OpenMx::mxMatrix(type = "Full", values = rowVecDriftWeights, labels = paste0("stdizer_",c(driftLables)), free = F, name = "rowVecDriftWeights")
 
   # Combine everything in a new model:
 
