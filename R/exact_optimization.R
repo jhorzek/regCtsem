@@ -210,7 +210,7 @@ exact_getPenaltyValue <- function(lambda, theta, regIndicators, adaptiveLassoWei
   return(regVal)
 }
 
-#' exact_getPenaltyValue
+#' exact_getPenaltyValueWithTarget
 #'
 #' computes sum(lambda*abs(regularized Values))
 #'

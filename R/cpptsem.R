@@ -199,7 +199,7 @@
 #'
 #' @export
 
-cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE, group = NULL, groupSpecificParameters = NULL){
+cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE, group = NULL, groupSpecificParameters = NULL, silent = FALSE){
   if(!"T0TRAITEFFECT" %in% ctsemModel$ctfitargs$stationary){
     stop("Non-stationary trait effect not yet implemented")
   }
@@ -241,7 +241,7 @@ cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE, group 
   }
 
   # step 3: extract continuous time matrices and parameters
-  ctMatrices <- extractCtsemMatrices(mxObject = mxObject, nlatent = nlatent, nmanifest = nmanifest)
+  ctMatrices <- extractCtsemMatrices(mxObject = mxObject, nlatent = nlatent, nmanifest = nmanifest, silent = silent)
 
   # step 4: get parameter table from mxObject
   if(tolower(ctsemModel$ctfitargs$objective) == "mxram"){
@@ -266,7 +266,7 @@ cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE, group 
         grSpecificParameterTable <- subset(grParameterTable, label %in% groupSpecificParameters)
         grSpecificParameterTable$label <- paste0(grSpecificParameterTable$label, paste0("_G", gr))
         grParameterTable <- rbind(subset(grParameterTable, !label %in% groupSpecificParameters),
-              grSpecificParameterTable)
+                                  grSpecificParameterTable)
         grParameterTable$groupID <- gr
         if(gr == uniqueGroups[1]){
           combinedGrParameterTable <- grParameterTable
@@ -394,7 +394,7 @@ constructDataset <- function(wideData){
   for(mrow in 1:nrow(isMissing)){
     rowMissing <- apply(uniqueMissingPatterns, 1, function(x) all(isMissing[mrow,] == x))
     individualMissingPatternID <- c(individualMissingPatternID,
-                                     (1:nrow(uniqueMissingPatterns))[rowMissing])
+                                    (1:nrow(uniqueMissingPatterns))[rowMissing])
   }
 
   dataList <- list("dataset" = as.matrix(dataset),
@@ -537,13 +537,15 @@ prepareKalmanData <- function(dataset, nlatent, nmanifest, dtIndicators, Tpoints
 #' @param nmanifest number of manifest variables
 #' @import OpenMx
 #' @export
-extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
+extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   ctMatrices <- list()
   ## latent
   # T0MEANS
-  cat("Translating model to C++. Found the following elements: ")
+  if(!silent){
+    cat("Translating model to C++. Found the following elements: ")
+  }
   if(!is.null(mxObject$T0MEANS)){
-    cat("T0MEANS, ")
+    if(!silent){cat("T0MEANS, ")}
     T0MEANS <- list("values" = NULL, "names" = NULL)
     T0MEANS$values <- deepCopyNumericMatrix(mxObject$T0MEANS$values)
     T0MEANS$names <- deepCopyStringMatrix(mxObject$T0MEANS$labels)
@@ -552,7 +554,7 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
 
   # T0VARbase
   if(!is.null(mxObject$T0VARbase)){
-    cat("T0VARbase, ")
+    if(!silent){cat("T0VARbase, ")}
     T0VARbase <- list("values" = NULL, "names" = NULL)
     T0VARbase$values <- deepCopyNumericMatrix(mxObject$T0VARbase$values)
     T0VARbase$names <- deepCopyStringMatrix(mxObject$T0VARbase$labels)
@@ -562,7 +564,7 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
 
   # DRIFT
   if(!is.null(mxObject$DRIFT)){
-    cat("DRIFT, ")
+    if(!silent){cat("DRIFT, ")}
     DRIFT <- list("values" = NULL, "names" = NULL)
     DRIFT$values <- deepCopyNumericMatrix(mxObject$DRIFT$values)
     DRIFT$names <- deepCopyStringMatrix(mxObject$DRIFT$labels)
@@ -572,7 +574,7 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
 
   # DIFFUSIONbase
   if(!is.null(mxObject$DIFFUSIONbase)){
-    cat("DIFFUSIONbase, ")
+    if(!silent){cat("DIFFUSIONbase, ")}
     DIFFUSIONbase <- list("values" = NULL, "names" = NULL)
     DIFFUSIONbase$values <- deepCopyNumericMatrix(mxObject$DIFFUSIONbase$values)
     DIFFUSIONbase$names <- deepCopyStringMatrix(mxObject$DIFFUSIONbase$labels)
@@ -581,7 +583,7 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
 
   # TRAITVARbase
   if(!is.null(mxObject$TRAITVARbase$values)){
-    cat("TRAITVARbase, ")
+    if(!silent){cat("TRAITVARbase, ")}
     TRAITVARbase <- list("values" = NULL, "names" = NULL)
     TRAITVARbase$values <- deepCopyNumericMatrix(mxObject$TRAITVARbase$values)
     TRAITVARbase$names <- deepCopyStringMatrix(mxObject$TRAITVARbase$labels)
@@ -590,7 +592,7 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
 
   # T0TRAITEFFECT
   if(!is.null(mxObject$T0TRAITEFFECT)){
-    cat("T0TRAITEFFECT, ")
+    if(!silent){cat("T0TRAITEFFECT, ")}
     T0TRAITEFFECT <- list("values" = NULL, "names" = NULL)
     T0TRAITEFFECT$values <- deepCopyNumericMatrix(mxObject$T0TRAITEFFECT$values)
     T0TRAITEFFECT$names <- deepCopyStringMatrix(mxObject$T0TRAITEFFECT$labels)
@@ -599,7 +601,7 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
 
   # CINT
   if(!is.null(mxObject$CINT)){
-    cat("CINT, ")
+    if(!silent){cat("CINT, ")}
     CINT <- list("values" = NULL, "names" = NULL)
     CINT$values <- deepCopyNumericMatrix(mxObject$CINT$values)
     CINT$names <- deepCopyStringMatrix(mxObject$CINT$labels)
@@ -610,7 +612,7 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
 
   # MANIFESTMEANS
   if(!is.null(mxObject$MANIFESTMEANS)){
-    cat("MANIFESTMEANS, ")
+    if(!silent){cat("MANIFESTMEANS, ")}
     MANIFESTMEANS <- list("values" = NULL, "names" = NULL)
     MANIFESTMEANS$values <- deepCopyNumericMatrix(mxObject$MANIFESTMEANS$values)
     MANIFESTMEANS$names <- deepCopyStringMatrix(mxObject$MANIFESTMEANS$labels)
@@ -619,7 +621,7 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
 
   # LAMBDA
   if(!is.null(mxObject$LAMBDA)){
-    cat("LAMBDA, ")
+    if(!silent){cat("LAMBDA, ")}
     LAMBDA <- list("values" = NULL, "names" = NULL)
     LAMBDA$values <- deepCopyNumericMatrix(mxObject$LAMBDA$values)
     LAMBDA$names <- deepCopyStringMatrix(mxObject$LAMBDA$labels)
@@ -628,7 +630,7 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
 
   # MANIFESTVAR
   if(!is.null(mxObject$MANIFESTVARbase$values)){
-    cat("MANIFESTVARbase.")
+    if(!silent){cat("MANIFESTVARbase.")}
     MANIFESTVARbase <- list("values" = NULL, "names" = NULL)
     MANIFESTVARbase$values <- deepCopyNumericMatrix(mxObject$MANIFESTVARbase$values)
     MANIFESTVARbase$names <- deepCopyStringMatrix(mxObject$MANIFESTVARbase$labels)
