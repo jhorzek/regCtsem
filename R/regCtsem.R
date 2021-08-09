@@ -1627,7 +1627,7 @@ getFlatStdizer <- function(T0VAR, driftLabels){
 #' @export
 getMaxLambda <- function(mxObject, regIndicators, differenceApprox, adaptiveLassoWeights){
   # This function is adapted from Murphy (2012) Machine learning: a probabilistic perspective. See p. 434 for more details.
-  cat("Computing maximally required lambda ... ")
+  cat("Computing lambda_max ... ")
 
   converged <- FALSE
   # warning("automatically determining the maximal lambda with getLambdaMax is still experimental! It only produces an approximation of the required lambdaMax which can be too large or too small.")
