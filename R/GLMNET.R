@@ -27,22 +27,18 @@
 #' reg2 <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = seq(0,1,.1), standardizeDrift = FALSE)
 #' reg2$regM2LL
 #' reg2$thetas
-#' @param ctsemObject Fitted object of class ctsemFit
-#' @param mxObject Object of type MxModel
+#' @param cpptsemObject Fitted object of class cpptsem
 #' @param dataset only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param regIndicators Vector with names of regularized parameters
 #' @param lambdas Vector with lambda values that should be tried
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param stepSize Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize * Stepdirection)
-#' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
-#' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param lineSearch String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.
 #' @param c1 c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"
 #' @param c2 c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
 #' @param sig only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.
 #' @param gam Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
-#' @param differenceApprox Which approximation should be used for calculating the gradients in the gradientModel. central is recommended
 #' @param initialHessianApproximation Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian
 #' @param maxIter_out Maximal number of outer iterations
 #' @param maxIter_in Maximal number of inner iterations
@@ -58,121 +54,66 @@
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #' @export
-exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndicators, lambdas, adaptiveLassoWeights,
+exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, lambdas, adaptiveLassoWeights,
                              # additional settings
                              sparseParameters = NULL,
-                             tryCpptsem, forceCpptsem = FALSE, stepSize = 1, lineSearch = "none", c1 = .0001, c2 = .9,
+                             stepSize = 1, lineSearch = "none", c1 = .0001, c2 = .9,
                              sig = 10^(-5), gam = 0,
-                             differenceApprox = "central", initialHessianApproximation = "OpenMx", maxIter_out = 100, maxIter_in = 1000,
+                             initialHessianApproximation = "optim", maxIter_out = 100, maxIter_in = 1000,
                              maxIter_line = 500, eps_out = .0000000001, eps_in = .0000000001, eps_WW = .0001,
                              scaleLambdaWithN = TRUE, sampleSize, approxFirst = T,
                              numStart = 0,
-                             approxMaxIt = 5, extraTries = 3, verbose = 0, progressBar = TRUE, parallelProgressBar = NULL){
+                             approxMaxIt = 5, extraTries = 3, verbose = 0){
   # Setup
-  ## hessianModel is a models which returns the gradients and the Hessian:
-  computeHessian <- !is.matrix(initialHessianApproximation) & is.null(mxObject$output$hessian)
-  hessianModel <- OpenMx::mxModel(mxObject,
-                                  OpenMx::mxComputeSequence(steps=list(OpenMx::mxComputeNumericDeriv(checkGradient = FALSE,
-                                                                                                     hessian = computeHessian))
-                                  ))
-  # get initial parameter values, gradients, and hessian:
-  hessianModel <- OpenMx::mxRun(hessianModel, silent = TRUE)
+  # save current parameters
+  parameters <- cpptsemObject$getParameterValues()
+
+  ## compute Hessian
+  if(!is.matrix(initialHessianApproximation)){
+    Hessian <- try(optimHess(par = parameters, fn = fitCpptsem,
+                             cpptsemObject = cpptsemObject,
+                             objective = objective,
+                             failureReturns = NA
+    ), silent = TRUE)
+    if(any(class(Hessian) == "try-error")){
+      warning("Could not compute Hessian. Using Identity")
+      Hessian <- diag(.1, length(parameters))
+    }
+  }else{
+    Hessian <- initialHessianApproximation
+  }
 
   # get parameter values
-  theta_kp1 <- as.matrix(OpenMx::omxGetParameters(hessianModel))
+  theta_kp1 <- as.matrix(cpptsemObject$getParameterValues())
+  thetaNames <- names(cpptsemObject$getParameterValues())
   initialParameters <- theta_kp1
 
   # get initial gradients
-  g_kp1 <- hessianModel$compute$steps[[1]]$output[["gradient"]]
-  thetaNames <- rownames(g_kp1)
-  g_kp1 <- g_kp1[,differenceApprox] # use specified gradient approximation
-  g_kp1 <- matrix(g_kp1, nrow = length(g_kp1), ncol = 1)
-  rownames(g_kp1) <- thetaNames
+  g_kp1 <- regCtsem::exact_getCppGradients(cpptsemObject, objective = objective)
   initialGradients <- g_kp1
 
   # get initial Hessian
-  if(computeHessian){
-    H_kp1 <- hessianModel$output$calculatedHessian
-    eigenDecomp <- eigen(H_kp1)
-    if(any(eigenDecomp$values < 0)){
-      warning("Initial Hessian is not positive definite. Flipping Eigen values to obtain a positive definite initial Hessian.")
-      D <- abs(diag(eigenDecomp$values))
-      L <- eigenDecomp$vectors
-      H_kp1 <- L%*%D%*%solve(L)
-    }
-  }else if(is.matrix(initialHessianApproximation)){
-    H_kp1 <- initialHessianApproximation
-  }else{
-    H_kp1 <- mxObject$output$hessian
+  H_kp1 <- Hessian
+  eigenDecomp <- eigen(H_kp1)
+  if(any(eigenDecomp$values < 0)){
+    warning("Initial Hessian is not positive definite. Flipping Eigen values to obtain a positive definite initial Hessian.")
+    D <- abs(diag(eigenDecomp$values))
+    L <- eigenDecomp$vectors
+    H_kp1 <- L%*%D%*%solve(L)
   }
 
-
-  # stop if Hessian is not positive definite
-  if(any(eigen(H_kp1)$values < 0)){
-    if(is.matrix(initialHessianApproximation) || !is.null(mxObject$output$hessian)){
-      H_kp1 <- "ident"
-    }
-    warning("Initial Hessian is not positive definite and will be approximated.")
-    H_kp1 <- regCtsem::exact_initialHessian(mxObject = mxObject,
-                                            approximationType = initialHessianApproximation,
-                                            estimatedHessian = H_kp1)
-  }
-  initialHessian <- H_kp1
   # define return values
   thetas <- matrix(NA,
                    nrow = length(theta_kp1),
                    ncol = length(lambdas),
-                   dimnames = list(names(OpenMx::omxGetParameters(hessianModel)),
+                   dimnames = list(thetaNames,
                                    lambdas))
   m2LL <- rep(NA, length(lambdas))
   regM2LL <- rep(NA, length(lambdas))
 
-  # define gradient model
-  ## try cpptsem
-  if(tryCpptsem){
-    if(tolower(objective)  == "ml"){
-      gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
-      if (any(class(gradientModelcpp) == "try-error")){
-        stop("Setting up the cpptsem model failed. Try using the argument control = list('tryCpptsem' = FALSE). This will slow down the computation considerably.")
-        gradientModelcpp <- NULL
-      }else{
-        gradientModelcpp$computeRAM()
-        gradientModelcpp$fitRAM()
-        m2LLcpp <- gradientModelcpp$m2LL
-        testM2LL <- round(ctsemObject$mxobj$fitfunction$result[[1]] - m2LLcpp,3) == 0
-        if (!testM2LL & !forceCpptsem){
-          stop(paste0("Differences in fit between ctsem and cpptsem object: ", ctsemObject$mxobj$fitfunction$result[[1]], " vs ", m2LLcpp, ". Try using the argument control = list('tryCpptsem' = FALSE) or This will slow down the computation considerably. Alternatively use control = list('forceCpptsem' = TRUE)"))
-          gradientModelcpp <- NULL
-        }
-      }
-    }else if (tolower(objective)  == "kalman"){
-      gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
-      if (any(class(gradientModelcpp) == "try-error")){
-        stop("Setting up the cpptsem model failed. Try using the argument control = list('tryCpptsem' = FALSE). This will slow down the computation considerably.")
-        gradientModelcpp <- NULL
-      }else{
-        gradientModelcpp$computeAndFitKalman()
-        m2LLcpp <- gradientModelcpp$m2LL
-        testM2LL <- round(ctsemObject$mxobj$fitfunction$result[[1]] - m2LLcpp,3) == 0
-        if (!testM2LL & !forceCpptsem){
-          stop(paste0("Differences in fit between ctsem and cpptsem object: ", ctsemObject$mxobj$fitfunction$result[[1]], " vs ", m2LLcpp, ". Try using the argument control = list('tryCpptsem' = FALSE) or This will slow down the computation considerably. Alternatively use control = list('forceCpptsem' = TRUE)"))
-          gradientModelcpp <- NULL
-        }
-      }
-    }
-  }else{
-    message("Using OpenMx. This can slow down the computation considerably.")
-    gradientModelcpp <- NULL
-  }
-  gradientModel <- OpenMx::mxModel(mxObject,
-                                   OpenMx::mxComputeSequence(steps=list(OpenMx::mxComputeNumericDeriv(checkGradient = FALSE,
-                                                                                                      hessian = FALSE))
-                                   ))
-
 
   # Progress bar
-  if(progressBar){
-    pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)}
+  pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
 
   # iterate over lambda values
   numLambdas <- length(lambdas)
@@ -181,16 +122,9 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
   while(iteration <= numLambdas){
     lambda <- lambdas[iteration]
     # update progress bar
-    if(progressBar){
-      setTxtProgressBar(pbar, iteration)
-    }else if(!is.null(parallelProgressBar)){
-      writeProgressError <- try(write.csv2(which(lambdas == lambda),parallelProgressBar$parallelTempFiles[[parallelProgressBar$iteration]], row.names = FALSE))
-      if(!any(class(writeProgressError) == "try-error")){
-        parallelProgressBar$printProgress(parallelProgressBar$parallelTempFiles, parallelProgressBar$maxItSum, parallelProgressBar$cores)
-      }
-    }
+    setTxtProgressBar(pbar, iteration)
 
-    lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*samplesize
+    lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*sampleSize
 
     # should the results first be approximated?
     startingValues <- as.vector(theta_kp1)
@@ -202,21 +136,20 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
       theta_kp1 <- tryApproxFirst(startingValues = startingValues, returnAs = "matrix",
                                   approxFirst = approxFirst, numStart = numStart, approxMaxIt = approxMaxIt,
                                   lambda = lambda, lambdas = lambdas,
-                                  gradientModelcpp = gradientModelcpp,
-                                  mxObject = mxObject,
+                                  cpptsemObject = cpptsemObject,
                                   regIndicators = regIndicators, targetVector = targetVector,
                                   adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
                                   extraTries = extraTries)
     }
 
     # outer loop: optimize parameters
-    resGLMNET <- try(regCtsem::exact_outerGLMNET(mxObject = mxObject, objective =objective,
+    resGLMNET <- try(regCtsem::exact_outerGLMNET(cpptsemObject = cpptsemObject, objective = objective,
                                                  adaptiveLassoWeights = adaptiveLassoWeights, sampleSize = sampleSize,
-                                                 gradientModel = gradientModel, gradientModelcpp = gradientModelcpp, parameterNames = thetaNames,
+                                                 parameterNames = thetaNames,
                                                  initialParameters = theta_kp1, initialGradients = g_kp1, initialHessian = H_kp1,
                                                  lambda = lambda, regIndicators = regIndicators,
                                                  stepSize = stepSize, lineSearch = lineSearch, c1 = c1, c2 = c2,
-                                                 differenceApprox = differenceApprox, maxIter_out = maxIter_out,
+                                                 maxIter_out = maxIter_out,
                                                  maxIter_in = maxIter_in, maxIter_line = maxIter_line, eps_out = eps_out,
                                                  eps_in = eps_in, eps_WW = eps_WW, scaleLambdaWithN = scaleLambdaWithN, verbose = verbose))
 
@@ -242,14 +175,13 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
       retryOnce <- TRUE
     }else{
       theta_kp1 <- resGLMNET$theta_kp1
-      # run final gradientModel
-      if(!is.null(resGLMNET$gradientModelcpp)){
-        gradientModelcpp <- resGLMNET$gradientModelcpp
+      # run final model
+        cpptsemObject <- resGLMNET$cpptsemObject
         if(tolower(objective) == "ml"){
-          out1 <- try(gradientModelcpp$computeRAM(), silent = TRUE)
-          out2 <- try(gradientModelcpp$fitRAM(), silent = TRUE)
+          out1 <- try(cpptsemObject$computeRAM(), silent = TRUE)
+          out2 <- try(cpptsemObject$fitRAM(), silent = TRUE)
         }else{
-          out1 <- try(gradientModelcpp$computeAndFitKalman(), silent = TRUE)
+          out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE)
           out2 <- NA
         }
         if(any(class(out1)== "try-error") | any(class(out2)== "try-error")){
@@ -277,53 +209,16 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
           # update gradients
           g_kp1 <- resGLMNET$g_kp1
           # save fit
-          cM2LL <- ifelse(resGLMNET$convergence, gradientModelcpp$m2LL, Inf)
-          cRegM2LL <- ifelse(resGLMNET$convergence, gradientModelcpp$m2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
-                                                                                                             theta = resGLMNET$theta_kp1,
-                                                                                                             regIndicators = regIndicators,
-                                                                                                             adaptiveLassoWeights = adaptiveLassoWeights), Inf)
+          cM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL, Inf)
+          cRegM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
+                                                                                                          theta = resGLMNET$theta_kp1,
+                                                                                                          regIndicators = regIndicators,
+                                                                                                          adaptiveLassoWeights = adaptiveLassoWeights), Inf)
           # save results
           thetas[,iteration] <- resGLMNET$theta_kp1[rownames(thetas),]
           m2LL[iteration] <- cM2LL
           regM2LL[iteration] <- cRegM2LL
         }
-      }else{
-        gradientModel <- try(OpenMx::mxRun(resGLMNET$gradientModel, silent = TRUE))
-        if(class(gradientModel) == "try-error"){
-          warning(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), "did not converge.", sep = ""))
-          # reset theta for next iteration
-          theta_kp1 <- initialParameters
-          # reset Hessian approximation
-          H_kp1 <- initialHessian
-          # reset gradients
-          g_kp1 <- initialGradients
-
-          if(retryOnce){
-            retryOnce <- FALSE
-            next
-          }
-          retryOnce <- TRUE
-
-        }else{
-          theta_kp1 <- resGLMNET$theta_kp1
-          # update gradientModel
-          gradientModel <- resGLMNET$gradientModel
-          # update Hessian approximation
-          H_kp1 <- resGLMNET$H_kp1
-          # update gradients
-          g_kp1 <- resGLMNET$g_kp1
-          # save fit
-          cM2LL <- ifelse(resGLMNET$convergence, resGLMNET$gradientModel$fitfunction$result[[1]], Inf)
-          cRegM2LL <- ifelse(resGLMNET$convergence, resGLMNET$gradientModel$fitfunction$result[[1]] +  regCtsem::exact_getPenaltyValue(lambda = lambda,
-                                                                                                                                       theta = resGLMNET$theta_kp1,
-                                                                                                                                       regIndicators = regIndicators,
-                                                                                                                                       adaptiveLassoWeights = adaptiveLassoWeights), Inf)
-          # save results
-          thetas[,iteration] <- resGLMNET$theta_kp1[rownames(thetas),]
-          m2LL[iteration] <- cM2LL
-          regM2LL[iteration] <- cRegM2LL
-        }
-      }
       iteration <- iteration + 1
     }
 
@@ -340,12 +235,10 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
 #'
 #' NOTE: Function located in file GLMNET.R
 #'
-#' @param mxObject Object of type MxModel
+#' @param cpptsemObject Object of type cpptsem
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param sampleSize sample size
-#' @param gradientModel Object of Type MxModel which specifies how the gradients of the likelihood-function are computed
-#' @param gradientModelcpp cpptsem object which specifies how the gradients of the likelihood-function are computed
 #' @param parameterNames Vector with names of theta-parameters
 #' @param initialParameters initial parameter estimates
 #' @param initialGradients initial gradients of the likelihood function
@@ -358,7 +251,6 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
 #' @param c2 c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
 #' @param sig only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.
 #' @param gam Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
-#' @param differenceApprox Which approximation should be used for calculating the gradients in the gradientModel. central is recommended
 #' @param maxIter_out Maximal number of outer iterations
 #' @param maxIter_in Maximal number of inner iterations
 #' @param maxIter_line Maximal number of iterations for the lineSearch procedure
@@ -370,10 +262,9 @@ exact_bfgsGLMNET <- function(ctsemObject, mxObject, dataset, objective, regIndic
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #' @import OpenMx
 #' @export
-exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleSize, gradientModel, gradientModelcpp = NULL, parameterNames, initialParameters, initialGradients, initialHessian,
+exact_outerGLMNET <- function(cpptsemObject, objective, adaptiveLassoWeights, sampleSize, parameterNames, initialParameters, initialGradients, initialHessian,
                               lambda, regIndicators,
                               stepSize = 1, lineSearch = "none", c1 = .0001, c2 = .9, sig = 10^(-5), gam = 0,
-                              differenceApprox = "central",
                               maxIter_out, maxIter_in, maxIter_line = 500, eps_out, eps_in, eps_WW, eps_numericDerivative = (1.1 * 10^(-16))^(1/3),
                               scaleLambdaWithN,
                               verbose = 0){
@@ -394,11 +285,7 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
   newParameters <- initialParameters
   newGradients <- initialGradients
   newHessian <- initialHessian
-  if(!is.null(gradientModelcpp)){
-    newM2LL <- gradientModelcpp$m2LL
-  }else{
-    newM2LL <- gradientModel$fitfunction$result[[1]]
-  }
+  newM2LL <- cpptsemObject$m2LL
   newRegM2LL <- newM2LL + exact_getPenaltyValue(lambda = lambda,
                                                 theta = newParameters,
                                                 regIndicators = regIndicators,
@@ -444,18 +331,18 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
       g_kp1 = oldGradients,
       H_kp1 = oldHessian,
       maxIter_in = maxIter_in,
-      eps_in = eps_in)
+      eps_in = eps_in
+    )
 
 
     # perform Line Search
     if(tolower(lineSearch) == "wolfe"){
 
-      stepSize_k <- regCtsem::exact_weakWolfeLineSearch(gradientModel = gradientModel, objective = objective,
-                                                        gradientModelcpp = gradientModelcpp,
+      stepSize_k <- regCtsem::exact_weakWolfeLineSearch(cpptsemObject = cpptsemObject, objective = objective,
                                                         adaptiveLassoWeights = adaptiveLassoWeights, thetaNames = parameterNames,
                                                         regIndicators = regIndicators, lambda = lambda,
                                                         theta_kp1 = oldParameters, m2LL_kp1 = oldM2LL, g_kp1 = oldGradients,
-                                                        d = d, differenceApprox = differenceApprox, eps_numericDerivative = eps_numericDerivative,
+                                                        d = d, eps_numericDerivative = eps_numericDerivative,
                                                         stepSize= stepSize, c1 = c1, c2 = c2, maxIter_line = maxIter_line,
                                                         eps_WW = eps_WW, verbose = verbose)
     }else if(tolower(lineSearch) == "glmnet") {
@@ -463,12 +350,11 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
         warning("Stepsize not allowed. Setting to .9.")
         stepSize = .9
       }
-      stepSize_k <- regCtsem::exact_GLMNETLineSearch(gradientModel = gradientModel, objective = objective,
-                                                     gradientModelcpp = gradientModelcpp,
+      stepSize_k <- regCtsem::exact_GLMNETLineSearch(cpptsemObject = cpptsemObject, objective = objective,
                                                      adaptiveLassoWeights = adaptiveLassoWeights, thetaNames = parameterNames,
                                                      regIndicators = regIndicators, lambda = lambda,
                                                      theta_kp1 = oldParameters, m2LL_kp1 = oldM2LL, g_kp1 = oldGradients, H_k = oldHessian,
-                                                     d = d, differenceApprox = differenceApprox, eps_numericDerivative = eps_numericDerivative,
+                                                     d = d, eps_numericDerivative = eps_numericDerivative,
                                                      stepSize= stepSize, sig = sig, gam = gam, maxIter_line = maxIter_line)
     }else{
       stepSize_k <- stepSize
@@ -477,52 +363,34 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
     newParameters <- oldParameters+stepSize_k*d
 
     # update model: set parameter values and compute
-    if(!is.null(gradientModelcpp)){
-      gradientModelcpp$setParameterValues(newParameters, parameterNames)
-      if(tolower(objective) == "ml"){
-        gradientModelcpp$computeRAM()
-        gradientModelcpp$fitRAM()
+    cpptsemObject$setParameterValues(newParameters, parameterNames)
+    if(tolower(objective) == "ml"){
+      cpptsemObject$computeRAM()
+      cpptsemObject$fitRAM()
 
-        # get fit
-        newM2LL <- gradientModelcpp$m2LL
-        newRegM2LL <- newM2LL + exact_getPenaltyValue(lambda = lambda,
-                                                      theta = newParameters,
-                                                      regIndicators = regIndicators,
-                                                      adaptiveLassoWeights = adaptiveLassoWeights)
-
-        # extract gradients:
-        newGradients <-  gradientModelcpp$approxRAMGradients(eps_numericDerivative)[parameterNames]
-        newGradients <- matrix(newGradients, nrow = length(newGradients), ncol = 1)
-        rownames(newGradients) <- parameterNames
-      }else{
-        gradientModelcpp$computeAndFitKalman()
-
-        # get fit
-        newM2LL <- gradientModelcpp$m2LL
-        newRegM2LL <- newM2LL + exact_getPenaltyValue(lambda = lambda,
-                                                      theta = newParameters,
-                                                      regIndicators = regIndicators,
-                                                      adaptiveLassoWeights = adaptiveLassoWeights)
-
-        # extract gradients:
-        newGradients <-  gradientModelcpp$approxKalmanGradients(eps_numericDerivative)[parameterNames]
-        newGradients <- matrix(newGradients, nrow = length(newGradients), ncol = 1)
-        rownames(newGradients) <- parameterNames
-      }
-
-    }else{
-      gradientModel <- OpenMx::omxSetParameters(model = gradientModel, labels = parameterNames, values = newParameters)
-      gradientModel <- suppressWarnings(try(OpenMx::mxRun(gradientModel, silent = TRUE), silent = TRUE))
       # get fit
-      newM2LL <- gradientModel$fitfunction$result[[1]]
+      newM2LL <- cpptsemObject$m2LL
       newRegM2LL <- newM2LL + exact_getPenaltyValue(lambda = lambda,
                                                     theta = newParameters,
                                                     regIndicators = regIndicators,
                                                     adaptiveLassoWeights = adaptiveLassoWeights)
 
       # extract gradients:
-      newGradients <- gradientModel$compute$steps[[1]]$output[["gradient"]]
-      newGradients <- newGradients[,differenceApprox] # use specified gradient approximation
+      newGradients <-  cpptsemObject$approxRAMGradients(eps_numericDerivative)[parameterNames]
+      newGradients <- matrix(newGradients, nrow = length(newGradients), ncol = 1)
+      rownames(newGradients) <- parameterNames
+    }else{
+      cpptsemObject$computeAndFitKalman()
+
+      # get fit
+      newM2LL <- cpptsemObject$m2LL
+      newRegM2LL <- newM2LL + exact_getPenaltyValue(lambda = lambda,
+                                                    theta = newParameters,
+                                                    regIndicators = regIndicators,
+                                                    adaptiveLassoWeights = adaptiveLassoWeights)
+
+      # extract gradients:
+      newGradients <-  cpptsemObject$approxKalmanGradients(eps_numericDerivative)[parameterNames]
       newGradients <- matrix(newGradients, nrow = length(newGradients), ncol = 1)
       rownames(newGradients) <- parameterNames
     }
@@ -536,7 +404,6 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
 
     # Approximate Hessian using bfgs
     newHessian <- regCtsem::exact_getBFGS(theta_k = oldParameters, g_k = oldGradients, H_k = oldHessian, theta_kp1 = newParameters, g_kp1 = newGradients)
-
 
     if(verbose == 1){
       convergencePlotValues[,iter_out] <- newRegM2LL
@@ -563,10 +430,8 @@ exact_outerGLMNET <- function(mxObject, objective, adaptiveLassoWeights, sampleS
   if(iter_out == maxIter_out){
     warning(paste("For lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), "the maximum number of iterations was reached. Try with a higher maxIter_out or with smaller lambda-steps."))
   }
-  return(list("gradientModel" = gradientModel, "gradientModelcpp" = gradientModelcpp, "theta_kp1" = newParameters, "g_kp1" = newGradients, "H_kp1" = newHessian, "convergence" = converged))
+  return(list("cpptsemObject" = cpptsemObject, "theta_kp1" = newParameters, "g_kp1" = newGradients, "H_kp1" = newHessian, "convergence" = converged))
 }
-
-
 
 
 #' exact_innerGLMNET
@@ -732,9 +597,8 @@ exact_armijoLineSearch <- function(gradientModel, adaptiveLassoWeights, thetaNam
 #'
 #' NOTE: Function located in file GLMNET.R
 #'
-#' @param gradientModel Object of Type MxModel which specifies how the gradients of the likelihood-function are computed
+#' @param cpptsemObject cpptsem object which specifies how the gradients of the likelihood-function are computed
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
-#' @param gradientModelcpp cpptsem object which specifies how the gradients of the likelihood-function are computed
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param thetaNames names of the parameter estimates
 #' @param regIndicators vector with names of parameters to regularize
@@ -743,23 +607,20 @@ exact_armijoLineSearch <- function(gradientModel, adaptiveLassoWeights, thetaNam
 #' @param m2LL_kp1 -2 log likelihood of iteration k plus 1
 #' @param g_kp1 gradients of iteration k plus 1
 #' @param d vector with updates to parameter estimates
-#' @param differenceApprox which approximation for the gradients should be used? Recommended is central
 #' @param eps_numericDerivative controls the precision of the central gradient approximation. The default (1.1 * 10^(-16))^(1/3) is derived in Nocedal, J., & Wright, S. J. (2006). Numerical optimization (2nd ed), p. 197
 #' @param stepSize Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)
 #' @param sig only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.
 #' @param gam Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
 #' @param maxIter_line maximal number of iterations for line search
 #' @export
-exact_GLMNETLineSearch <- function(gradientModel, objective, gradientModelcpp,
+exact_GLMNETLineSearch <- function(cpptsemObject, objective,
                                    adaptiveLassoWeights, thetaNames, regIndicators,
                                    lambda, theta_kp1, m2LL_kp1, g_kp1, H_k,
-                                   d, differenceApprox, eps_numericDerivative,
+                                   d, eps_numericDerivative,
                                    stepSize, sig, gam = 0, maxIter_line){
 
-  if(!is.null(gradientModelcpp)){
-    # deep clone of gradientModelcpp
-    gradientModelcpp_i <- rlang::duplicate(gradientModelcpp, shallow =FALSE)
-  }
+  # deep clone of cpptsemObject
+  cpptsemObject_i <- rlang::duplicate(cpptsemObject, shallow =FALSE)
 
   if(!is.null(adaptiveLassoWeights)){
     adaptiveLassoWeightsMatrix <- diag(adaptiveLassoWeights)
@@ -786,56 +647,28 @@ exact_GLMNETLineSearch <- function(gradientModel, objective, gradientModelcpp,
     theta_kp1_td <- theta_kp1+stepSize*d
 
     # compute new fitfunction value
-    if(!is.null(gradientModelcpp)){
-      gradientModelcpp_i$setParameterValues(theta_kp1_td, thetaNames)
-      if(tolower(objective) == "ml"){
-        invisible(capture.output(out1 <- try(gradientModelcpp_i$computeRAM(), silent = TRUE), type = "message"))
-        invisible(capture.output(out2 <- try(gradientModelcpp_i$fitRAM(), silent = TRUE), type = "message"))
-      }else{
-        invisible(capture.output(out1 <- try(gradientModelcpp_i$computeAndFitKalman(), silent = TRUE), type = "message"))
-        out2 <- NA
-      }
-      if(any(class(out1)== "try-error") | any(class(out2)== "try-error") | !is.finite(gradientModelcpp_i$m2LL)){
-        # if the starting values are not feasible
-        i <- i+1
-        next
-      }
-
-      if(any(class(gradientModelcpp_i)=="try-error")){
-        # if the starting values are far off, the gradients can be very large and testing for the initial
-        # step size might result in infeasible parameter values. In this case: try smaller step size
-        i <- i+1
-        next
-      }
+    cpptsemObject_i$setParameterValues(theta_kp1_td, thetaNames)
+    if(tolower(objective) == "ml"){
+      invisible(capture.output(out1 <- try(cpptsemObject_i$computeRAM(), silent = TRUE), type = "message"))
+      invisible(capture.output(out2 <- try(cpptsemObject_i$fitRAM(), silent = TRUE), type = "message"))
     }else{
-      gradientModel_i <- OpenMx::omxSetParameters(model = gradientModel, labels = thetaNames, values = theta_kp1_td)
-      gradientModel_i <- suppressWarnings(try(OpenMx::mxRun(gradientModel_i, silent = TRUE), silent = TRUE))
-      if(any(class(gradientModel_i)=="try-error")){
-        # if the starting values are far off, the gradients can be very large and testing for the initial
-        # step size might result in infeasible parameter values. In this case: try smaller step size
-        i <- i+1
-        next
-      }
-      if(!is.na(gradientModel_i$output$status$code)){
-        if(gradientModel_i$output$status$code == 10){
-          # if the starting values are not feasible
-          i <- i+1
-          next}
-      }
-
+      invisible(capture.output(out1 <- try(cpptsemObject_i$computeAndFitKalman(), silent = TRUE), type = "message"))
+      out2 <- NA
+    }
+    if(any(class(out1)== "try-error") | any(class(out2)== "try-error") | !is.finite(cpptsemObject_i$m2LL)){
+      # if the starting values are not feasible
+      i <- i+1
+      next
     }
 
-    if(!is.null(gradientModelcpp)){
-      m2LL_kp1_td <- gradientModelcpp_i$m2LL
-    }else{
-      m2LL_kp1_td <- gradientModel_i$fitfunction$result[[1]]
-
-      if((!is.na(gradientModel_i$output$status$code) & gradientModel_i$output$status$code == 10)){
-        # sometimes the stepSize of 1 results in NA; in this case: use smaller step size. Also, remove unfeasible starting values
-        i <- i+1
-        next
-      }
+    if(any(class(cpptsemObject_i)=="try-error")){
+      # if the starting values are far off, the gradients can be very large and testing for the initial
+      # step size might result in infeasible parameter values. In this case: try smaller step size
+      i <- i+1
+      next
     }
+
+    m2LL_kp1_td <- cpptsemObject_i$m2LL
 
     # compute h(stepSize) = L(x+td) + p(x+td) - L(x) - p(x), where p(x) is the penalty function
     f_new <- m2LL_kp1_td +  lambda*sum(abs((adaptiveLassoWeightsMatrix%*%theta_kp1_td)[regIndicators,]))
@@ -862,7 +695,7 @@ exact_GLMNETLineSearch <- function(gradientModel, objective, gradientModelcpp,
 #'
 #' NOTE: Function located in file GLMNET.R
 #'
-#' @param gradientModel mxObject for computing the derivarive of the likelihood with respect to the parameter estimates
+#' @param cpptsemObject Object of type cpptsem
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param thetaNames names of the parameter estimates
 #' @param regIndicators vector with names of parameters to regularize
@@ -874,22 +707,19 @@ exact_GLMNETLineSearch <- function(gradientModel, objective, gradientModelcpp,
 #' @param c1 tuning parameter for Armijo condition
 #' @param c2 c2 constant for lineSearch. This constant controls the Curvature condition
 #' @param stepSize Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)
-#' @param differenceApprox which approximation for the gradients should be used? Recommended is central
 #' @param eps_numericDerivative controls the precision of the central gradient approximation. The default (1.1 * 10^(-16))^(1/3) is derived in Nocedal, J., & Wright, S. J. (2006). Numerical optimization (2nd ed), p. 197
 #' @param maxIter_line maximal number of iterations for line search
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #' @param epsWW additional parameter to shorten the search if the upper and lower bound are already very close to each other
 #' @export
-exact_weakWolfeLineSearch <- function(gradientModel, objective, gradientModelcpp = NULL, adaptiveLassoWeights, thetaNames, regIndicators, lambda,
+exact_weakWolfeLineSearch <- function(cpptsemObject, objective, adaptiveLassoWeights, thetaNames, regIndicators, lambda,
                                       theta_kp1, m2LL_kp1, g_kp1, d, c1 = 0.0001, c2 = .9,
-                                      stepSize = 1, differenceApprox = "central",
+                                      stepSize = 1,
                                       maxIter_line = 100, verbose = 0, eps_WW = .0001, eps_numericDerivative = (1.1 * 10^(-16))^(1/3)){
   # Adapted from HANSO (see LEWIS, D.S. &  OVERTONNON, M. L., (2013). SMOOTH OPTIMIZATION VIA BFGS)
 
-  if(!is.null(gradientModelcpp)){
-    # deep clone of gradientModelcpp
-    gradientModelcpp_i <- rlang::duplicate(gradientModelcpp, shallow =FALSE)
-  }
+  # deep clone of cpptsemObject
+  cpptsemObject_i <- rlang::duplicate(cpptsemObject, shallow = FALSE)
 
   if(!is.null(adaptiveLassoWeights)){
     adaptiveLassoWeightsMatrix <- diag(adaptiveLassoWeights)
@@ -948,82 +778,46 @@ exact_weakWolfeLineSearch <- function(gradientModel, objective, gradientModelcpp
     # new theta
     theta_kp1_td <- rlang::duplicate(theta_kp1)+stepSize*d
     # get L(x+stepSize*d) and L'(x+stepSize*d)
-    if(!is.null(gradientModelcpp)){
-      gradientModelcpp_i$setParameterValues(theta_kp1_td, thetaNames)
-      if(tolower(objective) == "ml"){
-        invisible(capture.output(out1 <- try(gradientModelcpp_i$computeRAM(), silent = TRUE), type = "message"))
-        invisible(capture.output(out2 <- try(gradientModelcpp_i$fitRAM(), silent = TRUE), type = "message"))
-      }else{
-        invisible(capture.output(out1 <- try(gradientModelcpp_i$computeAndFitKalman(), silent = TRUE), type = "message"))
-        out2 <- NA
-      }
-      if(any(class(out1)== "try-error") | any(class(out2)== "try-error") | !is.finite(gradientModelcpp_i$m2LL)){
-        # if the starting values are not feasible
-        stepSize <- .5*stepSize
-        next
-      }
-
-      if(any(class(gradientModelcpp_i)=="try-error")){
-        # if the starting values are far off, the gradients can be very large and testing for the initial
-        # step size might result in infeasible parameter values. In this case: try smaller step size
-        stepSize <- .5*stepSize
-        next
-      }
+    cpptsemObject_i$setParameterValues(theta_kp1_td, thetaNames)
+    if(tolower(objective) == "ml"){
+      invisible(capture.output(out1 <- try(cpptsemObject_i$computeRAM(), silent = TRUE), type = "message"))
+      invisible(capture.output(out2 <- try(cpptsemObject_i$fitRAM(), silent = TRUE), type = "message"))
     }else{
-      gradientModel_i <- OpenMx::omxSetParameters(model = gradientModel, labels = thetaNames, values = theta_kp1_td)
-      gradientModel_i <- suppressWarnings(try(OpenMx::mxRun(gradientModel_i, silent = TRUE), silent = TRUE))
-      if(any(class(gradientModel_i)=="try-error")){
-        # if the starting values are far off, the gradients can be very large and testing for the initial
-        # step size might result in infeasible parameter values. In this case: try smaller step size
-        stepSize <- .5*stepSize
-        next
-      }
-      if(!is.na(gradientModel_i$output$status$code)){
-        if(gradientModel_i$output$status$code == 10){
-          # if the starting values are not feasible
-          stepSize <- .5*stepSize
-          next}
-      }
-
+      invisible(capture.output(out1 <- try(cpptsemObject_i$computeAndFitKalman(), silent = TRUE), type = "message"))
+      out2 <- NA
+    }
+    if(any(class(out1)== "try-error") | any(class(out2)== "try-error") | !is.finite(cpptsemObject_i$m2LL)){
+      # if the starting values are not feasible
+      stepSize <- .5*stepSize
+      next
     }
 
-
-    if(!is.null(gradientModelcpp)){
-      m2LL_kp1_td <- gradientModelcpp_i$m2LL
-      if(tolower(objective) == "ml"){
-        invisible(capture.output(g_kp1_td <- try(gradientModelcpp_i$approxRAMGradients(eps_numericDerivative)[thetaNames], silent = TRUE), type = "message"))
-      }else{
-        invisible(capture.output(g_kp1_td <- try(gradientModelcpp_i$approxKalmanGradients(eps_numericDerivative)[thetaNames], silent = TRUE), type = "message"))
-      }
-      if(any(class(g_kp1_td)=="try-error")){
-        # sometimes the stepsize of 1 results in NA; in this case: use smaller step size. Also, remove unfeasible starting values
-        stepSize <- .9*stepSize
-        next
-      }
-      g_kp1_td <- matrix(g_kp1_td, nrow = length(g_kp1_td), ncol = 1)
-      rownames(g_kp1_td) <- thetaNames
-
-      if(any(is.na(g_kp1_td))){
-        # sometimes the stepsize of 1 results in NA; in this case: use smaller step size. Also, remove unfeasible starting values
-        stepSize <- .9*stepSize
-        next
-      }
-    }else{
-      m2LL_kp1_td <- gradientModel_i$fitfunction$result[[1]]
-      g_kp1_td <- gradientModel_i$compute$steps[[1]]$output[["gradient"]]
-      g_kp1_td <- g_kp1_td[,differenceApprox] # use specified gradient approximation
-      g_kp1_td <- matrix(g_kp1_td, nrow = length(g_kp1_td), ncol = 1)
-      rownames(g_kp1_td) <- thetaNames
-
-      if((!is.na(gradientModel_i$output$status$code) & gradientModel_i$output$status$code == 10) | any(is.na(g_kp1_td))){
-        # sometimes the stepsize of 1 results in NA; in this case: use smaller step size. Also, remove unfeasible starting values
-        stepSize <- .9*stepSize
-        next
-      }
+    if(any(class(cpptsemObject_i)=="try-error")){
+      # if the starting values are far off, the gradients can be very large and testing for the initial
+      # step size might result in infeasible parameter values. In this case: try smaller step size
+      stepSize <- .5*stepSize
+      next
     }
 
+    m2LL_kp1_td <- cpptsemObject_i$m2LL
+    if(tolower(objective) == "ml"){
+      invisible(capture.output(g_kp1_td <- try(cpptsemObject_i$approxRAMGradients(eps_numericDerivative)[thetaNames], silent = TRUE), type = "message"))
+    }else{
+      invisible(capture.output(g_kp1_td <- try(cpptsemObject_i$approxKalmanGradients(eps_numericDerivative)[thetaNames], silent = TRUE), type = "message"))
+    }
+    if(any(class(g_kp1_td)=="try-error")){
+      # sometimes the stepsize of 1 results in NA; in this case: use smaller step size. Also, remove unfeasible starting values
+      stepSize <- .9*stepSize
+      next
+    }
+    g_kp1_td <- matrix(g_kp1_td, nrow = length(g_kp1_td), ncol = 1)
+    rownames(g_kp1_td) <- thetaNames
 
-
+    if(any(is.na(g_kp1_td))){
+      # sometimes the stepsize of 1 results in NA; in this case: use smaller step size. Also, remove unfeasible starting values
+      stepSize <- .9*stepSize
+      next
+    }
 
     # compute h(stepSize) = L(x+td) + p(x+td) - L(x) - p(x), where p(x) is the penalty function
     h_t <- m2LL_kp1_td +  lambda*sum(abs((adaptiveLassoWeightsMatrix%*%theta_kp1_td)[regIndicators,]))

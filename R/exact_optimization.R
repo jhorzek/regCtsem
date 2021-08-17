@@ -17,21 +17,11 @@
 #' @author Jannik Orzek
 #' @import ctsemOMX
 #' @export
-exact_getCVFit <- function(objective, ctsemObject, mxObject, parameterLabels,
+exact_getCVFit <- function(objective, cvSampleCpptsemObject, parameterLabels,
                            parameterValuesTable, lambdas,
                            cvSample){
   fits <- c("cvM2LL")
   fitTable <- matrix(NA, nrow = length(fits), ncol = length(lambdas), dimnames = list(fits, lambdas))
-
-  if(tolower(objective) == "kalman"){
-    suppressMessages(invisible(capture.output(ctsemTemp <- ctFit(dat = cvSample, ctmodelobj = ctsemObject$ctmodelobj, objective = "Kalman", useOptimizer = FALSE))))
-    cvModel <- ctsemTemp$mxobj
-  }else{
-    # create Model
-    cvModel <- mxObject
-    # replace sample
-    cvModel$data <- cvSample
-  }
 
   for(lambda in 1:length(lambdas)){
     if(any(is.na(parameterValuesTable[,lambda]))){
@@ -39,12 +29,10 @@ exact_getCVFit <- function(objective, ctsemObject, mxObject, parameterLabels,
     }
 
     # set parameters to iteration parameters
-    cvModel <- try(OpenMx::omxSetParameters(model = cvModel, labels = parameterLabels, values = parameterValuesTable[,lambda]))
+    cvModelFit <- try(regCtsem::fitCpptsem(parameterValues = parameterValuesTable[parameterLabels,lambda], cpptsemObject = cvSampleCpptsemObject, objective = objective, failureReturns = NA))
 
-    if(!any(class(cvModel) == "try-error")){
-      # compute -2LL
-      fitCvModel <- OpenMx::mxRun(cvModel, useOptimizer = FALSE, silent = TRUE)
-      fitTable["cvM2LL",lambda] <- fitCvModel$fitfunction$result[[1]]
+    if(!any(class(cvModelFit) == "try-error")){
+      fitTable["cvM2LL",lambda] <- cvModelFit
     }
 
   }
@@ -58,7 +46,6 @@ exact_getCVFit <- function(objective, ctsemObject, mxObject, parameterLabels,
 #'
 #' NOTE: Function located in file exact_optimization.R
 #'
-#' @param mxObject Fitted object of class MxObject
 #' @param parameterLabels labels of optimized parameters
 #' @param fitAndParameters table with fit and parameter values
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
@@ -66,7 +53,7 @@ exact_getCVFit <- function(objective, ctsemObject, mxObject, parameterLabels,
 #' @author Jannik Orzek
 #' @import ctsemOMX
 #' @export
-exact_getFitIndices <- function(mxObject, parameterLabels, fitAndParameters, lambdas, sampleSize){
+exact_getFitIndices <- function(parameterLabels, fitAndParameters, lambdas, sampleSize){
   fits <- c("AIC", "BIC", "estimatedParameters")
   fitTable <- matrix(NA, nrow = length(fits), ncol = length(lambdas), dimnames = list(fits, lambdas))
 
@@ -82,18 +69,6 @@ exact_getFitIndices <- function(mxObject, parameterLabels, fitAndParameters, lam
     fitTable["AIC", lambda] <- currentM2LL + 2*sum(currentParameterFree)
     fitTable["BIC", lambda] <- currentM2LL + log(sampleSize)*sum(currentParameterFree)
     fitTable["estimatedParameters", lambda] <- sum(currentParameterFree)
-
-
-    #fitModel <- mxObject
-    #fitModel <- OpenMx::omxSetParameters(model = fitModel, labels = parameterLabels, free = currentParameterFree, values = currentParameterValues)
-
-    # run Model
-    #fitFitModel <- OpenMx::mxRun(fitModel, useOptimizer = F, silent = T)
-
-    #fitTable["AIC", lambda] <- AIC(fitFitModel)
-    #fitTable["BIC", lambda] <- BIC(fitFitModel)
-    #fitTable["estimatedParameters", lambda] <- length(OpenMx::omxGetParameters(fitFitModel))
-
   }
 
   return(fitTable)
@@ -117,7 +92,7 @@ exact_getFitIndices <- function(mxObject, parameterLabels, fitAndParameters, lam
 #' @author Jannik Orzek
 #' @import ctsemOMX
 #' @export
-exact_getFitIndicesWithTarget <- function(mxObject, parameterLabels, regIndicators, fitAndParameters, targetVector, lambdas, sampleSize){
+exact_getFitIndicesWithTarget <- function(parameterLabels, regIndicators, fitAndParameters, targetVector, lambdas, sampleSize){
   fits <- c("AIC", "BIC", "estimatedParameters")
   fitTable <- matrix(NA, nrow = length(fits), ncol = length(lambdas), dimnames = list(fits, lambdas))
 
@@ -133,17 +108,6 @@ exact_getFitIndicesWithTarget <- function(mxObject, parameterLabels, regIndicato
     fitTable["AIC", lambda] <- currentM2LL + 2*sum(currentParameterFree)
     fitTable["BIC", lambda] <- currentM2LL + log(sampleSize)*sum(currentParameterFree)
     fitTable["estimatedParameters", lambda] <- sum(currentParameterFree)
-
-
-    #fitModel <- mxObject
-    #fitModel <- OpenMx::omxSetParameters(model = fitModel, labels = parameterLabels, free = currentParameterFree, values = currentParameterValues)
-
-    # run Model
-    #fitFitModel <- OpenMx::mxRun(fitModel, useOptimizer = F, silent = T)
-
-    #fitTable["AIC", lambda] <- AIC(fitFitModel)
-    #fitTable["BIC", lambda] <- BIC(fitFitModel)
-    #fitTable["estimatedParameters", lambda] <- length(OpenMx::omxGetParameters(fitFitModel))
 
   }
 
@@ -352,8 +316,7 @@ exact_getT0VAR <- function(mxObject, d){
 #'
 #' NOTE: Function located in file exact_optimization.R
 #'
-#' @param gradientModel Model used for computing gradients (from OpenMx)
-#' @param cppmodel cpptsem object to compute gradients
+#' @param cpptsemObject cpptsem object to compute gradients
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param currentParameters current parameter values
 #' @param sparseParameters parameters of the sparsest model
@@ -363,7 +326,7 @@ exact_getT0VAR <- function(mxObject, d){
 #' @param numStartingValues How many starting values should be tried?
 #' @param numOuter number of outer iterations of optim or Rsolnp
 #' @export
-exact_tryStartingValues <- function(gradientModel, cppmodel,
+exact_tryStartingValues <- function(cpptsemObject,
                                     objective, currentParameters,
                                     sparseParameters, regIndicators,
                                     newLambda,
@@ -386,28 +349,20 @@ exact_tryStartingValues <- function(gradientModel, cppmodel,
     parameterValues_i <- weight*currentParameters[parameterNames]+(1-weight)*sparseParameters[parameterNames]
     startValuesTable[parameterNames,i] <- parameterValues_i[parameterNames]
     # set parameters
-    if(!is.null(cppmodel)){
-      cppmodel$setParameterValues(parameterValues_i, names(parameterValues_i))
-      if(tolower(objective) == "ml"){
-        invisible(capture.output(out1 <- try(cppmodel$computeRAM(), silent = T), type = "message"))
-        invisible(capture.output(out2 <- try(cppmodel$fitRAM(), silent = T), type = "message"))
-      }else{
-        invisible(capture.output(out1 <- try(cppmodel$computeAndFitKalman(), silent = TRUE), type = "message"))
-        out2 <- NA
-      }
-      if(any(class(out1) == "try-error")  |
-         any(class(out2) == "try-error")){
-        next
-      }
-      m2LL_i <- cppmodel$m2LL
+    cpptsemObject$setParameterValues(parameterValues_i, names(parameterValues_i))
+    if(tolower(objective) == "ml"){
+      invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+      invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
     }else{
-      gradientModel <- OpenMx::omxSetParameters(model = gradientModel, labels = names(parameterValues_i), values = parameterValues_i)
-      gradientModel <- try(mxRun(gradientModel, silent = TRUE))
-      if(any(class(gradientModel) == "try-error")){
-        next
-      }
-      m2LL_i <- gradientModel$fitfunction$result[[1]]
+      invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE), type = "message"))
+      out2 <- NA
     }
+    if(any(class(out1) == "try-error")  |
+       any(class(out2) == "try-error")){
+      next
+    }
+    m2LL_i <- cppmodel$m2LL
+
     # get regularized Likelihood
     regM2LL_i <- m2LL_i + regCtsem::exact_getPenaltyValue(lambda = newLambda,
                                                           theta = parameterValues_i,
@@ -416,7 +371,7 @@ exact_tryStartingValues <- function(gradientModel, cppmodel,
     regM2LLs[i] <- regM2LL_i
 
     if(!is.na(m2LL_i)){
-      optimized <- try(approx_cpptsemOptim(cpptsemmodel = cppmodel,
+      optimized <- try(approx_cpptsemOptim(cpptsemmodel = cpptsemObject,
                                            regM2LLCpptsem = ifelse(tolower(objective) == "ml",
                                                                    regCtsem::approx_RAMRegM2LLCpptsem,
                                                                    regCtsem::approx_KalmanRegM2LLCpptsem),
@@ -439,7 +394,7 @@ exact_tryStartingValues <- function(gradientModel, cppmodel,
       pars[(names(pars) %in% regIndicators) & (abs(pars) < .001)] <- 0
       regM2LLTemp <- try(ifelse(tolower(objective) == "ml",
                                 regCtsem::approx_RAMRegM2LLCpptsem(parameters = pars,
-                                                                   cpptsemmodel = cppmodel,
+                                                                   cpptsemmodel = cpptsemObject,
                                                                    adaptiveLassoWeights = adaptiveLassoWeights,
                                                                    N = 1, lambda = newLambda,
                                                                    regIndicators = regIndicators,
@@ -447,7 +402,7 @@ exact_tryStartingValues <- function(gradientModel, cppmodel,
                                                                    failureReturns = NA
                                 ),
                                 regCtsem::approx_KalmanRegM2LLCpptsem(parameters = pars,
-                                                                      cpptsemmodel = cppmodel,
+                                                                      cpptsemmodel = cpptsemObject,
                                                                       adaptiveLassoWeights = adaptiveLassoWeights,
                                                                       N = 1, lambda = newLambda,
                                                                       regIndicators = regIndicators,
@@ -565,36 +520,9 @@ setStartingValuesFromApprox <- function(approx_regModel, mxObject, lambda){
 tryApproxFirst <- function(startingValues, returnAs,
                            approxFirst, numStart, approxMaxIt,
                            lambda, lambdas,
-                           gradientModelcpp,
-                           mxObject,
+                           cpptsemObject,
                            regIndicators, targetVector = NULL, adaptiveLassoWeights, objective, sparseParameters,
                            extraTries){
-  if(approxFirst && is.null(gradientModelcpp)){
-    if(any(! (regIndicators %in% mxObject$DRIFT$labels))){
-      stop("Requested approxFirst for a model where no C++ model could be built and non-drift parameters are regularized. Cannot build the approximation for non-drift regularization.")
-    }
-
-    approxModel <- regCtsem::approx_initializeModel(mxObject = mxObject,
-                                                    sampleSize = 1, # scaling with N is handled above
-                                                    regOn = "DRIFT",
-                                                    regIndicators = regIndicatorsFromNameToMatrix(mxObject = mxObject,
-                                                                                                  regOn = regOn,
-                                                                                                  regIndicators = regIndicators),
-                                                    lambda = lambda,
-                                                    adaptiveLassoWeights = adaptiveLassoWeights,
-                                                    penalty = "lasso"
-    )
-    suppressMessages(invisible(capture.output(approxModel <- try(expr = OpenMx::mxTryHardctsem(approxModel, extraTries = extraTries), silent = TRUE))))
-    if(!any(class(approxModel) == "try-error")){
-      startingValues <- omxGetParameters(approxModel)
-    }
-    if(returnAs == "vector"){
-      return(startingValues)
-    }else{
-      startingValues <- as.matrix(startingValues)
-      return(startingValues)
-    }
-  }
 
   # define a target vector if none is provided
   if(is.null(targetVector)){
@@ -603,8 +531,7 @@ tryApproxFirst <- function(startingValues, returnAs,
   }
 
   if(approxFirst && !is.null(sparseParameters)){
-    temp_startValues <- try(exact_tryStartingValues(gradientModel = gradientModel,
-                                                    cppmodel = gradientModelcpp,
+    temp_startValues <- try(exact_tryStartingValues(cpptsemObject = cpptsemObject,
                                                     objective = objective,
                                                     currentParameters = startingValues,
                                                     sparseParameters = sparseParameters,
@@ -623,8 +550,8 @@ tryApproxFirst <- function(startingValues, returnAs,
       return(startingValues)
     }
   }
-  if(approxFirst && !is.null(gradientModelcpp)){
-    optimized <- try(approx_cpptsemOptim(cpptsemmodel = gradientModelcpp,
+  if(approxFirst && !is.null(cpptsemObject)){
+    optimized <- try(approx_cpptsemOptim(cpptsemmodel = cpptsemObject,
                                          regM2LLCpptsem = ifelse(tolower(objective) == "ml",
                                                                  regCtsem::approx_RAMRegM2LLCpptsem,
                                                                  regCtsem::approx_KalmanRegM2LLCpptsem),

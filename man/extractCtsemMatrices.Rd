@@ -4,7 +4,7 @@
 \alias{extractCtsemMatrices}
 \title{extractCtsemMatrices}
 \usage{
-extractCtsemMatrices(mxObject, nlatent, nmanifest)
+extractCtsemMatrices(mxObject, nlatent, nmanifest, silent = FALSE)
 }
 \arguments{
 \item{mxObject}{mxObject from ctsemOMX}

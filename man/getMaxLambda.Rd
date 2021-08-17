@@ -4,14 +4,22 @@
 \alias{getMaxLambda}
 \title{getMaxLambda}
 \usage{
-getMaxLambda(mxObject, regIndicators, differenceApprox, adaptiveLassoWeights)
+getMaxLambda(
+  cpptsemObject,
+  objective,
+  regIndicators,
+  targetVector,
+  adaptiveLassoWeights
+)
 }
 \arguments{
-\item{mxObject}{Fitted object of class mxObject}
+\item{cpptsemObject}{Fitted object of class cpptsem}
+
+\item{objective}{ML or Kalman}
 
 \item{regIndicators}{Labels of the regularized parameters (e.g. drift_eta1_eta2)}
 
-\item{differenceApprox}{Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
+\item{targetVector}{vector with target values}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the unregularized parameter estimates.}
 }

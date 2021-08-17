@@ -5,16 +5,16 @@
 \title{getAdaptiveLassoWeights}
 \usage{
 getAdaptiveLassoWeights(
-  mxObject,
+  cpptsemObject,
   penalty,
   adaptiveLassoWeights,
   standardizeDrift
 )
 }
 \arguments{
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
+\item{cpptsemObject}{Fitted object of class cpptsem}
 
-\item{penalty}{type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact}
+\item{penalty}{type}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 

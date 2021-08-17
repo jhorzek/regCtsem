@@ -5,24 +5,20 @@
 \title{exact_bfgsGLMNET}
 \usage{
 exact_bfgsGLMNET(
-  ctsemObject,
-  mxObject,
+  cpptsemObject,
   dataset,
   objective,
   regIndicators,
   lambdas,
   adaptiveLassoWeights,
   sparseParameters = NULL,
-  tryCpptsem,
-  forceCpptsem = FALSE,
   stepSize = 1,
   lineSearch = "none",
   c1 = 1e-04,
   c2 = 0.9,
   sig = 10^(-5),
   gam = 0,
-  differenceApprox = "central",
-  initialHessianApproximation = "OpenMx",
+  initialHessianApproximation = "optim",
   maxIter_out = 100,
   maxIter_in = 1000,
   maxIter_line = 500,
@@ -35,15 +31,11 @@ exact_bfgsGLMNET(
   numStart = 0,
   approxMaxIt = 5,
   extraTries = 3,
-  verbose = 0,
-  progressBar = TRUE,
-  parallelProgressBar = NULL
+  verbose = 0
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted object of class ctsemFit}
-
-\item{mxObject}{Object of type MxModel}
+\item{cpptsemObject}{Fitted object of class cpptsem}
 
 \item{dataset}{only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX}
 
@@ -54,10 +46,6 @@ exact_bfgsGLMNET(
 \item{lambdas}{Vector with lambda values that should be tried}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
-
-\item{tryCpptsem}{should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models}
-
-\item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details}
 
 \item{stepSize}{Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize * Stepdirection)}
 
@@ -70,8 +58,6 @@ exact_bfgsGLMNET(
 \item{sig}{only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.}
 
 \item{gam}{Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.}
-
-\item{differenceApprox}{Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
 
 \item{initialHessianApproximation}{Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian}
 

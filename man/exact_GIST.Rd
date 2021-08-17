@@ -5,8 +5,7 @@
 \title{exact_GIST}
 \usage{
 exact_GIST(
-  ctsemObject,
-  mxObject,
+  cpptsemObject,
   dataset,
   objective,
   regIndicators,
@@ -14,8 +13,6 @@ exact_GIST(
   lambdas,
   adaptiveLassoWeights,
   sparseParameters = NULL,
-  tryCpptsem,
-  forceCpptsem = FALSE,
   eta = 2,
   sig = 10^(-5),
   initialStepsize = 1,
@@ -32,16 +29,11 @@ exact_GIST(
   numStart = 3,
   approxMaxIt = 5,
   extraTries = 3,
-  differenceApprox = "central",
-  verbose = 0,
-  progressBar = TRUE,
-  parallelProgressBar = NULL
+  verbose = 0
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted object of class ctsemFit}
-
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.}
+\item{cpptsemObject}{Fitted object of class cpptsem}
 
 \item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
 
@@ -54,10 +46,6 @@ exact_GIST(
 \item{lambdas}{Vector with lambda values that should be tried}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
-
-\item{tryCpptsem}{should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models}
-
-\item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details}
 
 \item{eta}{if the current step size fails, eta will decrease the step size. Must be > 1}
 

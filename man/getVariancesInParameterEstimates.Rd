@@ -4,10 +4,10 @@
 \alias{getVariancesInParameterEstimates}
 \title{getVariancesInParameterEstimates}
 \usage{
-getVariancesInParameterEstimates(mxObject, parameterEstimates)
+getVariancesInParameterEstimates(regCtsemObject, parameterEstimates)
 }
 \arguments{
-\item{mxObject}{mxObject}
+\item{regCtsemObject}{regCtsemObject}
 
 \item{parameterEstimates}{parameter estimates from regularized ctsem}
 }

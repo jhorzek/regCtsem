@@ -5,9 +5,8 @@
 \title{exact_GLMNETLineSearch}
 \usage{
 exact_GLMNETLineSearch(
-  gradientModel,
+  cpptsemObject,
   objective,
-  gradientModelcpp,
   adaptiveLassoWeights,
   thetaNames,
   regIndicators,
@@ -17,7 +16,6 @@ exact_GLMNETLineSearch(
   g_kp1,
   H_k,
   d,
-  differenceApprox,
   eps_numericDerivative,
   stepSize,
   sig,
@@ -26,11 +24,9 @@ exact_GLMNETLineSearch(
 )
 }
 \arguments{
-\item{gradientModel}{Object of Type MxModel which specifies how the gradients of the likelihood-function are computed}
+\item{cpptsemObject}{cpptsem object which specifies how the gradients of the likelihood-function are computed}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
-
-\item{gradientModelcpp}{cpptsem object which specifies how the gradients of the likelihood-function are computed}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
@@ -47,8 +43,6 @@ exact_GLMNETLineSearch(
 \item{g_kp1}{gradients of iteration k plus 1}
 
 \item{d}{vector with updates to parameter estimates}
-
-\item{differenceApprox}{which approximation for the gradients should be used? Recommended is central}
 
 \item{eps_numericDerivative}{controls the precision of the central gradient approximation. The default (1.1 * 10^(-16))^(1/3) is derived in Nocedal, J., & Wright, S. J. (2006). Numerical optimization (2nd ed), p. 197}
 

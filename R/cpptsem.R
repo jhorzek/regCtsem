@@ -199,7 +199,7 @@
 #'
 #' @export
 
-cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE, group = NULL, groupSpecificParameters = NULL, silent = FALSE){
+cpptsemFromCtsem <- function(ctsemModel, wideData, removeD = TRUE, group = NULL, groupSpecificParameters = NULL, silent = FALSE){
   if(!"T0TRAITEFFECT" %in% ctsemModel$ctfitargs$stationary){
     stop("Non-stationary trait effect not yet implemented")
   }
@@ -223,7 +223,7 @@ cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE, group 
       stop("Group specific parameters can only be used with the Kalman filter.")
     }
 
-    dataInformation <- constructDataset(wideData = mxObject$data$observed)
+    dataInformation <- constructDataset(wideData = wideData)
     dataForRAM <- prepareRAMData(dataset = dataInformation$dataset,
                                  individualMissingPatternID = dataInformation$individualMissingPatternID,
                                  uniqueMissingPatterns = dataInformation$uniqueMissingPatterns)
@@ -1348,6 +1348,59 @@ prepareKalmanMatrices <- function(nlatent, nmanifest, Tpoints, sampleSize){
 
 
 #### Optimization ####
+#' fitCpptsem
+#'
+#' fits a cpptsem. Returns -2 log Likelihood
+#' @param parameterValues vector with labeled parameter values
+#' @param cpptsemObject cpptsem object
+#' @param objective ML or Kalman
+#' @param free vector of same length as cpptsemObject$getParameterValues, where for each element it is specified if the parameter is freely estimated (workaround for fixing parameters)
+#' @param failureReturns e.g., NA, Inf, ... adapt to optimizer settings
+#' @export
+fitCpptsem <- function(parameterValues, cpptsemObject, objective, free = rep(TRUE, length(parameterValues)), failureReturns){
+  if(!all(free)){
+    parameters <- cpptsemObject$getParameterValues()
+    parameters[names(parameterValues)] <- parameterValues
+    cpptsemObject$setParameterValues(parameters, names(parameters))
+  }else{
+    cpptsemObject$setParameterValues(parameterValues, names(parameterValues))
+  }
+
+  if(tolower(objective) == "ml"){
+    # catching all errors from cpptsemObject
+    # when parameter values are impossible
+    invisible(capture.output(RAM <- try(cpptsemObject$computeRAM(),
+                                        silent = TRUE),
+                             type = "message"))
+    invisible(capture.output(FIT <- try(cpptsemObject$fitRAM(),
+                                        silent = TRUE),
+                             type = "message"))
+    if(class(RAM) == "try-error" | class(FIT) == "try-error"){
+      return(failureReturns)
+    }
+    m2LL <- cpptsemObject$m2LL
+    if(is.na(m2LL) | is.infinite(m2LL)){
+      return(failureReturns)
+    }
+    return(m2LL)
+  }
+  if(tolower(objective) == "Kalman"){
+    # catching all errors from cpptsemObject
+    # when parameter values are impossible
+    invisible(capture.output(FIT <- try(cpptsemObject$computeAndFitKalman(),
+                                        silent = TRUE),
+                             type = "message"))
+    if(class(FIT) == "try-error"){
+      return(failureReturns)
+    }
+    m2LL <- cpptsemObject$m2LL
+    if(is.na(m2LL) | is.infinite(m2LL)){
+      return(failureReturns)
+    }
+    return(m2LL)
+  }
+  stop("Error while computing fit.")
+}
 
 #' approx_KalmanM2LLCpptsem
 #'

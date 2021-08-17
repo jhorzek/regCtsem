@@ -4,17 +4,9 @@
 \alias{exact_getFitIndices}
 \title{exact_getFitIndices}
 \usage{
-exact_getFitIndices(
-  mxObject,
-  parameterLabels,
-  fitAndParameters,
-  lambdas,
-  sampleSize
-)
+exact_getFitIndices(parameterLabels, fitAndParameters, lambdas, sampleSize)
 }
 \arguments{
-\item{mxObject}{Fitted object of class MxObject}
-
 \item{parameterLabels}{labels of optimized parameters}
 
 \item{fitAndParameters}{table with fit and parameter values}

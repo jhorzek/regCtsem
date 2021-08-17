@@ -6,10 +6,11 @@
 \usage{
 cpptsemFromCtsem(
   ctsemModel,
-  wideData = NULL,
+  wideData,
   removeD = TRUE,
   group = NULL,
-  groupSpecificParameters = NULL
+  groupSpecificParameters = NULL,
+  silent = FALSE
 )
 }
 \arguments{

@@ -5,8 +5,7 @@
 \title{exact_tryStartingValues}
 \usage{
 exact_tryStartingValues(
-  gradientModel,
-  cppmodel,
+  cpptsemObject,
   objective,
   currentParameters,
   sparseParameters,
@@ -18,9 +17,7 @@ exact_tryStartingValues(
 )
 }
 \arguments{
-\item{gradientModel}{Model used for computing gradients (from OpenMx)}
-
-\item{cppmodel}{cpptsem object to compute gradients}
+\item{cpptsemObject}{cpptsem object to compute gradients}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 

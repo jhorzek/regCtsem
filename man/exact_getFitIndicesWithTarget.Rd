@@ -5,7 +5,6 @@
 \title{exact_getFitIndicesWithTarget}
 \usage{
 exact_getFitIndicesWithTarget(
-  mxObject,
   parameterLabels,
   regIndicators,
   fitAndParameters,
@@ -15,8 +14,6 @@ exact_getFitIndicesWithTarget(
 )
 }
 \arguments{
-\item{mxObject}{Fitted object of class MxObject}
-
 \item{parameterLabels}{labels of optimized parameters}
 
 \item{regIndicators}{Vector with names of regularized parameters}
@@ -28,6 +25,8 @@ exact_getFitIndicesWithTarget(
 \item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
 
 \item{sampleSize}{sample size}
+
+\item{mxObject}{Fitted object of class MxObject}
 }
 \description{
 computes fit indices for optimization = "exact"

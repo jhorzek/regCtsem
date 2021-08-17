@@ -2,7 +2,7 @@
 % Please edit documentation in R/exact_optimization.R
 \name{exact_getPenaltyValueWithTarget}
 \alias{exact_getPenaltyValueWithTarget}
-\title{exact_getPenaltyValue}
+\title{exact_getPenaltyValueWithTarget}
 \usage{
 exact_getPenaltyValueWithTarget(
   lambda,

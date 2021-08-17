@@ -4,12 +4,10 @@
 \alias{createCVFoldsAndModels}
 \title{createCVFoldsAndModels}
 \usage{
-createCVFoldsAndModels(mxObject, dataset = NULL, k)
+createCVFoldsAndModels(dataset, k)
 }
 \arguments{
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject.}
-
-\item{dataset}{only required if objective = "Kalman" and ctsemObject ist of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
+\item{dataset}{data set in wide format compatible to ctsemOMX}
 
 \item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
 }

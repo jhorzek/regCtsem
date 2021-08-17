@@ -5,9 +5,8 @@
 \title{exact_weakWolfeLineSearch}
 \usage{
 exact_weakWolfeLineSearch(
-  gradientModel,
+  cpptsemObject,
   objective,
-  gradientModelcpp = NULL,
   adaptiveLassoWeights,
   thetaNames,
   regIndicators,
@@ -19,7 +18,6 @@ exact_weakWolfeLineSearch(
   c1 = 1e-04,
   c2 = 0.9,
   stepSize = 1,
-  differenceApprox = "central",
   maxIter_line = 100,
   verbose = 0,
   eps_WW = 1e-04,
@@ -27,7 +25,7 @@ exact_weakWolfeLineSearch(
 )
 }
 \arguments{
-\item{gradientModel}{mxObject for computing the derivarive of the likelihood with respect to the parameter estimates}
+\item{cpptsemObject}{Object of type cpptsem}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
@@ -50,8 +48,6 @@ exact_weakWolfeLineSearch(
 \item{c2}{c2 constant for lineSearch. This constant controls the Curvature condition}
 
 \item{stepSize}{Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)}
-
-\item{differenceApprox}{which approximation for the gradients should be used? Recommended is central}
 
 \item{maxIter_line}{maximal number of iterations for line search}
 

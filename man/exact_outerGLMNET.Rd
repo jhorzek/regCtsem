@@ -5,12 +5,10 @@
 \title{exact_outerGLMNET}
 \usage{
 exact_outerGLMNET(
-  mxObject,
+  cpptsemObject,
   objective,
   adaptiveLassoWeights,
   sampleSize,
-  gradientModel,
-  gradientModelcpp = NULL,
   parameterNames,
   initialParameters,
   initialGradients,
@@ -23,7 +21,6 @@ exact_outerGLMNET(
   c2 = 0.9,
   sig = 10^(-5),
   gam = 0,
-  differenceApprox = "central",
   maxIter_out,
   maxIter_in,
   maxIter_line = 500,
@@ -36,17 +33,13 @@ exact_outerGLMNET(
 )
 }
 \arguments{
-\item{mxObject}{Object of type MxModel}
+\item{cpptsemObject}{Object of type cpptsem}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
 \item{sampleSize}{sample size}
-
-\item{gradientModel}{Object of Type MxModel which specifies how the gradients of the likelihood-function are computed}
-
-\item{gradientModelcpp}{cpptsem object which specifies how the gradients of the likelihood-function are computed}
 
 \item{parameterNames}{Vector with names of theta-parameters}
 
@@ -71,8 +64,6 @@ exact_outerGLMNET(
 \item{sig}{only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.}
 
 \item{gam}{Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.}
-
-\item{differenceApprox}{Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
 
 \item{maxIter_out}{Maximal number of outer iterations}
 

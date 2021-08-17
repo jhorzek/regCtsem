@@ -6,8 +6,8 @@
 \title{regCtsem}
 \usage{
 regCtsem(
-  ctsemObject = NULL,
-  dataset = NULL,
+  ctsemObject,
+  dataset,
   regIndicators,
   targetVector = NULL,
   lambdas = "auto",
@@ -24,34 +24,27 @@ regCtsem(
   optimization = "exact",
   optimizer = "GIST",
   control = list(),
-  extraTries = 3,
-  cores = 1,
-  verbose = 0,
-  silent = FALSE,
-  progressBar = TRUE,
-  parallelProgressBar = NULL,
-  mxObject = NULL,
-  objective = NULL
+  verbose = 0
 )
 }
 \arguments{
 \item{ctsemObject}{Fitted object of class ctsemFit}
 
-\item{dataset}{only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX}
+\item{dataset}{Please provide a data set in wide format compatible to ctsemOMX}
 
-\item{regIndicators}{Labels of the regularized parameters (e.g. drift_eta1_eta2). For optimization = "approx" a matrix has to be provided which indicates the regularized drift values with 1 and unregularitzed ones with 0. Only drift parameters can be regularized in this case}
+\item{regIndicators}{Labels of the regularized parameters (e.g. drift_eta1_eta2).}
 
-\item{targetVector}{named vector with values towards which the parameters are regularized}
+\item{targetVector}{named vector with values towards which the parameters are regularized (Standard is regularization towards zero)}
 
 \item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values}
 
 \item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
 
-\item{penalty}{Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
+\item{penalty}{Currently supported are lasso, ridge and adaptiveLasso}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
 
-\item{cvSample}{cross-validation sample. Has to be of type mxData}
+\item{cvSample}{cross-validation sample. Has to be in wide format and compatible with ctsemOMX}
 
 \item{autoCV}{Boolean: Should automatic cross-validation be used?}
 
@@ -65,27 +58,15 @@ regCtsem(
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 
-\item{optimization}{which optimization procedure should be used. Possible are  "exact" or "approx".}
+\item{optimization}{which optimization procedure should be used. Possible are  "exact" or "approx". exact is recommended}
 
 \item{optimizer}{for exact optimization: Either GIST or GLMNET}
 
 \item{control}{List with control arguments for the optimizer. See ?controlGIST, ?controlGLMNET and ?controlApprox for the respective parameters}
 
-\item{extraTries}{number of extra tries in mxTryHard}
+\item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress.}
 
-\item{cores}{how many computer cores should be used? Currently corse = 1 is recommended.}
-
-\item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)}
-
-\item{silent}{silent execution}
-
-\item{progressBar}{Boolean: Should a progress bar be displayed}
-
-\item{parallelProgressBar}{list: used internally to display progress when executing in parallel. Do not pass values to parallelProgressBar}
-
-\item{mxObject}{FOR INTERNAL USE ONLY. Don't pass a mxObject}
-
-\item{objective}{FOR INTERNAL USE ONLY. "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
+\item{optimizerApprox}{for approximate optimization. Chose from optimx optimizers}
 }
 \value{
 returns an object of class regCtsem. Without cross-validation, this object will have the fields setup (all arguments passed to the function), fitAndParameters (used internally to store the fit and the raw (i.e., untransformed) parameters), fit (fit indices, ect.), parameterEstimatesRaw (raw, i.e. untransformed parameters; used internally), and parameters (transformed parameters)#'

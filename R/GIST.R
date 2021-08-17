@@ -10,8 +10,7 @@
 #'
 #' NOTE: Function located in file GIST.R
 #'
-#' @param ctsemObject Fitted object of class ctsemFit
-#' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.
+#' @param cpptsemObject Fitted object of class cpptsem
 #' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param regIndicators Vector with names of regularized parameters
@@ -19,8 +18,6 @@
 #' @param lambdas Vector with lambda values that should be tried
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param stepSize Initial stepSize of the outer iteration
-#' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
-#' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param eta if the current step size fails, eta will decrease the step size. Must be > 1
 #' @param sig Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 < sigma < 1
 #' @param stepsizeMin Minimal acceptable step size. Must be > 0. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)
@@ -39,23 +36,21 @@
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)
 #' @export
-exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regIndicators, targetVector, lambdas, adaptiveLassoWeights,
+exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetVector, lambdas, adaptiveLassoWeights,
                        # additional settings
                        sparseParameters = NULL,
-                       tryCpptsem, forceCpptsem = FALSE, eta = 2, sig = 10^(-5), initialStepsize = 1, stepsizeMin = 1/(10^30), stepsizeMax = 10^30,
+                       eta = 2, sig = 10^(-5), initialStepsize = 1, stepsizeMin = 1/(10^30), stepsizeMax = 10^30,
                        GISTLinesearchCriterion = "monotone", GISTNonMonotoneNBack = 5,
                        maxIter_out = 100, maxIter_in = 1000,
                        break_outer = c("parameterChange" = 10^(-5)),
                        scaleLambdaWithN = TRUE, sampleSize, approxFirst = F,
                        numStart = 3, approxMaxIt = 5,
-                       extraTries = 3, differenceApprox = "central", verbose = 0,
-                       progressBar = TRUE, parallelProgressBar = NULL){
+                       extraTries = 3, verbose = 0){
   # Setup
   # get parameter values
-  initialParameters <- OpenMx::omxGetParameters(mxObject)
+  initialParameters <- cpptsemObject$getParameterValues()
   thetaNames <- names(initialParameters)
   startingValues <- initialParameters
-  gradientModel <- NULL
 
   break_crit <- names(break_outer)
   if(is.null(break_crit) || !(break_crit %in% c("parameterChange", "gradient", "fitChange"))){stop("Unknown breaking criterion. The value passed to break_crit has to be named (either 'parameterChange' or 'gradient') See ?controlGIST for details on break_outer")}
@@ -74,53 +69,8 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regIndicators,
   m2LL <- rep(NA, length(lambdas))
   regM2LL <- rep(NA, length(lambdas))
 
-  # define gradient model
-  ## try cpptsem
-  if(tryCpptsem){
-    if(tolower(objective)  == "ml"){
-      gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
-      if (any(class(gradientModelcpp) == "try-error")){
-        stop("Setting up the cpptsem model failed. Try using the argument control = list('tryCpptsem' = FALSE). This will slow down the computation considerably.")
-        gradientModelcpp <- NULL
-      }else{
-        gradientModelcpp$computeRAM()
-        gradientModelcpp$fitRAM()
-        m2LLcpp <- gradientModelcpp$m2LL
-        testM2LL <- round(ctsemObject$mxobj$fitfunction$result[[1]] - m2LLcpp,3) == 0
-        if (!testM2LL & !forceCpptsem){
-          stop(paste0("Differences in fit between ctsem and cpptsem object: ", ctsemObject$mxobj$fitfunction$result[[1]], " vs ", m2LLcpp, ". Try using the argument control = list('tryCpptsem' = FALSE) or This will slow down the computation considerably. Alternatively use control = list('forceCpptsem' = TRUE)"))
-          gradientModelcpp <- NULL
-        }
-      }
-    }else if (tolower(objective)  == "kalman"){
-      gradientModelcpp <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
-      if (any(class(gradientModelcpp) == "try-error")){
-        stop("Setting up the cpptsem model failed. Try using the argument control = list('tryCpptsem' = FALSE). This will slow down the computation considerably.")
-        gradientModelcpp <- NULL
-      }else{
-        gradientModelcpp$computeAndFitKalman()
-        m2LLcpp <- gradientModelcpp$m2LL
-        testM2LL <- round(ctsemObject$mxobj$fitfunction$result[[1]] - m2LLcpp,3) == 0
-        if (!testM2LL & !forceCpptsem){
-          stop(paste0("Differences in fit between ctsem and cpptsem object: ", ctsemObject$mxobj$fitfunction$result[[1]], " vs ", m2LLcpp, ". Try using the argument control = list('tryCpptsem' = FALSE) or This will slow down the computation considerably. Alternatively use control = list('forceCpptsem' = TRUE)"))
-          gradientModelcpp <- NULL
-        }
-      }
-    }
-  }else{
-    message("TryCpptsem = FALSE. Using OpenMx. This will slow down the computation considerably.")
-    gradientModelcpp <- NULL
-  }
-  if(is.null(gradientModelcpp)){
-    gradientModel <- OpenMx::mxModel(mxObject,
-                                     OpenMx::mxComputeSequence(steps=list(OpenMx::mxComputeNumericDeriv(checkGradient = FALSE,
-                                                                                                        hessian = FALSE))
-                                     ))
-  }
-
   # Progress bar
-  if(progressBar){
-    pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)}
+  pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
 
   # iterate over lambda values
   numLambdas <- length(lambdas)
@@ -130,14 +80,7 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regIndicators,
     lambda <- lambdas[iteration]
 
     # update progress bar
-    if(progressBar){
-      setTxtProgressBar(pbar, iteration)
-    }else if(!is.null(parallelProgressBar)){
-      writeProgressError <- try(write.csv2(which(lambdas == lambda),parallelProgressBar$parallelTempFiles[[parallelProgressBar$iteration]], row.names = FALSE))
-      if(!any(class(writeProgressError) == "try-error")){
-        parallelProgressBar$printProgress(parallelProgressBar$parallelTempFiles, parallelProgressBar$maxItSum, parallelProgressBar$cores)
-      }
-    }
+    setTxtProgressBar(pbar, iteration)
 
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*samplesize
 
@@ -146,64 +89,28 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regIndicators,
       startingValues <- tryApproxFirst(startingValues = startingValues, returnAs = "vector",
                                        approxFirst = approxFirst, numStart = numStart, approxMaxIt = approxMaxIt,
                                        lambda = lambda, lambdas = lambdas,
-                                       gradientModelcpp = gradientModelcpp,
-                                       mxObject = mxObject,
-                                       regIndicators = regIndicators, targetVector = targetVector, adaptiveLassoWeights = adaptiveLassoWeights,
-                                       objective = objective, sparseParameters =sparseParameters,
+                                       cpptsemObject = cpptsemObject,
+                                       regIndicators = regIndicators, targetVector = targetVector,
+                                       adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
                                        extraTries = extraTries)
     }
     # use Gist
-    if(!is.null(gradientModelcpp) && verbose == -1){
-      # The cpptsem objects come with a C++ implementation of GIST which will be used if
-      # verbose is set to -1
-
-      defaultPrecision <- OpenMx::imxAutoOptionValue("Gradient step size")
-      defaultPrecision2 <- (1.1 * 10^(-16))^(1/3)
-      precisions <- rev(seq(defaultPrecision, defaultPrecision2, length.out = 5))
-
-      lambdas2 = rep(lambda, length(startingValues))
-      names(lambdas2) = names(startingValues)
-      lambdas2 <- lambdas2*adaptiveLassoWeights[names(lambdas2)]
-
-      invisible(capture.output(optPars <- try(gradientModelcpp$GIST(
-        startingValues, # starting values
-        regIndicators,
-        lambdas2,
-        eta, sig,
-        precisions, # step sizes for numerical approximation of gradients
-        initialStepsize,
-        stepsizeMin,
-        stepsizeMax,
-        "monotone", # line search criterion
-        GISTNonMonotoneNBack, # number of N backs for non-monotone line search
-        maxIter_out,# maximum outer iterations
-        maxIter_in, # maximum inner iterations
-        break_outer, # value for breaking outer iterations
-        names(break_outer),# criterion for breaking outer iterations
-        0 # verbose
-      ), silent = T), type = "message"))
-      resGIST <- list()
-      resGIST$type <- "cpptsem"
-      resGIST$model <- gradientModelcpp
-      resGIST$convergence <- ifelse(any(class(optPars) == "try-error"), FALSE, TRUE)
+    if(is.null(targetVector) || all(targetVector == 0)){
+      resGIST <- try(regCtsem::GIST(cpptsemObject = cpptsemObject, startingValues = startingValues,
+                                    objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
+                                    regularizedParameters = regIndicators,
+                                    eta = eta, sig = sig, initialStepsize = initialStepsize, stepsizeMin = stepsizeMin, stepsizeMax = stepsizeMax,
+                                    GISTLinesearchCriterion = GISTLinesearchCriterion, GISTNonMonotoneNBack = GISTNonMonotoneNBack,
+                                    maxIter_out = maxIter_out, maxIter_in = maxIter_in,
+                                    break_outer = break_outer, verbose = verbose))
     }else{
-      if(is.null(targetVector)){
-        resGIST <- try(regCtsem::GIST(gradientModel = gradientModel, cppmodel = gradientModelcpp, startingValues = startingValues,
-                                      objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
-                                      regularizedParameters = regIndicators,
-                                      eta = eta, sig = sig, initialStepsize = initialStepsize, stepsizeMin = stepsizeMin, stepsizeMax = stepsizeMax,
-                                      GISTLinesearchCriterion = GISTLinesearchCriterion, GISTNonMonotoneNBack = GISTNonMonotoneNBack,
-                                      maxIter_out = maxIter_out, maxIter_in = maxIter_in,
-                                      break_outer = break_outer, differenceApprox = differenceApprox, verbose = verbose))
-      }else{
-        resGIST <- try(regCtsem::GISTWithTarget(gradientModel = gradientModel, cppmodel = gradientModelcpp, startingValues = startingValues,
-                                                objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
-                                                regularizedParameters = regIndicators, targetVector = targetVector,
-                                                eta = eta, sig = sig, initialStepsize = initialStepsize, stepsizeMin = stepsizeMin, stepsizeMax = stepsizeMax,
-                                                GISTLinesearchCriterion = GISTLinesearchCriterion, GISTNonMonotoneNBack = GISTNonMonotoneNBack,
-                                                maxIter_out = maxIter_out, maxIter_in = maxIter_in,
-                                                break_outer = break_outer, differenceApprox = differenceApprox, verbose = verbose))
-      }
+      resGIST <- try(regCtsem::GISTWithTarget(cpptsemObject = cpptsemObject, startingValues = startingValues,
+                                              objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
+                                              regularizedParameters = regIndicators, targetVector = targetVector,
+                                              eta = eta, sig = sig, initialStepsize = initialStepsize, stepsizeMin = stepsizeMin, stepsizeMax = stepsizeMax,
+                                              GISTLinesearchCriterion = GISTLinesearchCriterion, GISTNonMonotoneNBack = GISTNonMonotoneNBack,
+                                              maxIter_out = maxIter_out, maxIter_in = maxIter_in,
+                                              break_outer = break_outer, verbose = verbose))
     }
 
 
@@ -243,23 +150,7 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regIndicators,
                                                                                                      adaptiveLassoWeights = adaptiveLassoWeights), Inf)
         }
       }else{
-        newValues <- OpenMx::omxGetParameters(resGIST$model)
-        startingValues <- newValues
-        # save fit
-        cM2LL <- ifelse(resGIST$convergence, resGIST$model$fitfunction$result[[1]], Inf)
-
-        if(is.null(targetVector)){
-          cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
-                                                                                           theta = newValues,
-                                                                                           regIndicators = regIndicators,
-                                                                                           adaptiveLassoWeights = adaptiveLassoWeights), Inf)
-        }else{
-          cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getPenaltyValueWithTarget(lambda = lambda,
-                                                                                                     theta = newValues,
-                                                                                                     regIndicators = regIndicators,
-                                                                                                     targetVector = targetVector,
-                                                                                                     adaptiveLassoWeights = adaptiveLassoWeights), Inf)
-        }
+        stop("Internal error in GIST.")
       }
     }
 
@@ -284,8 +175,7 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regIndicators,
 #'
 #' NOTE: Function located in file GIST.R
 #'
-#' @param gradientModel model of type MxObject to compute the gradients
-#' @param cppmodel model of type cpptsemmodel to compute the gradients
+#' @param cpptsemObject model of type cpptsem
 #' @param startingValues named vector with starting values
 #' @param objective "ML" for maximum likelihood SEM, "Kalman" for Kalman filter
 #' @param lambda penalty value
@@ -303,11 +193,11 @@ exact_GIST <- function(ctsemObject, mxObject, dataset, objective, regIndicators,
 #' @param break_outer Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)
 #' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
 #' @export
-GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, adaptiveLassoWeights, regularizedParameters,
+GIST <- function(cpptsemObject, startingValues, objective, lambda, adaptiveLassoWeights, regularizedParameters,
                  eta = 2, sig = 10^(-5), initialStepsize = 1, stepsizeMin = 1/(10^30), stepsizeMax = 10^30,
                  GISTLinesearchCriterion = "monotone", GISTNonMonotoneNBack = 5,
                  maxIter_out = 100, maxIter_in = 1000,
-                 break_outer = c("parameterChange" = 10^(-5)), differenceApprox = "central", verbose = 0, silent = FALSE){
+                 break_outer = c("parameterChange" = 10^(-5)), verbose = 0, silent = FALSE){
   break_crit <- names(break_outer)
   # iteration counter
   k_out <- 1
@@ -319,46 +209,29 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
   colnames(adaptiveLassoWeightsMatrix) <- parameterNames
 
   # set parameters
-  if(!is.null(cppmodel)){
-    cppmodel$setParameterValues(startingValues, names(startingValues))
-    if(tolower(objective) == "ml"){
-      invisible(capture.output(out1 <- try(cppmodel$computeRAM(), silent = T), type = "message"))
-      invisible(capture.output(out2 <- try(cppmodel$fitRAM(), silent = T), type = "message"))
-      out3 <- exact_getCppGradients(cppmodel = cppmodel, objective = objective)
-    }else{
-      invisible(capture.output(out1 <- try(cppmodel$computeAndFitKalman(), silent = TRUE), type = "message"))
-      out2 <- NA
-      out3 <- exact_getCppGradients(cppmodel = cppmodel, objective = objective)
-    }
-    if(any(class(out1) == "try-error")  |
-       any(class(out2) == "try-error") |
-       any(class(out3) == "try-error") |
-       anyNA(out3)){
-      stop("Infeasible starting values in GIST.")
-    }
-
-    parameters_km1 <- NULL
-    parameters_k <- cppmodel$getParameterValues()
-    parameterNames <- names(parameters_k)
-    gradients_km1 <- NULL
-    gradients_k <- out3
-    m2LL_k <- cppmodel$m2LL
+  cpptsemObject$setParameterValues(startingValues, names(startingValues))
+  if(tolower(objective) == "ml"){
+    invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+    invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
+    out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
   }else{
-    gradientModel <- OpenMx::omxSetParameters(model = gradientModel, labels = names(startingValues), values = startingValues)
-    gradientModel <- try(mxRun(gradientModel, silent = TRUE))
-    if(any(class(gradientModel) == "try-error")){
-      stop("Infeasible starting values in GIST.")
-    }
-    # extract gradients:
-    gradients_k <- gradientModel$compute$steps[[1]]$output[["gradient"]]
-    gradients_k <- gradients_k[,differenceApprox] # use specified gradient approximation
-
-    parameters_km1 <- NULL
-    parameters_k <- OpenMx::omxGetParameters(gradientModel)
-    parameterNames <- names(parameters_k)
-    gradients_km1 <- NULL
-    m2LL_k <- gradientModel$fitfunction$result[[1]]
+    invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE), type = "message"))
+    out2 <- NA
+    out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
   }
+  if(any(class(out1) == "try-error")  |
+     any(class(out2) == "try-error") |
+     any(class(out3) == "try-error") |
+     anyNA(out3)){
+    stop("Infeasible starting values in GIST.")
+  }
+
+  parameters_km1 <- NULL
+  parameters_k <- cpptsemObject$getParameterValues()
+  parameterNames <- names(parameters_k)
+  gradients_km1 <- NULL
+  gradients_k <- out3
+  m2LL_k <- cpptsemObject$m2LL
 
   regM2LL_k <- m2LL_k + regCtsem::exact_getPenaltyValue(lambda = lambda,
                                                         theta = parameters_k,
@@ -435,77 +308,41 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
         }
       }
 
-      if(!is.null(cppmodel)){
-        # update parameters
-        cppmodel$setParameterValues(parameters_kp1, names(parameters_kp1))
-        # compute likelihood
-        if(tolower(objective) == "ml"){
-          invisible(capture.output(out1 <- try(cppmodel$computeRAM(), silent = T), type = "message"))
-          invisible(capture.output(out2 <- try(cppmodel$fitRAM(), silent = T), type = "message"))
-        }else{
-          invisible(capture.output(out1 <- try(cppmodel$computeAndFitKalman(), silent = TRUE), type = "message"))
-          out2 <- NA
-        }
-        if(any(class(out1) == "try-error")  |
-           any(class(out2) == "try-error")){
-
-          # update step size
-          stepsize <- eta*stepsize
-
-          # update iteration counter
-          k <- k+1
-
-          # skip rest
-          next
-        }
-
-        m2LL_kp1 <- cppmodel$m2LL
-
-        if(is.na(m2LL_kp1) | is.infinite(m2LL_kp1)){
-
-          # update step size
-          stepsize <- eta*stepsize
-
-          # update iteration counter
-          k <- k+1
-
-          # skip rest
-          next
-        }
+      # update parameters
+      cpptsemObject$setParameterValues(parameters_kp1, names(parameters_kp1))
+      # compute likelihood
+      if(tolower(objective) == "ml"){
+        invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+        invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
       }else{
+        invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE), type = "message"))
+        out2 <- NA
+      }
+      if(any(class(out1) == "try-error")  |
+         any(class(out2) == "try-error")){
 
-        # update parameters
-        gradientModel <- OpenMx::omxSetParameters(model = gradientModel, labels = names(parameters_kp1), values = parameters_kp1)
-        # compute likelihood
-        gradientModel <- try(mxRun(gradientModel, silent = TRUE))
+        # update step size
+        stepsize <- eta*stepsize
 
-        if(any(class(gradientModel) == "try-error")){
+        # update iteration counter
+        k <- k+1
 
-          # update step size
-          stepsize <- eta*stepsize
+        # skip rest
+        next
+      }
 
-          # update iteration counter
-          k <- k+1
+      m2LL_kp1 <- cpptsemObject$m2LL
 
-          # skip rest
-          next
-        }
+      if(is.na(m2LL_kp1) | is.infinite(m2LL_kp1)){
 
-        # extract fit
-        m2LL_kp1 <- gradientModel$fitfunction$result[[1]]
+        # update step size
+        stepsize <- eta*stepsize
 
-        if(is.na(m2LL_kp1) | is.infinite(m2LL_kp1)){
+        # update iteration counter
+        k <- k+1
 
-          # update step size
-          stepsize <- eta*stepsize
-
-          # update iteration counter
-          k <- k+1
-
-          # skip rest
-          next
-        }
-
+        # skip rest
+        next
       }
       regM2LL_kp1 <- m2LL_kp1 + regCtsem::exact_getPenaltyValue(lambda = lambda,
                                                                 theta = parameters_kp1,
@@ -549,28 +386,20 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
         warning("Maximal number of inner iterations used by GIST. Consider increasing the number of inner iterations.")}
     }
 
-    if(!is.null(cppmodel)){
-      if(tolower(objective) == "ml"){
-        out3 <- exact_getCppGradients(cppmodel = cppmodel, objective = objective)
-      }else{
-        out3 <- exact_getCppGradients(cppmodel = cppmodel, objective = objective)
-      }
-      if(any(class(out3) == "try-error") |
-         any(is.na(out3))){
-        if(!silent){
-          convergence <- FALSE
-          stop("No gradients in GIST")}
-      }
-
-      gradients_kp1 <- out3
+    if(tolower(objective) == "ml"){
+      out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
     }else{
-
-      # extract gradients:
-      gradients_kp1 <- gradientModel$compute$steps[[1]]$output[["gradient"]]
-      gradientLabels <- rownames(gradients_kp1)
-      gradients_kp1 <- gradients_kp1[,differenceApprox] # use specified gradient approximation
-      names(gradients_kp1) <- gradientLabels
+      out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
     }
+    if(any(class(out3) == "try-error") |
+       any(is.na(out3))){
+      if(!silent){
+        convergence <- FALSE
+        stop("No gradients in GIST")}
+    }
+
+    gradients_kp1 <- out3
+
 
     # update parameters for next iteration
     parameters_km1 <- parameters_k
@@ -679,14 +508,9 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
       warning("Maximal number of outer iterations used by GIST. Consider increasing the number of outer iterations.")}
   }
 
-  if(!is.null(cppmodel)){
-    return(list("type" = "cpptsem",
-                "model" = cppmodel,
-                "regM2LL" = regM2LL,
-                "convergence" = convergence))
-  }
-  return(list("type" = "mx",
-              "model" = gradientModel,
+
+  return(list("type" = "cpptsem",
+              "model" = cpptsemObject,
               "regM2LL" = regM2LL,
               "convergence" = convergence))
 }
@@ -700,8 +524,7 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
 #'
 #' NOTE: Function located in file GIST.R
 #'
-#' @param gradientModel model of type MxObject to compute the gradients
-#' @param cppmodel model of type cpptsemmodel to compute the gradients
+#' @param cpptsemObject model of type MxObject to compute the gradients
 #' @param startingValues named vector with starting values
 #' @param objective "ML" for maximum likelihood SEM, "Kalman" for Kalman filter
 #' @param lambda penalty value
@@ -720,12 +543,12 @@ GIST <- function(gradientModel, cppmodel, startingValues, objective, lambda, ada
 #' @param break_outer Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)
 #' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
 #' @export
-GISTWithTarget <- function(gradientModel, cppmodel, startingValues, objective, lambda, adaptiveLassoWeights, regularizedParameters,
+GISTWithTarget <- function(cpptsemObject, startingValues, objective, lambda, adaptiveLassoWeights, regularizedParameters,
                            targetVector,
                            eta = 2, sig = 10^(-5), initialStepsize = 1, stepsizeMin = 1/(10^30), stepsizeMax = 10^30,
                            GISTLinesearchCriterion = "monotone", GISTNonMonotoneNBack = 5,
                            maxIter_out = 100, maxIter_in = 1000,
-                           break_outer = c("parameterChange" = 10^(-5)), differenceApprox = "central", verbose = 0, silent = FALSE){
+                           break_outer = c("parameterChange" = 10^(-5)), verbose = 0, silent = FALSE){
   break_crit <- names(break_outer)
   # iteration counter
   k_out <- 1
@@ -737,46 +560,29 @@ GISTWithTarget <- function(gradientModel, cppmodel, startingValues, objective, l
   colnames(adaptiveLassoWeightsMatrix) <- parameterNames
 
   # set parameters
-  if(!is.null(cppmodel)){
-    cppmodel$setParameterValues(startingValues, names(startingValues))
-    if(tolower(objective) == "ml"){
-      invisible(capture.output(out1 <- try(cppmodel$computeRAM(), silent = T), type = "message"))
-      invisible(capture.output(out2 <- try(cppmodel$fitRAM(), silent = T), type = "message"))
-      out3 <- exact_getCppGradients(cppmodel = cppmodel, objective = objective)
-    }else{
-      invisible(capture.output(out1 <- try(cppmodel$computeAndFitKalman(), silent = TRUE), type = "message"))
-      out2 <- NA
-      out3 <- exact_getCppGradients(cppmodel = cppmodel, objective = objective)
-    }
-    if(any(class(out1) == "try-error")  |
-       any(class(out2) == "try-error") |
-       any(class(out3) == "try-error") |
-       anyNA(out3)){
-      stop("Infeasible starting values in GIST.")
-    }
-
-    parameters_km1 <- NULL
-    parameters_k <- cppmodel$getParameterValues()
-    parameterNames <- names(parameters_k)
-    gradients_km1 <- NULL
-    gradients_k <- out3
-    m2LL_k <- cppmodel$m2LL
+  cpptsemObject$setParameterValues(startingValues, names(startingValues))
+  if(tolower(objective) == "ml"){
+    invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+    invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
+    out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
   }else{
-    gradientModel <- OpenMx::omxSetParameters(model = gradientModel, labels = names(startingValues), values = startingValues)
-    gradientModel <- try(mxRun(gradientModel, silent = TRUE))
-    if(any(class(gradientModel) == "try-error")){
-      stop("Infeasible starting values in GIST.")
-    }
-    # extract gradients:
-    gradients_k <- gradientModel$compute$steps[[1]]$output[["gradient"]]
-    gradients_k <- gradients_k[,differenceApprox] # use specified gradient approximation
-
-    parameters_km1 <- NULL
-    parameters_k <- OpenMx::omxGetParameters(gradientModel)
-    parameterNames <- names(parameters_k)
-    gradients_km1 <- NULL
-    m2LL_k <- gradientModel$fitfunction$result[[1]]
+    invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE), type = "message"))
+    out2 <- NA
+    out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
   }
+  if(any(class(out1) == "try-error")  |
+     any(class(out2) == "try-error") |
+     any(class(out3) == "try-error") |
+     anyNA(out3)){
+    stop("Infeasible starting values in GIST.")
+  }
+
+  parameters_km1 <- NULL
+  parameters_k <- cpptsemObject$getParameterValues()
+  parameterNames <- names(parameters_k)
+  gradients_km1 <- NULL
+  gradients_k <- out3
+  m2LL_k <- cpptsemObject$m2LL
 
   regM2LL_k <- m2LL_k + regCtsem::exact_getPenaltyValueWithTarget(lambda = lambda,
                                                                   theta = parameters_k,
@@ -863,78 +669,43 @@ GISTWithTarget <- function(gradientModel, cppmodel, startingValues, objective, l
         }
       }
 
-      if(!is.null(cppmodel)){
-        # update parameters
-        cppmodel$setParameterValues(parameters_kp1, names(parameters_kp1))
-        # compute likelihood
-        if(tolower(objective) == "ml"){
-          invisible(capture.output(out1 <- try(cppmodel$computeRAM(), silent = T), type = "message"))
-          invisible(capture.output(out2 <- try(cppmodel$fitRAM(), silent = T), type = "message"))
-        }else{
-          invisible(capture.output(out1 <- try(cppmodel$computeAndFitKalman(), silent = TRUE), type = "message"))
-          out2 <- NA
-        }
-        if(any(class(out1) == "try-error")  |
-           any(class(out2) == "try-error")){
-
-          # update step size
-          stepsize <- eta*stepsize
-
-          # update iteration counter
-          k <- k+1
-
-          # skip rest
-          next
-        }
-
-        m2LL_kp1 <- cppmodel$m2LL
-
-        if(is.na(m2LL_kp1) | is.infinite(m2LL_kp1)){
-
-          # update step size
-          stepsize <- eta*stepsize
-
-          # update iteration counter
-          k <- k+1
-
-          # skip rest
-          next
-        }
+      # update parameters
+      cpptsemObject$setParameterValues(parameters_kp1, names(parameters_kp1))
+      # compute likelihood
+      if(tolower(objective) == "ml"){
+        invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+        invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
       }else{
-
-        # update parameters
-        gradientModel <- OpenMx::omxSetParameters(model = gradientModel, labels = names(parameters_kp1), values = parameters_kp1)
-        # compute likelihood
-        gradientModel <- try(mxRun(gradientModel, silent = TRUE))
-
-        if(any(class(gradientModel) == "try-error")){
-
-          # update step size
-          stepsize <- eta*stepsize
-
-          # update iteration counter
-          k <- k+1
-
-          # skip rest
-          next
-        }
-
-        # extract fit
-        m2LL_kp1 <- gradientModel$fitfunction$result[[1]]
-
-        if(is.na(m2LL_kp1) | is.infinite(m2LL_kp1)){
-
-          # update step size
-          stepsize <- eta*stepsize
-
-          # update iteration counter
-          k <- k+1
-
-          # skip rest
-          next
-        }
-
+        invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE), type = "message"))
+        out2 <- NA
       }
+      if(any(class(out1) == "try-error")  |
+         any(class(out2) == "try-error")){
+
+        # update step size
+        stepsize <- eta*stepsize
+
+        # update iteration counter
+        k <- k+1
+
+        # skip rest
+        next
+      }
+
+      m2LL_kp1 <- cpptsemObject$m2LL
+
+      if(is.na(m2LL_kp1) | is.infinite(m2LL_kp1)){
+
+        # update step size
+        stepsize <- eta*stepsize
+
+        # update iteration counter
+        k <- k+1
+
+        # skip rest
+        next
+      }
+
       regM2LL_kp1 <- m2LL_kp1 + regCtsem::exact_getPenaltyValueWithTarget(lambda = lambda,
                                                                           theta = parameters_kp1,
                                                                           regIndicators = regularizedParameters,
@@ -978,28 +749,20 @@ GISTWithTarget <- function(gradientModel, cppmodel, startingValues, objective, l
         warning("Maximal number of inner iterations used by GIST. Consider increasing the number of inner iterations.")}
     }
 
-    if(!is.null(cppmodel)){
-      if(tolower(objective) == "ml"){
-        out3 <- exact_getCppGradients(cppmodel = cppmodel, objective = objective)
-      }else{
-        out3 <- exact_getCppGradients(cppmodel = cppmodel, objective = objective)
-      }
-      if(any(class(out3) == "try-error") |
-         any(is.na(out3))){
-        if(!silent){
-          convergence <- FALSE
-          stop("No gradients in GIST")}
-      }
-
-      gradients_kp1 <- out3
+    if(tolower(objective) == "ml"){
+      out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
     }else{
-
-      # extract gradients:
-      gradients_kp1 <- gradientModel$compute$steps[[1]]$output[["gradient"]]
-      gradientLabels <- rownames(gradients_kp1)
-      gradients_kp1 <- gradients_kp1[,differenceApprox] # use specified gradient approximation
-      names(gradients_kp1) <- gradientLabels
+      out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
     }
+    if(any(class(out3) == "try-error") |
+       any(is.na(out3))){
+      if(!silent){
+        convergence <- FALSE
+        stop("No gradients in GIST")}
+    }
+
+    gradients_kp1 <- out3
+
 
     # update parameters for next iteration
     parameters_km1 <- parameters_k
@@ -1108,17 +871,8 @@ GISTWithTarget <- function(gradientModel, cppmodel, startingValues, objective, l
       warning("Maximal number of outer iterations used by GIST. Consider increasing the number of outer iterations.")}
   }
 
-  if(!is.null(cppmodel)){
-    return(list("type" = "cpptsem",
-                "model" = cppmodel,
-                "regM2LL" = regM2LL,
-                "convergence" = convergence))
-  }
-  return(list("type" = "mx",
-              "model" = gradientModel,
+  return(list("type" = "cpptsem",
+              "model" = cpptsemObject,
               "regM2LL" = regM2LL,
               "convergence" = convergence))
 }
-
-
-

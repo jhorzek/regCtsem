@@ -5,8 +5,7 @@
 \title{GIST}
 \usage{
 GIST(
-  gradientModel,
-  cppmodel,
+  cpptsemObject,
   startingValues,
   objective,
   lambda,
@@ -22,15 +21,12 @@ GIST(
   maxIter_out = 100,
   maxIter_in = 1000,
   break_outer = c(parameterChange = 10^(-5)),
-  differenceApprox = "central",
   verbose = 0,
   silent = FALSE
 )
 }
 \arguments{
-\item{gradientModel}{model of type MxObject to compute the gradients}
-
-\item{cppmodel}{model of type cpptsemmodel to compute the gradients}
+\item{cpptsemObject}{model of type cpptsem}
 
 \item{startingValues}{named vector with starting values}
 
