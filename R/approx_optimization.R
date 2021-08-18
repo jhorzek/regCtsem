@@ -138,111 +138,93 @@ approx_initializeModel <- function(  # model
 #' @import ctsemOMX
 #' @export
 approx_iterateOverLambdas <- function(  # model
-  ctsemObject = NULL,
-  mxObject = NULL,
+  cpptsemObject = NULL,
+  dataset = NULL,
   sampleSize = NULL,
   # penalty settings
-  regOn = "DRIFT",
   regIndicators,
   lambdas,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
+  targetVector,
   # fit settings
   returnFitIndices = TRUE,
-  cvSample = NULL,
-  autoCV = FALSE,
-  k = 5,
   # optimization settings
+  optimizer = "BFGS",
   objective = "ML",
   epsilon = .001,
   zeroThresh = .001,
-  extraTries = 1,
+  maxIt = 200,
   # additional settings
   scaleLambdaWithN,
-  cores = 1,
-  verbose = 0,
-  silent = FALSE,
-  progressBar = TRUE,
-  parallelProgressBar = NULL){
+  verbose = 0){
 
-  parameterLabels <- names(OpenMx::omxGetParameters(mxObject))
+  parameterLabels <- names(cpptsemObject$getParameterValues())
+  initialParameterValues <- cpptsemObject$getParameterValues()
+  startingValues <- initialParameterValues
+
   fitLabels <- c("regM2LL", "m2LL")
   if(returnFitIndices){
     fitLabels <- c(fitLabels, "AIC", "BIC", "estimatedParameters")
-  }
-  if(!is.null(cvSample)){
-    fitLabels <- c(fitLabels, "cvM2LL")
   }
 
   fitAndParameters <- matrix(NA, nrow = length(parameterLabels)+length(fitLabels), ncol = length(lambdas))
   rownames(fitAndParameters) <- c(fitLabels, parameterLabels)
   colnames(fitAndParameters) <- lambdas
 
-  if(progressBar){
-    pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
-  }
+  pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
+
   for(iteration in 1:length(lambdas)){
 
+    ## if (adaptive) lasso
     # create model
-    regModel <- regCtsem::approx_initializeModel(ctsemObject = ctsemObject, mxObject = mxObject, sampleSize = ifelse(scaleLambdaWithN,sampleSize,1),
-                                                 # penalty settings
-                                                 regOn = regOn, regIndicators = regIndicators, lambda = lambdas[iteration],
-                                                 penalty = penalty, adaptiveLassoWeights = adaptiveLassoWeights,
-                                                 # fit settings
-                                                 returnFitIndices = returnFitIndices, cvSample = cvSample,
-                                                 autoCV = autoCV, k = k,
-                                                 # optimization settings
-                                                 epsilon = epsilon, zeroThresh = zeroThresh,
-                                                 # additional settings
-                                                 cores  = cores, verbose = verbose, silent = silent,
-                                                 progressBar = progressBar, parallelProgressBar = parallelProgressBar)
-    # run model
-    if(extraTries == 1){
-      regModel <- try(expr = OpenMx::mxRun(regModel, silent = TRUE), silent = silent)
-    }else{
-      suppressMessages(invisible(capture.output(regModel <- try(expr = OpenMx::mxTryHardctsem(regModel, extraTries = extraTries), silent = TRUE))))
-    }
+    optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
+                                          regM2LLCpptsem = ifelse(tolower(objective) == "ml",
+                                                                  regCtsem::approx_RAMRegM2LLCpptsem,
+                                                                  regCtsem::approx_KalmanRegM2LLCpptsem),
+                                          gradCpptsem = regCtsem::approx_gradCpptsem,
+                                          startingValues = startingValues,
+                                          adaptiveLassoWeights = adaptiveLassoWeights,
+                                          N = ifelse(scaleLambdaWithN, sampleSize, 1), lambda = lambdas[iteration],
+                                          regIndicators = regIndicators,
+                                          targetVector = targetVector,
+                                          epsilon = epsilon,
+                                          maxit = maxIt, objective = objective,
+                                          testGradients = TRUE,
+                                          optimizer = optimizer,
+                                          failureReturns = .Machine$double.xmax/2), silent = TRUE)
 
     # check if model returned errors:
-    if(any(class(regModel) == "try-error")){next} # go to next iteration if errors were encountered
+    if(any(class(optimized) == "try-error")){
+      # reset starting values
+      startingValues <- initialParameterValues
+      next
+    } # go to next iteration if errors were encountered
 
     ## if no errors were produced
-    # update model
-    mxObject <- regModel$submodel
+    # save current values as new starting values
+    startingValues <- optimized$parameters
 
     # extract parameter estimates
-    fitAndParameters[parameterLabels, as.character(lambdas[iteration])] <- OpenMx::cvectorize(OpenMx::omxGetParameters(regModel$submodel))
-    fits <- regCtsem::approx_getFitIndices(fittedRegModel = regModel, sampleSize = sampleSize,
+    fitAndParameters[parameterLabels, as.character(lambdas[iteration])] <- optimized$parameters[parameterLabels]
+    fits <- regCtsem::approx_getFitIndices(m2LL = optimized$m2LL,
+                                           regM2LL = optimized$regM2LL,
+                                           lambda = lambdas[iteration],
+                                           parameterValues = optimized$parameters,
+                                           targetVector = targetVector,
+                                           sampleSize = sampleSize,
                                            # penalty settings
-                                           regOn = regOn, regIndicators = regIndicators,
+                                           regIndicators = regIndicators,
                                            # fit settings
-                                           returnFitIndices = returnFitIndices, cvSample = cvSample,
+                                           returnFitIndices = returnFitIndices,
                                            # optimization settings
                                            zeroThresh = zeroThresh)
     # extract fit
     fitAndParameters[fitLabels,as.character(lambdas[iteration])] <- fits[fitLabels,]
 
-    # set progress bar for single core execution
-    if(progressBar){setTxtProgressBar(pbar,iteration)}
-    # set progress bar for multi core execution
-    if(!is.null(parallelProgressBar)){
-      writeProgressError <- try(write.csv2(which(lambdas == lambdas[iteration]),parallelProgressBar$parallelTempFiles[[parallelProgressBar$iteration]], row.names = FALSE))
-      if(!any(class(writeProgressError) == "try-error")){
-        parallelProgressBar$printProgress(parallelProgressBar$parallelTempFiles, parallelProgressBar$maxItSum, parallelProgressBar$cores)
-      }
-    }
+    # set progress bar for
+    setTxtProgressBar(pbar,iteration)
   }
-
-  # cvFit
-
-  if(!is.null(cvSample)){
-    fitAndParameters <- approx_getCVFit(mxObject = mxObject, ctsemObject = ctsemObject,
-                                        cvSample = cvSample, objective = objective,
-                                        fitAndParameters = fitAndParameters, parameterLabels = parameterLabels,
-                                        lambdas = lambdas)
-  }
-
-
   return(fitAndParameters)
 
 }
@@ -333,52 +315,49 @@ approx_getCVFit <- function(mxObject, ctsemObject, cvSample, objective, fitAndPa
 #'
 #' NOTE: Function located in file approx_optimization.R
 #'
-#' @param fittedRegModel fitted regCtsem object
-#' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
+#' @param m2LL -2 log Likelihood
+#' @param parameterValues current parameter values
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
 #' @param returnFitIndices Boolean: should fit indices be returned?
-#' @param cvSample cross-validation sample. Has to be of type mxData
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
 #' @param sampleSize sample size
 #' @author Jannik Orzek
 #' @export
-approx_getFitIndices <- function(fittedRegModel,
+approx_getFitIndices <- function(m2LL,
+                                 regM2LL,
+                                 lambda,
+                                 parameterValues,
+                                 targetVector,
                                  sampleSize,
                                  # penalty settings
-                                 regOn = "DRIFT",
                                  regIndicators,
                                  # fit settings
                                  returnFitIndices = TRUE,
-                                 cvSample = NULL,
                                  # optimization settings
                                  zeroThresh = .001){
   fitLabels <- c("regM2LL", "m2LL")
   if(returnFitIndices){
     fitLabels <- c(fitLabels, "AIC", "BIC", "estimatedParameters")
   }
-  if(!is.null(cvSample)){
-    fitLabels <- c(fitLabels, "cvM2LL")
-  }
 
   fitTable <- matrix(NA, nrow = length(fitLabels), ncol = 1)
-  colnames(fitTable) <- fittedRegModel$lambda$values
+  colnames(fitTable) <- lambda
   rownames(fitTable) <- fitLabels
 
-  fitTable["regM2LL",] <- fittedRegModel$fitfunction$result[[1]]
-  fitTable["m2LL",] <- fittedRegModel$submodel$fitfunction$result[[1]]
+  fitTable["regM2LL",] <- regM2LL
+  fitTable["m2LL",] <- m2LL
 
   if(returnFitIndices){
-    currentParameters <- OpenMx::omxGetParameters(fittedRegModel)
+    if(lambda > 0){
+      setZero <- abs(parameterValues[regIndicators] - targetVector[regIndicators]) <= zeroThresh
+    }else{
+      setZero <- 0
+    }
+    estimatedParameters <- length(parameterValues)-sum(setZero)
 
-    driftLabels <- fittedRegModel$submodel[[regOn]]$labels
-
-    regularizedDrifts <- driftLabels[regIndicators == 1]
-    setZero <- abs(currentParameters[regularizedDrifts]) <= zeroThresh
-    estimatedParameters <- length(currentParameters)-sum(setZero)
-
-    fitTable["AIC", as.character(fittedRegModel$lambda$values)] <- fitTable["m2LL",] + 2*estimatedParameters
-    fitTable["BIC", as.character(fittedRegModel$lambda$values)] <- fitTable["m2LL",] + log(sampleSize)*estimatedParameters
-    fitTable["estimatedParameters", as.character(fittedRegModel$lambda$values)] <- estimatedParameters
+    fitTable["AIC", 1] <- m2LL + 2*estimatedParameters
+    fitTable["BIC", 1] <- m2LL + log(sampleSize)*estimatedParameters
+    fitTable["estimatedParameters", 1] <- estimatedParameters
   }
 
   return(fitTable)

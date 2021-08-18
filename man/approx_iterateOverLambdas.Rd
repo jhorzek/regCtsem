@@ -5,38 +5,25 @@
 \title{approx_iterateOverLambdas}
 \usage{
 approx_iterateOverLambdas(
-  ctsemObject = NULL,
-  mxObject = NULL,
+  cpptsemObject = NULL,
+  dataset = NULL,
   sampleSize = NULL,
-  regOn = "DRIFT",
   regIndicators,
   lambdas,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
   returnFitIndices = TRUE,
-  cvSample = NULL,
-  autoCV = FALSE,
-  k = 5,
+  optimizer = "BFGS",
   objective = "ML",
   epsilon = 0.001,
   zeroThresh = 0.001,
-  extraTries = 1,
+  maxIt = 200,
   scaleLambdaWithN,
-  cores = 1,
-  verbose = 0,
-  silent = FALSE,
-  progressBar = TRUE,
-  parallelProgressBar = NULL
+  verbose = 0
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted object of class ctsemFit}
-
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
-
 \item{sampleSize}{sample size}
-
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
 
 \item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
 
@@ -48,25 +35,31 @@ approx_iterateOverLambdas(
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 
-\item{cvSample}{cross-validation sample. Has to be of type mxData}
-
-\item{autoCV}{Boolean: Should automatic cross-validation be used?}
-
-\item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
-
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
 \item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
 
-\item{extraTries}{number of extra tries in mxTryHard}
-
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 
-\item{cores}{how many computer cores should be used?}
-
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress}
+
+\item{ctsemObject}{Fitted object of class ctsemFit}
+
+\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
+
+\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
+
+\item{cvSample}{cross-validation sample. Has to be of type mxData}
+
+\item{autoCV}{Boolean: Should automatic cross-validation be used?}
+
+\item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
+
+\item{extraTries}{number of extra tries in mxTryHard}
+
+\item{cores}{how many computer cores should be used?}
 
 \item{silent}{silent execution}
 

@@ -1642,6 +1642,98 @@ approx_cpptsemOptim <- function(cpptsemmodel,
               "regM2LL" = CpptsemFit$value))
 }
 
+#' approx_cpptsemOptimx
+#'
+#' creates an approximate solution to regularized ctsem using optimx
+#' @param cpptsemmodel model returned from cpptsem
+#' @param regM2LLCpptsem regularized fitting function
+#' @param gradCpptsem function for computing the gradients of regM2LLCpptsem
+#' @param startingValues starting values for optimization
+#' @param adaptiveLassoWeights vector with weights of the adaptive lasso
+#' @param N sample size
+#' @param lambda tuning parameter lambda
+#' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
+#' @param epsilon tuning parameter for epsL1 approximation
+#' @param maxit maximal number of iterations
+#' @param objective ML or Kalman
+#' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
+#' @param testGradients should be tested if the final parameters result in NA gradients?
+#' @param optimizer which optimizer from optimx should be used?
+#' @author Jannik Orzek
+#' @import optimx
+#' @export
+approx_cpptsemOptimx <- function(cpptsemmodel,
+                                 regM2LLCpptsem,
+                                 gradCpptsem,
+                                 startingValues,
+                                 adaptiveLassoWeights,
+                                 N, lambda,
+                                 regIndicators,
+                                 targetVector,
+                                 epsilon,
+                                 maxit,
+                                 objective,
+                                 failureReturns = NA,
+                                 testGradients,
+                                 optimizer){
+  invisible(capture.output(CpptsemFit <- try(optimx::optimx(par = startingValues,
+                                                            fn = regM2LLCpptsem,
+                                                            #gr = gradCpptsem,
+                                                            cpptsemmodel = cpptsemmodel, adaptiveLassoWeights = adaptiveLassoWeights,
+                                                            N = N, lambda = lambda, regIndicators = regIndicators, targetVector = targetVector,
+                                                            epsilon = epsilon, objective = objective, failureReturns = failureReturns,
+                                                            method = optimizer,
+                                                            control = list("maxit" = maxit, "dowarn" = FALSE)), silent = TRUE), type = c("output", "message")))
+  if(CpptsemFit$convcode > 0){warning(paste0("Optimx reports convcode  > 0: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
+  if(any(class(CpptsemFit) == "try-error")){stop()}
+
+  # extract parameters
+  CpptsemFit <- extractOptimx(names(cpptsemmodel$getParameterValues()), CpptsemFit)
+  # compute unregularized fit
+  cpptsemmodel$setParameterValues(CpptsemFit$parameters, names(CpptsemFit$parameters))
+  if(tolower(objective) == "ml"){
+    cpptsemmodel$computeRAM()
+    cpptsemmodel$fitRAM()
+  }else{
+    cpptsemmodel$computeAndFitKalman()
+  }
+
+  if(testGradients){
+    grad <- try(gradCpptsem(parameters = CpptsemFit$parameters,
+                            cpptsemmodel = cpptsemmodel,
+                            adaptiveLassoWeights = adaptiveLassoWeights,
+                            N =  N,lambda =  lambda, regIndicators = regIndicators,
+                            targetVector = targetVector,
+                            epsilon = epsilon, objective =  objective,
+                            failureReturns =  failureReturns))
+    if(any(class(grad) == "try-error") || anyNA(grad)){
+      stop("NA in gradients")
+    }
+  }
+
+  return(list("parameters" = CpptsemFit$parameters,
+              "regM2LL" = CpptsemFit$fit,
+              "m2LL" = cpptsemmodel$m2LL))
+}
+
+#' extractOptimx
+#'
+#' sets the model parameters to the best values obtained from optimx
+#' @param parameterLabels vector with parameter labels
+#' @param opt result from calling psydiffOptimx
+#' @export
+#'
+extractOptimx <- function(parameterLabels, opt){
+  if(!any(class(opt) == "optimx")){
+    stop("opt has to be of class optimx")
+  }
+  values <- opt$value
+  bestValue <- which(values == min(values))[1] # if multiple optimizers find the same optimum, the first will be used
+  optimizer <- rownames(opt)[bestValue]
+  optimizedPars <- unlist(opt[optimizer,parameterLabels])
+  return(list("fit" = min(values), "parameters" = optimizedPars))
+}
 
 #' approx_cpptsemSolnp
 #'

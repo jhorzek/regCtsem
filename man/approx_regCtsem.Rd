@@ -5,10 +5,8 @@
 \title{approx_regCtsem}
 \usage{
 approx_regCtsem(
-  ctsemObject = NULL,
-  mxObject = NULL,
+  cpptsemObject = NULL,
   dataset = NULL,
-  regOn = "DRIFT",
   regIndicators,
   lambdas,
   lambdasAutoLength = 50,
@@ -16,49 +14,34 @@ approx_regCtsem(
   adaptiveLassoWeights = NULL,
   standardizeDrift = FALSE,
   returnFitIndices = TRUE,
-  cvSample = NULL,
-  autoCV = FALSE,
-  k = 5,
+  cvSampleCpptsemObject = NULL,
   objective = "ML",
   epsilon = 0.001,
   zeroThresh = 0.001,
-  extraTries = 1,
   scaleLambdaWithN = T,
-  cores = 1,
-  verbose = 0,
-  silent = FALSE,
-  progressBar = TRUE,
-  parallelProgressBar = NULL
+  verbose = 0
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted object of class ctsemFit}
-
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
+\item{cpptsemObject}{Fitted object of class cpptsem}
 
 \item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
 
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
+\item{regIndicators}{Labels for the regularized parameters (e.g. drift_eta1_eta2)}
 
-\item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
-
-\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
+\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values}
 
 \item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
 
-\item{penalty}{Currently supported are lasso, adaptiveLasso, and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
+\item{penalty}{Currently supported are ridge, lasso, and adaptiveLasso}
 
-\item{adaptiveLassoWeights}{weights for the adaptive lasso.}
+\item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
 
-\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using T0VAR?}
+\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using the T0VAR?}
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 
-\item{cvSample}{cross-validation sample. Has to be of type mxData}
-
-\item{autoCV}{Boolean: Should automatic cross-validation be used?}
-
-\item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
+\item{cvSampleCpptsemObject}{cppstem for cross-validation}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
@@ -66,19 +49,11 @@ approx_regCtsem(
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
 
-\item{extraTries}{number of extra tries in mxTryHard}
-
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
-
-\item{cores}{how many computer cores should be used?}
 
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress}
 
-\item{silent}{silent execution}
-
-\item{progressBar}{Boolean: Should a progress bar be displayed}
-
-\item{parallelProgressBar}{list: used internally to display progress when executing in parallel}
+\item{targetVector}{named vector with values towards which the parameters are regularized}
 }
 \description{
 creates a regCtsem object for approximate optimization

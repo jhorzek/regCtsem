@@ -2,13 +2,17 @@
 #'
 #' The following arguments can be used to adjust the approximate optimization
 #'
+#' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
+#' @param maxIter maximal number of iterations
 #' @export
 controlApprox <- function(){
   return(controlApprox <- list(
+    "forceCpptsem" = FALSE, # should the C++ translation be enforced even if results differ from ctsem? Sometimes differences between the C++ implementation and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
     "epsilon" = .001, # epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
-    "zeroThresh" = .04 # threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
+    "zeroThresh" = .04, # threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
+    "maxIter" = 200
   )
   )
 }
@@ -17,7 +21,6 @@ controlApprox <- function(){
 #'
 #' The following arguments can be used to adjust the GIST optimization
 #'
-#' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
 #' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param stepSize initial step size of the outer iteration
 #' @param sig sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
@@ -36,7 +39,6 @@ controlApprox <- function(){
 #' @export
 controlGIST <- function(){
   return(controlGIST <- list(
-    "tryCpptsem" = TRUE, # should regCtsem try to translate the model to C++? This can speed up the computation considerably but might fail for some models
     "forceCpptsem" = FALSE, # should the C++ translation be enforced even if results differ from ctsem? Sometimes differences between the C++ implementation and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
     "stepSize" =  1, # initial step size of the outer iteration
     "sig" = 10^(-5), # sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
