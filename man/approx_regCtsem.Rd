@@ -10,14 +10,17 @@ approx_regCtsem(
   regIndicators,
   lambdas,
   lambdasAutoLength = 50,
+  targetVector,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
   standardizeDrift = FALSE,
   returnFitIndices = TRUE,
   cvSampleCpptsemObject = NULL,
+  optimizer = "BFGS",
   objective = "ML",
   epsilon = 0.001,
   zeroThresh = 0.001,
+  maxIter = 200,
   scaleLambdaWithN = T,
   verbose = 0
 )
@@ -32,6 +35,8 @@ approx_regCtsem(
 \item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values}
 
 \item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
+
+\item{targetVector}{named vector with values towards which the parameters are regularized}
 
 \item{penalty}{Currently supported are ridge, lasso, and adaptiveLasso}
 
@@ -52,8 +57,6 @@ approx_regCtsem(
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress}
-
-\item{targetVector}{named vector with values towards which the parameters are regularized}
 }
 \description{
 creates a regCtsem object for approximate optimization

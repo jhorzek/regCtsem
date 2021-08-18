@@ -178,22 +178,39 @@ approx_iterateOverLambdas <- function(  # model
 
     ## if (adaptive) lasso
     # create model
-    optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
-                                          regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                  regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                  regCtsem::approx_KalmanRegM2LLCpptsem),
-                                          gradCpptsem = regCtsem::approx_gradCpptsem,
-                                          startingValues = startingValues,
-                                          adaptiveLassoWeights = adaptiveLassoWeights,
-                                          N = ifelse(scaleLambdaWithN, sampleSize, 1), lambda = lambdas[iteration],
-                                          regIndicators = regIndicators,
-                                          targetVector = targetVector,
-                                          epsilon = epsilon,
-                                          maxit = maxIt, objective = objective,
-                                          testGradients = TRUE,
-                                          optimizer = optimizer,
-                                          failureReturns = .Machine$double.xmax/2), silent = TRUE)
-
+    if(penalty != "ridge"){
+      optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
+                                            regM2LLCpptsem = ifelse(tolower(objective) == "ml",
+                                                                    regCtsem::approx_RAMRegM2LLCpptsem,
+                                                                    regCtsem::approx_KalmanRegM2LLCpptsem),
+                                            gradCpptsem = regCtsem::approx_gradCpptsem,
+                                            startingValues = startingValues,
+                                            adaptiveLassoWeights = adaptiveLassoWeights,
+                                            N = ifelse(scaleLambdaWithN, sampleSize, 1), lambda = lambdas[iteration],
+                                            regIndicators = regIndicators,
+                                            targetVector = targetVector,
+                                            epsilon = epsilon,
+                                            maxit = maxIt, objective = objective,
+                                            testGradients = TRUE,
+                                            optimizer = optimizer,
+                                            failureReturns = .Machine$double.xmax/2), silent = TRUE)
+    }else{
+      optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
+                                            regM2LLCpptsem = ifelse(tolower(objective) == "ml",
+                                                                    regCtsem::ridgeRAMRegM2LLCpptsem,
+                                                                    regCtsem::ridgeKalmanRegM2LLCpptsem),
+                                            gradCpptsem = regCtsem::approx_gradCpptsem,
+                                            startingValues = startingValues,
+                                            adaptiveLassoWeights = adaptiveLassoWeights,
+                                            N = ifelse(scaleLambdaWithN, sampleSize, 1), lambda = lambdas[iteration],
+                                            regIndicators = regIndicators,
+                                            targetVector = targetVector,
+                                            epsilon = epsilon,
+                                            maxit = maxIt, objective = objective,
+                                            testGradients = TRUE,
+                                            optimizer = optimizer,
+                                            failureReturns = .Machine$double.xmax/2), silent = TRUE)
+    }
     # check if model returned errors:
     if(any(class(optimized) == "try-error")){
       # reset starting values

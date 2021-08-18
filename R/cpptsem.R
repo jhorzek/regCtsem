@@ -1467,6 +1467,41 @@ approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeig
   return(regM2LL)
 }
 
+#' ridgeRAMRegM2LLCpptsem
+#'
+#' approximates the regularized likelihood function using cpptsem and Full Information Maximum Likelihood
+#' @param parameters parameter values
+#' @param cpptsemmodel model returned from cpptsem
+#' @param adaptiveLassoWeights vector with weights of the adaptive lasso
+#' @param N sample size
+#' @param lambda tuning parameter lambda
+#' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
+#' @param epsilon NOT USED; Only required for the optimizer to call the function
+#' @param objective ML or Kalman
+#' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
+#' @author Jannik Orzek
+#' @export
+ridgeRAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector, epsilon, objective, failureReturns){
+  cpptsemmodel$setParameterValues(parameters, names(parameters))
+  # catching all errors from cpptsemmodel
+  # when parameter values are impossible
+  invisible(capture.output(RAM <- try(cpptsemmodel$computeRAM(),
+                                      silent = TRUE),
+                           type = "message"))
+  invisible(capture.output(FIT <- try(cpptsemmodel$fitRAM(),
+                                      silent = TRUE),
+                           type = "message"))
+  if(class(RAM) == "try-error" | class(FIT) == "try-error"){
+    return(failureReturns)
+  }
+  m2LL <- cpptsemmodel$m2LL
+  regM2LL <- m2LL + sum(N*lambda*adaptiveLassoWeights[regIndicators] * (parameters[regIndicators] - targetVector[regIndicators])^2)
+  if(is.na(regM2LL) | is.infinite(regM2LL)){
+    return(failureReturns)
+  }
+  return(regM2LL)
+}
 
 #' approx_KalmanM2LLCpptsem
 #'
@@ -1521,6 +1556,39 @@ approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoW
   }
   m2LL <- cpptsemmodel$m2LL
   regM2LL <- m2LL + sum(N*lambda*adaptiveLassoWeights[regIndicators] * abs(parameters[regIndicators] - targetVector[regIndicators]))
+  if(is.na(regM2LL) | is.infinite(regM2LL)){
+    return(failureReturns)
+  }
+  return(regM2LL)
+}
+
+#' ridgeKalmanRegM2LLCpptsem
+#'
+#' approximates the regularized likelihood function using cpptsem and Kalman
+#' @param parameters parameter values
+#' @param cpptsemmodel model returned from cpptsem
+#' @param adaptiveLassoWeights vector with weights of the adaptive lasso
+#' @param N sample size
+#' @param lambda tuning parameter lambda
+#' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
+#' @param epsilon NOT USED; Only required for the optimizer to call the function
+#' @param objective ML or Kalman
+#' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
+#' @author Jannik Orzek
+#' @export
+ridgeKalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector, epsilon, objective, failureReturns){
+  cpptsemmodel$setParameterValues(parameters, names(parameters))
+  # catching all errors from cpptsemmodel
+  # when parameter values are impossible
+  invisible(capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(),
+                                      silent = TRUE),
+                           type = "message"))
+  if(class(FIT) == "try-error"){
+    return(failureReturns)
+  }
+  m2LL <- cpptsemmodel$m2LL
+  regM2LL <- m2LL + sum(N*lambda*adaptiveLassoWeights[regIndicators] * (parameters[regIndicators] - targetVector[regIndicators])^2)
   if(is.na(regM2LL) | is.infinite(regM2LL)){
     return(failureReturns)
   }

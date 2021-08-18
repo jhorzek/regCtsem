@@ -5,27 +5,27 @@
 \title{approx_getFitIndices}
 \usage{
 approx_getFitIndices(
-  fittedRegModel,
+  m2LL,
+  regM2LL,
+  lambda,
+  parameterValues,
+  targetVector,
   sampleSize,
-  regOn = "DRIFT",
   regIndicators,
   returnFitIndices = TRUE,
-  cvSample = NULL,
   zeroThresh = 0.001
 )
 }
 \arguments{
-\item{fittedRegModel}{fitted regCtsem object}
+\item{m2LL}{-2 log Likelihood}
+
+\item{parameterValues}{current parameter values}
 
 \item{sampleSize}{sample size}
-
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
 
 \item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
-
-\item{cvSample}{cross-validation sample. Has to be of type mxData}
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
 }

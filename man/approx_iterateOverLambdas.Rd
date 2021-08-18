@@ -12,6 +12,7 @@ approx_iterateOverLambdas(
   lambdas,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
+  targetVector,
   returnFitIndices = TRUE,
   optimizer = "BFGS",
   objective = "ML",

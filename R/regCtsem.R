@@ -207,6 +207,18 @@ regCtsem <- function(
   cat(paste0("Object with objective = ", ifelse(ctsemObject$ctfitargs$objective == "Kalman", "Kalman", "ML"), " detected.\n"))
 
   ## Defaults for optimizer
+  if(optimization == "exact" && penalty == "ridge"){
+    optimization <- "approx"
+    argsIn$optimization <- optimization
+  }
+  if(penalty == "ridge"){
+    returnFitIndices <- FALSE
+    argsIn$returnFitIndices <- returnFitIndices
+    if(any(lambdas == "auto")){
+      stop("Ridge regularization requires explicit specification of lambdas. lambdas = 'auto' is not allowed.")
+    }
+  }
+
   if(optimization == "approx"){
     controlTemp <- controlApprox()
     if(tolower(optimizer) == "gist" || tolower(optimizer) == "glmnet"){
@@ -311,7 +323,7 @@ regCtsem <- function(
 
   argsIn$adaptiveLassoWeights <- getAdaptiveLassoWeights(cpptsemObject = cpptsemObject, penalty = argsIn$penalty, adaptiveLassoWeights = argsIn$adaptiveLassoWeights, standardizeDrift = argsIn$standardizeDrift)
 
-  #### Exact Optimizaiton ####
+  #### Exact Optimization ####
   #### without automatic cross-validation ####
   if(!autoCV && argsIn$optimization == "exact"){
     regCtsemObject <- regCtsem::exact_regCtsem(cpptsemObject = cpptsemObject,
