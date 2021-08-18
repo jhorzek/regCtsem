@@ -319,6 +319,10 @@ regCtsem <- function(
     stop("Unknown objective")
   }
 
+  if(any(c("DIFFUSIONbase", "T0VARbase", "MANIFESTVARbase") %in% unique(cpptsemObject$parameterTable$matrix[cpptsemObject$parameterTable$label %in% regIndicators]))){
+    warning("You seem to be regularizing covariance parameters. Please not that regCtsem uses the log-Cholesky implementation to estimate covariance matrices. See Pinheiro, J. C., & Bates, D. M. (1996). Unconstrained parametrizations for variance-covariance matrices. Statistics and Computing, 6(3), 289–296. https://doi.org/10.1007/BF00140873. Check that the regularization actually does what it should!")
+  }
+
   # set adaptiveLassoWeights
 
   argsIn$adaptiveLassoWeights <- getAdaptiveLassoWeights(cpptsemObject = cpptsemObject, penalty = argsIn$penalty, adaptiveLassoWeights = argsIn$adaptiveLassoWeights, standardizeDrift = argsIn$standardizeDrift)
