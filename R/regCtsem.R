@@ -382,6 +382,8 @@ regCtsem <- function(
       }
     }
 
+    cat("\n")
+
     class(regCtsemObject) <- "regCtsem"
     return(regCtsemObject)
   }
@@ -486,6 +488,7 @@ regCtsem <- function(
     cvFit["mean",] <- apply(cvFit[1:argsIn$k,], 2, mean, na.rm = TRUE)
     regCtsemCVObject <- list("fit" = cvFit, "subModels" = subModels, "cvFoldsAndModels" = cvFoldsAndModels, "setup" = argsIn)
     class(regCtsemCVObject) <- "regCtsemCV"
+    cat("\n")
     return(regCtsemCVObject)
   }
 
@@ -616,6 +619,7 @@ regCtsem <- function(
     cvFit["mean",] <- apply(cvFit[1:argsIn$k,], 2, mean, na.rm = TRUE)
     regCtsemCVObject <- list("fit" = cvFit, "subModels" = subModels, "cvFoldsAndModels" = cvFoldsAndModels, "setup" = argsIn)
     class(regCtsemCVObject) <- "regCtsemCV"
+    cat("\n")
     return(regCtsemCVObject)
   }
   stop("Something went wrong. Check your model specification")
