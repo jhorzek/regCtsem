@@ -4,7 +4,7 @@
 \alias{getFinalParameters}
 \title{getFinalParameters}
 \usage{
-getFinalParameters(regCtsemObject, criterion = NULL, raw = FALSE)
+getFinalParameters(regCtsemObject, criterion = NULL, raw = TRUE)
 }
 \arguments{
 \item{regCtsemObject}{fitted regularized continuous time model}

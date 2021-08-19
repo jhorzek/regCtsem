@@ -14,7 +14,7 @@ approx_KalmanM2LLCpptsem(parameters, cpptsemmodel, failureReturns)
 \item{failureReturns}{value which is returned if regM2LLCpptsem or gradCpptsem fails}
 }
 \description{
-computes gradients for an approximate optimization of regularized ctsem based on cpptsem with Kalman objective
+computes -2LogLikelihood for an approximate optimization of regularized ctsem based on cpptsem with Kalman objective
 }
 \author{
 Jannik Orzek
