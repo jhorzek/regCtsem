@@ -53,6 +53,8 @@ regCtsem(
 
 \item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.}
 
+\item{subjectSpecificParameters}{EXPERIMENTAL! A vector of parameter labels for parameters which should be estimated person-specific. If these parameter labels are also passed to regIndicators, all person-specific parameters will be regularized towards a group-parameter. This is a 2-step-procedure: In step 1 all parameters are constrained to equality between individuals to estimate the group parameters. In step 2 the parameters are estimated person-specific, but regularized towards the group parameter from step 1.}
+
 \item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using the T0VAR?}
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent}
