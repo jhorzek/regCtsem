@@ -1384,7 +1384,7 @@ fitCpptsem <- function(parameterValues, cpptsemObject, objective, free = rep(TRU
     }
     return(m2LL)
   }
-  if(tolower(objective) == "Kalman"){
+  if(tolower(objective) == "kalman"){
     # catching all errors from cpptsemObject
     # when parameter values are impossible
     invisible(capture.output(FIT <- try(cpptsemObject$computeAndFitKalman(),
@@ -1505,7 +1505,7 @@ ridgeRAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeight
 
 #' approx_KalmanM2LLCpptsem
 #'
-#' computes gradients for an approximate optimization of regularized ctsem based on cpptsem with Kalman objective
+#' computes -2LogLikelihood for an approximate optimization of regularized ctsem based on cpptsem with Kalman objective
 #' @param parameters paramneter values
 #' @param cpptsemmodel model from cpptsem
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
@@ -1984,4 +1984,22 @@ testall_cpptsem <- function(){
   }
 }
 
-
+#' computeStandardErrors
+#'
+#' computes standard errors for a cpptsem object
+#' @param cpptsemObject fitted cpptsemObject
+#' @param objective Kalman or ML
+#' @param sampleSize sample size
+#' @author Jannik H. Orzek
+#' @export
+computeStandardErrors <- function(cpptsemObject, objective, sampleSize){
+  parameterValues <- cpptsemObject$getParameterValues()
+  Hessian <- optimHess(par = parameterValues, fn = regCtsem::fitCpptsem,
+                       cpptsemObject = cpptsemObject,
+                       objective = objective, failureReturns = .5*.Machine$double.xmax)
+  # Note: We are minimizing the negative log likelihood.
+  # The Hessian is therefore .5*"observed Fisher Information"
+  # and 2 times it's inverse is the covariance matrix of the parameters
+  standardErrors <- sqrt(diag(2*solve(Hessian)))
+  return(standardErrors)
+}

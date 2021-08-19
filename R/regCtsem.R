@@ -186,6 +186,7 @@ regCtsem <- function(
   autoCV = FALSE,
   k = 5,
   sparseParameters = NULL,
+  subjectSpecificParameters = NULL,
 
   standardizeDrift = FALSE,
   scaleLambdaWithN = TRUE,
@@ -205,6 +206,16 @@ regCtsem <- function(
   # set objective
   argsIn$objective <- ifelse(ctsemObject$ctfitargs$objective == "Kalman", "Kalman", "ML")
   cat(paste0("Object with objective = ", ifelse(ctsemObject$ctfitargs$objective == "Kalman", "Kalman", "ML"), " detected.\n"))
+
+  if(!is.null(subjectSpecificParameters)){
+    if(argsIn$objective != "Kalman"){
+      stop("Subject-Specific parameters are only supported for models fitted with Kalman filter.")
+    }
+    if(!is.null(cvSample) || autoCV){
+      stop("Cross-validation not supported with subject-specific parameters.")
+    }
+    warning("Subject-Specific parameters are a very experimental feature. Usage not recommended!")
+  }
 
   ## Defaults for optimizer
   if(optimization == "exact" && penalty == "ridge"){
@@ -269,7 +280,9 @@ regCtsem <- function(
 
   # translate model to C++
   if(tolower(argsIn$objective)  == "ml"){
-    cpptsemObject <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
+
+      cpptsemObject <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
+
     # if there is a cvSample: generate model for cvSample as well
     if(!is.null(cvSample)){
       cvSampleCpptsemObject <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvSample, silent = TRUE))
@@ -292,8 +305,12 @@ regCtsem <- function(
         stop(paste0("Differences in fit between ctsem and cpptsem object: ", ctsemObject$mxobj$fitfunction$result[[1]], " vs ", m2LLcpp, ". Did you pass the same data to the ctsemObject and as dataset? Try using control = list('forceCpptsem' = TRUE)"))
       }
     }
-  }else if (tolower(objective)  == "kalman"){
+  }else if (tolower(argsIn$objective)  == "kalman"){
+    if(!is.null(subjectSpecificParameters)){
+      cpptsemObject <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset, group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters))
+    }else{
     cpptsemObject <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
+    }
     # if there is a cvSample: generate model for cvSample as well
     if(!is.null(cvSample)){
       cvSampleCpptsemObject <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvSample, silent = TRUE))
@@ -321,6 +338,44 @@ regCtsem <- function(
 
   if(any(c("DIFFUSIONbase", "T0VARbase", "MANIFESTVARbase") %in% unique(cpptsemObject$parameterTable$matrix[cpptsemObject$parameterTable$label %in% regIndicators]))){
     warning("You seem to be regularizing covariance parameters. Please not that regCtsem uses the log-Cholesky implementation to estimate covariance matrices. See Pinheiro, J. C., & Bates, D. M. (1996). Unconstrained parametrizations for variance-covariance matrices. Statistics and Computing, 6(3), 289–296. https://doi.org/10.1007/BF00140873. Check that the regularization actually does what it should!")
+  }
+
+  ## Additional settings for person specific parameter estimates
+  if(!is.null(subjectSpecificParameters)){
+    # optimize subject specific model
+    message("Fitting model with person-specific parameter estimates.")
+    startingValues <- cpptsemObject$getParameterValues()
+    invisible(capture.output(CpptsemFit <- try(optimx::optimx(par = startingValues,
+                                                              fn = regCtsem::approx_KalmanM2LLCpptsem,
+                                                              #gr = gradCpptsem,
+                                                              cpptsemmodel = cpptsemObject, failureReturns = .5*.Machine$double.xmax,
+                                                              method = "BFGS",
+                                                              control = list("maxit" = 400, "dowarn" = FALSE)), silent = TRUE), type = c("output", "message")))
+    if(CpptsemFit$convcode > 0){warning(paste0("Optimx reports convcode  > 0 for the model with person-specific parameter estimates: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
+    if(any(class(CpptsemFit) == "try-error")){stop("Optimx for the model with person-specific parameter estimates resulted in errors.")}
+
+    # extract parameters
+    CpptsemFit <- extractOptimx(names(cpptsemObject$getParameterValues()), CpptsemFit)
+    # compute unregularized fit
+    cpptsemObject$setParameterValues(CpptsemFit$parameters, names(CpptsemFit$parameters))
+    cpptsemObject$computeAndFitKalman()
+
+    ## add person-specific parameter estimates to the regularized parameters if requested
+    subjectSpecificParameterLabels <- c()
+    for(grPar in subjectSpecificParameters){
+      subjectSpecificParameterLabels <- paste0(grPar, "_G", 1:nrow(dataset))
+      if(grPar %in% regIndicators){
+        regIndicators <- regIndicators[-which(regIndicators == grPar)]
+        regIndicators <- c(regIndicators, subjectSpecificParameterLabels)
+        targetVector <- targetVector[-which(names(targetVector) == grPar)]
+        # add group parameter value to targetValues
+        targetVector <- c(targetVector, startingValues[subjectSpecificParameterLabels])
+      }
+    }
+    argsIn$cpptsemObject <- cpptsemObject
+    argsIn$regIndicators <- regIndicators
+    argsIn$targetVector <- targetVector
+
   }
 
   # set adaptiveLassoWeights
