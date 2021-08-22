@@ -1077,7 +1077,7 @@ approx_regCtsem <- function(  # model
                                                               penalty = penalty, adaptiveLassoWeights = adaptiveLassoWeights,
                                                               targetVector = targetVector,
                                                               # fit settings
-                                                              returnFitIndices = returnFitIndices,
+                                                              returnFitIndices = returnFitIndices, BICWithNAndT = BICWithNAndT, Tpoints = Tpoints,
                                                               # optimization settings
                                                               objective = objective, epsilon = epsilon, zeroThresh = zeroThresh, maxIt = maxIter,
                                                               # additional settings
