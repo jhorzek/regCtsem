@@ -20,6 +20,7 @@
 #' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using the T0VAR?
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent
 #' @param returnFitIndices Boolean: should fit indices be returned?
+#' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
 #' @param optimization which optimization procedure should be used. Possible are  "exact" or "approx". exact is recommended
 #' @param optimizer for exact optimization: Either GIST or GLMNET. When using optimization = "approx", any of the optimizers in optimx can be used. See ?optimx
 #' @param control List with control arguments for the optimizer. See ?controlGIST, ?controlGLMNET and ?controlApprox for the respective parameters
@@ -249,6 +250,7 @@ regCtsem <- function(
   standardizeDrift = FALSE,
   scaleLambdaWithN = TRUE,
   returnFitIndices = TRUE,
+  BICWithNAndT = TRUE,
 
   optimization = "exact",
   optimizer = "GIST",
@@ -264,6 +266,9 @@ regCtsem <- function(
   # set objective
   argsIn$objective <- ifelse(ctsemObject$ctfitargs$objective == "Kalman", "Kalman", "ML")
   cat(paste0("Object with objective = ", ifelse(ctsemObject$ctfitargs$objective == "Kalman", "Kalman", "ML"), " detected.\n"))
+
+  # save number of time points
+  argsIn$Tpoints <- ctsemObject$ctmodelobj$Tpoints
 
   if(!is.null(subjectSpecificParameters)){
     if(argsIn$objective != "Kalman"){
@@ -455,6 +460,8 @@ regCtsem <- function(
                                                adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
                                                standardizeDrift = argsIn$standardizeDrift,
                                                returnFitIndices = argsIn$returnFitIndices,
+                                               BICWithNAndT = argsIn$BICWithNAndT,
+                                               Tpoints = argsIn$Tpoints,
                                                cvSampleCpptsemObject = argsIn$cvSampleCpptsemObject,
                                                optimizer = argsIn$optimizer,
                                                objective = argsIn$objective,
@@ -562,6 +569,8 @@ regCtsem <- function(
                                                  adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
                                                  standardizeDrift = argsIn$standardizeDrift,
                                                  returnFitIndices = argsIn$returnFitIndices,
+                                                 BICWithNAndT = argsIn$BICWithNAndT,
+                                                 Tpoints = argsIn$Tpoints,
                                                  cvSampleCpptsemObject = cvFoldsAndModels$testModels[[i]],
                                                  optimizer = argsIn$optimizer,
                                                  objective = argsIn$objective,
@@ -601,7 +610,7 @@ regCtsem <- function(
       subModels[[i]] <- regCtsemObject
     }
     cvFit["mean",] <- apply(cvFit[1:argsIn$k,], 2, mean, na.rm = TRUE)
-    regCtsemCVObject <- list("fit" = cvFit, "argsIn" = argsIn, "subModels" = subModels, "cvFoldsAndModels" = cvFoldsAndModels, "setup" = argsIn)
+    regCtsemCVObject <- list("fit" = cvFit, "subModels" = subModels, "cvFoldsAndModels" = cvFoldsAndModels, "setup" = argsIn)
     class(regCtsemCVObject) <- "regCtsemCV"
     cat("\n")
     return(regCtsemCVObject)
@@ -624,6 +633,8 @@ regCtsem <- function(
                                                 standardizeDrift = argsIn$standardizeDrift,
                                                 # fit settings
                                                 returnFitIndices = argsIn$returnFitIndices,
+                                                BICWithNAndT = argsIn$BICWithNAndT,
+                                                Tpoints = argsIn$Tpoints,
                                                 cvSampleCpptsemObject = argsIn$cvSampleCpptsemObject,
                                                 # optimization settings
                                                 optimizer = argsIn$optimizer,
@@ -713,6 +724,8 @@ regCtsem <- function(
                                                   standardizeDrift = argsIn$standardizeDrift,
                                                   # fit settings
                                                   returnFitIndices = argsIn$returnFitIndices,
+                                                  BICWithNAndT = argsIn$BICWithNAndT,
+                                                  Tpoints = argsIn$Tpoints,
                                                   cvSampleCpptsemObject = cvFoldsAndModels$testModels[[i]],
                                                   # optimization settings
                                                   optimizer = argsIn$optimizer,
@@ -733,7 +746,7 @@ regCtsem <- function(
       subModels[[i]] <- regCtsemObject
     }
     cvFit["mean",] <- apply(cvFit[1:argsIn$k,], 2, mean, na.rm = TRUE)
-    regCtsemCVObject <- list("fit" = cvFit, "argsIn" = argsIn,"subModels" = subModels, "cvFoldsAndModels" = cvFoldsAndModels, "setup" = argsIn)
+    regCtsemCVObject <- list("fit" = cvFit, "subModels" = subModels, "cvFoldsAndModels" = cvFoldsAndModels, "setup" = argsIn)
     class(regCtsemCVObject) <- "regCtsemCV"
     cat("\n")
     return(regCtsemCVObject)
@@ -758,6 +771,8 @@ regCtsem <- function(
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
 #' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using the T0VAR?
 #' @param returnFitIndices Boolean: should fit indices be returned?
+#' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
+#' @param Tpoints Number of time points (used for BICWithNAndT)
 #' @param cvSampleCpptsemObject cppstem for cross-validation
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param sparseParameters labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.
@@ -802,6 +817,8 @@ exact_regCtsem <- function(  # model
   standardizeDrift = FALSE,
   # fit settings
   returnFitIndices = TRUE,
+  BICWithNAndT = TRUE,
+  Tpoints = NULL,
   cvSampleCpptsemObject = NULL,
   # optimization settings
   optimizer = "GIST",
@@ -935,11 +952,13 @@ exact_regCtsem <- function(  # model
   if(returnFitIndices & !(any(class(regModel) == "try-error"))){
     if(is.null(targetVector) || all(targetVector == 0)){
       fitIndicesTable <- regCtsem::exact_getFitIndices(parameterLabels = parameterLabels,
-                                                       fitAndParameters = fitAndParameters, lambdas = lambdas, sampleSize = sampleSize)
+                                                       fitAndParameters = fitAndParameters, lambdas = lambdas,
+                                                       sampleSize = ifelse(BICWithNAndT,Tpoints*sampleSize, sampleSize))
     }else{
       fitIndicesTable <- regCtsem::exact_getFitIndicesWithTarget(parameterLabels = parameterLabels, regIndicators = regIndicators,
                                                                  fitAndParameters = fitAndParameters, targetVector = targetVector,
-                                                                 lambdas = lambdas, sampleSize = sampleSize)
+                                                                 lambdas = lambdas,
+                                                                 sampleSize = ifelse(BICWithNAndT,Tpoints*sampleSize, sampleSize))
 
     }
     fitAndParameters[rownames(fitIndicesTable),] <- fitIndicesTable[rownames(fitIndicesTable),]
@@ -977,6 +996,8 @@ exact_regCtsem <- function(  # model
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
 #' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using the T0VAR?
 #' @param returnFitIndices Boolean: should fit indices be returned?
+#' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
+#' @param Tpoints Number of time points (used for BICWithNAndT)
 #' @param cvSampleCpptsemObject cppstem for cross-validation
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
@@ -1000,6 +1021,8 @@ approx_regCtsem <- function(  # model
   standardizeDrift = FALSE,
   # fit settings
   returnFitIndices = TRUE,
+  BICWithNAndT = TRUE,
+  Tpoints = NULL,
   cvSampleCpptsemObject = NULL,
   # optimization settings
   optimizer = "BFGS",

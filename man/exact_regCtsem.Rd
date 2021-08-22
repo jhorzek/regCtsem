@@ -15,6 +15,8 @@ exact_regCtsem(
   adaptiveLassoWeights = NULL,
   standardizeDrift = FALSE,
   returnFitIndices = TRUE,
+  BICWithNAndT = TRUE,
+  Tpoints = NULL,
   cvSampleCpptsemObject = NULL,
   optimizer = "GIST",
   objective,
@@ -66,6 +68,10 @@ exact_regCtsem(
 \item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using the T0VAR?}
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
+
+\item{BICWithNAndT}{Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))}
+
+\item{Tpoints}{Number of time points (used for BICWithNAndT)}
 
 \item{cvSampleCpptsemObject}{cppstem for cross-validation}
 

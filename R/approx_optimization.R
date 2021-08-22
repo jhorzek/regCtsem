@@ -120,6 +120,8 @@ approx_initializeModel <- function(  # model
 #' @param penalty type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param returnFitIndices Boolean: should fit indices be returned?
+#' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
+#' @param Tpoints Number of time points (used for BICWithNAndT)
 #' @param cvSample cross-validation sample. Has to be of type mxData
 #' @param autoCV Boolean: Should automatic cross-validation be used?
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
@@ -149,6 +151,8 @@ approx_iterateOverLambdas <- function(  # model
   targetVector,
   # fit settings
   returnFitIndices = TRUE,
+  BICWithNAndT = TRUE,
+  Tpoints = NULL,
   # optimization settings
   optimizer = "BFGS",
   objective = "ML",
@@ -229,7 +233,7 @@ approx_iterateOverLambdas <- function(  # model
                                            lambda = lambdas[iteration],
                                            parameterValues = optimized$parameters,
                                            targetVector = targetVector,
-                                           sampleSize = sampleSize,
+                                           sampleSize = ifelse(BICWithNAndT,Tpoints*sampleSize, sampleSize),
                                            # penalty settings
                                            regIndicators = regIndicators,
                                            # fit settings

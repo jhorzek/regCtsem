@@ -22,6 +22,7 @@ regCtsem(
   standardizeDrift = FALSE,
   scaleLambdaWithN = TRUE,
   returnFitIndices = TRUE,
+  BICWithNAndT = TRUE,
   optimization = "exact",
   optimizer = "GIST",
   control = list(),
@@ -60,6 +61,8 @@ regCtsem(
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent}
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
+
+\item{BICWithNAndT}{Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))}
 
 \item{optimization}{which optimization procedure should be used. Possible are  "exact" or "approx". exact is recommended}
 

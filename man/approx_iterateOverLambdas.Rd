@@ -14,6 +14,8 @@ approx_iterateOverLambdas(
   adaptiveLassoWeights = NULL,
   targetVector,
   returnFitIndices = TRUE,
+  BICWithNAndT = TRUE,
+  Tpoints = NULL,
   optimizer = "BFGS",
   objective = "ML",
   epsilon = 0.001,
@@ -35,6 +37,10 @@ approx_iterateOverLambdas(
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
+
+\item{BICWithNAndT}{Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))}
+
+\item{Tpoints}{Number of time points (used for BICWithNAndT)}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
