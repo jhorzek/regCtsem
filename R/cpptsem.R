@@ -547,8 +547,14 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$T0MEANS)){
     if(!silent){cat("T0MEANS, ")}
     T0MEANS <- list("values" = NULL, "names" = NULL)
-    T0MEANS$values <- deepCopyNumericMatrix(mxObject$T0MEANS$values)
-    T0MEANS$names <- deepCopyStringMatrix(mxObject$T0MEANS$labels)
+    T0MEANS$values <- try(deepCopyNumericMatrix(mxObject$T0MEANS$values))
+    if(any(class(T0MEANS$values) == "try-error")){
+      T0MEANS$values <- matrix(mxObject$T0MEANS$values, nrow = nrow(mxObject$T0MEANS$values), ncol = ncol(mxObject$T0MEANS$values))
+    }
+    T0MEANS$names <- try(deepCopyStringMatrix(mxObject$T0MEANS$labels))
+    if(any(class(T0MEANS$names) == "try-error")){
+      T0MEANS$names <- matrix(mxObject$T0MEANS$labels, nrow = nrow(mxObject$T0MEANS$labels), ncol = ncol(mxObject$T0MEANS$labels))
+    }
     ctMatrices[["T0MEANS"]] <- T0MEANS
   }
 
@@ -556,8 +562,14 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$T0VARbase)){
     if(!silent){cat("T0VARbase, ")}
     T0VARbase <- list("values" = NULL, "names" = NULL)
-    T0VARbase$values <- deepCopyNumericMatrix(mxObject$T0VARbase$values)
-    T0VARbase$names <- deepCopyStringMatrix(mxObject$T0VARbase$labels)
+    T0VARbase$values <- try(deepCopyNumericMatrix(mxObject$T0VARbase$values))
+    if(any(class(T0VARbase$values) == "try-error")){
+      T0VARbase$values <- matrix(mxObject$T0VARbase$values, nrow = nrow(mxObject$T0VARbase$values), ncol = ncol(mxObject$T0VARbase$values))
+    }
+    T0VARbase$names <- try(deepCopyStringMatrix(mxObject$T0VARbase$labels))
+    if(any(class(T0VARbase$names) == "try-error")){
+      T0VARbase$names <- matrix(mxObject$T0VARbase$labels, nrow = nrow(mxObject$T0VARbase$labels), ncol = ncol(mxObject$T0VARbase$labels))
+    }
     ctMatrices[["T0VARbase"]] <- T0VARbase
   }
 
@@ -566,8 +578,14 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$DRIFT)){
     if(!silent){cat("DRIFT, ")}
     DRIFT <- list("values" = NULL, "names" = NULL)
-    DRIFT$values <- deepCopyNumericMatrix(mxObject$DRIFT$values)
-    DRIFT$names <- deepCopyStringMatrix(mxObject$DRIFT$labels)
+    DRIFT$values <- try(deepCopyNumericMatrix(mxObject$DRIFT$values))
+    if(any(class(DRIFT$values) == "try-error")){
+      DRIFT$values <- matrix(mxObject$DRIFT$values, nrow = nrow(mxObject$DRIFT$values), ncol = ncol(mxObject$DRIFT$values))
+    }
+    DRIFT$names <- try(deepCopyStringMatrix(mxObject$DRIFT$labels))
+    if(any(class(DRIFT$names) == "try-error")){
+      DRIFT$names <- matrix(mxObject$DRIFT$labels, nrow = nrow(mxObject$DRIFT$labels), ncol = ncol(mxObject$DRIFT$labels))
+    }
     ctMatrices[["DRIFT"]] <- DRIFT
   }
 
@@ -576,8 +594,14 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$DIFFUSIONbase)){
     if(!silent){cat("DIFFUSIONbase, ")}
     DIFFUSIONbase <- list("values" = NULL, "names" = NULL)
-    DIFFUSIONbase$values <- deepCopyNumericMatrix(mxObject$DIFFUSIONbase$values)
+    DIFFUSIONbase$values <- try(deepCopyNumericMatrix(mxObject$DIFFUSIONbase$values))
+    if(any(class(DIFFUSIONbase$values) == "try-error")){
+      DIFFUSIONbase$values <- matrix(mxObject$DIFFUSIONbase$values, nrow = nrow(mxObject$DIFFUSIONbase$values), ncol = ncol(mxObject$DIFFUSIONbase$values))
+    }
     DIFFUSIONbase$names <- deepCopyStringMatrix(mxObject$DIFFUSIONbase$labels)
+    if(any(class(DIFFUSIONbase$names) == "try-error")){
+      DIFFUSIONbase$names <- matrix(mxObject$DIFFUSIONbase$labels, nrow = nrow(mxObject$DIFFUSIONbase$labels), ncol = ncol(mxObject$DIFFUSIONbase$labels))
+    }
     ctMatrices[["DIFFUSIONbase"]] <- DIFFUSIONbase
   }
 
@@ -585,8 +609,14 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$TRAITVARbase$values)){
     if(!silent){cat("TRAITVARbase, ")}
     TRAITVARbase <- list("values" = NULL, "names" = NULL)
-    TRAITVARbase$values <- deepCopyNumericMatrix(mxObject$TRAITVARbase$values)
-    TRAITVARbase$names <- deepCopyStringMatrix(mxObject$TRAITVARbase$labels)
+    TRAITVARbase$values <- try(deepCopyNumericMatrix(mxObject$TRAITVARbase$values))
+    if(any(class(TRAITVARbase$values) == "try-error")){
+      TRAITVARbase$values <- matrix(mxObject$TRAITVARbase$values, nrow = nrow(mxObject$TRAITVARbase$values), ncol = ncol(mxObject$TRAITVARbase$values))
+    }
+    TRAITVARbase$names <- try(deepCopyStringMatrix(mxObject$TRAITVARbase$labels))
+    if(any(class(TRAITVARbase$names) == "try-error")){
+      TRAITVARbase$names <- matrix(mxObject$TRAITVARbase$labels, nrow = nrow(mxObject$TRAITVARbase$labels), ncol = ncol(mxObject$TRAITVARbase$labels))
+    }
     ctMatrices[["TRAITVARbase"]] <- TRAITVARbase
   }
 
@@ -594,8 +624,14 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$T0TRAITEFFECT)){
     if(!silent){cat("T0TRAITEFFECT, ")}
     T0TRAITEFFECT <- list("values" = NULL, "names" = NULL)
-    T0TRAITEFFECT$values <- deepCopyNumericMatrix(mxObject$T0TRAITEFFECT$values)
-    T0TRAITEFFECT$names <- deepCopyStringMatrix(mxObject$T0TRAITEFFECT$labels)
+    T0TRAITEFFECT$values <- try(deepCopyNumericMatrix(mxObject$T0TRAITEFFECT$values))
+    if(any(class(T0TRAITEFFECT$values) == "try-error")){
+      T0TRAITEFFECT$values <- matrix(mxObject$T0TRAITEFFECT$values, nrow = nrow(mxObject$T0TRAITEFFECT$values), ncol = ncol(mxObject$T0TRAITEFFECT$values))
+    }
+    T0TRAITEFFECT$names <- try(deepCopyStringMatrix(mxObject$T0TRAITEFFECT$labels))
+    if(any(class(T0TRAITEFFECT$names) == "try-error")){
+      T0TRAITEFFECT$names <- matrix(mxObject$T0TRAITEFFECT$labels, nrow = nrow(mxObject$T0TRAITEFFECT$labels), ncol = ncol(mxObject$T0TRAITEFFECT$labels))
+    }
     ctMatrices[["T0TRAITEFFECT"]] <- T0TRAITEFFECT
   }
 
@@ -603,8 +639,14 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$CINT)){
     if(!silent){cat("CINT, ")}
     CINT <- list("values" = NULL, "names" = NULL)
-    CINT$values <- deepCopyNumericMatrix(mxObject$CINT$values)
-    CINT$names <- deepCopyStringMatrix(mxObject$CINT$labels)
+    CINT$values <- try(deepCopyNumericMatrix(mxObject$CINT$values))
+    if(any(class(CINT$values) == "try-error")){
+      CINT$values <- matrix(mxObject$CINT$values, nrow = nrow(mxObject$CINT$values), ncol = ncol(mxObject$CINT$values))
+    }
+    CINT$names <- try(deepCopyStringMatrix(mxObject$CINT$labels))
+    if(any(class(CINT$names) == "try-error")){
+      CINT$names <- matrix(mxObject$CINT$labels, nrow = nrow(mxObject$CINT$labels), ncol = ncol(mxObject$CINT$labels))
+    }
     ctMatrices[["CINT"]] <- CINT
   }
 
@@ -614,8 +656,14 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$MANIFESTMEANS)){
     if(!silent){cat("MANIFESTMEANS, ")}
     MANIFESTMEANS <- list("values" = NULL, "names" = NULL)
-    MANIFESTMEANS$values <- deepCopyNumericMatrix(mxObject$MANIFESTMEANS$values)
-    MANIFESTMEANS$names <- deepCopyStringMatrix(mxObject$MANIFESTMEANS$labels)
+    MANIFESTMEANS$values <- try(deepCopyNumericMatrix(mxObject$MANIFESTMEANS$values))
+    if(any(class(MANIFESTMEANS$values) == "try-error")){
+      MANIFESTMEANS$values <- matrix(mxObject$MANIFESTMEANS$values, nrow = nrow(mxObject$MANIFESTMEANS$values), ncol = ncol(mxObject$MANIFESTMEANS$values))
+    }
+    MANIFESTMEANS$names <- try(deepCopyStringMatrix(mxObject$MANIFESTMEANS$labels))
+    if(any(class(MANIFESTMEANS$names) == "try-error")){
+      MANIFESTMEANS$names <- matrix(mxObject$MANIFESTMEANS$labels, nrow = nrow(mxObject$MANIFESTMEANS$labels), ncol = ncol(mxObject$MANIFESTMEANS$labels))
+    }
     ctMatrices[["MANIFESTMEANS"]] <- MANIFESTMEANS
   }
 
@@ -623,8 +671,14 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$LAMBDA)){
     if(!silent){cat("LAMBDA, ")}
     LAMBDA <- list("values" = NULL, "names" = NULL)
-    LAMBDA$values <- deepCopyNumericMatrix(mxObject$LAMBDA$values)
-    LAMBDA$names <- deepCopyStringMatrix(mxObject$LAMBDA$labels)
+    LAMBDA$values <- try(deepCopyNumericMatrix(mxObject$LAMBDA$values))
+    if(any(class(LAMBDA$values) == "try-error")){
+      LAMBDA$values <- matrix(mxObject$LAMBDA$values, nrow = nrow(mxObject$LAMBDA$values), ncol = ncol(mxObject$LAMBDA$values))
+    }
+    LAMBDA$names <- try(deepCopyStringMatrix(mxObject$LAMBDA$labels))
+    if(any(class(LAMBDA$names) == "try-error")){
+      LAMBDA$names <- matrix(mxObject$LAMBDA$labels, nrow = nrow(mxObject$LAMBDA$labels), ncol = ncol(mxObject$LAMBDA$labels))
+    }
     ctMatrices[["LAMBDA"]] <- LAMBDA
   }
 
@@ -632,8 +686,14 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$MANIFESTVARbase$values)){
     if(!silent){cat("MANIFESTVARbase.")}
     MANIFESTVARbase <- list("values" = NULL, "names" = NULL)
-    MANIFESTVARbase$values <- deepCopyNumericMatrix(mxObject$MANIFESTVARbase$values)
-    MANIFESTVARbase$names <- deepCopyStringMatrix(mxObject$MANIFESTVARbase$labels)
+    MANIFESTVARbase$values <- try(deepCopyNumericMatrix(mxObject$MANIFESTVARbase$values))
+    if(any(class(MANIFESTVARbase$values) == "try-error")){
+      MANIFESTVARbase$values <- matrix(mxObject$MANIFESTVARbase$values, nrow = nrow(mxObject$MANIFESTVARbase$values), ncol = ncol(mxObject$MANIFESTVARbase$values))
+    }
+    MANIFESTVARbase$names <- try(deepCopyStringMatrix(mxObject$MANIFESTVARbase$labels))
+    if(any(class(MANIFESTVARbase$names) == "try-error")){
+      MANIFESTVARbase$names <- matrix(mxObject$MANIFESTVARbase$labels, nrow = nrow(mxObject$MANIFESTVARbase$labels), ncol = ncol(mxObject$MANIFESTVARbase$labels))
+    }
     ctMatrices[["MANIFESTVARbase"]] <- MANIFESTVARbase
   }
 
