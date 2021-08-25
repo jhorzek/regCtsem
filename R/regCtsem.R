@@ -277,6 +277,9 @@ regCtsem <- function(
     if(!is.null(cvSample) || autoCV){
       stop("Cross-validation not supported with subject-specific parameters.")
     }
+    if(tolower(argsIn$optimizer) != "gist"){
+      stop("Only GIST optimizer allows for person-specific parameters")
+    }
     warning("Subject-Specific parameters are a very experimental feature. Usage not recommended!")
   }
 
@@ -496,8 +499,8 @@ regCtsem <- function(
     if(!any(class(fitAndParametersSeparated) == "try-error")){
       regCtsemObject$fit <- fitAndParametersSeparated$fit
       regCtsemObject$parameterEstimatesRaw <- fitAndParametersSeparated$parameterEstimates
-      regCtsemObject$parameters <- try(getVariancesInParameterEstimates(regCtsemObject = regCtsemObjectregCtsemObject,
-                                                                        parameterEstimates = fitAndParametersSeparated$parameterEstimates),
+      regCtsemObject$parameters <- try(getParameterEstimates(regCtsemObject = regCtsemObject,
+                                                             parameterEstimatesRaw = fitAndParametersSeparated$parameterEstimates),
                                        silent = T)
       if(any(class(regCtsemObject$parameters) == "try-error")){
         warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. This is a bug and will be resolved later on.")
@@ -505,7 +508,7 @@ regCtsem <- function(
     }
 
     cat("\n")
-    regCtsemObject$argsIn <- argsIn
+    regCtsemObject$setup <- append(regCtsemObject$setup, argsIn[!(names(argsIn) %in% names(regCtsemObject$setup))])
     class(regCtsemObject) <- "regCtsem"
     return(regCtsemObject)
   }
@@ -606,6 +609,12 @@ regCtsem <- function(
         cvFit[i,] <- fitAndParametersSeparated$fit["cvM2LL",]
         regCtsemObject$fit <- fitAndParametersSeparated$fit
         regCtsemObject$parameterEstimatesRaw <- fitAndParametersSeparated$parameterEstimates
+        regCtsemObject$parameters <- try(getParameterEstimates(regCtsemObject = regCtsemObject,
+                                                               parameterEstimatesRaw = fitAndParametersSeparated$parameterEstimates),
+                                         silent = T)
+        if(any(class(regCtsemObject$parameters) == "try-error")){
+          warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. This is a bug and will be resolved later on.")
+        }
       }
       subModels[[i]] <- regCtsemObject
     }
@@ -650,14 +659,14 @@ regCtsem <- function(
     if(!any(class(fitAndParametersSeparated) == "try-error")){
       regCtsemObject$fit <- fitAndParametersSeparated$fit
       regCtsemObject$parameterEstimatesRaw <- fitAndParametersSeparated$parameterEstimates
-      regCtsemObject$parameters <- try(getVariancesInParameterEstimates(regCtsemObject = regCtsemObjectregCtsemObject,
-                                                                        parameterEstimates = fitAndParametersSeparated$parameterEstimates),
+      regCtsemObject$parameters <- try(getParameterEstimates(regCtsemObject = regCtsemObject,
+                                                             parameterEstimatesRaw = fitAndParametersSeparated$parameterEstimates),
                                        silent = T)
       if(any(class(regCtsemObject$parameters) == "try-error")){
         warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. This is a bug and will be resolved later on.")
       }
     }
-    regCtsemObject$argsIn <- argsIn
+    regCtsemObject$setup <- append(regCtsemObject$setup, argsIn[!(names(argsIn) %in% names(regCtsemObject$setup))])
     class(regCtsemObject) <- "regCtsem"
     cat("\n")
     return(regCtsemObject)
@@ -1546,200 +1555,126 @@ getVarianceFromVarianceBase2 <- function(varianceBaseValues){
 }
 
 
-
-
-#' getVariancesInParameterEstimates
+#' getParameterEstimates
 #'
-#' computes the variances from the parameterEstimates matrix
+#' computes the parameters given the raw parameter estimates
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
 #' @param regCtsemObject regCtsemObject
-#' @param parameterEstimates parameter estimates from regularized ctsem
+#' @param parameterEstimatesRaw raw parameter estimates from regularized ctsem
 #' @export
-getVariancesInParameterEstimates <- function(regCtsemObject, parameterEstimates){
-  if(!is.matrix(parameterEstimates)){
-    stop("parameterEstimates has to be of class matrix")
-  }
+getParameterEstimates <- function(regCtsemObject, parameterEstimatesRaw){
+  parameterTable <- regCtsemObject$setup$cpptsemObject$parameterTable
+  parameterTable[] <- parameterTable[]
   nlatent <- nrow(regCtsemObject$setup$cpptsemObject$DRIFTValues)
-  nmamifest <- nrow(regCtsemObject$setup$cpptsemObject$MANIFESTVARValues)
-  T0VARLabels <- paste0("T0VAR_",
-                        rep(1:nlatent, each = nlatent),
-                        "_",
-                        rep(1:nlatent, nlatent))
-  DIFFUSIONLabels <- paste0("DIFFUSION_",
-                            rep(1:nlatent, each = nlatent),
-                            "_",
-                            rep(1:nlatent, nlatent))
-  MANIFESTVARLabels <- paste0("MANIFESTVAR_",
-                              rep(1:nmamifest, each = nmamifest),
-                              "_",
-                              rep(1:nmamifest, nmamifest))
-
-  for(lambda in 1:ncol(parameterEstimates)){
-    tempMxObject <- mxObject
-    tempMxObject <- OpenMx::omxSetParameters(model = tempMxObject,
-                                             labels = rownames(parameterEstimates),
-                                             values = parameterEstimates[,lambda]
-    )
-
-    # T0VAR
-    if(any(mxObject$T0VARbase$free)){
-      T0VAR <- regCtsem::getVarianceFromVarianceBase2(varianceBaseValues = tempMxObject$T0VARbase$values)
-
-      if(lambda == 1){
-        T0VARBaseLabels <- tempMxObject$T0VARbase$labels[!is.na(tempMxObject$T0VARbase$labels)]
-
-        T0VARLabels <- matrix(T0VARLabels,
-                              nrow = length(latentNames),
-                              ncol = length(latentNames),
-                              byrow = TRUE)
-
-        T0VARs <- OpenMx::cvectorize(T0VAR)
-      }else{
-        T0VARs <- cbind(T0VARs, OpenMx::cvectorize(T0VAR))
+  nmanifest <- nrow(regCtsemObject$setup$cpptsemObject$MANIFESTVARValues)
+  if(!is.null(parameterTable$groupID) && length(unique(parameterTable$groupID))>1){
+    parameterEstimatesList <- vector("list", length(unique(parameterTable$groupID)))
+    names(parameterEstimatesList) <- paste0("group", unique(parameterTable$groupID))
+    for(group in unique(parameterTable$groupID)){
+      groupParameterTable <- parameterTable[parameterTable$groupID == group,]
+      #groupParameterTable$label <- unlist(strsplit(groupParameterTable$label, paste0("_G", group)))
+      parameterEstimates <- c()
+      for(parMat in unique(groupParameterTable$matrix)){
+        if(grepl("base", parMat)){
+          matName <- strsplit(parMat, "base")[[1]]
+          if(matName == "MANIFESTVAR"){
+            parameterEstimates <- rbind(parameterEstimates,
+                                        getVariances(parameterEstimatesRaw = parameterEstimatesRaw,
+                                                     matName = matName,
+                                                     baseMatName = parMat,
+                                                     parameterTable = groupParameterTable,
+                                                     nVariables = nmanifest,
+                                                     variableNames = "Y")
+            )
+          }else{
+            parameterEstimates <- rbind(parameterEstimates,
+                                        getVariances(parameterEstimatesRaw = parameterEstimatesRaw,
+                                                     matName = matName,
+                                                     baseMatName = parMat,
+                                                     parameterTable = groupParameterTable,
+                                                     nVariables = nlatent,
+                                                     variableNames = "eta")
+            )
+          }
+        }else{
+          parameterEstimates <- rbind(parameterEstimates,
+                                      parameterEstimatesRaw[groupParameterTable$label[groupParameterTable$matrix == parMat],]
+          )
+        }
       }
+      colnames(parameterEstimates) <- colnames(parameterEstimatesRaw)
+      parameterEstimates <- parameterEstimates[sort(rownames(parameterEstimates)), ]
 
+      parameterEstimatesList[[paste0("group", group)]] <- parameterEstimates
     }
+    return(parameterEstimatesList)
+  }
 
-    # DIFFUSION
-
-    if(any(mxObject$DIFFUSIONbase$free)){
-      DIFFUSION <- regCtsem::getVarianceFromVarianceBase2(varianceBaseValues = tempMxObject$DIFFUSIONbase$values)
-
-      if(lambda == 1){
-        DIFFUSIONBaseLabels <- tempMxObject$DIFFUSIONbase$labels[!is.na(tempMxObject$DIFFUSIONbase$labels)]
-        DIFFUSIONLabels <- paste0("DIFFUSION_",rep(latentNames, each = length(latentNames)),
-                                  "_",
-                                  rep(latentNames, length(latentNames)))
-        DIFFUSIONLabels <- matrix(DIFFUSIONLabels,
-                                  nrow = length(latentNames),
-                                  ncol = length(latentNames),
-                                  byrow = TRUE)
-
-        DIFFUSIONs <- OpenMx::cvectorize(DIFFUSION)
+  parameterEstimates <- c()
+  for(parMat in unique(parameterTable$matrix)){
+    if(grepl("base", parMat)){
+      matName <- strsplit(parMat, "base")[[1]]
+      if(matName == "MANIFESTVAR"){
+        parameterEstimates <- rbind(parameterEstimates,
+                                    getVariances(parameterEstimatesRaw = parameterEstimatesRaw,
+                                                 matName = matName,
+                                                 baseMatName = parMat,
+                                                 parameterTable = parameterTable,
+                                                 nVariables = nmanifest,
+                                                 variableNames = "Y")
+        )
       }else{
-        DIFFUSIONs <- cbind(DIFFUSIONs, OpenMx::cvectorize(DIFFUSION))
+        parameterEstimates <- rbind(parameterEstimates,
+                                    getVariances(parameterEstimatesRaw = parameterEstimatesRaw,
+                                                 matName = matName,
+                                                 baseMatName = parMat,
+                                                 parameterTable = parameterTable,
+                                                 nVariables = nlatent,
+                                                 variableNames = "eta")
+        )
       }
-
+    }else{
+      parameterEstimates <- rbind(parameterEstimates,
+                                  parameterEstimatesRaw[parameterTable$label[parameterTable$matrix == parMat],]
+      )
     }
-
-    # MANIFESTVAR
-
-    if(any(mxObject$MANIFESTVARbase$free)){
-      MANIFESTVAR <- regCtsem::getVarianceFromVarianceBase2(varianceBaseValues = tempMxObject$MANIFESTVARbase$values)
-
-      if(lambda == 1){
-        MANIFESTVARBaseLabels <- tempMxObject$MANIFESTVARbase$labels[!is.na(tempMxObject$MANIFESTVARbase$labels)]
-        MANIFESTVARLabels <- paste0("MANIFESTVAR_",rep(manifestNames, each = length(manifestNames)),
-                                    "_",
-                                    rep(manifestNames, length(manifestNames)))
-        MANIFESTVARLabels <- matrix(MANIFESTVARLabels,
-                                    nrow = length(manifestNames),
-                                    ncol = length(manifestNames),
-                                    byrow = TRUE)
-
-        MANIFESTVARs <- OpenMx::cvectorize(MANIFESTVAR)
-      }else{
-        MANIFESTVARs <- cbind(MANIFESTVARs, OpenMx::cvectorize(MANIFESTVAR))
-      }
-
-    }
-
-    if(any(grepl("asymDIFFUSIONalg", mxObject$T0VAR$labels))){
-      # in this case: T0VAR is set to stationarity
-      DRIFTHATCH <- tempMxObject$DRIFT$values %x% tempMxObject$II$values + tempMxObject$II$values %x% tempMxObject$DRIFT$values
-      asymDIFFUSIONalg <- -solve(DRIFTHATCH) %*% cvectorize(DIFFUSION)
-      T0VAR <- matrix(asymDIFFUSIONalg, nrow = length(latentNames), byrow = F)
-
-      if(lambda == 1){
-        T0VARBaseLabels <- c()
-        T0VARLabels <- paste0("T0VAR_",rep(latentNames, each = length(latentNames)),
-                              "_",
-                              rep(latentNames, length(latentNames)))
-        T0VARLabels <- matrix(T0VARLabels,
-                              nrow = length(latentNames),
-                              ncol = length(latentNames),
-                              byrow = TRUE)
-
-        T0VARs <- OpenMx::cvectorize(T0VAR)
-      }else{
-        T0VARs <- cbind(T0VARs, OpenMx::cvectorize(T0VAR))
-      }
-
-    }
-
   }
-  # replace values in parameterEstimates
-  # T0VAR
-  if(any(mxObject$T0VARbase$free)){
-    rownames(T0VARs) <- OpenMx::cvectorize(T0VARLabels)
-    parameterEstimates <- parameterEstimates[!(rownames(parameterEstimates) %in% T0VARBaseLabels),]
-    if(!is.matrix(parameterEstimates)){
-      parLabels <- names(parameterEstimates)
-      parameterEstimates <- matrix(parameterEstimates, nrow = length(parLabels))
-      rownames(parameterEstimates) <- parLabels
-    }
-    parameterEstimates <- rbind(parameterEstimates, T0VARs)
-  }
-  if(any(grepl("asymDIFFUSIONalg", mxObject$T0VAR$labels))){
-    rownames(T0VARs) <- OpenMx::cvectorize(T0VARLabels)
-    if(!is.matrix(parameterEstimates)){
-      parLabels <- names(parameterEstimates)
-      parameterEstimates <- matrix(parameterEstimates, nrow = length(parLabels))
-      rownames(parameterEstimates) <- parLabels
-    }
-    parameterEstimates <- rbind(parameterEstimates, T0VARs)
-  }
-
-  # DIFFUSION
-  if(any(mxObject$DIFFUSIONbase$free)){
-    rownames(DIFFUSIONs) <- OpenMx::cvectorize(DIFFUSIONLabels)
-    parameterEstimates <- parameterEstimates[!(rownames(parameterEstimates) %in% DIFFUSIONBaseLabels),]
-    if(!is.matrix(parameterEstimates)){
-      parLabels <- names(parameterEstimates)
-      parameterEstimates <- matrix(parameterEstimates, nrow = length(parLabels))
-      rownames(parameterEstimates) <- parLabels
-    }
-    parameterEstimates <- rbind(parameterEstimates, DIFFUSIONs)
-  }
-
-  # MANIFESTVAR
-  if(any(mxObject$MANIFESTVARbase$free)){
-    rownames(MANIFESTVARs) <- OpenMx::cvectorize(MANIFESTVARLabels)
-    parameterEstimates <- parameterEstimates[!(rownames(parameterEstimates) %in% MANIFESTVARBaseLabels),]
-    if(!is.matrix(parameterEstimates)){
-      parLabels <- names(parameterEstimates)
-      parameterEstimates <- matrix(parameterEstimates, nrow = length(parLabels))
-      rownames(parameterEstimates) <- parLabels
-    }
-    parameterEstimates <- rbind(parameterEstimates, MANIFESTVARs)
-  }
-
+  colnames(parameterEstimates) <- colnames(parameterEstimatesRaw)
+  parameterEstimates <- parameterEstimates[sort(rownames(parameterEstimates)), ]
   return(parameterEstimates)
-
 }
 
-
-
-
-#' regIndicatorsFromNameToMatrix
+#' getVariances
 #'
-#' transforms string indicated regIndicators to matrix indicated regIndicators
+#' computes the variances for varianceBase matrices
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
-#' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
-#' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
-#' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
-regIndicatorsFromNameToMatrix <- function(mxObject, regOn, regIndicators){
-  regIndicatorsMatrix <- matrix(as.numeric(c(mxObject[[regOn]]$labels %in% regIndicators)),
-                                ncol = ncol(mxObject[[regOn]]$labels),
-                                nrow = nrow(mxObject[[regOn]]$labels))
-  return(regIndicatorsMatrix)
+#' @param parameterEstimatesRaw raw parameter estimates from regularized ctsem
+#' @param matName name of the new matrix
+#' @param baseMatName name of the base matrix
+#' @param parameterTable parameterTable
+#' @param nVariables number of variables in the matrix
+#' @param variableNames names of the variables
+#' @export
+getVariances <- function(parameterEstimatesRaw, matName, baseMatName, parameterTable, nVariables, variableNames){
+  baseMat <- diag(-999, nrow = nVariables, ncol = nVariables)
+  VARLabels <- matrix(paste0(matName,"_", variableNames,seq_len(nVariables),
+                             rep(paste0("_", variableNames,seq_len(nVariables)), each = nVariables)
+  ), nrow = nVariables, ncol = nVariables, byrow = F)
+  varPars <- matrix(NA, nrow = sum(lower.tri(VARLabels, diag = T)), ncol = ncol(parameterEstimatesRaw))
+  rownames(varPars) <- VARLabels[lower.tri(VARLabels, diag = T)]
+  for(lambda in 1:ncol(parameterEstimatesRaw)){
+    for(parLab in parameterTable$label[parameterTable$matrix == baseMatName]){
+      baseMat[parameterTable$row[parameterTable$label == parLab]+1, parameterTable$col[parameterTable$label == parLab]+1] <- parameterEstimatesRaw[parLab,1]
+    }
+    VAR <- getVarianceFromVarianceBase2(baseMat)
+    varPars[,lambda] <- VAR[lower.tri(VARLabels, diag = T)]
+  }
+  return(varPars)
 }
-
-
 
 
 #' separateFitAndParameters
@@ -1773,8 +1708,6 @@ separateFitAndParameters <- function(regCtsemObject){
   return(list("fit" = fit, "parameterEstimates" = parameterEstimates))
 
 }
-
-
 
 
 #' generateDRIFTPlot
@@ -1817,7 +1750,6 @@ generateDRIFTPlot <- function(model, ylab = "auto", xlab = "auto", skiptYlabComp
 
   par(mar=c(5, 4, 4, 2) + 0.1, xpd=TRUE)
 }
-
 
 
 
