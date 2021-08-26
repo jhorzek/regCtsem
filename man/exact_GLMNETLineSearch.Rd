@@ -42,6 +42,8 @@ exact_GLMNETLineSearch(
 
 \item{g_kp1}{gradients of iteration k plus 1}
 
+\item{H_k}{Hessian approximation}
+
 \item{d}{vector with updates to parameter estimates}
 
 \item{eps_numericDerivative}{controls the precision of the central gradient approximation. The default (1.1 * 10^(-16))^(1/3) is derived in Nocedal, J., & Wright, S. J. (2006). Numerical optimization (2nd ed), p. 197}

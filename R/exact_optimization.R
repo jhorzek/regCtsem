@@ -8,8 +8,7 @@
 #' NOTE: Function located in file exact_optimization.R
 #'
 #' @param objective Kalman or mx
-#' @param ctsemObject Fitted object of class ctsemFit
-#' @param mxObject Fitted object of class MxObject
+#' @param cvSampleCpptsemObject Fitted object of class cpptsem
 #' @param parameterLabels labels of optimized parameters
 #' @param parameterValuesTable table with parameter values+
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
@@ -82,10 +81,9 @@ exact_getFitIndices <- function(parameterLabels, fitAndParameters, lambdas, samp
 #'
 #' NOTE: Function located in file exact_optimization.R
 #'
-#' @param mxObject Fitted object of class MxObject
 #' @param parameterLabels labels of optimized parameters
-#' @param fitAndParameters table with fit and parameter values
 #' @param regIndicators Vector with names of regularized parameters
+#' @param fitAndParameters table with fit and parameter values
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
 #' @param sampleSize sample size
@@ -142,8 +140,9 @@ exact_getFlatStdizer <- function(T0VAR, thetaNames){
 #'
 #' NOTE: Function located in file exact_optimization.R
 #'
-#' @param regIndicators Names of regularized parameters
 #' @param lambda Penalty value
+#' @param theta parameter values
+#' @param regIndicators Names of regularized parameters
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @export
 exact_getPenaltyValue <- function(lambda, theta, regIndicators, adaptiveLassoWeights = NULL){
@@ -180,8 +179,9 @@ exact_getPenaltyValue <- function(lambda, theta, regIndicators, adaptiveLassoWei
 #'
 #' NOTE: Function located in file exact_optimization.R
 #'
-#' @param regIndicators Names of regularized parameters
 #' @param lambda Penalty value
+#' @param theta parameter values
+#' @param regIndicators Names of regularized parameters
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @export
@@ -224,8 +224,9 @@ exact_getPenaltyValueWithTarget <- function(lambda, theta, regIndicators, target
 #' @param jacobian derivative of L(theta)
 #' @param regIndicators names of regularized parameters
 #' @param lambda lambda value
+#' @param adaptiveLassoWeightsMatrix matrix with adaptive lasso weights
 #' @export
-exact_getSubgradients <- function(theta, jacobian, regIndicators, lambda, lineSearch, adaptiveLassoWeightsMatrix){
+exact_getSubgradients <- function(theta, jacobian, regIndicators, lambda, adaptiveLassoWeightsMatrix){
 
   # first part: derivative of Likelihood
   subgradient <- jacobian
@@ -253,59 +254,59 @@ exact_getSubgradients <- function(theta, jacobian, regIndicators, lambda, lineSe
 }
 
 
-#' exact_getT0VAR
-#'
-#' computes the updated T0VAR given the old parameter values in an mxObject and the updates to the parameters in a vector d
-#'
-#' NOTE: Function located in file exact_optimization.R
-#'
-#' @param mxObject mxObject with old parameter values
-#' @param d vector with updates to parameter values
-#' @param stationarity set to TRUE, if stationaritiy is assumed for the T0VAR
-#' @export
-exact_getT0VAR <- function(mxObject, d){
-  stationarity <- !("T0VAR" %in% names(mxObject$algebras))
-  if(stationarity){
-    stop("Not yet implemented for stationarity = 'T0VAR'. Changes in derivative necessary")
-
-    T0Varmodel <- mxModel(
-      # with free parameters
-      mxObject$DRIFT,
-      mxObject$DIFFUSIONbase,
-
-      # algebras
-      mxObject$T0VAR,
-      mxObject$asymDIFFUSIONalg,
-      mxObject$DRIFTHATCH,
-      mxObject$DIFFUSION,
-      mxObject$DIFFUSIONchol,
-      mxObject$II)
-
-    # set Parameters
-    d_subset <- names(OpenMx::omxGetParameters(T0Varmodel))
-    T0Varmodel_new <- OpenMx::omxSetParameters(T0Varmodel, labels = d_subset, values = OpenMx::omxGetParameters(T0Varmodel)+d[d_subset,])
-
-    T0Varmodel_new.fit <- OpenMx::mxRun(T0Varmodel_new, silent = TRUE)
-
-    return(T0Varmodel_new.fit$T0VAR$values)
-  }else{
-    if(!any(mxObject$T0VARbase$free)){
-      return(mxObject$T0VAR$result)
-    }
-    d_subset <- unique(OpenMx::cvectorize(mxObject$T0VARbase$labels[!is.na(mxObject$T0VARbase$labels)])) # rownames(d)[grepl("T0var", rownames(d))]
-    T0VARbaseVal <- mxObject$T0VARbase$values
-    T0VARbaseLab <- mxObject$T0VARbase$labels
-    for(d_sub in d_subset){
-      T0VARbaseVal[T0VARbaseLab == d_sub & !is.na(T0VARbaseLab)] <- T0VARbaseVal[T0VARbaseLab == d_sub & !is.na(T0VARbaseLab)] + d[d_sub,]
-    }
-    T0VARchol <- OpenMx::vec2diag(exp(OpenMx::diag2vec(T0VARbaseVal))) + T0VARbaseVal - OpenMx::vec2diag(OpenMx::diag2vec(T0VARbaseVal))
-    T0VAR <- T0VARchol %*% t(T0VARchol)
-
-    return(T0VAR)
-
-  }
-
-}
+# #' exact_getT0VAR
+# #'
+# #' computes the updated T0VAR given the old parameter values in an mxObject and the updates to the parameters in a vector d
+# #'
+# #' NOTE: Function located in file exact_optimization.R
+# #'
+# #' @param mxObject mxObject with old parameter values
+# #' @param d vector with updates to parameter values
+# #' @param stationarity set to TRUE, if stationaritiy is assumed for the T0VAR
+# #' @export
+# exact_getT0VAR <- function(mxObject, d){
+#   stationarity <- !("T0VAR" %in% names(mxObject$algebras))
+#   if(stationarity){
+#     stop("Not yet implemented for stationarity = 'T0VAR'. Changes in derivative necessary")
+#
+#     T0Varmodel <- mxModel(
+#       # with free parameters
+#       mxObject$DRIFT,
+#       mxObject$DIFFUSIONbase,
+#
+#       # algebras
+#       mxObject$T0VAR,
+#       mxObject$asymDIFFUSIONalg,
+#       mxObject$DRIFTHATCH,
+#       mxObject$DIFFUSION,
+#       mxObject$DIFFUSIONchol,
+#       mxObject$II)
+#
+#     # set Parameters
+#     d_subset <- names(OpenMx::omxGetParameters(T0Varmodel))
+#     T0Varmodel_new <- OpenMx::omxSetParameters(T0Varmodel, labels = d_subset, values = OpenMx::omxGetParameters(T0Varmodel)+d[d_subset,])
+#
+#     T0Varmodel_new.fit <- OpenMx::mxRun(T0Varmodel_new, silent = TRUE)
+#
+#     return(T0Varmodel_new.fit$T0VAR$values)
+#   }else{
+#     if(!any(mxObject$T0VARbase$free)){
+#       return(mxObject$T0VAR$result)
+#     }
+#     d_subset <- unique(OpenMx::cvectorize(mxObject$T0VARbase$labels[!is.na(mxObject$T0VARbase$labels)])) # rownames(d)[grepl("T0var", rownames(d))]
+#     T0VARbaseVal <- mxObject$T0VARbase$values
+#     T0VARbaseLab <- mxObject$T0VARbase$labels
+#     for(d_sub in d_subset){
+#       T0VARbaseVal[T0VARbaseLab == d_sub & !is.na(T0VARbaseLab)] <- T0VARbaseVal[T0VARbaseLab == d_sub & !is.na(T0VARbaseLab)] + d[d_sub,]
+#     }
+#     T0VARchol <- OpenMx::vec2diag(exp(OpenMx::diag2vec(T0VARbaseVal))) + T0VARbaseVal - OpenMx::vec2diag(OpenMx::diag2vec(T0VARbaseVal))
+#     T0VAR <- T0VARchol %*% t(T0VARchol)
+#
+#     return(T0VAR)
+#
+#   }
+#
+# }
 
 
 
@@ -512,17 +513,31 @@ setStartingValuesFromApprox <- function(approx_regModel, mxObject, lambda){
 
 #' tryApproxFirst
 #'
+#' Approximates the solution to the lasso regularized fitting function using an established optimizer
+#'
 #' NOTE: Function located in file exact_optimization.R
 #'
+#' @param startingValues start values for optimization
+#' @param returnAs "vector" or "matrix"
+#' @param approxFirst boolean: should the solution be approximated
+#' @param numStart number of starting values
+#' @param approxMaxIt maximal number of iterations for the approximation
+#' @param lambda tuning parameter value
+#' @param cpptsemObject object of type cpptsem
+#' @param regIndicators Labels for the regularized parameters (e.g. drift_eta1_eta2)
+#' @param targetVector named vector with values towards which the parameters are regularized
+#' @param adaptiveLassoWeights weights for the adaptive lasso.
+#' @param objective which objective is used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
+#' @param sparseParameters labeled vector with parameter estimates of the most sparse model.
 #' @author Jannik Orzek
 #' @import ctsemOMX
 #' @export
 tryApproxFirst <- function(startingValues, returnAs,
                            approxFirst, numStart, approxMaxIt,
-                           lambda, lambdas,
+                           lambda,
                            cpptsemObject,
-                           regIndicators, targetVector = NULL, adaptiveLassoWeights, objective, sparseParameters,
-                           extraTries){
+                           regIndicators, targetVector = NULL, adaptiveLassoWeights, objective, sparseParameters
+                           ){
 
   # define a target vector if none is provided
   if(is.null(targetVector)){

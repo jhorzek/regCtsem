@@ -15,6 +15,8 @@ exact_getPenaltyValueWithTarget(
 \arguments{
 \item{lambda}{Penalty value}
 
+\item{theta}{parameter values}
+
 \item{regIndicators}{Names of regularized parameters}
 
 \item{targetVector}{named vector with values towards which the parameters are regularized}

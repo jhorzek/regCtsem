@@ -8,8 +8,14 @@
 #' transforms fitted ctsem model to cpptsem model
 #'
 #' @param ctsemModel fittet ctsem object
+#' @param wideData Please provide a data set in wide format compatible to ctsemOMX
+#' @param removeD removes the D matrix in the mxObject; This should be set to TRUE
+#' @param group numeric vector indicating which group a person belongs to
+#' @param groupSpecificParameters string vector indicating which parameters should be group specific
+#' @param silent suppress messages
 #'
 #' @examples
+#' \dontrun{
 #' library(regCtsem)
 #'
 #' addCINT <- FALSE
@@ -26,7 +32,7 @@
 #'                           MANIFESTVAR=diag(0, 2),
 #'                           TRAITVAR = NULL,
 #'                           CINT = CINT)
-#' AnomAuthfit1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = F, stationary = stationary)
+#' AnomAuthfit1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = FALSE, stationary = stationary)
 #' AnomAuthfit1$mxobj$fitfunction$result[[1]]
 #' gradientModel1 <- OpenMx::mxRun(OpenMx::mxModel(AnomAuthfit1$mxobj,
 #'                                                 OpenMx::mxComputeSequence(steps=list(
@@ -38,14 +44,14 @@
 #' centralGrandients
 #'
 #' ## with cpptsem
-#' cpptsemmodel1 <- cpptsemFromCtsem(ctsemModel = AnomAuthfit1)
+#' cpptsemmodel1 <- cpptsemFromCtsem(ctsemModel = AnomAuthfit1, wideData = AnomAuth)
 #' cpptsemmodel1$computeRAM()
 #' cpptsemmodel1$fitRAM()
 #' cpptsemmodel1$m2LL
 #' cpptsemmodel1$approxRAMGradients((1.1 * 10^(-16))^(1/3))[names(centralGrandients)]
 #'
 #' # change parameter values
-#' AnomAuthfit1_1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = T, stationary = stationary)
+#' AnomAuthfit1_1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = TRUE, stationary = stationary)
 #' newParameters <- omxGetParameters(AnomAuthfit1_1$mxobj)
 #' cpptsemmodel1$setParameterValues(newParameters, names(newParameters))
 #' cpptsemmodel1$computeRAM()
@@ -58,7 +64,7 @@
 #'                           MANIFESTVAR=diag(0, 2),
 #'                           TRAITVAR = "auto",
 #'                           CINT = CINT)
-#' AnomAuthfit2 <- ctFit(AnomAuth, AnomAuthmodel2, useOptimizer = F, stationary = stationary)
+#' AnomAuthfit2 <- ctFit(AnomAuth, AnomAuthmodel2, useOptimizer = FALSE, stationary = stationary)
 #' AnomAuthfit2$mxobj$fitfunction$result[[1]]
 #' gradientModel2 <- OpenMx::mxRun(OpenMx::mxModel(AnomAuthfit2$mxobj,
 #'                                                 OpenMx::mxComputeSequence(steps=list(
@@ -69,7 +75,7 @@
 #' names(centralGrandients) <- rownames(gradientModel2$compute$steps[[1]]$output[["gradient"]])
 #' centralGrandients
 #' ## with cpptsem
-#' cpptsemmodel2 <- cpptsemFromCtsem(AnomAuthfit2)
+#' cpptsemmodel2 <- cpptsemFromCtsem(AnomAuthfit2, wideData = AnomAuth)
 #' cpptsemmodel2$computeRAM()
 #' cpptsemmodel2$fitRAM()
 #' cpptsemmodel2$m2LL
@@ -195,6 +201,7 @@
 #'                                   cpptsemmodel3)
 #' kalmanCpptsemFit$pars
 #' ct_drift1
+#' }
 #'
 #'
 #' @export
@@ -466,7 +473,6 @@ prepareRAMData <- function(dataset, individualMissingPatternID, uniqueMissingPat
 #'
 #' Separates data and time intervals. Computes the number of unique time intervals and the unqiue missingness patterns
 #' @param wideData dataset in wide format compatible with ctsem
-#' @import mgcv
 #' @export
 constructDatasetKalman <- function(wideData){
   wideData <- as.matrix(wideData)
@@ -487,8 +493,13 @@ constructDatasetKalman <- function(wideData){
   # extract unique missingness patterns
 
   isMissing <- is.na(dataset)
-  uniqueMissingPatterns <- mgcv::uniquecombs(isMissing, ordered=FALSE)
-  individualMissingPatternID <- attr(uniqueMissingPatterns,"index")
+  uniqueMissingPatterns <- unique(isMissing)
+  individualMissingPatternID <- c()
+  for(mrow in 1:nrow(isMissing)){
+    rowMissing <- apply(uniqueMissingPatterns, 1, function(x) all(isMissing[mrow,] == x))
+    individualMissingPatternID <- c(individualMissingPatternID,
+                                    (1:nrow(uniqueMissingPatterns))[rowMissing])
+  }
 
   dataList <- list("dataset" = as.matrix(dataset),
                    "dT" = dT,
@@ -535,6 +546,7 @@ prepareKalmanData <- function(dataset, nlatent, nmanifest, dtIndicators, Tpoints
 #' @param mxObject mxObject from ctsemOMX
 #' @param nlatent number of latent variables
 #' @param nmanifest number of manifest variables
+#' @param silent suppress messages
 #' @import OpenMx
 #' @export
 extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
@@ -547,14 +559,8 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$T0MEANS)){
     if(!silent){cat("T0MEANS, ")}
     T0MEANS <- list("values" = NULL, "names" = NULL)
-    T0MEANS$values <- try(deepCopyNumericMatrix(mxObject$T0MEANS$values))
-    if(any(class(T0MEANS$values) == "try-error")){
-      T0MEANS$values <- matrix(mxObject$T0MEANS$values, nrow = nrow(mxObject$T0MEANS$values), ncol = ncol(mxObject$T0MEANS$values))
-    }
-    T0MEANS$names <- try(deepCopyStringMatrix(mxObject$T0MEANS$labels))
-    if(any(class(T0MEANS$names) == "try-error")){
-      T0MEANS$names <- matrix(mxObject$T0MEANS$labels, nrow = nrow(mxObject$T0MEANS$labels), ncol = ncol(mxObject$T0MEANS$labels))
-    }
+    T0MEANS$values <- matrix(mxObject$T0MEANS$values, nrow = nrow(mxObject$T0MEANS$values), ncol = ncol(mxObject$T0MEANS$values))
+    T0MEANS$names <- matrix(mxObject$T0MEANS$labels, nrow = nrow(mxObject$T0MEANS$labels), ncol = ncol(mxObject$T0MEANS$labels))
     ctMatrices[["T0MEANS"]] <- T0MEANS
   }
 
@@ -562,14 +568,8 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$T0VARbase)){
     if(!silent){cat("T0VARbase, ")}
     T0VARbase <- list("values" = NULL, "names" = NULL)
-    T0VARbase$values <- try(deepCopyNumericMatrix(mxObject$T0VARbase$values))
-    if(any(class(T0VARbase$values) == "try-error")){
-      T0VARbase$values <- matrix(mxObject$T0VARbase$values, nrow = nrow(mxObject$T0VARbase$values), ncol = ncol(mxObject$T0VARbase$values))
-    }
-    T0VARbase$names <- try(deepCopyStringMatrix(mxObject$T0VARbase$labels))
-    if(any(class(T0VARbase$names) == "try-error")){
-      T0VARbase$names <- matrix(mxObject$T0VARbase$labels, nrow = nrow(mxObject$T0VARbase$labels), ncol = ncol(mxObject$T0VARbase$labels))
-    }
+    T0VARbase$values <- matrix(mxObject$T0VARbase$values, nrow = nrow(mxObject$T0VARbase$values), ncol = ncol(mxObject$T0VARbase$values))
+    T0VARbase$names <- matrix(mxObject$T0VARbase$labels, nrow = nrow(mxObject$T0VARbase$labels), ncol = ncol(mxObject$T0VARbase$labels))
     ctMatrices[["T0VARbase"]] <- T0VARbase
   }
 
@@ -578,14 +578,8 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$DRIFT)){
     if(!silent){cat("DRIFT, ")}
     DRIFT <- list("values" = NULL, "names" = NULL)
-    DRIFT$values <- try(deepCopyNumericMatrix(mxObject$DRIFT$values))
-    if(any(class(DRIFT$values) == "try-error")){
-      DRIFT$values <- matrix(mxObject$DRIFT$values, nrow = nrow(mxObject$DRIFT$values), ncol = ncol(mxObject$DRIFT$values))
-    }
-    DRIFT$names <- try(deepCopyStringMatrix(mxObject$DRIFT$labels))
-    if(any(class(DRIFT$names) == "try-error")){
-      DRIFT$names <- matrix(mxObject$DRIFT$labels, nrow = nrow(mxObject$DRIFT$labels), ncol = ncol(mxObject$DRIFT$labels))
-    }
+    DRIFT$values <- matrix(mxObject$DRIFT$values, nrow = nrow(mxObject$DRIFT$values), ncol = ncol(mxObject$DRIFT$values))
+    DRIFT$names <- matrix(mxObject$DRIFT$labels, nrow = nrow(mxObject$DRIFT$labels), ncol = ncol(mxObject$DRIFT$labels))
     ctMatrices[["DRIFT"]] <- DRIFT
   }
 
@@ -594,14 +588,8 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$DIFFUSIONbase)){
     if(!silent){cat("DIFFUSIONbase, ")}
     DIFFUSIONbase <- list("values" = NULL, "names" = NULL)
-    DIFFUSIONbase$values <- try(deepCopyNumericMatrix(mxObject$DIFFUSIONbase$values))
-    if(any(class(DIFFUSIONbase$values) == "try-error")){
-      DIFFUSIONbase$values <- matrix(mxObject$DIFFUSIONbase$values, nrow = nrow(mxObject$DIFFUSIONbase$values), ncol = ncol(mxObject$DIFFUSIONbase$values))
-    }
-    DIFFUSIONbase$names <- deepCopyStringMatrix(mxObject$DIFFUSIONbase$labels)
-    if(any(class(DIFFUSIONbase$names) == "try-error")){
-      DIFFUSIONbase$names <- matrix(mxObject$DIFFUSIONbase$labels, nrow = nrow(mxObject$DIFFUSIONbase$labels), ncol = ncol(mxObject$DIFFUSIONbase$labels))
-    }
+    DIFFUSIONbase$values <- matrix(mxObject$DIFFUSIONbase$values, nrow = nrow(mxObject$DIFFUSIONbase$values), ncol = ncol(mxObject$DIFFUSIONbase$values))
+    DIFFUSIONbase$names <- matrix(mxObject$DIFFUSIONbase$labels, nrow = nrow(mxObject$DIFFUSIONbase$labels), ncol = ncol(mxObject$DIFFUSIONbase$labels))
     ctMatrices[["DIFFUSIONbase"]] <- DIFFUSIONbase
   }
 
@@ -609,14 +597,8 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$TRAITVARbase$values)){
     if(!silent){cat("TRAITVARbase, ")}
     TRAITVARbase <- list("values" = NULL, "names" = NULL)
-    TRAITVARbase$values <- try(deepCopyNumericMatrix(mxObject$TRAITVARbase$values))
-    if(any(class(TRAITVARbase$values) == "try-error")){
-      TRAITVARbase$values <- matrix(mxObject$TRAITVARbase$values, nrow = nrow(mxObject$TRAITVARbase$values), ncol = ncol(mxObject$TRAITVARbase$values))
-    }
-    TRAITVARbase$names <- try(deepCopyStringMatrix(mxObject$TRAITVARbase$labels))
-    if(any(class(TRAITVARbase$names) == "try-error")){
-      TRAITVARbase$names <- matrix(mxObject$TRAITVARbase$labels, nrow = nrow(mxObject$TRAITVARbase$labels), ncol = ncol(mxObject$TRAITVARbase$labels))
-    }
+    TRAITVARbase$values <- matrix(mxObject$TRAITVARbase$values, nrow = nrow(mxObject$TRAITVARbase$values), ncol = ncol(mxObject$TRAITVARbase$values))
+    TRAITVARbase$names <- matrix(mxObject$TRAITVARbase$labels, nrow = nrow(mxObject$TRAITVARbase$labels), ncol = ncol(mxObject$TRAITVARbase$labels))
     ctMatrices[["TRAITVARbase"]] <- TRAITVARbase
   }
 
@@ -624,14 +606,8 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$T0TRAITEFFECT)){
     if(!silent){cat("T0TRAITEFFECT, ")}
     T0TRAITEFFECT <- list("values" = NULL, "names" = NULL)
-    T0TRAITEFFECT$values <- try(deepCopyNumericMatrix(mxObject$T0TRAITEFFECT$values))
-    if(any(class(T0TRAITEFFECT$values) == "try-error")){
-      T0TRAITEFFECT$values <- matrix(mxObject$T0TRAITEFFECT$values, nrow = nrow(mxObject$T0TRAITEFFECT$values), ncol = ncol(mxObject$T0TRAITEFFECT$values))
-    }
-    T0TRAITEFFECT$names <- try(deepCopyStringMatrix(mxObject$T0TRAITEFFECT$labels))
-    if(any(class(T0TRAITEFFECT$names) == "try-error")){
-      T0TRAITEFFECT$names <- matrix(mxObject$T0TRAITEFFECT$labels, nrow = nrow(mxObject$T0TRAITEFFECT$labels), ncol = ncol(mxObject$T0TRAITEFFECT$labels))
-    }
+    T0TRAITEFFECT$values <- matrix(mxObject$T0TRAITEFFECT$values, nrow = nrow(mxObject$T0TRAITEFFECT$values), ncol = ncol(mxObject$T0TRAITEFFECT$values))
+    T0TRAITEFFECT$names <- matrix(mxObject$T0TRAITEFFECT$labels, nrow = nrow(mxObject$T0TRAITEFFECT$labels), ncol = ncol(mxObject$T0TRAITEFFECT$labels))
     ctMatrices[["T0TRAITEFFECT"]] <- T0TRAITEFFECT
   }
 
@@ -639,14 +615,9 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$CINT)){
     if(!silent){cat("CINT, ")}
     CINT <- list("values" = NULL, "names" = NULL)
-    CINT$values <- try(deepCopyNumericMatrix(mxObject$CINT$values))
-    if(any(class(CINT$values) == "try-error")){
-      CINT$values <- matrix(mxObject$CINT$values, nrow = nrow(mxObject$CINT$values), ncol = ncol(mxObject$CINT$values))
-    }
-    CINT$names <- try(deepCopyStringMatrix(mxObject$CINT$labels))
-    if(any(class(CINT$names) == "try-error")){
-      CINT$names <- matrix(mxObject$CINT$labels, nrow = nrow(mxObject$CINT$labels), ncol = ncol(mxObject$CINT$labels))
-    }
+    CINT$values <- matrix(mxObject$CINT$values, nrow = nrow(mxObject$CINT$values), ncol = ncol(mxObject$CINT$values))
+    CINT$names <- matrix(mxObject$CINT$labels, nrow = nrow(mxObject$CINT$labels), ncol = ncol(mxObject$CINT$labels))
+
     ctMatrices[["CINT"]] <- CINT
   }
 
@@ -656,14 +627,8 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$MANIFESTMEANS)){
     if(!silent){cat("MANIFESTMEANS, ")}
     MANIFESTMEANS <- list("values" = NULL, "names" = NULL)
-    MANIFESTMEANS$values <- try(deepCopyNumericMatrix(mxObject$MANIFESTMEANS$values))
-    if(any(class(MANIFESTMEANS$values) == "try-error")){
-      MANIFESTMEANS$values <- matrix(mxObject$MANIFESTMEANS$values, nrow = nrow(mxObject$MANIFESTMEANS$values), ncol = ncol(mxObject$MANIFESTMEANS$values))
-    }
-    MANIFESTMEANS$names <- try(deepCopyStringMatrix(mxObject$MANIFESTMEANS$labels))
-    if(any(class(MANIFESTMEANS$names) == "try-error")){
-      MANIFESTMEANS$names <- matrix(mxObject$MANIFESTMEANS$labels, nrow = nrow(mxObject$MANIFESTMEANS$labels), ncol = ncol(mxObject$MANIFESTMEANS$labels))
-    }
+    MANIFESTMEANS$values <- matrix(mxObject$MANIFESTMEANS$values, nrow = nrow(mxObject$MANIFESTMEANS$values), ncol = ncol(mxObject$MANIFESTMEANS$values))
+    MANIFESTMEANS$names <- matrix(mxObject$MANIFESTMEANS$labels, nrow = nrow(mxObject$MANIFESTMEANS$labels), ncol = ncol(mxObject$MANIFESTMEANS$labels))
     ctMatrices[["MANIFESTMEANS"]] <- MANIFESTMEANS
   }
 
@@ -671,14 +636,8 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$LAMBDA)){
     if(!silent){cat("LAMBDA, ")}
     LAMBDA <- list("values" = NULL, "names" = NULL)
-    LAMBDA$values <- try(deepCopyNumericMatrix(mxObject$LAMBDA$values))
-    if(any(class(LAMBDA$values) == "try-error")){
-      LAMBDA$values <- matrix(mxObject$LAMBDA$values, nrow = nrow(mxObject$LAMBDA$values), ncol = ncol(mxObject$LAMBDA$values))
-    }
-    LAMBDA$names <- try(deepCopyStringMatrix(mxObject$LAMBDA$labels))
-    if(any(class(LAMBDA$names) == "try-error")){
-      LAMBDA$names <- matrix(mxObject$LAMBDA$labels, nrow = nrow(mxObject$LAMBDA$labels), ncol = ncol(mxObject$LAMBDA$labels))
-    }
+    LAMBDA$values <- matrix(mxObject$LAMBDA$values, nrow = nrow(mxObject$LAMBDA$values), ncol = ncol(mxObject$LAMBDA$values))
+    LAMBDA$names <- matrix(mxObject$LAMBDA$labels, nrow = nrow(mxObject$LAMBDA$labels), ncol = ncol(mxObject$LAMBDA$labels))
     ctMatrices[["LAMBDA"]] <- LAMBDA
   }
 
@@ -686,14 +645,8 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   if(!is.null(mxObject$MANIFESTVARbase$values)){
     if(!silent){cat("MANIFESTVARbase.")}
     MANIFESTVARbase <- list("values" = NULL, "names" = NULL)
-    MANIFESTVARbase$values <- try(deepCopyNumericMatrix(mxObject$MANIFESTVARbase$values))
-    if(any(class(MANIFESTVARbase$values) == "try-error")){
-      MANIFESTVARbase$values <- matrix(mxObject$MANIFESTVARbase$values, nrow = nrow(mxObject$MANIFESTVARbase$values), ncol = ncol(mxObject$MANIFESTVARbase$values))
-    }
-    MANIFESTVARbase$names <- try(deepCopyStringMatrix(mxObject$MANIFESTVARbase$labels))
-    if(any(class(MANIFESTVARbase$names) == "try-error")){
-      MANIFESTVARbase$names <- matrix(mxObject$MANIFESTVARbase$labels, nrow = nrow(mxObject$MANIFESTVARbase$labels), ncol = ncol(mxObject$MANIFESTVARbase$labels))
-    }
+    MANIFESTVARbase$values <- matrix(mxObject$MANIFESTVARbase$values, nrow = nrow(mxObject$MANIFESTVARbase$values), ncol = ncol(mxObject$MANIFESTVARbase$values))
+    MANIFESTVARbase$names <- matrix(mxObject$MANIFESTVARbase$labels, nrow = nrow(mxObject$MANIFESTVARbase$labels), ncol = ncol(mxObject$MANIFESTVARbase$labels))
     ctMatrices[["MANIFESTVARbase"]] <- MANIFESTVARbase
   }
 
@@ -1077,7 +1030,6 @@ prepareAMatrix <- function(mxObject, ctMatrices, nlatent, nmanifest, Tpoints, dT
 #' @param ctMatrices continuous time matrices
 #' @param nlatent number of latent variables
 #' @param nmanifest number of manifest variables
-#' @param dtIndicators indicators for discrete time parameters
 #' @param Tpoints number of time points
 #' @param dT time intervals
 #' @param stationaryT0VAR boolean: are variances stationary?
@@ -1267,7 +1219,6 @@ prepareFMatrix <- function(nlatent, nmanifest, Tpoints){
 #' @param ctMatrices continuous time matrices
 #' @param nlatent number of latent variables
 #' @param nmanifest number of manifest variables
-#' @param dtIndicators indicators for discrete time parameters
 #' @param Tpoints number of time points
 #' @param dT time intervals
 #' @param stationaryT0MEANS boolean: are Means stationary?
@@ -1392,7 +1343,6 @@ prepareMMatrix <- function(mxObject, ctMatrices, nlatent, nmanifest, Tpoints, dT
 #'
 #' @param nlatent number of latent variables
 #' @param nmanifest number of manifest variables
-#' @param dtIndicators indicators for discrete time parameters
 #' @param Tpoints number of time points
 #' @param sampleSize number of persons
 #' @export
@@ -1686,16 +1636,15 @@ exact_getCppGradients <- function(cppmodel, objective){
 #'
 #' computes gradients for an approximate optimization of regularized ctsem based on cpptsem
 #' @param parameters parameter values
+#' @param cpptsemmodel Model of type cpptsem
 #' @param adaptiveLassoWeights vector with weights of the adaptive lasso
 #' @param N sample size
 #' @param lambda tuning parameter lambda
 #' @param regIndicators string vector with names of regularized parameters
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param epsilon tuning parameter for epsL1 approximation
-#' @param maxit maximal number of iterations
 #' @param objective ML or Kalman
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
-#' @param testGradients should be tested if the final parameters result in NA gradients?
 #' @author Jannik Orzek
 #' @export
 approx_gradCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector, epsilon, objective, failureReturns){
@@ -1927,7 +1876,7 @@ testall_cpptsem <- function(){
   data(AnomAuth)
   AnomAuthmodel <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
                            Tpoints = 5, n.latent = 2, n.manifest = 2, MANIFESTVAR=diag(0, 2), TRAITVAR = "auto")
-  AnomAuthfit <- ctFit(AnomAuth, AnomAuthmodel, useOptimizer = F)
+  AnomAuthfit <- ctFit(AnomAuth, AnomAuthmodel, useOptimizer = FALSE)
   mxObject <- AnomAuthfit$mxobj
 
   # construct dataset and time intervals

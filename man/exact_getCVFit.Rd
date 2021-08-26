@@ -16,6 +16,8 @@ exact_getCVFit(
 \arguments{
 \item{objective}{Kalman or mx}
 
+\item{cvSampleCpptsemObject}{Fitted object of class cpptsem}
+
 \item{parameterLabels}{labels of optimized parameters}
 
 \item{parameterValuesTable}{table with parameter values+}
@@ -23,10 +25,6 @@ exact_getCVFit(
 \item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
 
 \item{cvSample}{cross-validation sample. Has to be of type mxData}
-
-\item{ctsemObject}{Fitted object of class ctsemFit}
-
-\item{mxObject}{Fitted object of class MxObject}
 }
 \description{
 computes cross-validation fit for exact optimization.

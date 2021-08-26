@@ -19,7 +19,13 @@ approx_getFitIndices(
 \arguments{
 \item{m2LL}{-2 log Likelihood}
 
+\item{regM2LL}{regularized -2 log Likelihood}
+
+\item{lambda}{tuning parameter lambda}
+
 \item{parameterValues}{current parameter values}
+
+\item{targetVector}{named vector with values towards which the parameters are regularized (Standard is regularization towards zero)}
 
 \item{sampleSize}{sample size}
 

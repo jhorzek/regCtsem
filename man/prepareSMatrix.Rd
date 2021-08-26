@@ -28,8 +28,6 @@ prepareSMatrix(
 \item{dT}{time intervals}
 
 \item{stationaryT0VAR}{boolean: are variances stationary?}
-
-\item{dtIndicators}{indicators for discrete time parameters}
 }
 \description{
 prepare matrix with covariances for RAM model

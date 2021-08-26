@@ -28,8 +28,6 @@ prepareMMatrix(
 \item{dT}{time intervals}
 
 \item{stationaryT0MEANS}{boolean: are Means stationary?}
-
-\item{dtIndicators}{indicators for discrete time parameters}
 }
 \description{
 prepare matrix with means for RAM model

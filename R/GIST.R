@@ -17,9 +17,10 @@
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas Vector with lambda values that should be tried
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
-#' @param stepSize Initial stepSize of the outer iteration
+#' @param sparseParameters labeled vector with parameter estimates of the most sparse model.
 #' @param eta if the current step size fails, eta will decrease the step size. Must be > 1
 #' @param sig Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 < sigma < 1
+#' @param initialStepsize intial step size tested at the beginning of each optimization iteration
 #' @param stepsizeMin Minimal acceptable step size. Must be > 0. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)
 #' @param stepsizeMax Maximal acceptable step size. Must be > stepsizeMin. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)
 #' @param GISTLinesearchCriterion criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.
@@ -33,7 +34,6 @@
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
 #' @param approxMaxIt Used if approxFirst. How many outer iterations should be given to each starting values vector?
-#' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)
 #' @export
 exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetVector, lambdas, adaptiveLassoWeights,
@@ -45,7 +45,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
                        break_outer = c("parameterChange" = 10^(-5)),
                        scaleLambdaWithN = TRUE, sampleSize, approxFirst = F,
                        numStart = 3, approxMaxIt = 5,
-                       extraTries = 3, verbose = 0){
+                       verbose = 0){
   # Setup
   # get parameter values
   initialParameters <- cpptsemObject$getParameterValues()
@@ -88,11 +88,10 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
     if(approxFirst > 0){
       startingValues <- tryApproxFirst(startingValues = startingValues, returnAs = "vector",
                                        approxFirst = approxFirst, numStart = numStart, approxMaxIt = approxMaxIt,
-                                       lambda = lambda, lambdas = lambdas,
+                                       lambda = lambda,
                                        cpptsemObject = cpptsemObject,
                                        regIndicators = regIndicators, targetVector = targetVector,
-                                       adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
-                                       extraTries = extraTries)
+                                       adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters)
     }
     # use Gist
     if(is.null(targetVector) || all(targetVector == 0)){
@@ -192,6 +191,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
 #' @param maxIter_in maximal number of inner iterations
 #' @param break_outer Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)
 #' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
+#' @param silent suppress all warning messages
 #' @export
 GIST <- function(cpptsemObject, startingValues, objective, lambda, adaptiveLassoWeights, regularizedParameters,
                  eta = 2, sig = 10^(-5), initialStepsize = 1, stepsizeMin = 1/(10^30), stepsizeMax = 10^30,
@@ -423,7 +423,7 @@ GIST <- function(cpptsemObject, startingValues, objective, lambda, adaptiveLasso
       rownames(gradientMatrix) <- parameterNames
       subgradients <- exact_getSubgradients(theta = parameterMatrix, jacobian = gradientMatrix,
                                             regIndicators = regularizedParameters, lambda = lambda,
-                                            lineSearch = NULL, adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
+                                            adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
 
       breakOuter <- max(abs(subgradients)) < break_outer
 
@@ -542,6 +542,7 @@ GIST <- function(cpptsemObject, startingValues, objective, lambda, adaptiveLasso
 #' @param maxIter_in maximal number of inner iterations
 #' @param break_outer Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)
 #' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
+#' @param silent suppress all warning messages
 #' @export
 GISTWithTarget <- function(cpptsemObject, startingValues, objective, lambda, adaptiveLassoWeights, regularizedParameters,
                            targetVector,
@@ -786,7 +787,7 @@ GISTWithTarget <- function(cpptsemObject, startingValues, objective, lambda, ada
       rownames(gradientMatrix) <- parameterNames
       subgradients <- exact_getSubgradients(theta = parameterMatrix, jacobian = gradientMatrix,
                                             regIndicators = regularizedParameters, lambda = lambda,
-                                            lineSearch = NULL, adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
+                                            adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
 
       breakOuter <- max(abs(subgradients)) < break_outer
 

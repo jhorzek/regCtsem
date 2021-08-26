@@ -13,7 +13,7 @@
 #' @param sampleSize sample size
 #' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
-#' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
+#' @param lambda penalty value (tuning parameter). E.g., .01
 #' @param penalty type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param returnFitIndices Boolean: should fit indices be returned?
@@ -111,30 +111,24 @@ approx_initializeModel <- function(  # model
 #'
 #' NOTE: Function located in file approx_optimization.R
 #'
-#' @param ctsemObject Fitted object of class ctsemFit
-#' @param mxObject Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject
+#' @param cpptsemObject Fitted object of type cpptsem
+#' @param dataset wide data set
 #' @param sampleSize sample size
-#' @param regOn string specifying which matrix should be regularized. Currently only supports DRIFT
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01)
 #' @param penalty type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
+#' @param targetVector named vector with values towards which the parameters are regularized (Standard is regularization towards zero)
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
 #' @param Tpoints Number of time points (used for BICWithNAndT)
-#' @param cvSample cross-validation sample. Has to be of type mxData
-#' @param autoCV Boolean: Should automatic cross-validation be used?
-#' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
+#' @param optimizer Any of the optimizers from optimx
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
-#' @param extraTries number of extra tries in mxTryHard
+#' @param maxIt maximal number of iterations given to the optimizer
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
-#' @param cores how many computer cores should be used?
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
-#' @param silent silent execution
-#' @param progressBar Boolean: Should a progress bar be displayed
-#' @param parallelProgressBar list: used internally to display progress when executing in parallel
 #'
 #' @author Jannik Orzek
 #' @import ctsemOMX
@@ -337,7 +331,10 @@ approx_getCVFit <- function(mxObject, ctsemObject, cvSample, objective, fitAndPa
 #' NOTE: Function located in file approx_optimization.R
 #'
 #' @param m2LL -2 log Likelihood
+#' @param regM2LL regularized -2 log Likelihood
+#' @param lambda tuning parameter lambda
 #' @param parameterValues current parameter values
+#' @param targetVector named vector with values towards which the parameters are regularized (Standard is regularization towards zero)
 #' @param regIndicators matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx

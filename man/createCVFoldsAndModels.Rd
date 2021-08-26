@@ -7,7 +7,7 @@
 createCVFoldsAndModels(dataset, k)
 }
 \arguments{
-\item{dataset}{data set in wide format compatible to ctsemOMX}
+\item{dataset}{Please provide a data set in wide format compatible to ctsemOMX}
 
 \item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
 }

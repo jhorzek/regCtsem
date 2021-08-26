@@ -14,6 +14,8 @@ exact_getPenaltyValue(
 \arguments{
 \item{lambda}{Penalty value}
 
+\item{theta}{parameter values}
+
 \item{regIndicators}{Names of regularized parameters}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}

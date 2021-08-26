@@ -41,17 +41,16 @@ exact_regCtsem(
   GISTNonMonotoneNBack = 5,
   break_outer = c(parameterChange = 10^(-5)),
   scaleLambdaWithN = TRUE,
-  approxFirst = F,
+  approxFirst = FALSE,
   numStart = 0,
   approxMaxIt = 5,
-  extraTries = 3,
   verbose = 0
 )
 }
 \arguments{
 \item{cpptsemObject}{Object of type cpptsem}
 
-\item{dataset}{data set in wide format}
+\item{dataset}{Please provide a data set in wide format compatible to ctsemOMX}
 
 \item{regIndicators}{Labels for the regularized parameters (e.g. drift_eta1_eta2)}
 
@@ -74,6 +73,8 @@ exact_regCtsem(
 \item{Tpoints}{Number of time points (used for BICWithNAndT)}
 
 \item{cvSampleCpptsemObject}{cppstem for cross-validation}
+
+\item{optimizer}{Either "GIST" or "GLMNET"}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
@@ -115,6 +116,8 @@ exact_regCtsem(
 
 \item{GISTNonMonotoneNBack}{in case of non-monotone line search: Number of preceding regM2LL values to consider}
 
+\item{break_outer}{criterion for breaking outer iterations of GIST. See ?controlGIST for more information}
+
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent}
 
 \item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization?}
@@ -124,8 +127,6 @@ exact_regCtsem(
 \item{approxMaxIt}{Used if approxFirst. How many outer iterations should be given to each starting values vector?}
 
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress}
-
-\item{differenceApprox}{GLMNET & GIST: Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
 }
 \description{
 creates a regCtsem object for exact optimization

@@ -25,8 +25,6 @@ exact_getFitIndicesWithTarget(
 \item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
 
 \item{sampleSize}{sample size}
-
-\item{mxObject}{Fitted object of class MxObject}
 }
 \description{
 computes fit indices for optimization = "exact"

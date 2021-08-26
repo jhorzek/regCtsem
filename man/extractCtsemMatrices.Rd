@@ -12,6 +12,8 @@ extractCtsemMatrices(mxObject, nlatent, nmanifest, silent = FALSE)
 \item{nlatent}{number of latent variables}
 
 \item{nmanifest}{number of manifest variables}
+
+\item{silent}{suppress messages}
 }
 \description{
 Extract DRIFT, DIFFUSION, etc from an mxObject

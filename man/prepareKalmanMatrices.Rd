@@ -14,8 +14,6 @@ prepareKalmanMatrices(nlatent, nmanifest, Tpoints, sampleSize)
 \item{Tpoints}{number of time points}
 
 \item{sampleSize}{number of persons}
-
-\item{dtIndicators}{indicators for discrete time parameters}
 }
 \description{
 prepare matrices for Kalman model

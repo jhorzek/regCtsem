@@ -15,11 +15,22 @@ cpptsemFromCtsem(
 }
 \arguments{
 \item{ctsemModel}{fittet ctsem object}
+
+\item{wideData}{Please provide a data set in wide format compatible to ctsemOMX}
+
+\item{removeD}{removes the D matrix in the mxObject; This should be set to TRUE}
+
+\item{group}{numeric vector indicating which group a person belongs to}
+
+\item{groupSpecificParameters}{string vector indicating which parameters should be group specific}
+
+\item{silent}{suppress messages}
 }
 \description{
 transforms fitted ctsem model to cpptsem model
 }
 \examples{
+\dontrun{
 library(regCtsem)
 
 addCINT <- FALSE
@@ -36,7 +47,7 @@ AnomAuthmodel1 <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
                           MANIFESTVAR=diag(0, 2),
                           TRAITVAR = NULL,
                           CINT = CINT)
-AnomAuthfit1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = F, stationary = stationary)
+AnomAuthfit1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = FALSE, stationary = stationary)
 AnomAuthfit1$mxobj$fitfunction$result[[1]]
 gradientModel1 <- OpenMx::mxRun(OpenMx::mxModel(AnomAuthfit1$mxobj,
                                                 OpenMx::mxComputeSequence(steps=list(
@@ -48,14 +59,14 @@ names(centralGrandients) <- rownames(gradientModel1$compute$steps[[1]]$output[["
 centralGrandients
 
 ## with cpptsem
-cpptsemmodel1 <- cpptsemFromCtsem(ctsemModel = AnomAuthfit1)
+cpptsemmodel1 <- cpptsemFromCtsem(ctsemModel = AnomAuthfit1, wideData = AnomAuth)
 cpptsemmodel1$computeRAM()
 cpptsemmodel1$fitRAM()
 cpptsemmodel1$m2LL
 cpptsemmodel1$approxRAMGradients((1.1 * 10^(-16))^(1/3))[names(centralGrandients)]
 
 # change parameter values
-AnomAuthfit1_1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = T, stationary = stationary)
+AnomAuthfit1_1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = TRUE, stationary = stationary)
 newParameters <- omxGetParameters(AnomAuthfit1_1$mxobj)
 cpptsemmodel1$setParameterValues(newParameters, names(newParameters))
 cpptsemmodel1$computeRAM()
@@ -68,7 +79,7 @@ AnomAuthmodel2 <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
                           MANIFESTVAR=diag(0, 2),
                           TRAITVAR = "auto",
                           CINT = CINT)
-AnomAuthfit2 <- ctFit(AnomAuth, AnomAuthmodel2, useOptimizer = F, stationary = stationary)
+AnomAuthfit2 <- ctFit(AnomAuth, AnomAuthmodel2, useOptimizer = FALSE, stationary = stationary)
 AnomAuthfit2$mxobj$fitfunction$result[[1]]
 gradientModel2 <- OpenMx::mxRun(OpenMx::mxModel(AnomAuthfit2$mxobj,
                                                 OpenMx::mxComputeSequence(steps=list(
@@ -79,7 +90,7 @@ centralGrandients <- gradientModel2$compute$steps[[1]]$output[["gradient"]][,"ce
 names(centralGrandients) <- rownames(gradientModel2$compute$steps[[1]]$output[["gradient"]])
 centralGrandients
 ## with cpptsem
-cpptsemmodel2 <- cpptsemFromCtsem(AnomAuthfit2)
+cpptsemmodel2 <- cpptsemFromCtsem(AnomAuthfit2, wideData = AnomAuth)
 cpptsemmodel2$computeRAM()
 cpptsemmodel2$fitRAM()
 cpptsemmodel2$m2LL
@@ -204,6 +215,7 @@ kalmanCpptsemFit <- Rsolnp::solnp(pars = startingValues,
                                   cpptsemmodel3)
 kalmanCpptsemFit$pars
 ct_drift1
+}
 
 
 }

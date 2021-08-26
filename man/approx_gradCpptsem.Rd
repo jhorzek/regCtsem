@@ -20,6 +20,8 @@ approx_gradCpptsem(
 \arguments{
 \item{parameters}{parameter values}
 
+\item{cpptsemmodel}{Model of type cpptsem}
+
 \item{adaptiveLassoWeights}{vector with weights of the adaptive lasso}
 
 \item{N}{sample size}
@@ -35,10 +37,6 @@ approx_gradCpptsem(
 \item{objective}{ML or Kalman}
 
 \item{failureReturns}{value which is returned if regM2LLCpptsem or gradCpptsem fails}
-
-\item{maxit}{maximal number of iterations}
-
-\item{testGradients}{should be tested if the final parameters result in NA gradients?}
 }
 \description{
 computes gradients for an approximate optimization of regularized ctsem based on cpptsem

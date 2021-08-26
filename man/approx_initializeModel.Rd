@@ -37,6 +37,8 @@ approx_initializeModel(
 
 \item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
 
+\item{lambda}{penalty value (tuning parameter). E.g., .01}
+
 \item{penalty}{type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
@@ -62,8 +64,6 @@ approx_initializeModel(
 \item{progressBar}{Boolean: Should a progress bar be displayed}
 
 \item{parallelProgressBar}{list: used internally to display progress when executing in parallel}
-
-\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
 }
 \description{
 sets up an approximate regularized ctsem

@@ -23,14 +23,14 @@ approx_regCtsem(
   epsilon = 0.001,
   zeroThresh = 0.001,
   maxIter = 200,
-  scaleLambdaWithN = T,
+  scaleLambdaWithN = TRUE,
   verbose = 0
 )
 }
 \arguments{
 \item{cpptsemObject}{Fitted object of class cpptsem}
 
-\item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
+\item{dataset}{Please provide a data set in wide format compatible to ctsemOMX}
 
 \item{regIndicators}{Labels for the regularized parameters (e.g. drift_eta1_eta2)}
 
@@ -54,11 +54,15 @@ approx_regCtsem(
 
 \item{cvSampleCpptsemObject}{cppstem for cross-validation}
 
+\item{optimizer}{any of the optimizers from optimx}
+
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
 \item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
+
+\item{maxIter}{maximal number of iterations given to the optimizer}
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 

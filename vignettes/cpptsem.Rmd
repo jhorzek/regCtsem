@@ -66,7 +66,7 @@ This will be explained in more detail below using the RAM model. Otherwise, more
 The function cpptsemFromCtsem translates a fitted ctsem object (e.g., AnomAuthfit in the example above) in a new object of class Rcpp_cpptsemmodel:
 
 ```{r}
-cpptsemmodel <- regCtsem::cpptsemFromCtsem(AnomAuthfit)
+cpptsemmodel <- regCtsem::cpptsemFromCtsem(AnomAuthfit, wideData = AnomAuth)
 ```
 
 ### Compute the RAM matrices
@@ -201,7 +201,7 @@ gradientModel <- OpenMx::mxModel(fit_myModel$mxobj,
                                  ))
 
 # set up the model for cpptsem
-cpptsemGradientDemonstation <- regCtsem::cpptsemFromCtsem(fit_myModel)
+cpptsemGradientDemonstation <- regCtsem::cpptsemFromCtsem(fit_myModel, wideData = dat)
 cpptsemGradientDemonstation$computeRAM()
 cpptsemGradientDemonstation$fitRAM()
 
@@ -239,7 +239,7 @@ AANotOptimized <- ctFit(AnomAuth, AAmodel, useOptimizer = F)
 AACtsemFit <- ctFit(AnomAuth, AAmodel, useOptimizer = T) 
 
 # translate to cpptsem:
-AACpptsem <- regCtsem::cpptsemFromCtsem(AANotOptimized)
+AACpptsem <- regCtsem::cpptsemFromCtsem(AANotOptimized, wideData = AnomAuth)
 
 startingValues <- omxGetParameters(AANotOptimized$mxobj)
 

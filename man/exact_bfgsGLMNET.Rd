@@ -47,6 +47,8 @@ exact_bfgsGLMNET(
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
+\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model.}
+
 \item{stepSize}{Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize * Stepdirection)}
 
 \item{lineSearch}{String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.}
@@ -92,26 +94,4 @@ Performs GLMNET (see Friedman, 2010 & Yuan, 2011) with bfgs approximated Hessian
 }
 \details{
 NOTE: Function located in file GLMNET.R
-}
-\examples{
-library(regCtsem)
-library(ctsemOMX)
-
-# The following example is taken directly from the examples provided in the ctFit documentation of ctsemOMX
-### Example from Voelkle, Oud, Davidov, and Schmidt (2012) - anomia and authoritarianism.
-data(AnomAuth)
-AnomAuthmodel <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
-                         Tpoints = 5, n.latent = 2, n.manifest = 2, MANIFESTVAR=diag(0, 2), TRAITVAR = NULL)
-AnomAuthfit <- ctFit(AnomAuth, AnomAuthmodel, fit = T)
-
-# with GLMNET
-## with standardization
-reg <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = rev(seq(0,1,.1)), standardizeDrift = TRUE)
-reg$regM2LL
-reg$thetas
-
-## without standardization
-reg2 <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = seq(0,1,.1), standardizeDrift = FALSE)
-reg2$regM2LL
-reg2$thetas
 }

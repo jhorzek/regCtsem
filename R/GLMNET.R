@@ -6,33 +6,13 @@
 #'
 #' NOTE: Function located in file GLMNET.R
 #'
-#' @examples
-#' library(regCtsem)
-#' library(ctsemOMX)
-#'
-#' # The following example is taken directly from the examples provided in the ctFit documentation of ctsemOMX
-#' ### Example from Voelkle, Oud, Davidov, and Schmidt (2012) - anomia and authoritarianism.
-#' data(AnomAuth)
-#' AnomAuthmodel <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
-#'                          Tpoints = 5, n.latent = 2, n.manifest = 2, MANIFESTVAR=diag(0, 2), TRAITVAR = NULL)
-#' AnomAuthfit <- ctFit(AnomAuth, AnomAuthmodel, fit = T)
-#'
-#' # with GLMNET
-#' ## with standardization
-#' reg <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = rev(seq(0,1,.1)), standardizeDrift = TRUE)
-#' reg$regM2LL
-#' reg$thetas
-#'
-#' ## without standardization
-#' reg2 <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = seq(0,1,.1), standardizeDrift = FALSE)
-#' reg2$regM2LL
-#' reg2$thetas
 #' @param cpptsemObject Fitted object of class cpptsem
 #' @param dataset only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param regIndicators Vector with names of regularized parameters
 #' @param lambdas Vector with lambda values that should be tried
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
+#' @param sparseParameters labeled vector with parameter estimates of the most sparse model.
 #' @param stepSize Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize * Stepdirection)
 #' @param lineSearch String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.
 #' @param c1 c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"
@@ -135,11 +115,10 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
     if(approxFirst > 0){
       theta_kp1 <- tryApproxFirst(startingValues = startingValues, returnAs = "matrix",
                                   approxFirst = approxFirst, numStart = numStart, approxMaxIt = approxMaxIt,
-                                  lambda = lambda, lambdas = lambdas,
+                                  lambda = lambda,
                                   cpptsemObject = cpptsemObject,
                                   regIndicators = regIndicators, targetVector = targetVector,
-                                  adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters,
-                                  extraTries = extraTries)
+                                  adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters)
     }
 
     # outer loop: optimize parameters
@@ -555,7 +534,7 @@ exact_armijoLineSearch <- function(gradientModel, adaptiveLassoWeights, thetaNam
   h_0 <- m2LL_kp1 + lambda*sum(abs((theta_kp1)[regIndicators,]))
 
   # get (sub-)gradients for step size 0:
-  g_0 <- regCtsem::exact_getSubgradients(theta = theta_kp1, jacobian = g_kp1, regIndicators = regIndicators, lambda = lambda, lineSearch = "armijo")
+  g_0 <- regCtsem::exact_getSubgradients(theta = theta_kp1, jacobian = g_kp1, regIndicators = regIndicators, lambda = lambda)
 
   # Inexact Line Search
   i <- 0
@@ -579,7 +558,7 @@ exact_armijoLineSearch <- function(gradientModel, adaptiveLassoWeights, thetaNam
     # compute h(stepSize) = L(x+td) + p(x+td) - L(x) - p(x), where p(x) is the penalty function
     h_t <- m2LL_kp1_td + lambda*sum(abs((theta_kp1_td)[regIndicators,]))
     # compute h'(stepSize)
-    g_t <- regCtsem::exact_getSubgradients(theta = theta_kp1_td, jacobian = g_kp1_td, regIndicators = regIndicators, lambda = lambda, lineSearch = "armijo")
+    g_t <- regCtsem::exact_getSubgradients(theta = theta_kp1_td, jacobian = g_kp1_td, regIndicators = regIndicators, lambda = lambda)
 
     # Check Armijo
     if(h_t-h_0 <= c1*stepSize*(t(g_kp1)%*%d+lambda*sum(abs((theta_kp1_td)[regIndicators,]))-lambda*sum(abs((theta_kp1)[regIndicators,])))){
@@ -606,6 +585,7 @@ exact_armijoLineSearch <- function(gradientModel, adaptiveLassoWeights, thetaNam
 #' @param theta_kp1 parameter values of iteration k plus 1
 #' @param m2LL_kp1 -2 log likelihood of iteration k plus 1
 #' @param g_kp1 gradients of iteration k plus 1
+#' @param H_k Hessian approximation
 #' @param d vector with updates to parameter estimates
 #' @param eps_numericDerivative controls the precision of the central gradient approximation. The default (1.1 * 10^(-16))^(1/3) is derived in Nocedal, J., & Wright, S. J. (2006). Numerical optimization (2nd ed), p. 197
 #' @param stepSize Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)
@@ -696,6 +676,7 @@ exact_GLMNETLineSearch <- function(cpptsemObject, objective,
 #' NOTE: Function located in file GLMNET.R
 #'
 #' @param cpptsemObject Object of type cpptsem
+#' @param objective Kalman or ML
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param thetaNames names of the parameter estimates
 #' @param regIndicators vector with names of parameters to regularize
@@ -710,7 +691,7 @@ exact_GLMNETLineSearch <- function(cpptsemObject, objective,
 #' @param eps_numericDerivative controls the precision of the central gradient approximation. The default (1.1 * 10^(-16))^(1/3) is derived in Nocedal, J., & Wright, S. J. (2006). Numerical optimization (2nd ed), p. 197
 #' @param maxIter_line maximal number of iterations for line search
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
-#' @param epsWW additional parameter to shorten the search if the upper and lower bound are already very close to each other
+#' @param eps_WW additional parameter to shorten the search if the upper and lower bound are already very close to each other
 #' @export
 exact_weakWolfeLineSearch <- function(cpptsemObject, objective, adaptiveLassoWeights, thetaNames, regIndicators, lambda,
                                       theta_kp1, m2LL_kp1, g_kp1, d, c1 = 0.0001, c2 = .9,
@@ -741,7 +722,6 @@ exact_weakWolfeLineSearch <- function(cpptsemObject, objective, adaptiveLassoWei
                                          jacobian = g_kp1,
                                          regIndicators = regIndicators,
                                          lambda = lambda,
-                                         lineSearch = "wolfe",
                                          adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
 
   # Inexact Line Search
@@ -826,7 +806,6 @@ exact_weakWolfeLineSearch <- function(cpptsemObject, objective, adaptiveLassoWei
                                            jacobian = g_kp1_td,
                                            regIndicators = regIndicators,
                                            lambda = lambda,
-                                           lineSearch = "wolfe",
                                            adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
 
     # Check Armijo and Curvature Condition
@@ -866,7 +845,7 @@ exact_weakWolfeLineSearch <- function(cpptsemObject, objective, adaptiveLassoWei
 #' @param H_k Hessian of the likelihood function at iteration k
 #' @param theta_kp1 Theta at iteration k+1
 #' @param g_kp1 Gradients of the likelihood function at iteration k+1
-#' @param cautios boolen: should the update be skipped if it would result in a non positive definite Hessian?
+#' @param cautious boolean: should the update be skipped if it would result in a non positive definite Hessian?
 #' @param hessianEps controls when the update of the Hessian approximation is skipped
 #' @export
 exact_getBFGS <- function(theta_k, g_k, H_k, theta_kp1, g_kp1, cautious = TRUE, hessianEps = .001){

@@ -188,17 +188,18 @@ checkNonConvexity <- function(model, lowerBound = NULL, upperBound = NULL, nSamp
 #'
 #' provides a 3D plot of the likelihood surface for two selected variables
 #'
-#' The function generates nSample points within the provided parameter bounds. For each combination of sample point
+#' The function generates nSamples points within the provided parameter bounds. For each combination of sample point
 #' @param model model of type ctsemFit, Rcpp_cpptsemRAMmodel, Rcpp_cpptsemKalmanModel, or MxRAMModel
 #' @param parnames vector of length 2 with the names of the parameters for which the likelihood surface should be plotted
 #' @param lowerBound1 double: lower bound for the first parameter
 #' @param lowerBound2 double: lower bound for the second parameter
 #' @param upperBound1 double: upper bound for the first parameter
 #' @param upperBound2 double: upper bound for the second parameter
-#' @param nSample number of sample points between the lower and upper bound
+#' @param nSamples number of sample points between the lower and upper bound
 #' @return returns the a list with arguments to pass to plot3D::persp (e.g. do.call(args, plot3D::persp))
 #' @return
 checkNonConvexity3D <- function(model, parnames, lowerBound1, upperBound1, lowerBound2, upperBound2, nSamples){
+  warning("Very experimental function. Don't use...")
   if(any(class(model) == "ctsemFit")){
     model <- model$mxobj
     pars <- omxGetParameters(model)

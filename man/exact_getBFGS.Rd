@@ -25,9 +25,9 @@ exact_getBFGS(
 
 \item{g_kp1}{Gradients of the likelihood function at iteration k+1}
 
-\item{hessianEps}{controls when the update of the Hessian approximation is skipped}
+\item{cautious}{boolean: should the update be skipped if it would result in a non positive definite Hessian?}
 
-\item{cautios}{boolen: should the update be skipped if it would result in a non positive definite Hessian?}
+\item{hessianEps}{controls when the update of the Hessian approximation is skipped}
 }
 \description{
 computes the BFGS Hessian approximation

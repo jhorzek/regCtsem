@@ -11,17 +11,43 @@ tryApproxFirst(
   numStart,
   approxMaxIt,
   lambda,
-  lambdas,
   cpptsemObject,
   regIndicators,
   targetVector = NULL,
   adaptiveLassoWeights,
   objective,
-  sparseParameters,
-  extraTries
+  sparseParameters
 )
 }
+\arguments{
+\item{startingValues}{start values for optimization}
+
+\item{returnAs}{"vector" or "matrix"}
+
+\item{approxFirst}{boolean: should the solution be approximated}
+
+\item{numStart}{number of starting values}
+
+\item{approxMaxIt}{maximal number of iterations for the approximation}
+
+\item{lambda}{tuning parameter value}
+
+\item{cpptsemObject}{object of type cpptsem}
+
+\item{regIndicators}{Labels for the regularized parameters (e.g. drift_eta1_eta2)}
+
+\item{targetVector}{named vector with values towards which the parameters are regularized}
+
+\item{adaptiveLassoWeights}{weights for the adaptive lasso.}
+
+\item{objective}{which objective is used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
+
+\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model.}
+}
 \description{
+Approximates the solution to the lasso regularized fitting function using an established optimizer
+}
+\details{
 NOTE: Function located in file exact_optimization.R
 }
 \author{

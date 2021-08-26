@@ -28,7 +28,6 @@ exact_GIST(
   approxFirst = F,
   numStart = 3,
   approxMaxIt = 5,
-  extraTries = 3,
   verbose = 0
 )
 }
@@ -47,9 +46,13 @@ exact_GIST(
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
+\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model.}
+
 \item{eta}{if the current step size fails, eta will decrease the step size. Must be > 1}
 
 \item{sig}{Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 < sigma < 1}
+
+\item{initialStepsize}{intial step size tested at the beginning of each optimization iteration}
 
 \item{stepsizeMin}{Minimal acceptable step size. Must be > 0. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)}
 
@@ -75,11 +78,7 @@ exact_GIST(
 
 \item{approxMaxIt}{Used if approxFirst. How many outer iterations should be given to each starting values vector?}
 
-\item{extraTries}{number of extra tries in mxTryHard for warm start}
-
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)}
-
-\item{stepSize}{Initial stepSize of the outer iteration}
 }
 \description{
 General Iterative Shrinkage and Thresholding Algorithm based on Gong, P., Zhang, C., Lu, Z., Huang, J., & Ye, J. (2013). A General Iterative Shrinkage and Thresholding Algorithm for Non-convex Regularized Optimization Problems. In S. Dasgupta & D. McAllester (Eds.), Proceedings of Machine Learning Research (PMLR; Vol. 28, Issue 2, pp. 37--45). PMLR. http://proceedings.mlr.press

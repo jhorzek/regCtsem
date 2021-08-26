@@ -22,6 +22,7 @@ Example:
 
 ```{r}
 library(Rcpp)
+library(RcppArmadillo)
 library(OpenMx)
 set.seed(53455)
 cppFunction('arma::mat expMat(arma::mat matrix){

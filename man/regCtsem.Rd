@@ -237,7 +237,7 @@ set.seed(175446)
 ## define the population model:
 
 # set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
-ct_drift <- matrix(c(-.3,0,.2,-.2),2,2,T)
+ct_drift <- matrix(c(-.3,0,.2,-.2),2,2,TRUE)
 dataset <- c()
 indpars <- c()
 # We will simulate data for 10 individuals with person-specific parameters
@@ -245,11 +245,11 @@ indpars <- c()
 # common group parameter
 for(i in 1:10){
   while(TRUE){
-    DRIFT <- ct_drift + matrix(c(0,rnorm(1,0,.5),0,0),2,2,T)
+    DRIFT <- ct_drift + matrix(c(0,rnorm(1,0,.5),0,0),2,2,TRUE)
     if(!any(Re(eigen(DRIFT)$values) > 0)){break}
   }
   indpars <- c(indpars, DRIFT[1,2])
-  generatingModel<-ctsem::ctModel(Tpoints=500,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+  generatingModel<-ctsem::ctModel(Tpoints=50,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
                                   MANIFESTVAR=diag(0,2),
                                   LAMBDA=diag(1,2),
                                   DRIFT=DRIFT,
@@ -262,14 +262,14 @@ for(i in 1:10){
 }
 
 ## Build the analysis model.
-myModel <- ctsem::ctModel(Tpoints=500,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+myModel <- ctsem::ctModel(Tpoints=50,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
                           LAMBDA=diag(1,2),
                           MANIFESTVAR=diag(0,2),
                           DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
                           T0MEANS=matrix(0,ncol=1,nrow=2),
                           T0VAR="auto", type = "omx")
 myModel <- ctFit(myModel, dat = dataset, objective = "Kalman",
-                 useOptimizer = T)
+                 useOptimizer = TRUE)
 regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
 # the following parameters will be estimated person-specific and (as we specified this above)
 # regularized. The regularization will be towards a group parameter
@@ -280,10 +280,12 @@ regModel <- regCtsem(ctsemObject = myModel,
                    lambdasAutoLength = 5, # 5 will not be enough, but this takes some time to execute
                    subjectSpecificParameters = subjectSpecificParameters
                    )
+regModel$parameters$group1
 # The person-specific parameters will be labeled with _G1, _G2, ...
-finalParameters <- getFinalParameters(regCtsemObject = regModel, criterion = "BIC")
-finalParameters$parameters[paste0(rep(subjectSpecificParameters, each = 10), paste0("_G", 1:10))]
-}
+# NOT YET WORKING:
+#finalParameters <- getFinalParameters(regCtsemObject = regModel, criterion = "BIC")
+#finalParameters$parameters[paste0(rep(subjectSpecificParameters, each = 10), paste0("_G", 1:10))]
+#}
 
 }
 \author{

@@ -180,7 +180,7 @@
 #' ## define the population model:
 #'
 #' # set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
-#' ct_drift <- matrix(c(-.3,0,.2,-.2),2,2,T)
+#' ct_drift <- matrix(c(-.3,0,.2,-.2),2,2,TRUE)
 #' dataset <- c()
 #' indpars <- c()
 #' # We will simulate data for 10 individuals with person-specific parameters
@@ -188,11 +188,11 @@
 #' # common group parameter
 #' for(i in 1:10){
 #'   while(TRUE){
-#'     DRIFT <- ct_drift + matrix(c(0,rnorm(1,0,.5),0,0),2,2,T)
+#'     DRIFT <- ct_drift + matrix(c(0,rnorm(1,0,.5),0,0),2,2,TRUE)
 #'     if(!any(Re(eigen(DRIFT)$values) > 0)){break}
 #'   }
 #'   indpars <- c(indpars, DRIFT[1,2])
-#'   generatingModel<-ctsem::ctModel(Tpoints=500,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+#'   generatingModel<-ctsem::ctModel(Tpoints=50,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
 #'                                   MANIFESTVAR=diag(0,2),
 #'                                   LAMBDA=diag(1,2),
 #'                                   DRIFT=DRIFT,
@@ -205,14 +205,14 @@
 #' }
 #'
 #' ## Build the analysis model.
-#' myModel <- ctsem::ctModel(Tpoints=500,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+#' myModel <- ctsem::ctModel(Tpoints=50,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
 #'                           LAMBDA=diag(1,2),
 #'                           MANIFESTVAR=diag(0,2),
 #'                           DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
 #'                           T0MEANS=matrix(0,ncol=1,nrow=2),
 #'                           T0VAR="auto", type = "omx")
 #' myModel <- ctFit(myModel, dat = dataset, objective = "Kalman",
-#'                  useOptimizer = T)
+#'                  useOptimizer = TRUE)
 #' regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
 #' # the following parameters will be estimated person-specific and (as we specified this above)
 #' # regularized. The regularization will be towards a group parameter
@@ -223,10 +223,12 @@
 #'                    lambdasAutoLength = 5, # 5 will not be enough, but this takes some time to execute
 #'                    subjectSpecificParameters = subjectSpecificParameters
 #'                    )
+#' regModel$parameters$group1
 #' # The person-specific parameters will be labeled with _G1, _G2, ...
-#' finalParameters <- getFinalParameters(regCtsemObject = regModel, criterion = "BIC")
-#' finalParameters$parameters[paste0(rep(subjectSpecificParameters, each = 10), paste0("_G", 1:10))]
-#' }
+#' # NOT YET WORKING:
+#' #finalParameters <- getFinalParameters(regCtsemObject = regModel, criterion = "BIC")
+#' #finalParameters$parameters[paste0(rep(subjectSpecificParameters, each = 10), paste0("_G", 1:10))]
+#' #}
 #'
 #' @author Jannik Orzek
 #' @import ctsemOMX rlist optimx
@@ -492,7 +494,6 @@ regCtsem <- function(
                                                approxFirst = argsIn$approxFirst,
                                                numStart = argsIn$numStart,
                                                approxMaxIt = argsIn$approxMaxIt,
-                                               extraTries = argsIn$extraTries,
                                                verbose = argsIn$verbose)
 
     fitAndParametersSeparated <- try(separateFitAndParameters(regCtsemObject))
@@ -501,7 +502,7 @@ regCtsem <- function(
       regCtsemObject$parameterEstimatesRaw <- fitAndParametersSeparated$parameterEstimates
       regCtsemObject$parameters <- try(getParameterEstimates(regCtsemObject = regCtsemObject,
                                                              parameterEstimatesRaw = fitAndParametersSeparated$parameterEstimates),
-                                       silent = T)
+                                       silent = TRUE)
       if(any(class(regCtsemObject$parameters) == "try-error")){
         warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. This is a bug and will be resolved later on.")
       }
@@ -601,7 +602,6 @@ regCtsem <- function(
                                                  approxFirst = argsIn$approxFirst,
                                                  numStart = argsIn$numStart,
                                                  approxMaxIt = argsIn$approxMaxIt,
-                                                 extraTries = argsIn$extraTries,
                                                  verbose = argsIn$verbose)
 
       fitAndParametersSeparated <- try(separateFitAndParameters(regCtsemObject))
@@ -611,7 +611,7 @@ regCtsem <- function(
         regCtsemObject$parameterEstimatesRaw <- fitAndParametersSeparated$parameterEstimates
         regCtsemObject$parameters <- try(getParameterEstimates(regCtsemObject = regCtsemObject,
                                                                parameterEstimatesRaw = fitAndParametersSeparated$parameterEstimates),
-                                         silent = T)
+                                         silent = TRUE)
         if(any(class(regCtsemObject$parameters) == "try-error")){
           warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. This is a bug and will be resolved later on.")
         }
@@ -661,7 +661,7 @@ regCtsem <- function(
       regCtsemObject$parameterEstimatesRaw <- fitAndParametersSeparated$parameterEstimates
       regCtsemObject$parameters <- try(getParameterEstimates(regCtsemObject = regCtsemObject,
                                                              parameterEstimatesRaw = fitAndParametersSeparated$parameterEstimates),
-                                       silent = T)
+                                       silent = TRUE)
       if(any(class(regCtsemObject$parameters) == "try-error")){
         warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. This is a bug and will be resolved later on.")
       }
@@ -771,7 +771,7 @@ regCtsem <- function(
 #' NOTE: Function located in file regCtsem.R
 #'
 #' @param cpptsemObject Object of type cpptsem
-#' @param dataset data set in wide format
+#' @param dataset Please provide a data set in wide format compatible to ctsemOMX
 #' @param regIndicators Labels for the regularized parameters (e.g. drift_eta1_eta2)
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values
@@ -783,6 +783,7 @@ regCtsem <- function(
 #' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
 #' @param Tpoints Number of time points (used for BICWithNAndT)
 #' @param cvSampleCpptsemObject cppstem for cross-validation
+#' @param optimizer Either "GIST" or "GLMNET"
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param sparseParameters labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.
 #' @param stepSize GLMNET & GIST: initial step size of the outer iteration
@@ -791,7 +792,6 @@ regCtsem <- function(
 #' @param c2 GLMNET: c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
 #' @param sig GLMNET & GIST: GLMNET: only relevant when lineSearch = 'GLMNET' | GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
 #' @param gam GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
-#' @param differenceApprox GLMNET & GIST: Which approximation should be used for calculating the gradients in the gradientModel. central is recommended
 #' @param initialHessianApproximation GLMNET: Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian
 #' @param maxIter_out GLMNET & GIST: Maximal number of outer iterations
 #' @param maxIter_in GLMNET & GIST: Maximal number of inner iterations
@@ -804,6 +804,7 @@ regCtsem <- function(
 #' @param stepsizeMax GIST: Maximal acceptable step size. Must be > stepsizeMin. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)
 #' @param GISTLinesearchCriterion criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
+#' @param break_outer criterion for breaking outer iterations of GIST. See ?controlGIST for more information
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
@@ -856,10 +857,9 @@ exact_regCtsem <- function(  # model
   break_outer = c("parameterChange" = 10^(-5)),
   # general
   scaleLambdaWithN = TRUE,
-  approxFirst = F,
+  approxFirst = FALSE,
   numStart = 0,
   approxMaxIt = 5,
-  extraTries = 3,
   # additional settings
   verbose = 0){
 
@@ -945,7 +945,6 @@ exact_regCtsem <- function(  # model
                                          scaleLambdaWithN = scaleLambdaWithN, sampleSize = sampleSize,
                                          approxFirst = approxFirst,
                                          numStart = numStart, approxMaxIt = approxMaxIt,
-                                         extraTries = extraTries,
                                          verbose = verbose
     )
     )
@@ -996,7 +995,7 @@ exact_regCtsem <- function(  # model
 #' NOTE: Function located in file regCtsem.R
 #'
 #' @param cpptsemObject Fitted object of class cpptsem
-#' @param dataset only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX
+#' @param dataset Please provide a data set in wide format compatible to ctsemOMX
 #' @param regIndicators Labels for the regularized parameters (e.g. drift_eta1_eta2)
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values
@@ -1008,9 +1007,11 @@ exact_regCtsem <- function(  # model
 #' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
 #' @param Tpoints Number of time points (used for BICWithNAndT)
 #' @param cvSampleCpptsemObject cppstem for cross-validation
+#' @param optimizer any of the optimizers from optimx
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
+#' @param maxIter maximal number of iterations given to the optimizer
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #'
@@ -1040,7 +1041,7 @@ approx_regCtsem <- function(  # model
   zeroThresh = .001,
   maxIter = 200,
   # additional settings
-  scaleLambdaWithN = T,
+  scaleLambdaWithN = TRUE,
   verbose = 0){
 
   approxArgsIn <- as.list(environment())
@@ -1113,7 +1114,7 @@ approx_regCtsem <- function(  # model
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
-#' @param dataset data set in wide format compatible to ctsemOMX
+#' @param dataset Please provide a data set in wide format compatible to ctsemOMX
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
 #' @author Jannik Orzek
 #' @export
@@ -1285,7 +1286,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
 
       if(anyNA(driftLabels)){
         autoDriftLabels <- matrix(paste0("_autoDriftLabel_", rep(seq_len(nrow(driftLabels)), each = ncol(driftLabels)), "_", seq_len(ncol(driftLabels))),
-                                  nrow = nrow(driftLabels), ncol = ncol(driftLabels), byrow = T)
+                                  nrow = nrow(driftLabels), ncol = ncol(driftLabels), byrow = TRUE)
         driftLabels[is.na(driftLabels)] <- autoDriftLabels[is.na(driftLabels)]
       }
 
@@ -1663,15 +1664,15 @@ getVariances <- function(parameterEstimatesRaw, matName, baseMatName, parameterT
   baseMat <- diag(-999, nrow = nVariables, ncol = nVariables)
   VARLabels <- matrix(paste0(matName,"_", variableNames,seq_len(nVariables),
                              rep(paste0("_", variableNames,seq_len(nVariables)), each = nVariables)
-  ), nrow = nVariables, ncol = nVariables, byrow = F)
-  varPars <- matrix(NA, nrow = sum(lower.tri(VARLabels, diag = T)), ncol = ncol(parameterEstimatesRaw))
-  rownames(varPars) <- VARLabels[lower.tri(VARLabels, diag = T)]
+  ), nrow = nVariables, ncol = nVariables, byrow = FALSE)
+  varPars <- matrix(NA, nrow = sum(lower.tri(VARLabels, diag = TRUE)), ncol = ncol(parameterEstimatesRaw))
+  rownames(varPars) <- VARLabels[lower.tri(VARLabels, diag = TRUE)]
   for(lambda in 1:ncol(parameterEstimatesRaw)){
     for(parLab in parameterTable$label[parameterTable$matrix == baseMatName]){
       baseMat[parameterTable$row[parameterTable$label == parLab]+1, parameterTable$col[parameterTable$label == parLab]+1] <- parameterEstimatesRaw[parLab,1]
     }
     VAR <- getVarianceFromVarianceBase2(baseMat)
-    varPars[,lambda] <- VAR[lower.tri(VARLabels, diag = T)]
+    varPars[,lambda] <- VAR[lower.tri(VARLabels, diag = TRUE)]
   }
   return(varPars)
 }
@@ -1744,7 +1745,7 @@ generateDRIFTPlot <- function(model, ylab = "auto", xlab = "auto", skiptYlabComp
   tickat <- seq(1, length(lambdas[!colsWithNA]), length.out = 10)
   axis(3, at = lambdas[tickat],
        labels=apply(drifts == 0,2,sum)[tickat],
-       outer= F,
+       outer = FALSE,
        line=1,col="black",col.ticks="black",col.axis="black")
   mtext("# zeroed parameters",3,line=3,at=mean(lambdas),col="black", cex = 1)
 
