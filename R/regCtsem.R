@@ -87,7 +87,8 @@
 #' # getFinalParameters(regCtsemObject = regModel, criterion = "BIC")
 #' # bestModel <- getFinalModel(regCtsemObject = regModel, criterion = "BIC")
 #' # WARNING: The returned model is of type cpptsem. You can access it's elements with the
-#' # $ operator. For example: bestModel$DRIFTValues
+#' # $ operator. For example: bestModel$DRIFTValues. See vignette(topic = "cpptsem", package = "regCtsem")
+#' # for more details on the cpptsem backend of the regCtsem package.
 #'
 #' # Optimize model using GLMNET with lasso penalty
 #' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
@@ -371,7 +372,7 @@ regCtsem <- function(
       m2LLcpp <- cpptsemObject$m2LL
       testM2LL <- round(ctsemObject$mxobj$fitfunction$result[[1]] - m2LLcpp,3) == 0
       if (!testM2LL & !argsIn$forceCpptsem){
-        stop(paste0("Differences in fit between ctsem and cpptsem object: ", ctsemObject$mxobj$fitfunction$result[[1]], " vs ", m2LLcpp, ". Did you pass the same data to the ctsemObject and as dataset? Try using control = list('forceCpptsem' = TRUE)"))
+        stop(paste0("Differences in fit between ctsem and cpptsem object: ", ctsemObject$mxobj$fitfunction$result[[1]], " vs ", m2LLcpp, ". Did you pass the same data to the ctsemObject and as dataset? This can also be a result of different implementations of the matrix exponential in the Eigen mathematical library used by OpenMx and the Armadillo library used by regCtsem. See vignette(topic = 'MatrixExponential', package = 'regCtsem') for more details. Use control = list('forceCpptsem' = TRUE) to ignore this warning."))
       }
     }
   }else if (tolower(argsIn$objective)  == "kalman"){
@@ -399,7 +400,7 @@ regCtsem <- function(
       m2LLcpp <- cpptsemObject$m2LL
       testM2LL <- round(ctsemObject$mxobj$fitfunction$result[[1]] - m2LLcpp,3) == 0
       if (!testM2LL & !argsIn$forceCpptsem){
-        stop(paste0("Differences in fit between ctsem and cpptsem object: ", ctsemObject$mxobj$fitfunction$result[[1]], " vs ", m2LLcpp, ". Did you pass the same data to the ctsemObject and as dataset? Try using control = list('forceCpptsem' = TRUE)"))
+        stop(paste0("Differences in fit between ctsem and cpptsem object: ", ctsemObject$mxobj$fitfunction$result[[1]], " vs ", m2LLcpp, ". Did you pass the same data to the ctsemObject and as dataset? This can also be a result of different implementations of the matrix exponential in the Eigen mathematical library used by OpenMx and the Armadillo library used by regCtsem. See vignette(topic = 'MatrixExponential', package = 'regCtsem') for more details. Use control = list('forceCpptsem' = TRUE) to ignore this warning."))
       }
     }
   }else{
@@ -504,7 +505,7 @@ regCtsem <- function(
                                                              parameterEstimatesRaw = fitAndParametersSeparated$parameterEstimates),
                                        silent = TRUE)
       if(any(class(regCtsemObject$parameters) == "try-error")){
-        warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. This is a bug and will be resolved later on.")
+        warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. You will only find the raw paramter values in the output.")
       }
     }
 
@@ -535,7 +536,7 @@ regCtsem <- function(
       if(!any(class(fitTrain) == "try-error")){
         cvFoldsAndModels$trainModels[[i]]$setParameterValues(fitTrain$par, names(fitTrain$par))
       }else{
-        stop("Error while optimizing training models.")
+        stop("Error while optimizing training models. This is often a sign that the sample size of the cross-validation training sets is to small. Consider using a higher k or rerun the analysis with a differnt seed to get a new split of the samples.")
       }
       cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
 
@@ -560,6 +561,7 @@ regCtsem <- function(
     cvFit <- matrix(NA, nrow = argsIn$k+1, length(argsIn$lambdas))
     rownames(cvFit) <- c(paste0("CV", 1:argsIn$k), "mean")
     subModels <- vector("list", argsIn$k)
+    names(subModels) <- paste0("CVModel", 1:argsIn$k)
 
     for(i in 1:argsIn$k){
       message(paste0("\n Fitting CV Model ", i, " of ", argsIn$k, "."))
@@ -613,7 +615,7 @@ regCtsem <- function(
                                                                parameterEstimatesRaw = fitAndParametersSeparated$parameterEstimates),
                                          silent = TRUE)
         if(any(class(regCtsemObject$parameters) == "try-error")){
-          warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. This is a bug and will be resolved later on.")
+          warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. You will only find the raw paramter values in the output.")
         }
       }
       subModels[[i]] <- regCtsemObject
@@ -663,7 +665,7 @@ regCtsem <- function(
                                                              parameterEstimatesRaw = fitAndParametersSeparated$parameterEstimates),
                                        silent = TRUE)
       if(any(class(regCtsemObject$parameters) == "try-error")){
-        warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. This is a bug and will be resolved later on.")
+        warning("Could not compute the variances and covariances from the DIFFUSIONbase and T0VARbase. You will only find the raw paramter values in the output.")
       }
     }
     regCtsemObject$setup <- append(regCtsemObject$setup, argsIn[!(names(argsIn) %in% names(regCtsemObject$setup))])
@@ -693,7 +695,7 @@ regCtsem <- function(
       if(!any(class(fitTrain) == "try-error")){
         cvFoldsAndModels$trainModels[[i]]$setParameterValues(fitTrain$par, names(fitTrain$par))
       }else{
-        stop("Error while optimizing training models.")
+        stop("Error while optimizing training models. This is often a sign that the sample size of the cross-validation training sets is to small. Consider using a higher k or rerun the analysis with a differnt seed to get a new split of the samples.")
       }
       cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
 
@@ -718,6 +720,7 @@ regCtsem <- function(
     cvFit <- matrix(NA, nrow = argsIn$k+1, length(argsIn$lambdas))
     rownames(cvFit) <- c(paste0("CV", 1:argsIn$k), "mean")
     subModels <- vector("list", argsIn$k)
+    names(subModels) <- paste0("CVModel", 1:argsIn$k)
 
     for(i in 1:argsIn$k){
       message(paste0("\n Fitting CV Model ", i, " of ", argsIn$k, "."))
@@ -1347,7 +1350,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
 #' @import OpenMx
 #' @export
 getFinalParameters <- function(regCtsemObject, criterion = NULL, raw = TRUE){
-  if(!regCtsemObject$argsIn$autoCV){
+  if(!regCtsemObject$setup$autoCV){
     minCriterionValue <- max(which(regCtsemObject$fit[criterion,] == min(regCtsemObject$fit[criterion,], na.rm = TRUE)))
     lambdas <- regCtsemObject$setup$lambdas
     bestLambda <- lambdas[minCriterionValue]
@@ -1379,21 +1382,21 @@ getFinalParameters <- function(regCtsemObject, criterion = NULL, raw = TRUE){
 #' @import OpenMx
 #' @export
 getFinalModel <- function(regCtsemObject, criterion = NULL){
-  if(regCtsemObject$argsIn$autoCV){
+  if(regCtsemObject$setup$autoCV){
     stop("getFinalModel not supported for automatic cross-validation. At the moment, you have to manually re-run the model with the best lambda value using the whole sample.")
   }
 
   bestPars <- getFinalParameters(regCtsemObject, criterion = criterion, raw = TRUE)
   message(paste0("Best fit for ", criterion, " was observed for lambda = ", bestPars$lambda, "."))
-  regCtsemObject$argsIn$cpptsemObject$setParameterValues(bestPars$parameters, names(bestPars$parameters))
-  if(tolower(regCtsemObject$argsIn$objective) == "ml"){
-    regCtsemObject$argsIn$cpptsemObject$computeRAM()
-    regCtsemObject$argsIn$cpptsemObject$fitRAM()
+  regCtsemObject$setup$cpptsemObject$setParameterValues(bestPars$parameters, names(bestPars$parameters))
+  if(tolower(regCtsemObject$setup$objective) == "ml"){
+    regCtsemObject$setup$cpptsemObject$computeRAM()
+    regCtsemObject$setup$cpptsemObject$fitRAM()
   }else{
-    regCtsemObject$argsIn$cpptsemObject$computeAndFitKalman()
+    regCtsemObject$setup$cpptsemObject$computeAndFitKalman()
   }
 
-  return(regCtsemObject$argsIn$cpptsemObject)
+  return(regCtsemObject$setup$cpptsemObject)
 }
 
 

@@ -144,7 +144,8 @@ plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 # getFinalParameters(regCtsemObject = regModel, criterion = "BIC")
 # bestModel <- getFinalModel(regCtsemObject = regModel, criterion = "BIC")
 # WARNING: The returned model is of type cpptsem. You can access it's elements with the
-# $ operator. For example: bestModel$DRIFTValues
+# $ operator. For example: bestModel$DRIFTValues. See vignette(topic = "cpptsem", package = "regCtsem")
+# for more details on the cpptsem backend of the regCtsem package.
 
 # Optimize model using GLMNET with lasso penalty
 regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,

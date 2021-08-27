@@ -32,6 +32,7 @@ class cpptsemRAMmodel{
   Rcpp::DataFrame parameterTable;
   arma::mat DRIFTValues;
   arma::mat DIFFUSIONValues;
+  arma::mat DIFFUSIONbaseValues;
   arma::mat T0VARValues;
   arma::colvec T0MEANSValues;
   arma::mat TRAITVARValues;

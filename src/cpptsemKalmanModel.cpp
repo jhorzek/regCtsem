@@ -252,7 +252,7 @@ void cpptsemKalmanModel::computeAndFitKalman(){
     if( ctMatrixList.containsElementNamed("DIFFUSIONbase") ){
       // get DIFFUSION
       Rcpp::List DIFFUSIONbaseList = ctMatrixList["DIFFUSIONbase"];
-      arma::mat DIFFUSIONbaseValues = DIFFUSIONbaseList["values"];
+      DIFFUSIONbaseValues = Rcpp::as<arma::mat>(DIFFUSIONbaseList["values"]);
       DIFFUSIONValues = getVarianceFromVarianceBase(DIFFUSIONbaseValues);
     }else{
       Rcpp::stop("Could not find a DIFFUSION!");
@@ -778,6 +778,7 @@ RCPP_EXPOSED_CLASS(cpptsemKalmanModel)
       .field_readonly( "discreteDIFFUSIONUnique", &cpptsemKalmanModel::discreteDIFFUSIONUnique, "discreteDIFFUSIONUnique")
       .field_readonly( "DRIFTValues", &cpptsemKalmanModel::DRIFTValues, "DRIFTValues")
       .field_readonly( "DIFFUSIONValues", &cpptsemKalmanModel::DIFFUSIONValues, "DIFFUSIONValues")
+      .field_readonly( "DIFFUSIONbaseValues", &cpptsemKalmanModel::DIFFUSIONbaseValues, "DIFFUSIONbaseValues")
       .field_readonly( "T0VARValues", &cpptsemKalmanModel::T0VARValues, "T0VARValues")
       .field_readonly( "T0MEANSValues", &cpptsemKalmanModel::T0MEANSValues, "T0MEANSValues")
       .field_readonly( "TRAITVARValues", &cpptsemKalmanModel::TRAITVARValues, "TRAITVARValues")
