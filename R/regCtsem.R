@@ -28,6 +28,7 @@
 #' @return returns an object of class regCtsem. Without cross-validation, this object will have the fields setup (all arguments passed to the function), fitAndParameters (used internally to store the fit and the raw (i.e., untransformed) parameters), fit (fit indices, ect.), parameterEstimatesRaw (raw, i.e. untransformed parameters; used internally), and parameters (transformed parameters)#'
 #' @examples
 #' \donttest{
+#'
 #' set.seed(17046)
 #'
 #' library(regCtsem)
@@ -69,8 +70,9 @@
 #'
 #' # select DRIFT values for regularization:
 #' regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
-#' # Note: If you are unsure what the drift labels are called in
-#' # your model, check: fit_myModel$ctmodelobj$DRIFT
+#' # Note: If you are unsure what the parameters are called in
+#' # your model, check: fit_myModel$ctmodelobj$DRIFT for the drift or
+#' # omxGetParameters(fit_myModel$ctmodelobj) for all parameters
 #'
 #' # Optimize model using GIST with lasso penalty
 #' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
@@ -78,17 +80,15 @@
 #'                                regIndicators = regIndicators,
 #'                                lambdas = "auto",
 #'                                lambdasAutoLength = 20)
-#'
-#' summary(regModel, criterion = "BIC")
-#' plot(regModel, what = "drift")
+#' summary(regModel)
+#' plot(regModel)
 #' plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 #'
 #' # The best parameter estimates and the final model as mxObject can be extracted with:
 #' # getFinalParameters(regCtsemObject = regModel, criterion = "BIC")
 #' # bestModel <- getFinalModel(regCtsemObject = regModel, criterion = "BIC")
 #' # WARNING: The returned model is of type cpptsem. You can access it's elements with the
-#' # $ operator. For example: bestModel$DRIFTValues. See vignette(topic = "cpptsem", package = "regCtsem")
-#' # for more details on the cpptsem backend of the regCtsem package.
+#' # $ operator. For example: bestModel$DRIFTValues
 #'
 #' # Optimize model using GLMNET with lasso penalty
 #' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
@@ -101,6 +101,7 @@
 #' summary(regModel, criterion = "BIC")
 #' plot(regModel, what = "drift")
 #' plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
+#' plot(regModel, what = "drift_eta1_eta2")
 #'
 #' # The same regularization can be performed with the approximate optimization:
 #' regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
@@ -156,8 +157,9 @@
 #'
 #' # select DRIFT values:
 #' regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
-#' # Note: If you are unsure what the drift labels are called in
-#' # your model, check: fit_myModel$ctmodelobj$DRIFT
+#' # Note: If you are unsure what the parameters are called in
+#' # your model, check: fit_myModel$ctmodelobj$DRIFT for the drift or
+#' # omxGetParameters(fit_myModel$ctmodelobj) for all parameters
 #'
 #' ## Optimization with GIST:
 #' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
@@ -178,12 +180,14 @@
 #' ## Example 4: Kalman Filter with person specific parameter values
 #' ## WARNING: THIS WILL TAKE A WHILE TO RUN
 #' set.seed(175446)
+#'
 #' ## define the population model:
 #'
 #' # set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
 #' ct_drift <- matrix(c(-.3,0,.2,-.2),2,2,TRUE)
 #' dataset <- c()
 #' indpars <- c()
+#'
 #' # We will simulate data for 10 individuals with person-specific parameters
 #' # These person-specific parameters will then be regularized towards a
 #' # common group parameter
@@ -219,17 +223,14 @@
 #' # regularized. The regularization will be towards a group parameter
 #' subjectSpecificParameters <- c("drift_eta2_eta1", "drift_eta1_eta2")
 #' regModel <- regCtsem(ctsemObject = myModel,
-#'                    dataset = dataset,
-#'                    regIndicators = regIndicators,
-#'                    lambdasAutoLength = 5, # 5 will not be enough, but this takes some time to execute
-#'                    subjectSpecificParameters = subjectSpecificParameters
-#'                    )
-#' regModel$parameters$group1
-#' # The person-specific parameters will be labeled with _G1, _G2, ...
-#' # NOT YET WORKING:
-#' #finalParameters <- getFinalParameters(regCtsemObject = regModel, criterion = "BIC")
-#' #finalParameters$parameters[paste0(rep(subjectSpecificParameters, each = 10), paste0("_G", 1:10))]
-#' #}
+#'                      dataset = dataset,
+#'                      regIndicators = regIndicators,
+#'                      lambdasAutoLength = 5, # 5 will not be enough, but this takes some time to execute
+#'                      subjectSpecificParameters = subjectSpecificParameters
+#' )
+#' summary(regModel, criterion = "BIC")
+#' plot(regModel, what = "drift")
+#' }
 #'
 #' @author Jannik Orzek
 #' @import ctsemOMX rlist optimx
@@ -703,7 +704,7 @@ regCtsem <- function(
       if(!any(class(fitTrain) == "try-error")){
         cvFoldsAndModels$trainModels[[i]]$setParameterValues(fitTrain$par, names(fitTrain$par))
       }else{
-        stop("Error while optimizing training models. This is often a sign that the sample size of the cross-validation training sets is to small. Consider using a higher k or rerun the analysis with a differnt seed to get a new split of the samples.")
+        stop("Error while optimizing training models. This is often a sign that the sample size of the cross-validation training sets is too small. Consider using a higher k or rerun the analysis with a different seed to get a new split of the samples.")
       }
       cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
 
