@@ -13,7 +13,7 @@ controlApprox()
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
 
-\item{maxIter}{maximal number of iterations}
+\item{controlOptimx}{settings passed to optimx}
 }
 \description{
 The following arguments can be used to adjust the approximate optimization

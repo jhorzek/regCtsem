@@ -1732,11 +1732,10 @@ approx_cpptsemOptim <- function(cpptsemmodel,
 #' @param regIndicators string vector with names of regularized parameters
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param epsilon tuning parameter for epsL1 approximation
-#' @param maxit maximal number of iterations
 #' @param objective ML or Kalman
-#' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @param testGradients should be tested if the final parameters result in NA gradients?
-#' @param optimizer which optimizer from optimx should be used?
+#' @param controlOptimx additional arguments passed as control to optimx
+#' @param silent suppress warnings
 #' @author Jannik Orzek
 #' @import optimx
 #' @export
@@ -1749,20 +1748,34 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
                                  regIndicators,
                                  targetVector,
                                  epsilon,
-                                 maxit,
                                  objective,
-                                 failureReturns = NA,
                                  testGradients,
-                                 optimizer){
+                                 failureReturns,
+                                 controlOptimx,
+                                 silent){
+  if("maxit" %in% names(controlOptimx)){
+    itnmax <- controlOptimx$maxit
+  }else{
+    warning("No maximal number of iterations selected for optimx. Using 100.")
+    itnmax <- 100
+  }
+  if("method" %in% names(controlOptimx)){
+    method <- controlOptimx$method
+    controlOptimx$method <- NULL
+  }else{
+    warning("No method selected for optimx. Using BFGS.")
+    method <- "BFGS"
+  }
+
   invisible(capture.output(CpptsemFit <- try(optimx::optimx(par = startingValues,
                                                             fn = regM2LLCpptsem,
                                                             #gr = gradCpptsem,
                                                             cpptsemmodel = cpptsemmodel, adaptiveLassoWeights = adaptiveLassoWeights,
                                                             N = N, lambda = lambda, regIndicators = regIndicators, targetVector = targetVector,
-                                                            epsilon = epsilon, objective = objective, failureReturns = failureReturns,
-                                                            method = optimizer,
-                                                            control = list("maxit" = maxit, "dowarn" = FALSE)), silent = TRUE), type = c("output", "message")))
-  if(CpptsemFit$convcode > 0){warning(paste0("Optimx reports convcode  > 0: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
+                                                            epsilon = epsilon, objective = objective, failureReturns = failureReturns, itnmax = itnmax,
+                                                            method = method,
+                                                            control = controlOptimx), silent = TRUE), type = c("output", "message")))
+  if(CpptsemFit$convcode > 0 && !silent){warning(paste0("Optimx reports convcode  > 0: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
   if(any(class(CpptsemFit) == "try-error")){stop()}
 
   # extract parameters

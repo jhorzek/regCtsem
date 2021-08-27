@@ -303,9 +303,13 @@ regCtsem <- function(
   if(optimization == "approx"){
     controlTemp <- controlApprox()
     if(tolower(optimizer) == "gist" || tolower(optimizer) == "glmnet"){
-      optimizer <- "BFGS"
-      argsIn$optimizer <- optimizer
-      warning("Setting optimizer to BFGS")
+      optimizer <- controlTemp$controlOptimx$method
+      warning(paste0("Setting optimizer to ", optimizer))
+    }else if(optimizer %in% c('Nelder-Mead', 'BFGS', 'CG', 'L-BFGS-B', 'nlm', 'nlminb', 'spg', 'ucminf', 'newuoa', 'bobyqa', 'nmkb', 'hjkb', 'Rcgmin', 'Rvmmin')){
+      controlTemp$controlOptimx$method <- optimizer
+    }else{
+      optimizer <- controlTemp$controlOptimx$method
+      warning(paste0("Unknown optimizer. Setting optimizer to ", optimizer, ". See ?optimx for all options."))
     }
   } else if(optimization == "exact" && optimizer == "GIST"){
     controlTemp <- controlGIST()
@@ -495,7 +499,7 @@ regCtsem <- function(
                                                scaleLambdaWithN = argsIn$scaleLambdaWithN,
                                                approxFirst = argsIn$approxFirst,
                                                numStart = argsIn$numStart,
-                                               approxMaxIt = argsIn$approxMaxIt,
+                                               controlOptimx = argsIn$controlOptimx,
                                                verbose = argsIn$verbose)
 
     fitAndParametersSeparated <- try(separateFitAndParameters(regCtsemObject))
@@ -608,7 +612,7 @@ regCtsem <- function(
                                                  scaleLambdaWithN = argsIn$scaleLambdaWithN,
                                                  approxFirst = argsIn$approxFirst,
                                                  numStart = argsIn$numStart,
-                                                 approxMaxIt = argsIn$approxMaxIt,
+                                                 controlOptimx = argsIn$controlOptimx,
                                                  verbose = argsIn$verbose)
 
       fitAndParametersSeparated <- try(separateFitAndParameters(regCtsemObject))
@@ -653,11 +657,10 @@ regCtsem <- function(
                                                 Tpoints = argsIn$Tpoints,
                                                 cvSampleCpptsemObject = argsIn$cvSampleCpptsemObject,
                                                 # optimization settings
-                                                optimizer = argsIn$optimizer,
                                                 objective = argsIn$objective,
                                                 epsilon = argsIn$epsilon,
                                                 zeroThresh = argsIn$zeroThresh,
-                                                maxIter = argsIn$maxIter,
+                                                controlOptimx = argsIn$controlOptimx,
                                                 # additional settings
                                                 scaleLambdaWithN = argsIn$scaleLambdaWithN,
                                                 verbose = argsIn$verbose)
@@ -749,11 +752,10 @@ regCtsem <- function(
                                                   Tpoints = argsIn$Tpoints,
                                                   cvSampleCpptsemObject = cvFoldsAndModels$testModels[[i]],
                                                   # optimization settings
-                                                  optimizer = argsIn$optimizer,
                                                   objective = argsIn$objective,
                                                   epsilon = argsIn$epsilon,
                                                   zeroThresh = argsIn$zeroThresh,
-                                                  maxIter = argsIn$maxIter,
+                                                  controlOptimx = argsIn$controlOptimx,
                                                   # additional settings
                                                   scaleLambdaWithN = argsIn$scaleLambdaWithN,
                                                   verbose = argsIn$verbose)
@@ -820,7 +822,7 @@ regCtsem <- function(
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param approxMaxIt Used if approxFirst. How many outer iterations should be given to each starting values vector?
+#' @param controlOptimx settings passed to optimx
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #'
 #' @author Jannik Orzek
@@ -871,7 +873,7 @@ exact_regCtsem <- function(  # model
   scaleLambdaWithN = TRUE,
   approxFirst = FALSE,
   numStart = 0,
-  approxMaxIt = 5,
+  controlOptimx,
   # additional settings
   verbose = 0){
 
@@ -940,7 +942,7 @@ exact_regCtsem <- function(  # model
                                                eps_out = eps_out, eps_in = eps_in, eps_WW = eps_WW,
                                                scaleLambdaWithN = scaleLambdaWithN, sampleSize = sampleSize,
                                                approxFirst = approxFirst,
-                                               numStart = numStart, approxMaxIt = approxMaxIt,
+                                               numStart = numStart, controlOptimx = controlOptimx,
                                                verbose = verbose))
   }
   if(tolower(optimizer) == "gist"){
@@ -956,7 +958,7 @@ exact_regCtsem <- function(  # model
                                          break_outer = break_outer,
                                          scaleLambdaWithN = scaleLambdaWithN, sampleSize = sampleSize,
                                          approxFirst = approxFirst,
-                                         numStart = numStart, approxMaxIt = approxMaxIt,
+                                         numStart = numStart, controlOptimx = controlOptimx,
                                          verbose = verbose
     )
     )
@@ -1019,11 +1021,10 @@ exact_regCtsem <- function(  # model
 #' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
 #' @param Tpoints Number of time points (used for BICWithNAndT)
 #' @param cvSampleCpptsemObject cppstem for cross-validation
-#' @param optimizer any of the optimizers from optimx
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
-#' @param maxIter maximal number of iterations given to the optimizer
+#' @param controlOptimx settings passed to optimx
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #'
@@ -1047,11 +1048,10 @@ approx_regCtsem <- function(  # model
   Tpoints = NULL,
   cvSampleCpptsemObject = NULL,
   # optimization settings
-  optimizer = "BFGS",
   objective = "ML",
   epsilon = .001,
   zeroThresh = .001,
-  maxIter = 200,
+  controlOptimx,
   # additional settings
   scaleLambdaWithN = TRUE,
   verbose = 0){
@@ -1101,9 +1101,9 @@ approx_regCtsem <- function(  # model
                                                               # fit settings
                                                               returnFitIndices = returnFitIndices, BICWithNAndT = BICWithNAndT, Tpoints = Tpoints,
                                                               # optimization settings
-                                                              objective = objective, epsilon = epsilon, zeroThresh = zeroThresh, maxIt = maxIter,
+                                                              objective = objective, epsilon = epsilon, zeroThresh = zeroThresh, controlOptimx = controlOptimx,
                                                               # additional settings
-                                                              scaleLambdaWithN = scaleLambdaWithN, verbose = verbose, optimizer = optimizer))
+                                                              scaleLambdaWithN = scaleLambdaWithN, verbose = verbose))
 
   # cross-validation
   if(!is.null(cvSampleCpptsemObject)){

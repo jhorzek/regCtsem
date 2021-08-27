@@ -29,7 +29,7 @@ exact_bfgsGLMNET(
   sampleSize,
   approxFirst = T,
   numStart = 0,
-  approxMaxIt = 5,
+  controlOptimx,
   extraTries = 3,
   verbose = 0
 )
@@ -83,7 +83,7 @@ exact_bfgsGLMNET(
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{approxMaxIt}{Used if approxFirst. How many outer iterations should be given to each starting values vector?}
+\item{controlOptimx}{settings passed to optimx}
 
 \item{extraTries}{number of extra tries in mxTryHard for warm start}
 

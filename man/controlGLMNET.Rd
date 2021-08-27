@@ -25,8 +25,6 @@ controlGLMNET()
 
 \item{gam}{for lineSearch = 'GLMNET': Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 <= gamma < 1}
 
-\item{differenceApprox}{Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
-
 \item{initialHessianApproximation}{Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian}
 
 \item{maxIter_out}{Maximal number of outer iterations}
@@ -45,7 +43,7 @@ controlGLMNET()
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{approxMaxIt}{Used if approxFirst. How many outer iterations should be given to each starting values vector?}
+\item{controlOptimx}{settings passed to optimx}
 }
 \description{
 The following arguments can be used to adjust the GLMNET optimization

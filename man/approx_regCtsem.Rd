@@ -18,11 +18,10 @@ approx_regCtsem(
   BICWithNAndT = TRUE,
   Tpoints = NULL,
   cvSampleCpptsemObject = NULL,
-  optimizer = "BFGS",
   objective = "ML",
   epsilon = 0.001,
   zeroThresh = 0.001,
-  maxIter = 200,
+  controlOptimx,
   scaleLambdaWithN = TRUE,
   verbose = 0
 )
@@ -54,15 +53,13 @@ approx_regCtsem(
 
 \item{cvSampleCpptsemObject}{cppstem for cross-validation}
 
-\item{optimizer}{any of the optimizers from optimx}
-
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
 \item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
 
-\item{maxIter}{maximal number of iterations given to the optimizer}
+\item{controlOptimx}{settings passed to optimx}
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 

@@ -15,11 +15,11 @@ approx_cpptsemOptimx(
   regIndicators,
   targetVector,
   epsilon,
-  maxit,
   objective,
-  failureReturns = NA,
   testGradients,
-  optimizer
+  failureReturns,
+  controlOptimx,
+  silent
 )
 }
 \arguments{
@@ -43,15 +43,13 @@ approx_cpptsemOptimx(
 
 \item{epsilon}{tuning parameter for epsL1 approximation}
 
-\item{maxit}{maximal number of iterations}
-
 \item{objective}{ML or Kalman}
-
-\item{failureReturns}{value which is returned if regM2LLCpptsem or gradCpptsem fails}
 
 \item{testGradients}{should be tested if the final parameters result in NA gradients?}
 
-\item{optimizer}{which optimizer from optimx should be used?}
+\item{controlOptimx}{additional arguments passed as control to optimx}
+
+\item{silent}{suppress warnings}
 }
 \description{
 creates an approximate solution to regularized ctsem using optimx

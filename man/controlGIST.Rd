@@ -13,8 +13,6 @@ controlGIST()
 
 \item{sig}{sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.}
 
-\item{differenceApprox}{Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
-
 \item{maxIter_out}{Maximal number of outer iterations}
 
 \item{maxIter_in}{Maximal number of inner iterations}
@@ -35,7 +33,7 @@ controlGIST()
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{approxMaxIt}{Used if approxFirst. How many outer iterations should be given to each starting values vector?}
+\item{controlOptimx}{settings passed to optimx}
 }
 \description{
 The following arguments can be used to adjust the GIST optimization

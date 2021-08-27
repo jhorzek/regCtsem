@@ -5,14 +5,17 @@
 #' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
-#' @param maxIter maximal number of iterations
+#' @param controlOptimx settings passed to optimx
 #' @export
 controlApprox <- function(){
   return(controlApprox <- list(
     "forceCpptsem" = FALSE, # should the C++ translation be enforced even if results differ from ctsem? Sometimes differences between the C++ implementation and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
     "epsilon" = .001, # epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
     "zeroThresh" = .04, # threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
-    "maxIter" = 200
+    "controlOptimx" = list("method" = "BFGS",
+                           "failureReturns" = .Machine$double.xmax/2,
+                           "dowarn" = FALSE,
+                           "maxit" = 200)
   )
   )
 }
@@ -24,7 +27,6 @@ controlApprox <- function(){
 #' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param stepSize initial step size of the outer iteration
 #' @param sig sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
-#' @param differenceApprox Which approximation should be used for calculating the gradients in the gradientModel. central is recommended
 #' @param maxIter_out Maximal number of outer iterations
 #' @param maxIter_in Maximal number of inner iterations
 #' @param break_outer Stopping criterion for outer iterations; has to be a named value. By default the change in fit is used, with c("fitChange" = 1e-5) meaning that this change should be smaller than 1e-5. Additionally, a relative change in parameters is used as breaking criterion c("parameterChange" = .00001). Alternatively (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Example: c("gradient" = "max(max(abs(startingValues))*.001, .001)") . Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)).
@@ -35,7 +37,7 @@ controlApprox <- function(){
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param approxMaxIt Used if approxFirst. How many outer iterations should be given to each starting values vector?
+#' @param controlOptimx settings passed to optimx
 #' @export
 controlGIST <- function(){
   return(controlGIST <- list(
@@ -52,8 +54,11 @@ controlGIST <- function(){
     "GISTNonMonotoneNBack" = 5,# in case of non-monotone line search: Number of preceding regM2LL values to consider
     "approxFirst" = TRUE, # Should approximate optimization be used first to obtain start values for exact optimization?
     "numStart" = 0, # Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-    "approxMaxIt" = 5, # Used if approxFirst = 3. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation.
-    "differenceApprox" = "central" # Which approximation should be used for calculating the gradients in the gradientModel. central is recommended
+    "controlOptimx" = list("method" = "BFGS",
+                           "failureReturns" = .Machine$double.xmax/2,
+                           "dowarn" = FALSE,
+                           "kkt" = FALSE,
+                           "maxit" = 5)
   )
   )
 }
@@ -71,7 +76,6 @@ controlGIST <- function(){
 #' @param c2 c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
 #' @param sig for lineSearch = 'GLMNET': Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 < sigma < 1
 #' @param gam for lineSearch = 'GLMNET': Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 <= gamma < 1
-#' @param differenceApprox Which approximation should be used for calculating the gradients in the gradientModel. central is recommended
 #' @param initialHessianApproximation Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian
 #' @param maxIter_out Maximal number of outer iterations
 #' @param maxIter_in Maximal number of inner iterations
@@ -81,7 +85,7 @@ controlGIST <- function(){
 #' @param eps_WW Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param approxMaxIt Used if approxFirst. How many outer iterations should be given to each starting values vector?
+#' @param controlOptimx settings passed to optimx
 #' @export
 controlGLMNET <- function(){
   return(
@@ -103,8 +107,11 @@ controlGLMNET <- function(){
       "eps_WW" = .0001, #Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
       "approxFirst" = TRUE, # Should approximate optimization be used first to obtain start values for exact optimization?
       "numStart" = 0, # Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-      "approxMaxIt" = 5, # Used if approxFirst. How many outer iterations should be given to each starting values vector?
-      "differenceApprox" = "central" # Which approximation should be used for calculating the gradients in the gradientModel. central is recommended
+      "controlOptimx" = list("method" = "BFGS", # see ?optimx for more details
+                             "failureReturns" = .Machine$double.xmax/2,
+                             "dowarn" = FALSE,
+                             "kkt" = FALSE,
+                             "maxit" = 5)
     )
   )
 }

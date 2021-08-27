@@ -9,7 +9,7 @@ tryApproxFirst(
   returnAs,
   approxFirst,
   numStart,
-  approxMaxIt,
+  controlOptimx,
   lambda,
   cpptsemObject,
   regIndicators,
@@ -28,7 +28,7 @@ tryApproxFirst(
 
 \item{numStart}{number of starting values}
 
-\item{approxMaxIt}{maximal number of iterations for the approximation}
+\item{controlOptimx}{settings passed to optimx}
 
 \item{lambda}{tuning parameter value}
 

@@ -122,11 +122,10 @@ approx_initializeModel <- function(  # model
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
 #' @param Tpoints Number of time points (used for BICWithNAndT)
-#' @param optimizer Any of the optimizers from optimx
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
-#' @param maxIt maximal number of iterations given to the optimizer
+#' @param controlOptimx settings passed to optimx
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #'
@@ -148,11 +147,10 @@ approx_iterateOverLambdas <- function(  # model
   BICWithNAndT = TRUE,
   Tpoints = NULL,
   # optimization settings
-  optimizer = "BFGS",
   objective = "ML",
   epsilon = .001,
   zeroThresh = .001,
-  maxIt = 200,
+  controlOptimx,
   # additional settings
   scaleLambdaWithN,
   verbose = 0){
@@ -172,6 +170,14 @@ approx_iterateOverLambdas <- function(  # model
 
   pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
 
+  if("failureReturns" %in% names(controlOptimx)){
+    failureReturns <- controlOptimx$failureReturns
+    controlOptimx$failureReturns <- NULL
+  }else{
+    warning("No failureReturns for optimx. Using .Machine$double.xmax/2")
+    failureReturns <- .Machine$double.xmax/2
+  }
+
   for(iteration in 1:length(lambdas)){
 
     ## if (adaptive) lasso
@@ -188,10 +194,10 @@ approx_iterateOverLambdas <- function(  # model
                                             regIndicators = regIndicators,
                                             targetVector = targetVector,
                                             epsilon = epsilon,
-                                            maxit = maxIt, objective = objective,
+                                            objective = objective,
                                             testGradients = TRUE,
-                                            optimizer = optimizer,
-                                            failureReturns = .Machine$double.xmax/2), silent = TRUE)
+                                            controlOptimx =  controlOptimx,
+                                            failureReturns = failureReturns, silent = FALSE), silent = TRUE)
     }else{
       optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
                                             regM2LLCpptsem = ifelse(tolower(objective) == "ml",
@@ -204,10 +210,11 @@ approx_iterateOverLambdas <- function(  # model
                                             regIndicators = regIndicators,
                                             targetVector = targetVector,
                                             epsilon = epsilon,
-                                            maxit = maxIt, objective = objective,
+                                            objective = objective,
                                             testGradients = TRUE,
-                                            optimizer = optimizer,
-                                            failureReturns = .Machine$double.xmax/2), silent = TRUE)
+                                            controlOptimx =  controlOptimx,
+                                            failureReturns = failureReturns,
+                                            silent = FALSE), silent = TRUE)
     }
     # check if model returned errors:
     if(any(class(optimized) == "try-error")){

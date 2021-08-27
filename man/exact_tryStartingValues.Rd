@@ -5,39 +5,51 @@
 \title{exact_tryStartingValues}
 \usage{
 exact_tryStartingValues(
+  startingValues,
+  returnAs,
+  approxFirst,
+  numStart,
+  controlOptimx,
+  lambda,
   cpptsemObject,
-  objective,
-  currentParameters,
-  sparseParameters,
   regIndicators,
-  newLambda,
+  targetVector = NULL,
   adaptiveLassoWeights,
-  numStartingValues,
-  numOuter
+  objective,
+  sparseParameters
 )
 }
 \arguments{
-\item{cpptsemObject}{cpptsem object to compute gradients}
+\item{startingValues}{start values for optimization}
 
-\item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
+\item{returnAs}{"vector" or "matrix"}
 
-\item{currentParameters}{current parameter values}
+\item{approxFirst}{boolean: should the solution be approximated}
 
-\item{sparseParameters}{parameters of the sparsest model}
+\item{numStart}{number of starting values}
 
-\item{regIndicators}{named vector of regularized parameters}
+\item{controlOptimx}{settings passed to optimx}
 
-\item{newLambda}{new lambda}
+\item{lambda}{tuning parameter value}
 
-\item{adaptiveLassoWeights}{named vector with adaptive lasso weights}
+\item{cpptsemObject}{object of type cpptsem}
 
-\item{numStartingValues}{How many starting values should be tried?}
+\item{regIndicators}{Labels for the regularized parameters (e.g. drift_eta1_eta2)}
 
-\item{numOuter}{number of outer iterations of optim or Rsolnp}
+\item{targetVector}{named vector with values towards which the parameters are regularized}
+
+\item{adaptiveLassoWeights}{weights for the adaptive lasso.}
+
+\item{objective}{which objective is used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
+
+\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model.}
 }
 \description{
 tries different starting values to find a good starting point for exact optimization
 }
 \details{
 NOTE: Function located in file exact_optimization.R
+}
+\author{
+Jannik Orzek
 }
