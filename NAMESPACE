@@ -2,6 +2,8 @@
 
 S3method(plot,regCtsem)
 S3method(summary,regCtsem)
+S3method(summary,regCtsemCV)
+S3method(summary,regCtsemMultiSubject)
 export(GIST)
 export(GISTWithTarget)
 export(approx_KalmanM2LLCpptsem)

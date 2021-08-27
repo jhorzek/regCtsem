@@ -275,7 +275,7 @@ regCtsem <- function(
 
   if(!is.null(subjectSpecificParameters)){
     if(argsIn$objective != "Kalman"){
-      stop("Subject-Specific parameters are only supported for models fitted with Kalman filter.")
+      stop("Subject-specific parameters are only supported for models fitted with Kalman filter.")
     }
     if(!is.null(cvSample) || autoCV){
       stop("Cross-validation not supported with subject-specific parameters.")
@@ -283,7 +283,7 @@ regCtsem <- function(
     if(tolower(argsIn$optimizer) != "gist"){
       stop("Only GIST optimizer allows for person-specific parameters")
     }
-    warning("Subject-Specific parameters are a very experimental feature. Usage not recommended!")
+    warning("Subject-specific parameters are a very experimental feature. Usage not recommended!")
   }
 
   ## Defaults for optimizer
@@ -511,7 +511,11 @@ regCtsem <- function(
 
     cat("\n")
     regCtsemObject$setup <- append(regCtsemObject$setup, argsIn[!(names(argsIn) %in% names(regCtsemObject$setup))])
-    class(regCtsemObject) <- "regCtsem"
+    if(!is.null(subjectSpecificParameters)){
+      class(regCtsemObject) <- "regCtsemMultiSubject"
+    }else{
+      class(regCtsemObject) <- "regCtsem"
+    }
     return(regCtsemObject)
   }
 
@@ -669,7 +673,11 @@ regCtsem <- function(
       }
     }
     regCtsemObject$setup <- append(regCtsemObject$setup, argsIn[!(names(argsIn) %in% names(regCtsemObject$setup))])
-    class(regCtsemObject) <- "regCtsem"
+    if(!is.null(subjectSpecificParameters)){
+      class(regCtsemObject) <- "regCtsemMultiSubject"
+    }else{
+      class(regCtsemObject) <- "regCtsem"
+    }
     cat("\n")
     return(regCtsemObject)
   }

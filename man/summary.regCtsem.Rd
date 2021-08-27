@@ -7,9 +7,9 @@
 \method{summary}{regCtsem}(regCtsemObject, criterion = NULL)
 }
 \arguments{
-\item{criterion}{select a criterion. Possible are AIC, BIC, cvM2LL}
+\item{regCtsemObject}{Object of type regCtsem}
 
-\item{returnSummary}{Boolean: should the summary results be returned}
+\item{criterion}{select a criterion. Possible are AIC, BIC, cvM2LL}
 }
 \description{
 summary.regCtsem
