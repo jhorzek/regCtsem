@@ -1753,18 +1753,44 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
                                  failureReturns,
                                  controlOptimx,
                                  silent){
-  if("maxit" %in% names(controlOptimx)){
-    itnmax <- controlOptimx$maxit
+  if("hess" %in% names(controlOptimx)){
+    hess <- controlOptimx$hess
+  }else{
+    hess <- NULL
+  }
+  if("lower" %in% names(controlOptimx)){
+    lower <- controlOptimx$lower
+  }else{
+    lower <- -Inf
+  }
+  if("upper" %in% names(controlOptimx)){
+    upper <- controlOptimx$upper
+  }else{
+    upper <- Inf
+  }
+  if("method" %in% names(controlOptimx)){
+    method <- controlOptimx$method
+  }else{
+    warning("No method selected for optimx. Using BFGS.")
+    method <- "BFGS"
+  }
+  if("hessian" %in% names(controlOptimx)){
+    hessian <- controlOptimx$hessian
+  }else{
+    hessian <- FALSE
+  }
+  if("itnmax" %in% names(controlOptimx)){
+    itnmax <- controlOptimx$itnmax
   }else{
     warning("No maximal number of iterations selected for optimx. Using 100.")
     itnmax <- 100
   }
-  if("method" %in% names(controlOptimx)){
-    method <- controlOptimx$method
-    controlOptimx$method <- NULL
+  if("control" %in% names(controlOptimx)){
+    control <- controlOptimx$control
   }else{
-    warning("No method selected for optimx. Using BFGS.")
-    method <- "BFGS"
+    "control" = list("dowarn" = FALSE,
+                     "kkt" = TRUE,
+                     "maxit" = itnmax)
   }
 
   invisible(capture.output(CpptsemFit <- try(optimx::optimx(par = startingValues,
@@ -1772,9 +1798,10 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
                                                             #gr = gradCpptsem,
                                                             cpptsemmodel = cpptsemmodel, adaptiveLassoWeights = adaptiveLassoWeights,
                                                             N = N, lambda = lambda, regIndicators = regIndicators, targetVector = targetVector,
-                                                            epsilon = epsilon, objective = objective, failureReturns = failureReturns, itnmax = itnmax,
-                                                            method = method,
-                                                            control = controlOptimx), silent = TRUE), type = c("output", "message")))
+                                                            epsilon = epsilon, objective = objective, failureReturns = failureReturns,
+                                                            hess = hess, lower = lower, upper = upper, itnmax = itnmax,
+                                                            method = method,hessian = hessian, control = control),
+                                             silent = TRUE), type = c("output", "message")))
   if(CpptsemFit$convcode > 0 && !silent){warning(paste0("Optimx reports convcode  > 0: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
   if(any(class(CpptsemFit) == "try-error")){stop()}
 
@@ -1823,60 +1850,6 @@ extractOptimx <- function(parameterLabels, opt){
   optimizer <- rownames(opt)[bestValue]
   optimizedPars <- unlist(opt[optimizer,parameterLabels])
   return(list("fit" = min(values), "parameters" = optimizedPars))
-}
-
-#' approx_cpptsemSolnp
-#'
-#' creates an approximate solution to regularized ctsem using solnp
-#' @param cpptsemmodel model returned from cpptsem
-#' @param regM2LLCpptsem regularized fitting function
-#' @param gradCpptsem function for computing the gradients of regM2LLCpptsem
-#' @param startingValues starting values for optimization
-#' @param adaptiveLassoWeights vector with weights of the adaptive lasso
-#' @param N sample size
-#' @param lambda tuning parameter lambda
-#' @param regIndicators string vector with names of regularized parameters
-#' @param epsilon tuning parameter for epsL1 approximation
-#' @param maxit maximal number of iterations
-#' @param objective ML or Kalman
-#' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
-#' @param testGradients should be tested if the final parameters result in NA gradients?
-#' @author Jannik Orzek
-#' @import Rsolnp
-#' @export
-approx_cpptsemSolnp <- function(cpptsemmodel,
-                                regM2LLCpptsem,
-                                gradCpptsem,
-                                startingValues,
-                                adaptiveLassoWeights,
-                                N, lambda,
-                                regIndicators,
-                                epsilon,
-                                maxit,
-                                objective,
-                                failureReturns = 1e24,
-                                testGradients){
-  stop("Deprecated")
-  CpptsemFit <- Rsolnp::solnp(pars = startingValues,
-                              fun = regM2LLCpptsem,
-                              eqfun = NULL, eqB = NULL, ineqfun = NULL, ineqLB = NULL,
-                              ineqUB = NULL, LB = NULL, UB = NULL, control = list(trace = 0, outer.iter = maxit),
-                              cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, epsilon, objective, failureReturns)
-
-  if(testGradients){
-    grad <- try(gradCpptsem(parameters = CpptsemFit$pars,
-                            cpptsemmodel = cpptsemmodel,
-                            adaptiveLassoWeights = adaptiveLassoWeights,
-                            N =  N,lambda =  lambda, regIndicators = regIndicators,
-                            epsilon = epsilon, objective =  objective,
-                            failureReturns =  failureReturns))
-    if(any(class(grad) == "try-error") || anyNA(grad)){
-      stop("NA in gradients")
-    }
-  }
-
-  return(list("parameters" = CpptsemFit$pars,
-              "regM2LL" = CpptsemFit$values[length(CpptsemFit$values)]))
 }
 
 #' testall_cpptsem

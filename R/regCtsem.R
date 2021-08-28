@@ -306,10 +306,11 @@ regCtsem <- function(
       optimizer <- controlTemp$controlOptimx$method
       warning(paste0("Setting optimizer to ", optimizer))
     }else if(optimizer %in% c('Nelder-Mead', 'BFGS', 'CG', 'L-BFGS-B', 'nlm', 'nlminb', 'spg', 'ucminf', 'newuoa', 'bobyqa', 'nmkb', 'hjkb', 'Rcgmin', 'Rvmmin')){
-      controlTemp$controlOptimx$method <- optimizer
+      warning(paste0("For approx optimization, set the optimizer with control. See ?controlApprox for more details. Setting optimizer to ", controlTemp$controlOptimx$method, ". See ?optimx for all options."))
+      optimizer <- controlTemp$controlOptimx$method
     }else{
       optimizer <- controlTemp$controlOptimx$method
-      warning(paste0("Unknown optimizer. Setting optimizer to ", optimizer, ". See ?optimx for all options."))
+      warning(paste0("For approx optimization, set the optimizer with control. See ?controlApprox for more details. Setting optimizer to ", optimizer, ". See ?optimx for all options."))
     }
   } else if(optimization == "exact" && optimizer == "GIST"){
     controlTemp <- controlGIST()

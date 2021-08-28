@@ -12,10 +12,16 @@ controlApprox <- function(){
     "forceCpptsem" = FALSE, # should the C++ translation be enforced even if results differ from ctsem? Sometimes differences between the C++ implementation and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
     "epsilon" = .001, # epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
     "zeroThresh" = .04, # threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
-    "controlOptimx" = list("method" = "BFGS",
-                           "failureReturns" = .Machine$double.xmax/2,
-                           "dowarn" = FALSE,
-                           "maxit" = 200)
+    "controlOptimx" = list("failureReturns" = .Machine$double.xmax/2, # not part of the optimx documentation; controls the value that will be returned if the current paramter values are impossible
+                           "hess" = NULL,
+                           "lower" = -Inf,
+                           "upper" = Inf,
+                           "method" = "BFGS",
+                           "hessian" = FALSE,
+                           "itnmax" = 200,
+                           "control" = list("dowarn" = FALSE,
+                                            "kkt" = TRUE,
+                                            "maxit" = 200))
   )
   )
 }
@@ -37,7 +43,7 @@ controlApprox <- function(){
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param controlOptimx settings passed to optimx
+#' @param controlOptimx settings passed to optimx. See ?optimx for more details
 #' @export
 controlGIST <- function(){
   return(controlGIST <- list(
@@ -54,11 +60,17 @@ controlGIST <- function(){
     "GISTNonMonotoneNBack" = 5,# in case of non-monotone line search: Number of preceding regM2LL values to consider
     "approxFirst" = TRUE, # Should approximate optimization be used first to obtain start values for exact optimization?
     "numStart" = 0, # Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-    "controlOptimx" = list("method" = "BFGS",
-                           "failureReturns" = .Machine$double.xmax/2,
-                           "dowarn" = FALSE,
-                           "kkt" = FALSE,
-                           "maxit" = 5)
+    # see ?optimx for more details:
+    "controlOptimx" = list("failureReturns" = .Machine$double.xmax/2, # not part of the optimx documentation; controls the value that will be returned if the current paramter values are impossible
+                           "hess" = NULL,
+                           "lower" = -Inf,
+                           "upper" = Inf,
+                           "method" = "BFGS",
+                           "hessian" = FALSE,
+                           "itnmax" = 5,
+                           "control" = list("dowarn" = FALSE,
+                                            "kkt" = FALSE,
+                                            "maxit" = 5))
   )
   )
 }
@@ -85,7 +97,7 @@ controlGIST <- function(){
 #' @param eps_WW Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param controlOptimx settings passed to optimx
+#' @param controlOptimx settings passed to optimx. See ?optimx for more details
 #' @export
 controlGLMNET <- function(){
   return(
@@ -107,11 +119,17 @@ controlGLMNET <- function(){
       "eps_WW" = .0001, #Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
       "approxFirst" = TRUE, # Should approximate optimization be used first to obtain start values for exact optimization?
       "numStart" = 0, # Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-      "controlOptimx" = list("method" = "BFGS", # see ?optimx for more details
-                             "failureReturns" = .Machine$double.xmax/2,
-                             "dowarn" = FALSE,
-                             "kkt" = FALSE,
-                             "maxit" = 5)
+      # see ?optimx for more details:
+      "controlOptimx" = list("failureReturns" = .Machine$double.xmax/2, # not part of the optimx documentation; controls the value that will be returned if the current paramter values are impossible
+                             "hess" = NULL,
+                             "lower" = -Inf,
+                             "upper" = Inf,
+                             "method" = "BFGS",
+                             "hessian" = FALSE,
+                             "itnmax" = 5,
+                             "control" = list("dowarn" = FALSE,
+                                              "kkt" = FALSE,
+                                              "maxit" = 5))
     )
   )
 }

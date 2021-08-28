@@ -43,7 +43,7 @@ controlGLMNET()
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{controlOptimx}{settings passed to optimx}
+\item{controlOptimx}{settings passed to optimx. See ?optimx for more details}
 }
 \description{
 The following arguments can be used to adjust the GLMNET optimization
