@@ -1633,7 +1633,7 @@ getParameterEstimates <- function(regCtsemObject, parameterEstimatesRaw){
           }
         }else{
           parameterEstimates <- rbind(parameterEstimates,
-                                      parameterEstimatesRaw[groupParameterTable$label[groupParameterTable$matrix == parMat],]
+                                      t(t(parameterEstimatesRaw[groupParameterTable$label[groupParameterTable$matrix == parMat],]))
           )
         }
       }
@@ -1670,7 +1670,7 @@ getParameterEstimates <- function(regCtsemObject, parameterEstimatesRaw){
       }
     }else{
       parameterEstimates <- rbind(parameterEstimates,
-                                  parameterEstimatesRaw[parameterTable$label[parameterTable$matrix == parMat],]
+                                  t(t(parameterEstimatesRaw[parameterTable$label[parameterTable$matrix == parMat],]))
       )
     }
   }
