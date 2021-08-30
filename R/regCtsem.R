@@ -426,7 +426,7 @@ regCtsem <- function(
                                                               fn = regCtsem::approx_KalmanM2LLCpptsem,
                                                               #gr = gradCpptsem,
                                                               cpptsemmodel = cpptsemObject, failureReturns = .5*.Machine$double.xmax,
-                                                              method = "BFGS",
+                                                              method = "L-BFGS-B",
                                                               control = list("maxit" = 400, "dowarn" = FALSE)), silent = TRUE), type = c("output", "message")))
     if(CpptsemFit$convcode > 0){warning(paste0("Optimx reports convcode  > 0 for the model with person-specific parameter estimates: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
     if(any(class(CpptsemFit) == "try-error")){stop("Optimx for the model with person-specific parameter estimates resulted in errors.")}
@@ -538,7 +538,10 @@ regCtsem <- function(
     for(i in 1:argsIn$k){
       cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
       # optimize
-      fitTrain <- try(optim(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(), fn = fitCpptsem, method = "BFGS",
+      fitTrain <- try(optim(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(),
+                            fn = fitCpptsem,
+                            gr = gradCpptsem,
+                            method = "L-BFGS-B",
                             cpptsemObject = cvFoldsAndModels$trainModels[[i]],
                             objective = argsIn$objective,
                             failureReturns = NA
@@ -705,7 +708,10 @@ regCtsem <- function(
     for(i in 1:argsIn$k){
       cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
       # optimize
-      fitTrain <- try(optim(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(), fn = fitCpptsem, method = "BFGS",
+      fitTrain <- try(optim(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(),
+                            fn = fitCpptsem,
+                            gr = gradCpptsem,
+                            method = "L-BFGS-B",
                             cpptsemObject = cvFoldsAndModels$trainModels[[i]],
                             objective = argsIn$objective,
                             failureReturns = NA
@@ -1492,7 +1498,7 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
     sparseModel <- try(optim(par = param[freeParam],
                              fn = fitCpptsem,
                              gr = gradCpptsem,
-                             method = "BFGS",
+                             method = "L-BFGS-B",
                              cpptsemObject = cpptsemObject,
                              objective = objective,
                              free = freeParam,
