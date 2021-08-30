@@ -370,13 +370,16 @@ exact_tryStartingValues <- function(startingValues, returnAs,
     if(numStart > 0){
       warning("Can not try different starting values because sparseParameters is empty.")
     }
-    startingValues <- tryApproxFirst(startingValues = startingValues, returnAs = returnAs,
+    invisible(capture.output(newStartingValues <- tryApproxFirst(startingValues = startingValues, returnAs = returnAs,
                                      approxFirst = approxFirst, numStart = numStart, controlOptimx = controlOptimx,
                                      lambda = lambda,
                                      cpptsemObject = cpptsemObject,
                                      regIndicators = regIndicators, targetVector = targetVector,
-                                     adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters)
-    return(startingValues)
+                                     adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters), type = "message"))
+    if(any(class(newStartingValues) == "try-error")){
+      return(startingValues)
+    }
+    return(newStartingValues)
   }
 
   # generate multiple starting values
@@ -394,13 +397,13 @@ exact_tryStartingValues <- function(startingValues, returnAs,
     parameterValues_i <- weight*startingValues[parameterNames]+(1-weight)*sparseParameters[parameterNames]
     startValuesTable[parameterNames,i] <- parameterValues_i[parameterNames]
     # set parameters
-    optimized <- try(tryApproxFirst(startingValues = parameterValues_i, returnAs = "full",
+    invisible(capture.output(optimized <- try(tryApproxFirst(startingValues = parameterValues_i, returnAs = "full",
                                     approxFirst = approxFirst, numStart = numStart, controlOptimx = controlOptimx,
                                     lambda = lambda,
                                     cpptsemObject = cpptsemObject,
                                     regIndicators = regIndicators, targetVector = targetVector,
                                     adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters),
-                     silent = TRUE)
+                     silent = TRUE), type = "message"))
     if(any(class(optimized) == "try-error")){
       next
     }

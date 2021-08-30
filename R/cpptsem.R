@@ -1367,7 +1367,7 @@ prepareKalmanMatrices <- function(nlatent, nmanifest, Tpoints, sampleSize){
 #' @param free vector of same length as cpptsemObject$getParameterValues, where for each element it is specified if the parameter is freely estimated (workaround for fixing parameters)
 #' @param failureReturns e.g., NA, Inf, ... adapt to optimizer settings
 #' @export
-fitCpptsem <- function(parameterValues, cpptsemObject, objective, free = rep(TRUE, length(parameterValues)), failureReturns){
+fitCpptsem <- function(parameterValues, cpptsemObject, objective, free = labeledFree(parameterValues), failureReturns){
   if(!all(free)){
     parameters <- cpptsemObject$getParameterValues()
     parameters[names(parameterValues)] <- parameterValues
@@ -1412,16 +1412,66 @@ fitCpptsem <- function(parameterValues, cpptsemObject, objective, free = rep(TRU
   stop("Error while computing fit.")
 }
 
-#' approx_KalmanM2LLCpptsem
+#' gradCpptsem
 #'
-#' computes gradients for an approximate optimization of regularized ctsem based on cpptsem with Full Information Maximum Likelihood objective
-#' @param parameters paramneter values
+#' gradCpptsem will try to compute gradients with decreasing precision starting from the default in OpenMx. Allows for setting some parameters to fixed (difference to exact_getCppGradients)
+#'
+#' @param parameterValues vector with labeled parameter values
+#' @param cpptsemObject model of type cpptsem
+#' @param objective ml or Kalman
+#' @param free vector of same length as cpptsemObject$getParameterValues, where for each element it is specified if the parameter is freely estimated (workaround for fixing parameters)
+#' @param failureReturns value which is returned if gradCpptsem fails
+#' @export
+gradCpptsem <- function(parameterValues, cpptsemObject, objective, free = labeledFree(parameterValues), failureReturns = NA){
+  if(!all(free)){
+    parameters <- cpptsemObject$getParameterValues()
+    parameters[names(parameterValues)] <- parameterValues
+    cpptsemObject$setParameterValues(parameters, names(parameters))
+  }else{
+    cpptsemObject$setParameterValues(parameterValues, names(parameterValues))
+  }
+  # will try different precisions for the gradients
+  defaultPrecision <- OpenMx::imxAutoOptionValue("Gradient step size")
+  defaultPrecision2 <- (1.1 * 10^(-16))^(1/3)
+  precisions <- rev(seq(defaultPrecision, defaultPrecision2, length.out = 5))
+  for(precision in precisions){
+    if(tolower(objective) == "ml"){
+      invisible(capture.output(gradients <- try(cpptsemObject$approxRAMGradients(precision), silent = T), type = "message"))
+    }else{
+      invisible(capture.output(gradients <- try(cpptsemObject$approxKalmanGradients(precision), silent = T), type = "message"))
+    }
+    if(!(any(class(gradients) == "try-error")) &
+       !anyNA(gradients)){
+      break
+    }
+  }
+  gradients[is.na(gradients)] <- failureReturns
+  return(gradients[free[names(gradients)]])
+}
+
+#' labeledFree
+#'
+#' small helper function. Returns vector with TRUE of length x with same labels as x
+#' @param x vector with labeled values
+#' @export
+labeledFree <- function(x){
+  free <- rep(TRUE, length(x))
+  names(free) <- names(x)
+  return (free)
+}
+
+#' approx_RAMM2LLCpptsem
+#'
+#' computes fit for RAM model
+#' @param parameters parameter values
 #' @param cpptsemmodel model from cpptsem
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @author Jannik Orzek
 #' @export
 approx_RAMM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
-  cpptsemmodel$setParameterValues(parameters, names(parameters))
+
+  cpptsemObject$setParameterValues(parameterValues, names(parameterValues))
+
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
   invisible(capture.output(RAM <- try(cpptsemmodel$computeRAM(),
@@ -1609,19 +1659,19 @@ ridgeKalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWei
 #'
 #' exact_getCppGradients will try to compute gradients with decreasing precision starting from the default in OpenMx. Sometimes the gradients will result in NA for a very specific setting of the precisions. Then it can help to slightly alter the precision
 #'
-#' @param cppmodel model of type cpptsem
+#' @param cpptsemObject model of type cpptsem
 #' @param objective ml or Kalman
 #' @export
-exact_getCppGradients <- function(cppmodel, objective){
+exact_getCppGradients <- function(cpptsemObject, objective){
   # will try different precisions for the gradients
   defaultPrecision <- OpenMx::imxAutoOptionValue("Gradient step size")
   defaultPrecision2 <- (1.1 * 10^(-16))^(1/3)
   precisions <- rev(seq(defaultPrecision, defaultPrecision2, length.out = 5))
   for(precision in precisions){
     if(tolower(objective) == "ml"){
-      invisible(capture.output(gradients <- try(cppmodel$approxRAMGradients(precision), silent = T), type = "message"))
+      invisible(capture.output(gradients <- try(cpptsemObject$approxRAMGradients(precision), silent = T), type = "message"))
     }else{
-      invisible(capture.output(gradients <- try(cppmodel$approxKalmanGradients(precision), silent = T), type = "message"))
+      invisible(capture.output(gradients <- try(cpptsemObject$approxKalmanGradients(precision), silent = T), type = "message"))
     }
     if(!(any(class(gradients) == "try-error")) &
        !anyNA(gradients)){
@@ -1648,7 +1698,7 @@ exact_getCppGradients <- function(cppmodel, objective){
 #' @author Jannik Orzek
 #' @export
 approx_gradCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector, epsilon, objective, failureReturns){
-  invisible(capture.output(grad <- try(exact_getCppGradients(cppmodel = cpptsemmodel, objective = objective),
+  invisible(capture.output(grad <- try(exact_getCppGradients(cpptsemObject = cpptsemmodel, objective = objective),
                                        silent = TRUE),
                            type = "message"))
   if(class(grad) == "try-error" || anyNA(grad)){

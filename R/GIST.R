@@ -213,11 +213,11 @@ GIST <- function(cpptsemObject, startingValues, objective, lambda, adaptiveLasso
   if(tolower(objective) == "ml"){
     invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
     invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
-    out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
+    out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }else{
     invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE), type = "message"))
     out2 <- NA
-    out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
+    out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }
   if(any(class(out1) == "try-error")  |
      any(class(out2) == "try-error") |
@@ -387,9 +387,9 @@ GIST <- function(cpptsemObject, startingValues, objective, lambda, adaptiveLasso
     }
 
     if(tolower(objective) == "ml"){
-      out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
+      out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
     }else{
-      out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
+      out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
     }
     if(any(class(out3) == "try-error") |
        any(is.na(out3))){
@@ -565,11 +565,11 @@ GISTWithTarget <- function(cpptsemObject, startingValues, objective, lambda, ada
   if(tolower(objective) == "ml"){
     invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
     invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
-    out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
+    out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }else{
     invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE), type = "message"))
     out2 <- NA
-    out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
+    out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }
   if(any(class(out1) == "try-error")  |
      any(class(out2) == "try-error") |
@@ -751,9 +751,9 @@ GISTWithTarget <- function(cpptsemObject, startingValues, objective, lambda, ada
     }
 
     if(tolower(objective) == "ml"){
-      out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
+      out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
     }else{
-      out3 <- exact_getCppGradients(cppmodel = cpptsemObject, objective = objective)
+      out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
     }
     if(any(class(out3) == "try-error") |
        any(is.na(out3))){

@@ -564,6 +564,11 @@ regCtsem <- function(
     }
 
     if(!is.numeric(lambdas) && lambdas == "auto"){
+      if(scaleLambdaWithN){
+        sampleSize <- nrow(dataset)
+        maxLambdas <- maxLambdas/sampleSize
+      }
+      maxLambda <- maxLambdas + maxLambdas/25 # adding some wiggle room as there will always be some deviations
       argsIn$lambdas <- seq(0, max(maxLambdas, na.rm = TRUE), length.out = argsIn$lambdasAutoLength)
     }
 
@@ -726,6 +731,11 @@ regCtsem <- function(
     }
 
     if(!is.numeric(lambdas) && lambdas == "auto"){
+      if(scaleLambdaWithN){
+        sampleSize <- nrow(dataset)
+        maxLambdas <- maxLambdas/sampleSize
+      }
+      maxLambda <- maxLambdas + maxLambdas/25 # adding some wiggle room as there will always be some deviations
       argsIn$lambdas <- seq(0, max(maxLambdas, na.rm = TRUE), length.out = argsIn$lambdasAutoLength)
     }
 
@@ -1479,7 +1489,10 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
 
     cpptsemObject$setParameterValues(param, names(param))
     # optimize
-    sparseModel <- try(optim(par = param[freeParam], fn = fitCpptsem, method = "BFGS",
+    sparseModel <- try(optim(par = param[freeParam],
+                             fn = fitCpptsem,
+                             gr = gradCpptsem,
+                             method = "BFGS",
                              cpptsemObject = cpptsemObject,
                              objective = objective,
                              free = freeParam,
@@ -1502,7 +1515,7 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
     cpptsemObject$setParameterValues(param, names(param))
     grad <- regCtsem::exact_getCppGradients(cpptsemObject, objective = objective)
 
-    if(any(class(grad) == "try-error")){
+    if(any(class(grad) == "try-error") || anyNA(grad)){
       if(it ==  0){
         warning("Error when determining the lambdas automatically: Setting all regularized parameters to zero resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to zero; however, this might result in a wrong maximum for the lambdas! Consider setting the lambdas manually.")
       }
