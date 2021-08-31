@@ -30,7 +30,7 @@
 #' @param sampleSize sample size for scaling lambda with N
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param controlOptimx settings passed to optimx
+#' @param controlApproxOptimizer settings passed to optimx or Rsolnp
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #' @export
@@ -43,7 +43,7 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
                              maxIter_line = 500, eps_out = .0000000001, eps_in = .0000000001, eps_WW = .0001,
                              scaleLambdaWithN = TRUE, sampleSize, approxFirst = T,
                              numStart = 0,
-                             controlOptimx, extraTries = 3, verbose = 0){
+                             controlApproxOptimizer, extraTries = 3, verbose = 0){
   # Setup
   # save current parameters
   parameters <- cpptsemObject$getParameterValues()
@@ -114,7 +114,7 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
 
     if(approxFirst){
       theta_kp1 <- exact_tryStartingValues(startingValues = startingValues, returnAs = "matrix",
-                                  approxFirst = approxFirst, numStart = numStart, controlOptimx = controlOptimx,
+                                  approxFirst = approxFirst, numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
                                   lambda = lambda,
                                   cpptsemObject = cpptsemObject,
                                   regIndicators = regIndicators, targetVector = targetVector,

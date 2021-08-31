@@ -9,7 +9,7 @@ tryApproxFirst(
   returnAs,
   approxFirst,
   numStart,
-  controlOptimx,
+  controlApproxOptimizer,
   lambda,
   cpptsemObject,
   regIndicators,
@@ -28,7 +28,7 @@ tryApproxFirst(
 
 \item{numStart}{number of starting values}
 
-\item{controlOptimx}{settings passed to optimx}
+\item{controlApproxOptimizer}{settings passed to optimx or Rsolnp}
 
 \item{lambda}{tuning parameter value}
 

@@ -33,7 +33,7 @@
 #' @param sampleSize sample size for scaling lambda with N
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param controlOptimx settings passed to optimx
+#' @param controlApproxOptimizer settings passed to optimx or Rsolnp
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)
 #' @export
 exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetVector, lambdas, adaptiveLassoWeights,
@@ -44,7 +44,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
                        maxIter_out = 100, maxIter_in = 1000,
                        break_outer = c("parameterChange" = 10^(-5)),
                        scaleLambdaWithN = TRUE, sampleSize, approxFirst = F,
-                       numStart = 3, controlOptimx,
+                       numStart = 3, controlApproxOptimizer,
                        verbose = 0){
   # Setup
   # get parameter values
@@ -87,7 +87,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
     # should the results first be approximated?
     if(approxFirst){
       startingValues <- exact_tryStartingValues(startingValues = startingValues, returnAs = "vector",
-                                       approxFirst = approxFirst, numStart = numStart, controlOptimx = controlOptimx,
+                                       approxFirst = approxFirst, numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
                                        lambda = lambda,
                                        cpptsemObject = cpptsemObject,
                                        regIndicators = regIndicators, targetVector = targetVector,

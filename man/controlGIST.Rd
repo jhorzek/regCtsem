@@ -4,7 +4,22 @@
 \alias{controlGIST}
 \title{controlGIST}
 \usage{
-controlGIST()
+controlGIST(
+  forceCpptsem = FALSE,
+  stepSize = 1,
+  sig = 10^(-5),
+  maxIter_out = 100,
+  maxIter_in = 1000,
+  break_outer = c(fitChange = 10^(-5)),
+  eta = 2,
+  stepsizeMin = 1/(10^30),
+  stepsizeMax = 10^30,
+  GISTLinesearchCriterion = "monotone",
+  GISTNonMonotoneNBack = 5,
+  approxFirst = TRUE,
+  numStart = 0,
+  controlApproxOptimizer = controlRsolnp(control = list(outer.iter = 50, trace = 0))
+)
 }
 \arguments{
 \item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details}
@@ -33,7 +48,7 @@ controlGIST()
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{controlOptimx}{settings passed to optimx. See ?optimx for more details}
+\item{controlApproxOptimizer}{settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox}
 }
 \description{
 The following arguments can be used to adjust the GIST optimization

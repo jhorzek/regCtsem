@@ -22,7 +22,7 @@
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
 #' @param optimization which optimization procedure should be used. Possible are  "exact" or "approx". exact is recommended
-#' @param optimizer for exact optimization: Either GIST or GLMNET. When using optimization = "approx", any of the optimizers in optimx can be used. See ?optimx
+#' @param optimizer for exact optimization: Either GIST or GLMNET. When using optimization = "approx", Rsolnp or any of the optimizers in optimx can be used. See ?optimx
 #' @param control List with control arguments for the optimizer. See ?controlGIST, ?controlGLMNET and ?controlApprox for the respective parameters
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress.
 #' @return returns an object of class regCtsem. Without cross-validation, this object will have the fields setup (all arguments passed to the function), fitAndParameters (used internally to store the fit and the raw (i.e., untransformed) parameters), fit (fit indices, ect.), parameterEstimatesRaw (raw, i.e. untransformed parameters; used internally), and parameters (transformed parameters)#'
@@ -233,7 +233,7 @@
 #' }
 #'
 #' @author Jannik Orzek
-#' @import ctsemOMX rlist optimx
+#' @import ctsemOMX rlist optimx Rsolnp
 #' @export
 regCtsem <- function(
   # model
@@ -303,14 +303,11 @@ regCtsem <- function(
   if(optimization == "approx"){
     controlTemp <- controlApprox()
     if(tolower(optimizer) == "gist" || tolower(optimizer) == "glmnet"){
-      optimizer <- controlTemp$controlOptimx$method
-      warning(paste0("Setting optimizer to ", optimizer))
-    }else if(optimizer %in% c('Nelder-Mead', 'BFGS', 'CG', 'L-BFGS-B', 'nlm', 'nlminb', 'spg', 'ucminf', 'newuoa', 'bobyqa', 'nmkb', 'hjkb', 'Rcgmin', 'Rvmmin')){
-      warning(paste0("For approx optimization, set the optimizer with control. See ?controlApprox for more details. Setting optimizer to ", controlTemp$controlOptimx$method, ". See ?optimx for all options."))
-      optimizer <- controlTemp$controlOptimx$method
-    }else{
-      optimizer <- controlTemp$controlOptimx$method
-      warning(paste0("For approx optimization, set the optimizer with control. See ?controlApprox for more details. Setting optimizer to ", optimizer, ". See ?optimx for all options."))
+      if(controlTemp$controlApproxOptimizer$package == "optimx"){
+        optimizer <- controlTemp$controlApproxOptimizer$method
+      }else{
+        optimizer <- "solnp"
+      }
     }
   } else if(optimization == "exact" && optimizer == "GIST"){
     controlTemp <- controlGIST()
@@ -422,19 +419,16 @@ regCtsem <- function(
     # optimize subject specific model
     message("Fitting model with person-specific parameter estimates.")
     startingValues <- cpptsemObject$getParameterValues()
-    invisible(capture.output(CpptsemFit <- try(optimx::optimx(par = startingValues,
-                                                              fn = regCtsem::approx_KalmanM2LLCpptsem,
-                                                              #gr = gradCpptsem,
-                                                              cpptsemmodel = cpptsemObject, failureReturns = .5*.Machine$double.xmax,
-                                                              method = "L-BFGS-B",
-                                                              control = list("maxit" = 400, "dowarn" = FALSE)), silent = TRUE), type = c("output", "message")))
-    if(CpptsemFit$convcode > 0){warning(paste0("Optimx reports convcode  > 0 for the model with person-specific parameter estimates: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
-    if(any(class(CpptsemFit) == "try-error")){stop("Optimx for the model with person-specific parameter estimates resulted in errors.")}
+    invisible(capture.output(CpptsemFit <- try(Rsolnp::solnp(par = startingValues,
+                                                             fun = regCtsem::approx_KalmanM2LLCpptsem,
+                                                             #gr = gradCpptsem,
+                                                             cpptsemmodel = cpptsemObject, failureReturns = .5*.Machine$double.xmax
+    ), silent = TRUE), type = c("output", "message")))
+    if(CpptsemFit$convergence > 0){warning(paste0("Rsolnp reports convcode  > 0 for the model with person-specific parameter estimates: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
+    if(any(class(CpptsemFit) == "try-error")){stop("Rsolnp for the model with person-specific parameter estimates resulted in errors.")}
 
-    # extract parameters
-    CpptsemFit <- extractOptimx(names(cpptsemObject$getParameterValues()), CpptsemFit)
     # compute unregularized fit
-    cpptsemObject$setParameterValues(CpptsemFit$parameters, names(CpptsemFit$parameters))
+    cpptsemObject$setParameterValues(CpptsemFit$pars, names(CpptsemFit$pars))
     cpptsemObject$computeAndFitKalman()
 
     ## add person-specific parameter estimates to the regularized parameters if requested
@@ -500,7 +494,7 @@ regCtsem <- function(
                                                scaleLambdaWithN = argsIn$scaleLambdaWithN,
                                                approxFirst = argsIn$approxFirst,
                                                numStart = argsIn$numStart,
-                                               controlOptimx = argsIn$controlOptimx,
+                                               controlApproxOptimizer = argsIn$controlApproxOptimizer,
                                                verbose = argsIn$verbose)
 
     fitAndParametersSeparated <- try(separateFitAndParameters(regCtsemObject))
@@ -621,7 +615,7 @@ regCtsem <- function(
                                                  scaleLambdaWithN = argsIn$scaleLambdaWithN,
                                                  approxFirst = argsIn$approxFirst,
                                                  numStart = argsIn$numStart,
-                                                 controlOptimx = argsIn$controlOptimx,
+                                                 controlApproxOptimizer = argsIn$controlApproxOptimizer,
                                                  verbose = argsIn$verbose)
 
       fitAndParametersSeparated <- try(separateFitAndParameters(regCtsemObject))
@@ -669,7 +663,7 @@ regCtsem <- function(
                                                 objective = argsIn$objective,
                                                 epsilon = argsIn$epsilon,
                                                 zeroThresh = argsIn$zeroThresh,
-                                                controlOptimx = argsIn$controlOptimx,
+                                                controlApproxOptimizer = argsIn$controlApproxOptimizer,
                                                 # additional settings
                                                 scaleLambdaWithN = argsIn$scaleLambdaWithN,
                                                 verbose = argsIn$verbose)
@@ -772,7 +766,7 @@ regCtsem <- function(
                                                   objective = argsIn$objective,
                                                   epsilon = argsIn$epsilon,
                                                   zeroThresh = argsIn$zeroThresh,
-                                                  controlOptimx = argsIn$controlOptimx,
+                                                  controlApproxOptimizer = argsIn$controlApproxOptimizer,
                                                   # additional settings
                                                   scaleLambdaWithN = argsIn$scaleLambdaWithN,
                                                   verbose = argsIn$verbose)
@@ -839,7 +833,7 @@ regCtsem <- function(
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-#' @param controlOptimx settings passed to optimx
+#' @param controlApproxOptimizer settings passed to optimx or Rsolnp
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #'
 #' @author Jannik Orzek
@@ -890,7 +884,7 @@ exact_regCtsem <- function(  # model
   scaleLambdaWithN = TRUE,
   approxFirst = FALSE,
   numStart = 0,
-  controlOptimx,
+  controlApproxOptimizer,
   # additional settings
   verbose = 0){
 
@@ -959,7 +953,7 @@ exact_regCtsem <- function(  # model
                                                eps_out = eps_out, eps_in = eps_in, eps_WW = eps_WW,
                                                scaleLambdaWithN = scaleLambdaWithN, sampleSize = sampleSize,
                                                approxFirst = approxFirst,
-                                               numStart = numStart, controlOptimx = controlOptimx,
+                                               numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
                                                verbose = verbose))
   }
   if(tolower(optimizer) == "gist"){
@@ -975,7 +969,7 @@ exact_regCtsem <- function(  # model
                                          break_outer = break_outer,
                                          scaleLambdaWithN = scaleLambdaWithN, sampleSize = sampleSize,
                                          approxFirst = approxFirst,
-                                         numStart = numStart, controlOptimx = controlOptimx,
+                                         numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
                                          verbose = verbose
     )
     )
@@ -1041,7 +1035,7 @@ exact_regCtsem <- function(  # model
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
-#' @param controlOptimx settings passed to optimx
+#' @param controlApproxOptimizer settings passed to optimx or Rsolnp
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #'
@@ -1068,7 +1062,7 @@ approx_regCtsem <- function(  # model
   objective = "ML",
   epsilon = .001,
   zeroThresh = .001,
-  controlOptimx,
+  controlApproxOptimizer,
   # additional settings
   scaleLambdaWithN = TRUE,
   verbose = 0){
@@ -1118,7 +1112,7 @@ approx_regCtsem <- function(  # model
                                                               # fit settings
                                                               returnFitIndices = returnFitIndices, BICWithNAndT = BICWithNAndT, Tpoints = Tpoints,
                                                               # optimization settings
-                                                              objective = objective, epsilon = epsilon, zeroThresh = zeroThresh, controlOptimx = controlOptimx,
+                                                              objective = objective, epsilon = epsilon, zeroThresh = zeroThresh, controlApproxOptimizer = controlApproxOptimizer,
                                                               # additional settings
                                                               scaleLambdaWithN = scaleLambdaWithN, verbose = verbose))
 
@@ -1495,15 +1489,13 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
 
     cpptsemObject$setParameterValues(param, names(param))
     # optimize
-    sparseModel <- try(optim(par = param[freeParam],
-                             fn = fitCpptsem,
-                             gr = gradCpptsem,
-                             method = "L-BFGS-B",
-                             cpptsemObject = cpptsemObject,
-                             objective = objective,
-                             free = freeParam,
-                             failureReturns = NA
-    ), silent = TRUE)
+    invisible(capture.output(sparseModel <- try(Rsolnp::solnp(par = param[freeParam],
+                                                             fun = fitCpptsem,
+                                                             cpptsemObject = cpptsemObject,
+                                                             objective = objective,
+                                                             free = freeParam,
+                                                             failureReturns = .Machine$double.xmax/2),
+                                                silent = TRUE), type = c("output", "message")))
 
     if(any(class(sparseModel) == "try-error")){
       if(it ==  0){
@@ -1513,7 +1505,7 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
       next
     }
 
-    nonZeroParam <- sparseModel$par
+    nonZeroParam <- sparseModel$pars
     namesNonZeroParam <- names(nonZeroParam)
 
     # step 2: compute gradients with regularized parameters set to target and unregularized parameters set to nonZeroParam estimates

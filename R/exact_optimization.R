@@ -350,7 +350,7 @@ exact_initialHessian <- function(mxObject,
 #' @param returnAs "vector" or "matrix"
 #' @param approxFirst boolean: should the solution be approximated
 #' @param numStart number of starting values
-#' @param controlOptimx settings passed to optimx
+#' @param controlApproxOptimizer settings passed to optimx or Rsolnp
 #' @param lambda tuning parameter value
 #' @param cpptsemObject object of type cpptsem
 #' @param regIndicators Labels for the regularized parameters (e.g. drift_eta1_eta2)
@@ -361,17 +361,24 @@ exact_initialHessian <- function(mxObject,
 #' @author Jannik Orzek
 #' @import ctsemOMX
 #' @export
-exact_tryStartingValues <- function(startingValues, returnAs,
-                                    approxFirst, numStart, controlOptimx,
+exact_tryStartingValues <- function(startingValues,
+                                    returnAs,
+                                    approxFirst,
+                                    numStart,
+                                    controlApproxOptimizer,
                                     lambda,
                                     cpptsemObject,
-                                    regIndicators, targetVector = NULL, adaptiveLassoWeights, objective, sparseParameters){
+                                    regIndicators,
+                                    targetVector = NULL,
+                                    adaptiveLassoWeights,
+                                    objective,
+                                    sparseParameters){
   if(is.null(sparseParameters)){
     if(numStart > 0){
       warning("Can not try different starting values because sparseParameters is empty.")
     }
     invisible(capture.output(newStartingValues <- tryApproxFirst(startingValues = startingValues, returnAs = returnAs,
-                                     approxFirst = approxFirst, numStart = numStart, controlOptimx = controlOptimx,
+                                     approxFirst = approxFirst, numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
                                      lambda = lambda,
                                      cpptsemObject = cpptsemObject,
                                      regIndicators = regIndicators, targetVector = targetVector,
@@ -398,7 +405,7 @@ exact_tryStartingValues <- function(startingValues, returnAs,
     startValuesTable[parameterNames,i] <- parameterValues_i[parameterNames]
     # set parameters
     invisible(capture.output(optimized <- try(tryApproxFirst(startingValues = parameterValues_i, returnAs = "full",
-                                    approxFirst = approxFirst, numStart = numStart, controlOptimx = controlOptimx,
+                                    approxFirst = approxFirst, numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
                                     lambda = lambda,
                                     cpptsemObject = cpptsemObject,
                                     regIndicators = regIndicators, targetVector = targetVector,
@@ -429,7 +436,7 @@ exact_tryStartingValues <- function(startingValues, returnAs,
 #' @param returnAs "vector" or "matrix"
 #' @param approxFirst boolean: should the solution be approximated
 #' @param numStart number of starting values
-#' @param controlOptimx settings passed to optimx
+#' @param controlApproxOptimizer settings passed to optimx or Rsolnp
 #' @param lambda tuning parameter value
 #' @param cpptsemObject object of type cpptsem
 #' @param regIndicators Labels for the regularized parameters (e.g. drift_eta1_eta2)
@@ -441,10 +448,16 @@ exact_tryStartingValues <- function(startingValues, returnAs,
 #' @import ctsemOMX
 #' @export
 tryApproxFirst <- function(startingValues, returnAs,
-                           approxFirst, numStart, controlOptimx,
+                           approxFirst,
+                           numStart,
+                           controlApproxOptimizer,
                            lambda,
                            cpptsemObject,
-                           regIndicators, targetVector = NULL, adaptiveLassoWeights, objective, sparseParameters
+                           regIndicators,
+                           targetVector = NULL,
+                           adaptiveLassoWeights,
+                           objective,
+                           sparseParameters
 ){
 
   # define a target vector if none is provided
@@ -454,13 +467,7 @@ tryApproxFirst <- function(startingValues, returnAs,
   }
 
   if(approxFirst && !is.null(cpptsemObject)){
-    if("failureReturns" %in% names(controlOptimx)){
-      failureReturns <- controlOptimx$failureReturns
-      controlOptimx$failureReturns <- NULL
-    }else{
-      warning("No failureReturns for optimx. Using .Machine$double.xmax/2")
-      failureReturns <- .Machine$double.xmax/2
-    }
+    if(controlApproxOptimizer$package == "optimx"){
     optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
                                           regM2LLCpptsem = ifelse(tolower(objective) == "ml",
                                                                   regCtsem::approx_RAMRegM2LLCpptsem,
@@ -475,8 +482,27 @@ tryApproxFirst <- function(startingValues, returnAs,
                                           epsilon = 10^(-8),
                                           objective = objective,
                                           testGradients = TRUE,
-                                          failureReturns = failureReturns,
-                                          controlOptimx, silent = TRUE), silent = TRUE)
+                                          controlOptimx = controlApproxOptimizer, silent = TRUE), silent = TRUE)
+    }else if(tolower(controlApproxOptimizer$package) == "rsolnp"){
+      optimized <- try(approx_cpptsemRsolnp(cpptsemmodel = cpptsemObject,
+                                            regM2LLCpptsem = ifelse(tolower(objective) == "ml",
+                                                                    regCtsem::approx_RAMRegM2LLCpptsem,
+                                                                    regCtsem::approx_KalmanRegM2LLCpptsem),
+                                            gradCpptsem = regCtsem::approx_gradCpptsem,
+                                            startingValues = startingValues,
+                                            adaptiveLassoWeights = adaptiveLassoWeights,
+                                            N = 1, # lambda is already adjusted
+                                            lambda = lambda,
+                                            regIndicators = regIndicators,
+                                            targetVector = targetVector,
+                                            epsilon = 10^(-8),
+                                            objective = objective,
+                                            testGradients = TRUE,
+                                            controlRsolnp = controlApproxOptimizer,
+                                            silent = TRUE), silent = TRUE)
+    }else{
+      stop("No package in controlApproxOptimizer")
+    }
     if(!any(class(optimized) == "try-error") && returnAs == "full"){
       return(optimized)
     }

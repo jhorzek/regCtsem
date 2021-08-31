@@ -4,11 +4,28 @@
 \alias{controlGLMNET}
 \title{controlGLMNET}
 \usage{
-controlGLMNET()
+controlGLMNET(
+  tryCpptsem = TRUE,
+  forceCpptsem = FALSE,
+  stepSize = 1,
+  lineSearch = "GLMNET",
+  c1 = 1e-04,
+  c2 = 0.9,
+  sig = 10^(-5),
+  gam = 0,
+  initialHessianApproximation = "OpenMx",
+  maxIter_out = 100,
+  maxIter_in = 1000,
+  maxIter_line = 500,
+  eps_out = 1e-10,
+  eps_in = 1e-10,
+  eps_WW = 1e-04,
+  approxFirst = TRUE,
+  numStart = 0,
+  controlApproxOptimizer = controlRsolnp(control = list(outer.iter = 50, trace = 0))
+)
 }
 \arguments{
-\item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
-
 \item{tryCpptsem}{should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models}
 
 \item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the m,atrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details}
@@ -43,7 +60,9 @@ controlGLMNET()
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{controlOptimx}{settings passed to optimx. See ?optimx for more details}
+\item{controlApproxOptimizer}{settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox}
+
+\item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
 }
 \description{
 The following arguments can be used to adjust the GLMNET optimization

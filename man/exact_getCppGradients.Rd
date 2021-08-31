@@ -4,10 +4,10 @@
 \alias{exact_getCppGradients}
 \title{exact_getCppGradients}
 \usage{
-exact_getCppGradients(cppmodel, objective)
+exact_getCppGradients(cpptsemObject, objective)
 }
 \arguments{
-\item{cppmodel}{model of type cpptsem}
+\item{cpptsemObject}{model of type cpptsem}
 
 \item{objective}{ml or Kalman}
 }

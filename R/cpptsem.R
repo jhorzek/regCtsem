@@ -1498,7 +1498,7 @@ approx_RAMM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
 #' @param cpptsemmodel model returned from cpptsem
 #' @param adaptiveLassoWeights vector with weights of the adaptive lasso
 #' @param N sample size
-#' @param lambda tuning parameter lambda
+#' @param lambda_ tuning parameter lambda
 #' @param regIndicators string vector with names of regularized parameters
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param epsilon tuning parameter for epsL1 approximation
@@ -1506,7 +1506,7 @@ approx_RAMM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @author Jannik Orzek
 #' @export
-approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector, epsilon, objective, failureReturns){
+approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda_, regIndicators, targetVector, epsilon, objective, failureReturns){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
@@ -1520,7 +1520,7 @@ approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeig
     return(failureReturns)
   }
   m2LL <- cpptsemmodel$m2LL
-  regM2LL <- m2LL + sum(N*lambda*adaptiveLassoWeights[regIndicators] * abs(parameters[regIndicators] - targetVector[regIndicators]))
+  regM2LL <- m2LL + sum(N*lambda_*adaptiveLassoWeights[regIndicators] * abs(parameters[regIndicators] - targetVector[regIndicators]))
   if(is.na(regM2LL) | is.infinite(regM2LL)){
     return(failureReturns)
   }
@@ -1534,7 +1534,7 @@ approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeig
 #' @param cpptsemmodel model returned from cpptsem
 #' @param adaptiveLassoWeights vector with weights of the adaptive lasso
 #' @param N sample size
-#' @param lambda tuning parameter lambda
+#' @param lambda_ tuning parameter lambda
 #' @param regIndicators string vector with names of regularized parameters
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param epsilon NOT USED; Only required for the optimizer to call the function
@@ -1542,7 +1542,7 @@ approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeig
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @author Jannik Orzek
 #' @export
-ridgeRAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector, epsilon, objective, failureReturns){
+ridgeRAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda_, regIndicators, targetVector, epsilon, objective, failureReturns){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
@@ -1556,7 +1556,7 @@ ridgeRAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeight
     return(failureReturns)
   }
   m2LL <- cpptsemmodel$m2LL
-  regM2LL <- m2LL + sum(N*lambda*adaptiveLassoWeights[regIndicators] * (parameters[regIndicators] - targetVector[regIndicators])^2)
+  regM2LL <- m2LL + sum(N*lambda_*adaptiveLassoWeights[regIndicators] * (parameters[regIndicators] - targetVector[regIndicators])^2)
   if(is.na(regM2LL) | is.infinite(regM2LL)){
     return(failureReturns)
   }
@@ -1596,7 +1596,7 @@ approx_KalmanM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
 #' @param cpptsemmodel model returned from cpptsem
 #' @param adaptiveLassoWeights vector with weights of the adaptive lasso
 #' @param N sample size
-#' @param lambda tuning parameter lambda
+#' @param lambda_ tuning parameter lambda
 #' @param regIndicators string vector with names of regularized parameters
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param epsilon tuning parameter for epsL1 approximation
@@ -1604,7 +1604,7 @@ approx_KalmanM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @author Jannik Orzek
 #' @export
-approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector, epsilon, objective, failureReturns){
+approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda_, regIndicators, targetVector, epsilon, objective, failureReturns){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
@@ -1615,7 +1615,7 @@ approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoW
     return(failureReturns)
   }
   m2LL <- cpptsemmodel$m2LL
-  regM2LL <- m2LL + sum(N*lambda*adaptiveLassoWeights[regIndicators] * abs(parameters[regIndicators] - targetVector[regIndicators]))
+  regM2LL <- m2LL + sum(N*lambda_*adaptiveLassoWeights[regIndicators] * abs(parameters[regIndicators] - targetVector[regIndicators]))
   if(is.na(regM2LL) | is.infinite(regM2LL)){
     return(failureReturns)
   }
@@ -1629,7 +1629,7 @@ approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoW
 #' @param cpptsemmodel model returned from cpptsem
 #' @param adaptiveLassoWeights vector with weights of the adaptive lasso
 #' @param N sample size
-#' @param lambda tuning parameter lambda
+#' @param lambda_ tuning parameter lambda
 #' @param regIndicators string vector with names of regularized parameters
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param epsilon NOT USED; Only required for the optimizer to call the function
@@ -1637,7 +1637,7 @@ approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoW
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @author Jannik Orzek
 #' @export
-ridgeKalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector, epsilon, objective, failureReturns){
+ridgeKalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda_, regIndicators, targetVector, epsilon, objective, failureReturns){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
@@ -1648,7 +1648,7 @@ ridgeKalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWei
     return(failureReturns)
   }
   m2LL <- cpptsemmodel$m2LL
-  regM2LL <- m2LL + sum(N*lambda*adaptiveLassoWeights[regIndicators] * (parameters[regIndicators] - targetVector[regIndicators])^2)
+  regM2LL <- m2LL + sum(N*lambda_*adaptiveLassoWeights[regIndicators] * (parameters[regIndicators] - targetVector[regIndicators])^2)
   if(is.na(regM2LL) | is.infinite(regM2LL)){
     return(failureReturns)
   }
@@ -1712,6 +1712,125 @@ approx_gradCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N
 }
 
 
+#' approx_cpptsemRsolnp
+#'
+#' creates an approximate solution to regularized ctsem using Rsolnp::solnp
+#' @param cpptsemmodel model returned from cpptsem
+#' @param regM2LLCpptsem regularized fitting function
+#' @param gradCpptsem function for computing the gradients of regM2LLCpptsem
+#' @param startingValues starting values for optimization
+#' @param adaptiveLassoWeights vector with weights of the adaptive lasso
+#' @param N sample size
+#' @param lambda tuning parameter lambda
+#' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
+#' @param epsilon tuning parameter for epsL1 approximation
+#' @param objective ML or Kalman
+#' @param testGradients should be tested if the final parameters result in NA gradients?
+#' @param controlRsolnp additional arguments passed as control to solnp
+#' @param silent suppress warnings
+#' @author Jannik Orzek
+#' @import Rsolnp
+#' @export
+approx_cpptsemRsolnp <- function(cpptsemmodel,
+                                 regM2LLCpptsem,
+                                 gradCpptsem,
+                                 startingValues,
+                                 adaptiveLassoWeights,
+                                 N, lambda,
+                                 regIndicators,
+                                 targetVector,
+                                 epsilon,
+                                 objective,
+                                 testGradients,
+                                 controlRsolnp,
+                                 silent){
+  if("failureReturns" %in% names(controlRsolnp)){
+    failureReturns <- controlRsolnp$failureReturns
+  }else{
+    warning("No failureReturns for optimx. Using .Machine$double.xmax/2")
+    failureReturns <- .Machine$double.xmax/2
+  }
+  if("eqfun" %in% names(controlRsolnp)){
+    eqfun <- controlRsolnp$eqfun
+  }else{
+    eqfun <- NULL
+  }
+  if("eqB" %in% names(controlRsolnp)){
+    eqB <- controlRsolnp$eqB
+  }else{
+    eqB <- NULL
+  }
+  if("ineqfun" %in% names(controlRsolnp)){
+    ineqfun <- controlRsolnp$ineqfun
+  }else{
+    ineqfun <- NULL
+  }
+  if("ineqLB" %in% names(controlRsolnp)){
+    ineqLB <- controlRsolnp$ineqLB
+  }else{
+    ineqLB <- NULL
+  }
+  if("ineqUB" %in% names(controlRsolnp)){
+    ineqUB <- controlRsolnp$ineqUB
+  }else{
+    ineqUB <- NULL
+  }
+  if("LB" %in% names(controlRsolnp)){
+    LB <- controlRsolnp$LB
+  }else{
+    LB <- NULL
+  }
+  if("UB" %in% names(controlRsolnp)){
+    UB <- controlRsolnp$UB
+  }else{
+    UB <- NULL
+  }
+  if("control" %in% names(controlRsolnp)){
+    control <- controlRsolnp$control
+  }else{
+    "control" = list("trace" = 0)
+  }
+
+  invisible(capture.output(CpptsemFit <- try(Rsolnp::solnp(par = startingValues,
+                                                           fun = regM2LLCpptsem,
+                                                           #gr = gradCpptsem,
+                                                           eqfun = eqfun, eqB = eqB, ineqfun = ineqfun, ineqLB = ineqLB,
+                                                           ineqUB = ineqUB, LB = LB, UB = UB, control = control,
+                                                           cpptsemmodel = cpptsemmodel, adaptiveLassoWeights = adaptiveLassoWeights,
+                                                           N = N, lambda_ = lambda, regIndicators = regIndicators, targetVector = targetVector,
+                                                           epsilon = epsilon, objective = objective, failureReturns = failureReturns),
+                                             silent = TRUE), type = c("output", "message")))
+  if(any(class(CpptsemFit) == "try-error")){stop()}
+  if(CpptsemFit$convergence > 0 && !silent){warning(paste0("Rsolnp reports convcode  > 0: ", CpptsemFit$convergence, ". See ?Rsolnp::solnp for more details."))}
+
+  # compute unregularized fit
+  cpptsemmodel$setParameterValues(CpptsemFit$pars, names(CpptsemFit$pars))
+  if(tolower(objective) == "ml"){
+    cpptsemmodel$computeRAM()
+    cpptsemmodel$fitRAM()
+  }else{
+    cpptsemmodel$computeAndFitKalman()
+  }
+
+  if(testGradients){
+    grad <- try(gradCpptsem(parameters = CpptsemFit$pars,
+                            cpptsemmodel = cpptsemmodel,
+                            adaptiveLassoWeights = adaptiveLassoWeights,
+                            N =  N,lambda =  lambda, regIndicators = regIndicators,
+                            targetVector = targetVector,
+                            epsilon = epsilon, objective =  objective,
+                            failureReturns =  failureReturns))
+    if(any(class(grad) == "try-error") || anyNA(grad)){
+      stop("NA in gradients")
+    }
+  }
+
+  return(list("parameters" = CpptsemFit$pars,
+              "regM2LL" = CpptsemFit$values[length(CpptsemFit$values)],
+              "m2LL" = cpptsemmodel$m2LL))
+}
+
 #' approx_cpptsemOptim
 #'
 #' creates an approximate solution to regularized ctsem using optim with BFGS
@@ -1756,7 +1875,7 @@ approx_cpptsemOptim <- function(cpptsemmodel,
     grad <- try(gradCpptsem(parameters = CpptsemFit$par,
                             cpptsemmodel = cpptsemmodel,
                             adaptiveLassoWeights = adaptiveLassoWeights,
-                            N =  N,lambda =  lambda, regIndicators = regIndicators,
+                            N =  N,lambda_ =  lambda, regIndicators = regIndicators,
                             targetVector = targetVector,
                             epsilon = epsilon, objective =  objective,
                             failureReturns =  failureReturns))
@@ -1800,9 +1919,14 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
                                  epsilon,
                                  objective,
                                  testGradients,
-                                 failureReturns,
                                  controlOptimx,
                                  silent){
+  if("failureReturns" %in% names(controlOptimx)){
+    failureReturns <- controlOptimx$controlOptimx
+  }else{
+    warning("No failureReturns for optimx. Using .Machine$double.xmax/2")
+    failureReturns <- .Machine$double.xmax/2
+  }
   if("hess" %in% names(controlOptimx)){
     hess <- controlOptimx$hess
   }else{
@@ -1821,8 +1945,8 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
   if("method" %in% names(controlOptimx)){
     method <- controlOptimx$method
   }else{
-    warning("No method selected for optimx. Using BFGS.")
-    method <- "BFGS"
+    warning("No method selected for optimx. Using L-BFGS-B.")
+    method <- "L-BFGS-B"
   }
   if("hessian" %in% names(controlOptimx)){
     hessian <- controlOptimx$hessian
@@ -1847,7 +1971,7 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
                                                             fn = regM2LLCpptsem,
                                                             #gr = gradCpptsem,
                                                             cpptsemmodel = cpptsemmodel, adaptiveLassoWeights = adaptiveLassoWeights,
-                                                            N = N, lambda = lambda, regIndicators = regIndicators, targetVector = targetVector,
+                                                            N = N, lambda_ = lambda, regIndicators = regIndicators, targetVector = targetVector,
                                                             epsilon = epsilon, objective = objective, failureReturns = failureReturns,
                                                             hess = hess, lower = lower, upper = upper, itnmax = itnmax,
                                                             method = method,hessian = hessian, control = control),

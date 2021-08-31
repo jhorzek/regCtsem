@@ -66,7 +66,7 @@ regCtsem(
 
 \item{optimization}{which optimization procedure should be used. Possible are  "exact" or "approx". exact is recommended}
 
-\item{optimizer}{for exact optimization: Either GIST or GLMNET. When using optimization = "approx", any of the optimizers in optimx can be used. See ?optimx}
+\item{optimizer}{for exact optimization: Either GIST or GLMNET. When using optimization = "approx", Rsolnp or any of the optimizers in optimx can be used. See ?optimx}
 
 \item{control}{List with control arguments for the optimizer. See ?controlGIST, ?controlGLMNET and ?controlApprox for the respective parameters}
 

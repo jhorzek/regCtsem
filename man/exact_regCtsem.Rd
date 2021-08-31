@@ -43,7 +43,7 @@ exact_regCtsem(
   scaleLambdaWithN = TRUE,
   approxFirst = FALSE,
   numStart = 0,
-  controlOptimx,
+  controlApproxOptimizer,
   verbose = 0
 )
 }
@@ -124,7 +124,7 @@ exact_regCtsem(
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{controlOptimx}{settings passed to optimx}
+\item{controlApproxOptimizer}{settings passed to optimx or Rsolnp}
 
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress}
 }

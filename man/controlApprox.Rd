@@ -4,7 +4,12 @@
 \alias{controlApprox}
 \title{controlApprox}
 \usage{
-controlApprox()
+controlApprox(
+  forceCpptsem = FALSE,
+  epsilon = 0.001,
+  zeroThresh = 0.04,
+  controlApproxOptimizer = controlRsolnp(control = list(outer.iter = 500, trace = 0))
+)
 }
 \arguments{
 \item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details}
@@ -13,7 +18,7 @@ controlApprox()
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
 
-\item{controlOptimx}{settings passed to optimx}
+\item{controlApproxOptimizer}{settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox}
 }
 \description{
 The following arguments can be used to adjust the approximate optimization

@@ -19,7 +19,7 @@ approx_iterateOverLambdas(
   objective = "ML",
   epsilon = 0.001,
   zeroThresh = 0.001,
-  controlOptimx,
+  controlApproxOptimizer,
   scaleLambdaWithN,
   verbose = 0
 )
@@ -53,7 +53,7 @@ approx_iterateOverLambdas(
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
 
-\item{controlOptimx}{settings passed to optimx}
+\item{controlApproxOptimizer}{settings passed to optimx or Rsolnp}
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 

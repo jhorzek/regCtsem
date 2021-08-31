@@ -9,7 +9,7 @@ approx_RAMRegM2LLCpptsem(
   cpptsemmodel,
   adaptiveLassoWeights,
   N,
-  lambda,
+  lambda_,
   regIndicators,
   targetVector,
   epsilon,
@@ -26,7 +26,7 @@ approx_RAMRegM2LLCpptsem(
 
 \item{N}{sample size}
 
-\item{lambda}{tuning parameter lambda}
+\item{lambda_}{tuning parameter lambda}
 
 \item{regIndicators}{string vector with names of regularized parameters}
 
