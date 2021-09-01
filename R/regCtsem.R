@@ -20,7 +20,7 @@
 #' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using the T0VAR?
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent
 #' @param returnFitIndices Boolean: should fit indices be returned?
-#' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
+#' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N)). Defaults to TRUE if N = 1 and FALSE otherwise
 #' @param optimization which optimization procedure should be used. Possible are  "exact" or "approx". exact is recommended
 #' @param optimizer for exact optimization: Either GIST or GLMNET. When using optimization = "approx", Rsolnp or any of the optimizers in optimx can be used. See ?optimx
 #' @param control List with control arguments for the optimizer. See ?controlGIST, ?controlGLMNET and ?controlApprox for the respective parameters
@@ -254,7 +254,7 @@ regCtsem <- function(
   standardizeDrift = FALSE,
   scaleLambdaWithN = TRUE,
   returnFitIndices = TRUE,
-  BICWithNAndT = TRUE,
+  BICWithNAndT = nrow(dataset) == 1,
 
   optimization = "exact",
   optimizer = "GIST",
@@ -852,7 +852,7 @@ exact_regCtsem <- function(  # model
   standardizeDrift = FALSE,
   # fit settings
   returnFitIndices = TRUE,
-  BICWithNAndT = TRUE,
+  BICWithNAndT,
   Tpoints = NULL,
   cvSampleCpptsemObject = NULL,
   # optimization settings
@@ -1055,7 +1055,7 @@ approx_regCtsem <- function(  # model
   standardizeDrift = FALSE,
   # fit settings
   returnFitIndices = TRUE,
-  BICWithNAndT = TRUE,
+  BICWithNAndT,
   Tpoints = NULL,
   cvSampleCpptsemObject = NULL,
   # optimization settings

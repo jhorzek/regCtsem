@@ -15,7 +15,7 @@ exact_regCtsem(
   adaptiveLassoWeights = NULL,
   standardizeDrift = FALSE,
   returnFitIndices = TRUE,
-  BICWithNAndT = TRUE,
+  BICWithNAndT,
   Tpoints = NULL,
   cvSampleCpptsemObject = NULL,
   optimizer = "GIST",
