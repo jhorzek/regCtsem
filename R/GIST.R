@@ -38,14 +38,24 @@
 #' @export
 exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetVector, lambdas, adaptiveLassoWeights,
                        # additional settings
-                       sparseParameters = NULL,
-                       eta = 2, sig = 10^(-5), initialStepsize = 1, stepsizeMin = 1/(10^30), stepsizeMax = 10^30,
-                       GISTLinesearchCriterion = "monotone", GISTNonMonotoneNBack = 5,
-                       maxIter_out = 100, maxIter_in = 1000,
-                       break_outer = c("parameterChange" = 10^(-5)),
-                       scaleLambdaWithN = TRUE, sampleSize, approxFirst = F,
-                       numStart = 3, controlApproxOptimizer,
-                       verbose = 0){
+                       sparseParameters,# = NULL,
+                       eta,# = 2,
+                       sig,# = 10^(-5),
+                       initialStepsize,# = 1,
+                       stepsizeMin,# = 1/(10^30),
+                       stepsizeMax,# = 10^30,
+                       GISTLinesearchCriterion,# = "monotone",
+                       GISTNonMonotoneNBack,# = 5,
+                       maxIter_out,# = 100,
+                       maxIter_in,# = 1000,
+                       break_outer,# = c("parameterChange" = 10^(-5)),
+                       scaleLambdaWithN,# = TRUE,
+                       sampleSize,
+                       approxFirst,# = F,
+                       numStart,# = 3,
+                       controlApproxOptimizer,
+                       verbose# = 0
+                       ){
   # Setup
   # get parameter values
   initialParameters <- cpptsemObject$getParameterValues()
@@ -193,11 +203,25 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
 #' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
 #' @param silent suppress all warning messages
 #' @export
-GIST <- function(cpptsemObject, startingValues, objective, lambda, adaptiveLassoWeights, regularizedParameters,
-                 eta = 2, sig = 10^(-5), initialStepsize = 1, stepsizeMin = 1/(10^30), stepsizeMax = 10^30,
-                 GISTLinesearchCriterion = "monotone", GISTNonMonotoneNBack = 5,
-                 maxIter_out = 100, maxIter_in = 1000,
-                 break_outer = c("parameterChange" = 10^(-5)), verbose = 0, silent = FALSE){
+GIST <- function(cpptsemObject,
+                 startingValues,
+                 objective,
+                 lambda,
+                 adaptiveLassoWeights,
+                 regularizedParameters,
+                 eta,# = 2,
+                 sig,# = 10^(-5),
+                 initialStepsize,# = 1,
+                 stepsizeMin,# = 1/(10^30),
+                 stepsizeMax,# = 10^30,
+                 GISTLinesearchCriterion,# = "monotone",
+                 GISTNonMonotoneNBack,# = 5,
+                 maxIter_out,# = 100,
+                 maxIter_in,# = 1000,
+                 break_outer,# = c("parameterChange" = 10^(-5)),
+                 verbose,# = 0,
+                 silent # = FALSE
+                 ){
   break_crit <- names(break_outer)
   # iteration counter
   k_out <- 1
@@ -544,12 +568,26 @@ GIST <- function(cpptsemObject, startingValues, objective, lambda, adaptiveLasso
 #' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
 #' @param silent suppress all warning messages
 #' @export
-GISTWithTarget <- function(cpptsemObject, startingValues, objective, lambda, adaptiveLassoWeights, regularizedParameters,
+GISTWithTarget <- function(cpptsemObject,
+                           startingValues,
+                           objective,
+                           lambda,
+                           adaptiveLassoWeights,
+                           regularizedParameters,
                            targetVector,
-                           eta = 2, sig = 10^(-5), initialStepsize = 1, stepsizeMin = 1/(10^30), stepsizeMax = 10^30,
-                           GISTLinesearchCriterion = "monotone", GISTNonMonotoneNBack = 5,
-                           maxIter_out = 100, maxIter_in = 1000,
-                           break_outer = c("parameterChange" = 10^(-5)), verbose = 0, silent = FALSE){
+                           eta,# = 2,
+                           sig,# = 10^(-5),
+                           initialStepsize,# = 1,
+                           stepsizeMin,# = 1/(10^30),
+                           stepsizeMax,# = 10^30,
+                           GISTLinesearchCriterion,# = "monotone",
+                           GISTNonMonotoneNBack,# = 5,
+                           maxIter_out,# = 100,
+                           maxIter_in,# = 1000,
+                           break_outer,# = c("parameterChange" = 10^(-5)),
+                           verbose,# = 0,
+                           silent # = FALSE
+                           ){
   break_crit <- names(break_outer)
   # iteration counter
   k_out <- 1

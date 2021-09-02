@@ -265,13 +265,11 @@ void cpptsemKalmanModel::computeAndFitKalman(){
       T0VARValues = getVarianceFromVarianceBase(T0VARbaseValues);
     }
 
+    // compute asymptotic diffusion
+    asymptoticDIFFUSION = -1*arma::inv(DRIFTHASH) * arma::vectorise(DIFFUSIONValues);
+    asymptoticDIFFUSION.reshape(DIFFUSIONValues.n_rows, DIFFUSIONValues.n_cols);
     if(stationaryT0VAR){
-      // compute asymptotic diffusion
-      arma::uword nrows = DIFFUSIONValues.n_rows;
-      arma::uword ncols = DIFFUSIONValues.n_cols;
-      arma::mat asymptoticDIFFUSION = -1*arma::inv(DRIFTHASH) * arma::vectorise(DIFFUSIONValues);
       T0VARValues = asymptoticDIFFUSION;
-      T0VARValues.reshape(nrows, ncols);
     }
 
     if( ctMatrixList.containsElementNamed("TRAITVARbase") ){
@@ -782,6 +780,7 @@ RCPP_EXPOSED_CLASS(cpptsemKalmanModel)
       .field_readonly( "T0VARValues", &cpptsemKalmanModel::T0VARValues, "T0VARValues")
       .field_readonly( "T0MEANSValues", &cpptsemKalmanModel::T0MEANSValues, "T0MEANSValues")
       .field_readonly( "TRAITVARValues", &cpptsemKalmanModel::TRAITVARValues, "TRAITVARValues")
+      .field_readonly( "asymptoticDIFFUSION", &cpptsemKalmanModel::asymptoticDIFFUSION, "asymptoticDIFFUSION")
       .field_readonly( "MANIFESTMEANSValues", &cpptsemKalmanModel::MANIFESTMEANSValues, "MANIFESTMEANSValues")
       .field_readonly( "MANIFESTVARValues", &cpptsemKalmanModel::MANIFESTVARValues, "MANIFESTVARValues")
       .field_readonly( "LAMBDAValues", &cpptsemKalmanModel::LAMBDAValues, "LAMBDAValues")

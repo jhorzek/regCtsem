@@ -31,27 +31,28 @@
 #' @import ctsemOMX
 #' @export
 approx_iterateOverLambdas <- function(  # model
-  cpptsemObject = NULL,
-  dataset = NULL,
-  sampleSize = NULL,
+  cpptsemObject,# = NULL,
+  dataset,# = NULL,
+  sampleSize,# = NULL,
   # penalty settings
   regIndicators,
   lambdas,
-  penalty = "lasso",
-  adaptiveLassoWeights = NULL,
+  penalty,# = "lasso",
+  adaptiveLassoWeights,# = NULL,
   targetVector,
   # fit settings
-  returnFitIndices = TRUE,
-  BICWithNAndT = TRUE,
-  Tpoints = NULL,
+  returnFitIndices,# = TRUE,
+  BICWithNAndT,# = TRUE,
+  Tpoints,# = NULL,
   # optimization settings
-  objective = "ML",
-  epsilon = .001,
-  zeroThresh = .001,
+  objective,# = "ML",
+  epsilon,# = .001,
+  zeroThresh,# = .001,
   controlApproxOptimizer,
   # additional settings
   scaleLambdaWithN,
-  verbose = 0){
+  verbose# = 0
+  ){
 
   parameterLabels <- names(cpptsemObject$getParameterValues())
   initialParameterValues <- cpptsemObject$getParameterValues()
@@ -211,9 +212,10 @@ approx_getFitIndices <- function(m2LL,
                                  # penalty settings
                                  regIndicators,
                                  # fit settings
-                                 returnFitIndices = TRUE,
+                                 returnFitIndices,# = TRUE,
                                  # optimization settings
-                                 zeroThresh = .001){
+                                 zeroThresh # = .001
+                                 ){
   fitLabels <- c("regM2LL", "m2LL")
   if(returnFitIndices){
     fitLabels <- c(fitLabels, "AIC", "BIC", "estimatedParameters")

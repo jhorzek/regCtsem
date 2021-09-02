@@ -30,6 +30,7 @@ public:
   arma::mat MANIFESTVARValues;
   arma::mat LAMBDAValues;
   arma::colvec MANIFESTMEANSValues;
+  arma::mat asymptoticDIFFUSION;
   bool hasDiscreteDRIFTUnique = false,
     hasDiscreteTRAITUnique = false,
     hasDRIFTHASHExponentialUnique = false,

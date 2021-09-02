@@ -17,7 +17,7 @@
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
 #' @param sparseParameters labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.
 #' @param subjectSpecificParameters EXPERIMENTAL! A vector of parameter labels for parameters which should be estimated person-specific. If these parameter labels are also passed to regIndicators, all person-specific parameters will be regularized towards a group-parameter. This is a 2-step-procedure: In step 1 all parameters are constrained to equality between individuals to estimate the group parameters. In step 2 the parameters are estimated person-specific, but regularized towards the group parameter from step 1.
-#' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using the T0VAR?
+#' @param standardizeDrift Should Drift parameters be standardized automatically? Set to 'No' for no standardization, 'T0VAR' for standardization using the T0VAR or 'asymptoticDiffusion' for standardization using the asymptotic diffusion
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N)). Defaults to TRUE if N = 1 and FALSE otherwise
@@ -251,7 +251,7 @@ regCtsem <- function(
   sparseParameters = NULL,
   subjectSpecificParameters = NULL,
 
-  standardizeDrift = FALSE,
+  standardizeDrift = "No",
   scaleLambdaWithN = TRUE,
   returnFitIndices = TRUE,
   BICWithNAndT = nrow(dataset) == 1,
@@ -464,7 +464,6 @@ regCtsem <- function(
                                                lambdasAutoLength = argsIn$lambdasAutoLength,
                                                penalty = argsIn$penalty,
                                                adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
-                                               standardizeDrift = argsIn$standardizeDrift,
                                                returnFitIndices = argsIn$returnFitIndices,
                                                BICWithNAndT = argsIn$BICWithNAndT,
                                                Tpoints = argsIn$Tpoints,
@@ -585,7 +584,6 @@ regCtsem <- function(
                                                  lambdasAutoLength = argsIn$lambdasAutoLength,
                                                  penalty = argsIn$penalty,
                                                  adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
-                                                 standardizeDrift = argsIn$standardizeDrift,
                                                  returnFitIndices = argsIn$returnFitIndices,
                                                  BICWithNAndT = argsIn$BICWithNAndT,
                                                  Tpoints = argsIn$Tpoints,
@@ -653,7 +651,6 @@ regCtsem <- function(
                                                 targetVector = argsIn$targetVector,
                                                 penalty = argsIn$penalty,
                                                 adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
-                                                standardizeDrift = argsIn$standardizeDrift,
                                                 # fit settings
                                                 returnFitIndices = argsIn$returnFitIndices,
                                                 BICWithNAndT = argsIn$BICWithNAndT,
@@ -756,7 +753,6 @@ regCtsem <- function(
                                                   targetVector = argsIn$targetVector,
                                                   penalty = argsIn$penalty,
                                                   adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
-                                                  standardizeDrift = argsIn$standardizeDrift,
                                                   # fit settings
                                                   returnFitIndices = argsIn$returnFitIndices,
                                                   BICWithNAndT = argsIn$BICWithNAndT,
@@ -803,7 +799,6 @@ regCtsem <- function(
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty Currently supported are ridge, lasso, and adaptiveLasso
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
-#' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using the T0VAR?
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
 #' @param Tpoints Number of time points (used for BICWithNAndT)
@@ -840,53 +835,53 @@ regCtsem <- function(
 #' @import ctsemOMX rlist
 #' @export
 exact_regCtsem <- function(  # model
-  cpptsemObject = NULL,
-  dataset = NULL,
+  cpptsemObject,# = NULL,
+  dataset,# = NULL,
   # penalty settings
   regIndicators,
   targetVector,
-  lambdas = "auto",
-  lambdasAutoLength = 50,
-  penalty = "lasso",
-  adaptiveLassoWeights = NULL,
-  standardizeDrift = FALSE,
+  lambdas,# = "auto",
+  lambdasAutoLength,# = 50,
+  penalty,# = "lasso",
+  adaptiveLassoWeights,# = NULL,
   # fit settings
-  returnFitIndices = TRUE,
+  returnFitIndices,# = TRUE,
   BICWithNAndT,
-  Tpoints = NULL,
-  cvSampleCpptsemObject = NULL,
+  Tpoints,# = NULL,
+  cvSampleCpptsemObject,# = NULL,
   # optimization settings
-  optimizer = "GIST",
+  optimizer,# = "GIST",
   objective,
-  sparseParameters = NULL,
+  sparseParameters,# = NULL,
   # settings for optimization
-  stepSize = 1,
-  lineSearch = "GLMNET", # only used in GLMNET
-  c1 = .0001, # c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"
-  c2 = .9, # c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
-  sig = 10^(-5),
-  gam = 0,
-  initialHessianApproximation = NULL,
-  maxIter_out = 100,
-  maxIter_in = 1000,
-  maxIter_line = 500,
-  eps_out = .0000000001,
-  eps_in = .0000000001,
-  eps_WW = .0001,
+  stepSize,# = 1,
+  lineSearch,# = "GLMNET", # only used in GLMNET
+  c1,# = .0001, # c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"
+  c2,# = .9, # c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
+  sig,# = 10^(-5),
+  gam,# = 0,
+  initialHessianApproximation,# = NULL,
+  maxIter_out,# = 100,
+  maxIter_in,# = 1000,
+  maxIter_line,# = 500,
+  eps_out,# = .0000000001,
+  eps_in,# = .0000000001,
+  eps_WW,# = .0001,
   # settings for GIST
-  eta = 2,
-  stepsizeMin = 1/(10^30),
-  stepsizeMax = 10^30,
-  GISTLinesearchCriterion = "monotone",
-  GISTNonMonotoneNBack = 5,
-  break_outer = c("parameterChange" = 10^(-5)),
+  eta,# = 2,
+  stepsizeMin,# = 1/(10^30),
+  stepsizeMax,# = 10^30,
+  GISTLinesearchCriterion,# = "monotone",
+  GISTNonMonotoneNBack,# = 5,
+  break_outer,# = c("parameterChange" = 10^(-5)),
   # general
-  scaleLambdaWithN = TRUE,
-  approxFirst = FALSE,
-  numStart = 0,
+  scaleLambdaWithN,# = TRUE,
+  approxFirst,# = FALSE,
+  numStart,# = 0,
   controlApproxOptimizer,
   # additional settings
-  verbose = 0){
+  verbose # = 0
+  ){
 
   exactArgsIn <- as.list(environment())
 
@@ -1027,7 +1022,6 @@ exact_regCtsem <- function(  # model
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty Currently supported are ridge, lasso, and adaptiveLasso
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
-#' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using the T0VAR?
 #' @param returnFitIndices Boolean: should fit indices be returned?
 #' @param BICWithNAndT Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))
 #' @param Tpoints Number of time points (used for BICWithNAndT)
@@ -1043,29 +1037,29 @@ exact_regCtsem <- function(  # model
 #' @import ctsemOMX
 #' @export
 approx_regCtsem <- function(  # model
-  cpptsemObject = NULL,
-  dataset = NULL,
+  cpptsemObject,# = NULL,
+  dataset,# = NULL,
   # penalty settings
   regIndicators,
   lambdas,
-  lambdasAutoLength = 50,
+  lambdasAutoLength,# = 50,
   targetVector,
-  penalty = "lasso",
-  adaptiveLassoWeights = NULL,
-  standardizeDrift = FALSE,
+  penalty,# = "lasso",
+  adaptiveLassoWeights,# = NULL,
   # fit settings
-  returnFitIndices = TRUE,
+  returnFitIndices,# = TRUE,
   BICWithNAndT,
-  Tpoints = NULL,
-  cvSampleCpptsemObject = NULL,
+  Tpoints,# = NULL,
+  cvSampleCpptsemObject,# = NULL,
   # optimization settings
-  objective = "ML",
-  epsilon = .001,
-  zeroThresh = .001,
+  objective,# = "ML",
+  epsilon,# = .001,
+  zeroThresh,# = .001,
   controlApproxOptimizer,
   # additional settings
-  scaleLambdaWithN = TRUE,
-  verbose = 0){
+  scaleLambdaWithN,# = TRUE,
+  verbose# = 0
+  ){
 
   approxArgsIn <- as.list(environment())
 
@@ -1276,19 +1270,23 @@ checkSetup <- function(argsIn){
 #' @param cpptsemObject Fitted object of class cpptsem
 #' @param penalty type
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
-#' @param standardizeDrift Boolean: Should Drift parameters be standardized automatically using T0VAR?
+#' @param standardizeDrift Should Drift parameters be standardized automatically? Set to 'No' for no standardization, 'T0VAR' for standardization using the T0VAR or 'asymptoticDiffusion' for standardization using the asymptotic diffusion
 #' @author Jannik Orzek
 #' @export
 getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights, standardizeDrift){
+  if(!(standardizeDrift == "No" || standardizeDrift == "T0VAR" || standardizeDrift == "asymptoticDiffusion" )){
+    stop("standardizeDrift has to be set to 'No', 'T0VAR' or 'asymptoticDiffusion'")
+  }
 
   # if adaptiveLassoWeights were provided and no standardization is requested:
-  if(tolower(penalty) == "adaptivelasso" & is.numeric(adaptiveLassoWeights) & (!standardizeDrift)){
+  if(tolower(penalty) == "adaptivelasso" & is.numeric(adaptiveLassoWeights) & (standardizeDrift != "No")){
     return(adaptiveLassoWeights)
   }
 
   # otherwise: set adaptiveLassoWeights
   ## if automatic drift standardization was requested
-  if(standardizeDrift){
+  if(standardizeDrift == "T0VAR" || standardizeDrift == "asymptoticDiffusion"){
+    print(paste0("Standardizing drift parameters with ", standardizeDrift))
 
     # check if adaptiveLassoWeights were provided
     if(is.numeric(adaptiveLassoWeights)){ stop("standardizeDrift and provided adaptiveLassoWeights can not be combined automatically. Consider setting adaptiveLassoWeights = 'auto'") }
@@ -1300,7 +1298,12 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
       names(adaptiveLassoWeights) <- thetaNames
 
       # compute standardizers
-      T0VAR <- cpptsemObject$T0VARValues
+      if(standardizeDrift == "T0VAR"){
+        VARIs <- cpptsemObject$T0VARValues[]
+      }
+      if(standardizeDrift == "asymptoticDiffusion"){
+        VARIs <- cpptsemObject$asymptoticDIFFUSION[]
+      }
       DRIFTS <- cpptsemObject$parameterTable[cpptsemObject$parameterTable$matrix == "DRIFT",]
       driftLabels <- matrix("", nrow = nrow(cpptsemObject$DRIFTValues), ncol = ncol(cpptsemObject$DRIFTValues))
       for(i in 1:nrow(DRIFTS)){
@@ -1313,7 +1316,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
         driftLabels[is.na(driftLabels)] <- autoDriftLabels[is.na(driftLabels)]
       }
 
-      flatStandardizers <- regCtsem::getFlatStdizer(T0VAR = T0VAR, driftLabels = driftLabels)
+      flatStandardizers <- regCtsem::getFlatStdizer(VARIs = VARIs, driftLabels = driftLabels)
       flatStandardizers <- flatStandardizers[rownames(flatStandardizers) %in% thetaNames,]
 
       for(thetaName in names(flatStandardizers)){
@@ -1369,7 +1372,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
 #' @author Jannik Orzek
 #' @import OpenMx
 #' @export
-getFinalParameters <- function(regCtsemObject, criterion = NULL, raw = TRUE){
+getFinalParameters <- function(regCtsemObject, criterion, raw = TRUE){
   if(!regCtsemObject$setup$autoCV){
     minCriterionValue <- max(which(regCtsemObject$fit[criterion,] == min(regCtsemObject$fit[criterion,], na.rm = TRUE)))
     lambdas <- regCtsemObject$setup$lambdas
@@ -1401,7 +1404,7 @@ getFinalParameters <- function(regCtsemObject, criterion = NULL, raw = TRUE){
 #' @author Jannik Orzek
 #' @import OpenMx
 #' @export
-getFinalModel <- function(regCtsemObject, criterion = NULL){
+getFinalModel <- function(regCtsemObject, criterion){
   if(regCtsemObject$setup$autoCV){
     stop("getFinalModel not supported for automatic cross-validation. At the moment, you have to manually re-run the model with the best lambda value using the whole sample.")
   }
@@ -1422,17 +1425,17 @@ getFinalModel <- function(regCtsemObject, criterion = NULL){
 
 #' getFlatStdizer
 #'
-#' returns the standardizer for the standardized drift parameters if standardizeDrift = TRUE. Computes T0SD_predictor/T0SD_dependent
+#' returns the standardizer for the standardized drift parameters. Computes SD_predictor/SD_dependent
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
-#' @param T0VAR matrix with T0VAR values
+#' @param VARIs matrix with variances for standardization values
 #' @param driftLabels vector with drift names
 #' @export
-getFlatStdizer <- function(T0VAR, driftLabels){
-  stdizer <- matrix(1, nrow = nrow(T0VAR), ncol = ncol(T0VAR))
-  stdizer <- stdizer%*%diag(sqrt(diag(T0VAR))) # times predictor sd
-  stdizer <- t(t(stdizer)%*%diag(sqrt(diag(T0VAR))^(-1))) # divided by dependent sd
+getFlatStdizer <- function(VARIs, driftLabels){
+  stdizer <- matrix(1, nrow = nrow(VARIs), ncol = ncol(VARIs))
+  stdizer <- stdizer%*%diag(sqrt(diag(VARIs))) # times predictor sd
+  stdizer <- t(t(stdizer)%*%diag(sqrt(diag(VARIs))^(-1))) # divided by dependent sd
   flatStdizer <- OpenMx::cvectorize(stdizer) # flatten
   rownames(flatStdizer) <- as.vector(driftLabels)
   return(flatStdizer)

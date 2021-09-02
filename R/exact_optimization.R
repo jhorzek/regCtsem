@@ -126,7 +126,7 @@ exact_getFitIndicesWithTarget <- function(parameterLabels, regIndicators, fitAnd
 #' @param regIndicators Names of regularized parameters
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @export
-exact_getPenaltyValue <- function(lambda, theta, regIndicators, adaptiveLassoWeights = NULL){
+exact_getPenaltyValue <- function(lambda, theta, regIndicators, adaptiveLassoWeights){
 
   regVal <- 0
   if(!is.vector(theta)){
@@ -166,7 +166,7 @@ exact_getPenaltyValue <- function(lambda, theta, regIndicators, adaptiveLassoWei
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @export
-exact_getPenaltyValueWithTarget <- function(lambda, theta, regIndicators, targetVector, adaptiveLassoWeights = NULL){
+exact_getPenaltyValueWithTarget <- function(lambda, theta, regIndicators, targetVector, adaptiveLassoWeights){
 
   regVal <- 0
   if(!is.vector(theta)){
@@ -369,7 +369,7 @@ exact_tryStartingValues <- function(startingValues,
                                     lambda,
                                     cpptsemObject,
                                     regIndicators,
-                                    targetVector = NULL,
+                                    targetVector,
                                     adaptiveLassoWeights,
                                     objective,
                                     sparseParameters){
@@ -454,7 +454,7 @@ tryApproxFirst <- function(startingValues, returnAs,
                            lambda,
                            cpptsemObject,
                            regIndicators,
-                           targetVector = NULL,
+                           targetVector,
                            adaptiveLassoWeights,
                            objective,
                            sparseParameters
