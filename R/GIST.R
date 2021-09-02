@@ -111,7 +111,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
                                     eta = eta, sig = sig, initialStepsize = initialStepsize, stepsizeMin = stepsizeMin, stepsizeMax = stepsizeMax,
                                     GISTLinesearchCriterion = GISTLinesearchCriterion, GISTNonMonotoneNBack = GISTNonMonotoneNBack,
                                     maxIter_out = maxIter_out, maxIter_in = maxIter_in,
-                                    break_outer = break_outer, verbose = verbose))
+                                    break_outer = break_outer, verbose = verbose, silent = FALSE))
     }else{
       resGIST <- try(regCtsem::GISTWithTarget(cpptsemObject = cpptsemObject, startingValues = startingValues,
                                               objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
@@ -119,7 +119,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
                                               eta = eta, sig = sig, initialStepsize = initialStepsize, stepsizeMin = stepsizeMin, stepsizeMax = stepsizeMax,
                                               GISTLinesearchCriterion = GISTLinesearchCriterion, GISTNonMonotoneNBack = GISTNonMonotoneNBack,
                                               maxIter_out = maxIter_out, maxIter_in = maxIter_in,
-                                              break_outer = break_outer, verbose = verbose))
+                                              break_outer = break_outer, verbose = verbose, silent = FALSE))
     }
 
 
