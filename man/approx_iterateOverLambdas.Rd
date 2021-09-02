@@ -5,23 +5,23 @@
 \title{approx_iterateOverLambdas}
 \usage{
 approx_iterateOverLambdas(
-  cpptsemObject = NULL,
-  dataset = NULL,
-  sampleSize = NULL,
+  cpptsemObject,
+  dataset,
+  sampleSize,
   regIndicators,
   lambdas,
-  penalty = "lasso",
-  adaptiveLassoWeights = NULL,
+  penalty,
+  adaptiveLassoWeights,
   targetVector,
-  returnFitIndices = TRUE,
-  BICWithNAndT = TRUE,
-  Tpoints = NULL,
-  objective = "ML",
-  epsilon = 0.001,
-  zeroThresh = 0.001,
+  returnFitIndices,
+  BICWithNAndT,
+  Tpoints,
+  objective,
+  epsilon,
+  zeroThresh,
   controlApproxOptimizer,
   scaleLambdaWithN,
-  verbose = 0
+  verbose
 )
 }
 \arguments{

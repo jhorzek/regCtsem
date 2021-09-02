@@ -13,7 +13,7 @@ tryApproxFirst(
   lambda,
   cpptsemObject,
   regIndicators,
-  targetVector = NULL,
+  targetVector,
   adaptiveLassoWeights,
   objective,
   sparseParameters

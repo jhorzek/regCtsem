@@ -16,10 +16,9 @@ exact_GLMNETLineSearch(
   g_kp1,
   H_k,
   d,
-  eps_numericDerivative,
   stepSize,
   sig,
-  gam = 0,
+  gam,
   maxIter_line
 )
 }
@@ -45,8 +44,6 @@ exact_GLMNETLineSearch(
 \item{H_k}{Hessian approximation}
 
 \item{d}{vector with updates to parameter estimates}
-
-\item{eps_numericDerivative}{controls the precision of the central gradient approximation. The default (1.1 * 10^(-16))^(1/3) is derived in Nocedal, J., & Wright, S. J. (2006). Numerical optimization (2nd ed), p. 197}
 
 \item{stepSize}{Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)}
 

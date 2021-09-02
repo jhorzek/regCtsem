@@ -14,10 +14,10 @@ exact_armijoLineSearch(
   m2LL_kp1,
   g_kp1,
   d,
-  c1 = 1e-04,
-  stepSize = 0.99,
-  differenceApprox = "central",
-  maxIter_line = 100
+  c1,
+  stepSize,
+  differenceApprox,
+  maxIter_line
 )
 }
 \arguments{

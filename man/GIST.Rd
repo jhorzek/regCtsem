@@ -11,18 +11,18 @@ GIST(
   lambda,
   adaptiveLassoWeights,
   regularizedParameters,
-  eta = 2,
-  sig = 10^(-5),
-  initialStepsize = 1,
-  stepsizeMin = 1/(10^30),
-  stepsizeMax = 10^30,
-  GISTLinesearchCriterion = "monotone",
-  GISTNonMonotoneNBack = 5,
-  maxIter_out = 100,
-  maxIter_in = 1000,
-  break_outer = c(parameterChange = 10^(-5)),
-  verbose = 0,
-  silent = FALSE
+  eta,
+  sig,
+  initialStepsize,
+  stepsizeMin,
+  stepsizeMax,
+  GISTLinesearchCriterion,
+  GISTNonMonotoneNBack,
+  maxIter_out,
+  maxIter_in,
+  break_outer,
+  verbose,
+  silent
 )
 }
 \arguments{

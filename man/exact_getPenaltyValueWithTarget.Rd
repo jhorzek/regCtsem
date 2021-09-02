@@ -9,7 +9,7 @@ exact_getPenaltyValueWithTarget(
   theta,
   regIndicators,
   targetVector,
-  adaptiveLassoWeights = NULL
+  adaptiveLassoWeights
 )
 }
 \arguments{

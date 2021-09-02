@@ -12,8 +12,8 @@ approx_getFitIndices(
   targetVector,
   sampleSize,
   regIndicators,
-  returnFitIndices = TRUE,
-  zeroThresh = 0.001
+  returnFitIndices,
+  zeroThresh
 )
 }
 \arguments{

@@ -4,7 +4,7 @@
 \alias{getFinalModel}
 \title{getFinalModel}
 \usage{
-getFinalModel(regCtsemObject, criterion = NULL)
+getFinalModel(regCtsemObject, criterion)
 }
 \arguments{
 \item{regCtsemObject}{fitted regularized continuous time model}

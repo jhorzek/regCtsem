@@ -4,15 +4,15 @@
 \alias{getFlatStdizer}
 \title{getFlatStdizer}
 \usage{
-getFlatStdizer(T0VAR, driftLabels)
+getFlatStdizer(VARIs, driftLabels)
 }
 \arguments{
-\item{T0VAR}{matrix with T0VAR values}
+\item{VARIs}{matrix with variances for standardization values}
 
 \item{driftLabels}{vector with drift names}
 }
 \description{
-returns the standardizer for the standardized drift parameters if standardizeDrift = TRUE. Computes T0SD_predictor/T0SD_dependent
+returns the standardizer for the standardized drift parameters. Computes SD_predictor/SD_dependent
 }
 \details{
 NOTE: Function located in file regCtsem.R

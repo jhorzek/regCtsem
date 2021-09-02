@@ -18,7 +18,7 @@ getAdaptiveLassoWeights(
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
-\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using T0VAR?}
+\item{standardizeDrift}{Should Drift parameters be standardized automatically? Set to 'No' for no standardization, 'T0VAR' for standardization using the T0VAR or 'asymptoticDiffusion' for standardization using the asymptotic diffusion}
 }
 \description{
 Computes the adaptive lasso weights

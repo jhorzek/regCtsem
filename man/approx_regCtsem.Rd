@@ -5,25 +5,24 @@
 \title{approx_regCtsem}
 \usage{
 approx_regCtsem(
-  cpptsemObject = NULL,
-  dataset = NULL,
+  cpptsemObject,
+  dataset,
   regIndicators,
   lambdas,
-  lambdasAutoLength = 50,
+  lambdasAutoLength,
   targetVector,
-  penalty = "lasso",
-  adaptiveLassoWeights = NULL,
-  standardizeDrift = FALSE,
-  returnFitIndices = TRUE,
+  penalty,
+  adaptiveLassoWeights,
+  returnFitIndices,
   BICWithNAndT,
-  Tpoints = NULL,
-  cvSampleCpptsemObject = NULL,
-  objective = "ML",
-  epsilon = 0.001,
-  zeroThresh = 0.001,
+  Tpoints,
+  cvSampleCpptsemObject,
+  objective,
+  epsilon,
+  zeroThresh,
   controlApproxOptimizer,
-  scaleLambdaWithN = TRUE,
-  verbose = 0
+  scaleLambdaWithN,
+  verbose
 )
 }
 \arguments{
@@ -42,8 +41,6 @@ approx_regCtsem(
 \item{penalty}{Currently supported are ridge, lasso, and adaptiveLasso}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
-
-\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using the T0VAR?}
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 

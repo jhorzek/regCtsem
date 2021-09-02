@@ -4,12 +4,7 @@
 \alias{exact_getPenaltyValue}
 \title{exact_getPenaltyValue}
 \usage{
-exact_getPenaltyValue(
-  lambda,
-  theta,
-  regIndicators,
-  adaptiveLassoWeights = NULL
-)
+exact_getPenaltyValue(lambda, theta, regIndicators, adaptiveLassoWeights)
 }
 \arguments{
 \item{lambda}{Penalty value}

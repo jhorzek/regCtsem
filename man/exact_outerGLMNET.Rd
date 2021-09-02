@@ -15,21 +15,20 @@ exact_outerGLMNET(
   initialHessian,
   lambda,
   regIndicators,
-  stepSize = 1,
-  lineSearch = "none",
-  c1 = 1e-04,
-  c2 = 0.9,
-  sig = 10^(-5),
-  gam = 0,
+  stepSize,
+  lineSearch,
+  c1,
+  c2,
+  sig,
+  gam,
   maxIter_out,
   maxIter_in,
-  maxIter_line = 500,
+  maxIter_line,
   eps_out,
   eps_in,
   eps_WW,
-  eps_numericDerivative = (1.1 * 10^(-16))^(1/3),
   scaleLambdaWithN,
-  verbose = 0
+  verbose
 )
 }
 \arguments{
@@ -76,8 +75,6 @@ exact_outerGLMNET(
 \item{eps_in}{Stopping criterion for inner iterations}
 
 \item{eps_WW}{Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned}
-
-\item{eps_numericDerivative}{controls the precision of the central gradient approximation. The default (1.1 * 10^(-16))^(1/3) is derived in Nocedal, J., & Wright, S. J. (2006). Numerical optimization (2nd ed), p. 197}
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 

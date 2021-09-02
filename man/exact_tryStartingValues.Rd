@@ -13,7 +13,7 @@ exact_tryStartingValues(
   lambda,
   cpptsemObject,
   regIndicators,
-  targetVector = NULL,
+  targetVector,
   adaptiveLassoWeights,
   objective,
   sparseParameters

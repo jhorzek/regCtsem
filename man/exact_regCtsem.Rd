@@ -5,46 +5,45 @@
 \title{exact_regCtsem}
 \usage{
 exact_regCtsem(
-  cpptsemObject = NULL,
-  dataset = NULL,
+  cpptsemObject,
+  dataset,
   regIndicators,
   targetVector,
-  lambdas = "auto",
-  lambdasAutoLength = 50,
-  penalty = "lasso",
-  adaptiveLassoWeights = NULL,
-  standardizeDrift = FALSE,
-  returnFitIndices = TRUE,
+  lambdas,
+  lambdasAutoLength,
+  penalty,
+  adaptiveLassoWeights,
+  returnFitIndices,
   BICWithNAndT,
-  Tpoints = NULL,
-  cvSampleCpptsemObject = NULL,
-  optimizer = "GIST",
+  Tpoints,
+  cvSampleCpptsemObject,
+  optimizer,
   objective,
-  sparseParameters = NULL,
-  stepSize = 1,
-  lineSearch = "GLMNET",
-  c1 = 1e-04,
-  c2 = 0.9,
-  sig = 10^(-5),
-  gam = 0,
-  initialHessianApproximation = NULL,
-  maxIter_out = 100,
-  maxIter_in = 1000,
-  maxIter_line = 500,
-  eps_out = 1e-10,
-  eps_in = 1e-10,
-  eps_WW = 1e-04,
-  eta = 2,
-  stepsizeMin = 1/(10^30),
-  stepsizeMax = 10^30,
-  GISTLinesearchCriterion = "monotone",
-  GISTNonMonotoneNBack = 5,
-  break_outer = c(parameterChange = 10^(-5)),
-  scaleLambdaWithN = TRUE,
-  approxFirst = FALSE,
-  numStart = 0,
+  sparseParameters,
+  stepSize,
+  lineSearch,
+  c1,
+  c2,
+  sig,
+  gam,
+  initialHessianApproximation,
+  maxIter_out,
+  maxIter_in,
+  maxIter_line,
+  eps_out,
+  eps_in,
+  eps_WW,
+  eta,
+  stepsizeMin,
+  stepsizeMax,
+  GISTLinesearchCriterion,
+  GISTNonMonotoneNBack,
+  break_outer,
+  scaleLambdaWithN,
+  approxFirst,
+  numStart,
   controlApproxOptimizer,
-  verbose = 0
+  verbose
 )
 }
 \arguments{
@@ -63,8 +62,6 @@ exact_regCtsem(
 \item{penalty}{Currently supported are ridge, lasso, and adaptiveLasso}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
-
-\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using the T0VAR?}
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 
