@@ -5,40 +5,31 @@
 \title{approx_iterateOverLambdas}
 \usage{
 approx_iterateOverLambdas(
-  ctsemObject = NULL,
-  mxObject = NULL,
-  sampleSize = NULL,
-  regOn = "DRIFT",
+  cpptsemObject,
+  dataset,
+  sampleSize,
   regIndicators,
   lambdas,
-  penalty = "lasso",
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
-  adaptiveLassoWeights = NULL,
-  returnFitIndices = TRUE,
-  cvSample = NULL,
-  autoCV = FALSE,
-  k = 5,
-  objective = "ML",
-  epsilon = 0.001,
-  zeroThresh = 0.001,
-  extraTries = 1,
+  penalty,
+  adaptiveLassoWeights,
+  targetVector,
+  returnFitIndices,
+  BICWithNAndT,
+  Tpoints,
+  objective,
+  epsilon,
+  zeroThresh,
+  controlApproxOptimizer,
   scaleLambdaWithN,
-  cores = 1,
-  verbose = 0,
-  silent = FALSE,
-  progressBar = TRUE,
-  parallelProgressBar = NULL
+  verbose
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted object of class ctsemOMX}
+\item{cpptsemObject}{Fitted object of type cpptsem}
 
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
+\item{dataset}{wide data set}
 
 \item{sampleSize}{sample size}
-
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
 
 \item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
 
@@ -46,19 +37,15 @@ approx_iterateOverLambdas(
 
 \item{penalty}{type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact}
 
-\item{elastic_alpha}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{elastic_gamma}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
+
+\item{targetVector}{named vector with values towards which the parameters are regularized (Standard is regularization towards zero)}
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 
-\item{cvSample}{cross-validation sample. Has to be of type mxData}
+\item{BICWithNAndT}{Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))}
 
-\item{autoCV}{Boolean: Should automatic cross-validation be used?}
-
-\item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
+\item{Tpoints}{Number of time points (used for BICWithNAndT)}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
@@ -66,19 +53,11 @@ approx_iterateOverLambdas(
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
 
-\item{extraTries}{number of extra tries in mxTryHard}
+\item{controlApproxOptimizer}{settings passed to optimx or Rsolnp}
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 
-\item{cores}{how many computer cores should be used?}
-
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress}
-
-\item{silent}{silent execution}
-
-\item{progressBar}{Boolean: Should a progress bar be displayed}
-
-\item{parallelProgressBar}{list: used internally to display progress when executing in parallel}
 }
 \description{
 loops over lambdas if optimization = "approx"

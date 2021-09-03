@@ -16,7 +16,7 @@
 \arguments{
 \item{regCtsemObject}{fitted regCtsem object}
 
-\item{what}{what should be plotted? Possbile are: 'drift', 'parameters', 'fit'}
+\item{what}{what should be plotted? Possbile are: 'drift', 'parameters', 'fit' or labels of specific parameters}
 
 \item{criterion}{vector with labels of criteria which should be plotted when what = 'fit'}
 

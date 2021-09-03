@@ -6,101 +6,71 @@
 \title{regCtsem}
 \usage{
 regCtsem(
-  ctsemObject = NULL,
-  mxObject = NULL,
-  dataset = NULL,
-  regOn = "DRIFT",
+  ctsemObject,
+  dataset,
   regIndicators,
+  targetVector = NULL,
   lambdas = "auto",
   lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
   cvSample = NULL,
   autoCV = FALSE,
   k = 5,
-  objective = "ML",
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
   sparseParameters = NULL,
-  standardizeDrift = FALSE,
+  subjectSpecificParameters = NULL,
+  standardizeDrift = "No",
   scaleLambdaWithN = TRUE,
   returnFitIndices = TRUE,
+  BICWithNAndT = nrow(dataset) == 1,
   optimization = "exact",
   optimizer = "GIST",
   control = list(),
-  extraTries = 3,
-  cores = 1,
-  verbose = 0,
-  silent = FALSE,
-  progressBar = TRUE,
-  parallelProgressBar = NULL,
-  calledInternally = FALSE
+  verbose = 0
 )
 }
 \arguments{
-\item{ctsemObject}{if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel}
+\item{ctsemObject}{Fitted object of class ctsemFit}
 
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.}
+\item{dataset}{Please provide a data set in wide format compatible to ctsemOMX}
 
-\item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
+\item{regIndicators}{Labels of the regularized parameters (e.g. drift_eta1_eta2).}
 
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
-
-\item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of the same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
+\item{targetVector}{named vector with values towards which the parameters are regularized (Standard is regularization towards zero)}
 
 \item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values}
 
 \item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
 
-\item{penalty}{Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
+\item{penalty}{Currently supported are lasso, ridge and adaptiveLasso}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
 
-\item{elastic_alpha}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{elastic_gamma}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{cvSample}{cross-validation sample. Has to be of type mxData}
+\item{cvSample}{cross-validation sample. Has to be in wide format and compatible with ctsemOMX}
 
 \item{autoCV}{Boolean: Should automatic cross-validation be used?}
 
 \item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
 
-\item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
-
-\item{KalmanStartValues}{Optional starting values for the parameters when using Kalman filter}
-
-\item{optimizeKalman}{Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE}
-
 \item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.}
 
-\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using the T0VAR?}
+\item{subjectSpecificParameters}{EXPERIMENTAL! A vector of parameter labels for parameters which should be estimated person-specific. If these parameter labels are also passed to regIndicators, all person-specific parameters will be regularized towards a group-parameter. This is a 2-step-procedure: In step 1 all parameters are constrained to equality between individuals to estimate the group parameters. In step 2 the parameters are estimated person-specific, but regularized towards the group parameter from step 1.}
+
+\item{standardizeDrift}{Should Drift parameters be standardized automatically? Set to 'No' for no standardization, 'T0VAR' for standardization using the T0VAR or 'asymptoticDiffusion' for standardization using the asymptotic diffusion}
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent}
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 
-\item{optimization}{which optimization procedure should be used. Possible are  "exact" or "approx".}
+\item{BICWithNAndT}{Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N)). Defaults to TRUE if N = 1 and FALSE otherwise}
 
-\item{optimizer}{for exact optimization: Either GIST or GLMNET}
+\item{optimization}{which optimization procedure should be used. Possible are  "exact" or "approx". exact is recommended}
+
+\item{optimizer}{for exact optimization: Either GIST or GLMNET. When using optimization = "approx", Rsolnp or any of the optimizers in optimx can be used. See ?optimx}
 
 \item{control}{List with control arguments for the optimizer. See ?controlGIST, ?controlGLMNET and ?controlApprox for the respective parameters}
 
-\item{extraTries}{number of extra tries in mxTryHard}
-
-\item{cores}{how many computer cores should be used? Currently corse = 1 is recommended.}
-
-\item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)}
-
-\item{silent}{silent execution}
-
-\item{progressBar}{Boolean: Should a progress bar be displayed}
-
-\item{parallelProgressBar}{list: used internally to display progress when executing in parallel. Do not pass values to parallelProgressBar}
-
-\item{calledInternally}{Boolean: used internally for skipping checks}
+\item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress.}
 }
 \value{
 returns an object of class regCtsem. Without cross-validation, this object will have the fields setup (all arguments passed to the function), fitAndParameters (used internally to store the fit and the raw (i.e., untransformed) parameters), fit (fit indices, ect.), parameterEstimatesRaw (raw, i.e. untransformed parameters; used internally), and parameters (transformed parameters)#'
@@ -114,6 +84,8 @@ This package is based on ctsem and can regularize Drift parameters in continuous
 NOTE: Function located in file regCtsem.R
 }
 \examples{
+\donttest{
+
 set.seed(17046)
 
 library(regCtsem)
@@ -154,32 +126,30 @@ myModel <- ctsem::ctModel(Tpoints=10,n.latent=2,n.TDpred=0,
 fit_myModel <- ctsemOMX::ctFit(dat, myModel)
 
 # select DRIFT values for regularization:
-regOn = "DRIFT"
-regIndicators = matrix(c(0,1,
-                         1,0),
-                       byrow = T, nrow = 2)
+regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
+# Note: If you are unsure what the parameters are called in
+# your model, check: fit_myModel$ctmodelobj$DRIFT for the drift or
+# omxGetParameters(fit_myModel$ctmodelobj) for all parameters
 
 # Optimize model using GIST with lasso penalty
 regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
-                               regOn = regOn,
+                               dataset = dat,
                                regIndicators = regIndicators,
                                lambdas = "auto",
                                lambdasAutoLength = 20)
-
-summary(regModel, criterion = "BIC")
-plot(regModel, what = "drift")
+summary(regModel)
+plot(regModel)
 plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
-
-# Using shinyfy can also give some insights into the model:
-# shinyfy(regCtsemObject = regModel)
 
 # The best parameter estimates and the final model as mxObject can be extracted with:
 # getFinalParameters(regCtsemObject = regModel, criterion = "BIC")
 # bestModel <- getFinalModel(regCtsemObject = regModel, criterion = "BIC")
+# WARNING: The returned model is of type cpptsem. You can access it's elements with the
+# $ operator. For example: bestModel$DRIFTValues
 
 # Optimize model using GLMNET with lasso penalty
 regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
-                               regOn = regOn,
+                               dataset = dat,
                                regIndicators = regIndicators,
                                lambdas = "auto",
                                lambdasAutoLength = 20,
@@ -188,11 +158,11 @@ regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
 summary(regModel, criterion = "BIC")
 plot(regModel, what = "drift")
 plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
+plot(regModel, what = "drift_eta1_eta2")
 
 # The same regularization can be performed with the approximate optimization:
-# Note that we are using extraTries to get better parameter estimates
 regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
-                                     regOn = regOn,
+                                     dataset = dat,
                                      regIndicators = regIndicators,
                                      lambdas = "auto",
                                      lambdasAutoLength = 20,
@@ -201,8 +171,7 @@ regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
                                        epsilon = .001, # epsilon is used to transform the non-differentiable
                                        #lasso penalty to a differentiable one if optimization = approx
                                        zeroThresh = .04 # threshold below which parameters will be evaluated as == 0
-                                     ),
-                                     extraTries = 5)
+                                     ))
 
 # Comparison of parameter estimates:
 round(regModel$fitAndParameters - regModelApprox$fitAndParameters,4)
@@ -241,27 +210,84 @@ myModel <- ctsem::ctModel(Tpoints=100,n.latent=2,n.TDpred=0,
                           DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
                           T0MEANS=matrix(0,ncol=1,nrow=2),
                           T0VAR="auto", type = "omx")
+fit_myModel <- ctFit(dat = traindata, ctmodelobj = myModel, objective = "Kalman")
 
 # select DRIFT values:
-regOn = "DRIFT"
-regIndicators = matrix(c(0,1,1,0), byrow = T, ncol = 2)
+regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
+# Note: If you are unsure what the parameters are called in
+# your model, check: fit_myModel$ctmodelobj$DRIFT for the drift or
+# omxGetParameters(fit_myModel$ctmodelobj) for all parameters
 
 ## Optimization with GIST:
-regModel <- regCtsem::regCtsem(# important: We now have to pass the ctModel object, not the fitted model!
-  ctsemObject = myModel,
-  # Furthermore, the data has to be passed to regCtsem
-  dataset = traindata,
-  regOn = regOn,
-  regIndicators = regIndicators,
-  lambdas = "auto",
-  lambdasAutoLength = 20,
-  cvSample = testdata,
-  objective = "Kalman",
-  cores = 2
+regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+                               dataset = traindata,
+                               regIndicators = regIndicators,
+                               lambdas = "auto",
+                               lambdasAutoLength = 20,
+                               cvSample = testdata # data set for cross-validation
 )
 
 summary(regModel, criterion = "cvM2LL")
 plot(regModel, what = "fit", criterion = "cvM2LL")
+
+#### EXPERIMENTAL FEATURES: USE WITH CAUTION! ####
+
+library(regCtsem)
+
+## Example 4: Kalman Filter with person specific parameter values
+## WARNING: THIS WILL TAKE A WHILE TO RUN
+set.seed(175446)
+
+## define the population model:
+
+# set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
+ct_drift <- matrix(c(-.3,0,.2,-.2),2,2,TRUE)
+dataset <- c()
+indpars <- c()
+
+# We will simulate data for 10 individuals with person-specific parameters
+# These person-specific parameters will then be regularized towards a
+# common group parameter
+for(i in 1:10){
+  while(TRUE){
+    DRIFT <- ct_drift + matrix(c(0,rnorm(1,0,.5),0,0),2,2,TRUE)
+    if(!any(Re(eigen(DRIFT)$values) > 0)){break}
+  }
+  indpars <- c(indpars, DRIFT[1,2])
+  generatingModel<-ctsem::ctModel(Tpoints=50,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+                                  MANIFESTVAR=diag(0,2),
+                                  LAMBDA=diag(1,2),
+                                  DRIFT=DRIFT,
+                                  DIFFUSION=matrix(c(.5,0,0,.5),2),
+                                  CINT=matrix(0,nrow = 2, ncol = 1),
+                                  T0MEANS=matrix(0,ncol=1,nrow=2),
+                                  T0VAR=diag(1,2), type = "omx")
+  dataset <- rbind(dataset, ctsem::ctGenerate(generatingModel,n.subjects = 1, wide = TRUE))
+
+}
+
+## Build the analysis model.
+myModel <- ctsem::ctModel(Tpoints=50,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+                          LAMBDA=diag(1,2),
+                          MANIFESTVAR=diag(0,2),
+                          DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
+                          T0MEANS=matrix(0,ncol=1,nrow=2),
+                          T0VAR="auto", type = "omx")
+myModel <- ctFit(myModel, dat = dataset, objective = "Kalman",
+                 useOptimizer = TRUE)
+regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
+# the following parameters will be estimated person-specific and (as we specified this above)
+# regularized. The regularization will be towards a group parameter
+subjectSpecificParameters <- c("drift_eta2_eta1", "drift_eta1_eta2")
+regModel <- regCtsem(ctsemObject = myModel,
+                     dataset = dataset,
+                     regIndicators = regIndicators,
+                     lambdasAutoLength = 5, # 5 will not be enough, but this takes some time to execute
+                     subjectSpecificParameters = subjectSpecificParameters
+)
+summary(regModel, criterion = "BIC")
+plot(regModel, what = "drift")
+}
 
 }
 \author{

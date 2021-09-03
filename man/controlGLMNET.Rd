@@ -4,11 +4,28 @@
 \alias{controlGLMNET}
 \title{controlGLMNET}
 \usage{
-controlGLMNET()
+controlGLMNET(
+  tryCpptsem = TRUE,
+  forceCpptsem = FALSE,
+  stepSize = 1,
+  lineSearch = "GLMNET",
+  c1 = 1e-04,
+  c2 = 0.9,
+  sig = 10^(-5),
+  gam = 0,
+  initialHessianApproximation = "OpenMx",
+  maxIter_out = 100,
+  maxIter_in = 1000,
+  maxIter_line = 500,
+  eps_out = 1e-10,
+  eps_in = 1e-10,
+  eps_WW = 1e-04,
+  approxFirst = TRUE,
+  numStart = 0,
+  controlApproxOptimizer = controlRsolnp(control = list(outer.iter = 50, trace = 0))
+)
 }
 \arguments{
-\item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
-
 \item{tryCpptsem}{should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models}
 
 \item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the m,atrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details}
@@ -25,8 +42,6 @@ controlGLMNET()
 
 \item{gam}{for lineSearch = 'GLMNET': Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 <= gamma < 1}
 
-\item{differenceApprox}{Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
-
 \item{initialHessianApproximation}{Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian}
 
 \item{maxIter_out}{Maximal number of outer iterations}
@@ -41,13 +56,13 @@ controlGLMNET()
 
 \item{eps_WW}{Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned}
 
-\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first lambda, 2 = optimization for all lambdas. 3 ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or Opemx if cpptsem is not available, 5 = optimizing using optim or Opemx if cpptsem is not available (requires installation of Rsolnp)}
+\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization?}
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{approxOpt}{Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp}
+\item{controlApproxOptimizer}{settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox}
 
-\item{approxMaxIt}{Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .}
+\item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
 }
 \description{
 The following arguments can be used to adjust the GLMNET optimization

@@ -6,8 +6,7 @@
 \usage{
 exact_getCVFit(
   objective,
-  ctsemObject,
-  mxObject,
+  cvSampleCpptsemObject,
   parameterLabels,
   parameterValuesTable,
   lambdas,
@@ -15,11 +14,9 @@ exact_getCVFit(
 )
 }
 \arguments{
-\item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
+\item{objective}{Kalman or mx}
 
-\item{ctsemObject}{if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel}
-
-\item{mxObject}{Fitted object of class MxObject}
+\item{cvSampleCpptsemObject}{Fitted object of class cpptsem}
 
 \item{parameterLabels}{labels of optimized parameters}
 
@@ -30,7 +27,7 @@ exact_getCVFit(
 \item{cvSample}{cross-validation sample. Has to be of type mxData}
 }
 \description{
-computes cross-validation fit for exact optimization
+computes cross-validation fit for exact optimization.
 }
 \details{
 NOTE: Function located in file exact_optimization.R

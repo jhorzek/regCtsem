@@ -5,106 +5,77 @@
 \title{exact_regCtsem}
 \usage{
 exact_regCtsem(
-  ctsemObject = NULL,
-  mxObject = NULL,
-  dataset = NULL,
-  regOn = "DRIFT",
+  cpptsemObject,
+  dataset,
   regIndicators,
-  lambdas = "auto",
-  lambdasAutoLength = 50,
-  penalty = "lasso",
-  adaptiveLassoWeights = NULL,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
-  standardizeDrift = FALSE,
-  returnFitIndices = TRUE,
-  cvSample = NULL,
-  autoCV = FALSE,
-  k = 5,
-  optimizer = "GIST",
+  targetVector,
+  lambdas,
+  lambdasAutoLength,
+  penalty,
+  adaptiveLassoWeights,
+  returnFitIndices,
+  BICWithNAndT,
+  Tpoints,
+  cvSampleCpptsemObject,
+  optimizer,
   objective,
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
-  sparseParameters = NULL,
-  tryCpptsem = TRUE,
-  forceCpptsem = FALSE,
-  stepSize = 1,
-  lineSearch = "GLMNET",
-  c1 = 1e-04,
-  c2 = 0.9,
-  sig = 10^(-5),
-  gam = 0,
-  differenceApprox = "central",
-  initialHessianApproximation = "OpenMx",
-  maxIter_out = 100,
-  maxIter_in = 1000,
-  maxIter_line = 500,
-  eps_out = 1e-10,
-  eps_in = 1e-10,
-  eps_WW = 1e-04,
-  eta = 2,
-  stepsizeMin = 1/(10^30),
-  stepsizeMax = 10^30,
-  GISTLinesearchCriterion = "monotone",
-  GISTNonMonotoneNBack = 5,
-  break_outer = c(parameterChange = 10^(-5)),
-  scaleLambdaWithN = TRUE,
-  approxFirst = "auto",
-  numStart = 0,
-  approxOpt = 1,
-  approxMaxIt = "auto",
-  extraTries = 3,
-  cores = 1,
-  verbose = 0,
-  silent = FALSE,
-  progressBar = TRUE,
-  parallelProgressBar = NULL
+  sparseParameters,
+  stepSize,
+  lineSearch,
+  c1,
+  c2,
+  sig,
+  gam,
+  initialHessianApproximation,
+  maxIter_out,
+  maxIter_in,
+  maxIter_line,
+  eps_out,
+  eps_in,
+  eps_WW,
+  eta,
+  stepsizeMin,
+  stepsizeMax,
+  GISTLinesearchCriterion,
+  GISTNonMonotoneNBack,
+  break_outer,
+  scaleLambdaWithN,
+  approxFirst,
+  numStart,
+  controlApproxOptimizer,
+  verbose
 )
 }
 \arguments{
-\item{ctsemObject}{if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel}
+\item{cpptsemObject}{Object of type cpptsem}
 
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.}
+\item{dataset}{Please provide a data set in wide format compatible to ctsemOMX}
 
-\item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
+\item{regIndicators}{Labels for the regularized parameters (e.g. drift_eta1_eta2)}
 
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
-
-\item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of the same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
+\item{targetVector}{named vector with values towards which the parameters are regularized}
 
 \item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values}
 
 \item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
 
-\item{penalty}{Currently supported are lasso and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
+\item{penalty}{Currently supported are ridge, lasso, and adaptiveLasso}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
 
-\item{elastic_alpha}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{elastic_gamma}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using the T0VAR?}
-
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 
-\item{cvSample}{cross-validation sample. Has to be of type mxData}
+\item{BICWithNAndT}{Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))}
 
-\item{autoCV}{Boolean: Should automatic cross-validation be used?}
+\item{Tpoints}{Number of time points (used for BICWithNAndT)}
 
-\item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
+\item{cvSampleCpptsemObject}{cppstem for cross-validation}
+
+\item{optimizer}{Either "GIST" or "GLMNET"}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
-\item{KalmanStartValues}{Optional starting values for the parameters when using Kalman filter}
-
-\item{optimizeKalman}{Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE}
-
 \item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.}
-
-\item{tryCpptsem}{should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models}
-
-\item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details}
 
 \item{stepSize}{GLMNET & GIST: initial step size of the outer iteration}
 
@@ -117,8 +88,6 @@ exact_regCtsem(
 \item{sig}{GLMNET & GIST: GLMNET: only relevant when lineSearch = 'GLMNET' | GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.}
 
 \item{gam}{GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.}
-
-\item{differenceApprox}{GLMNET & GIST: Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
 
 \item{initialHessianApproximation}{GLMNET: Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian}
 
@@ -144,27 +113,17 @@ exact_regCtsem(
 
 \item{GISTNonMonotoneNBack}{in case of non-monotone line search: Number of preceding regM2LL values to consider}
 
+\item{break_outer}{criterion for breaking outer iterations of GIST. See ?controlGIST for more information}
+
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended as the likelihood is also sample size dependent}
 
-\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first lambda, 2 = optimization for all lambdas. 3 ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or OpenMx if cpptsem is not available, 5 = optimizing using Rsolnp or OpenMx if cpptsem is not available (requires installation of Rsolnp). "auto" will default to 3 if lambdas = "auto" and 4 otherwise}
+\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization?}
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{approxOpt}{Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp}
-
-\item{approxMaxIt}{Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .}
-
-\item{extraTries}{number of extra tries in mxTryHard for warm start}
-
-\item{cores}{how many computer cores should be used?}
+\item{controlApproxOptimizer}{settings passed to optimx or Rsolnp}
 
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress}
-
-\item{silent}{silent execution}
-
-\item{progressBar}{Boolean: Should a progress bar be displayed}
-
-\item{parallelProgressBar}{list: used internally to display progress when executing in parallel}
 }
 \description{
 creates a regCtsem object for exact optimization

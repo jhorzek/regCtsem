@@ -8,8 +8,14 @@
 #' transforms fitted ctsem model to cpptsem model
 #'
 #' @param ctsemModel fittet ctsem object
+#' @param wideData Please provide a data set in wide format compatible to ctsemOMX
+#' @param removeD removes the D matrix in the mxObject; This should be set to TRUE
+#' @param group numeric vector indicating which group a person belongs to
+#' @param groupSpecificParameters string vector indicating which parameters should be group specific
+#' @param silent suppress messages
 #'
 #' @examples
+#' \dontrun{
 #' library(regCtsem)
 #'
 #' addCINT <- FALSE
@@ -26,7 +32,7 @@
 #'                           MANIFESTVAR=diag(0, 2),
 #'                           TRAITVAR = NULL,
 #'                           CINT = CINT)
-#' AnomAuthfit1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = F, stationary = stationary)
+#' AnomAuthfit1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = FALSE, stationary = stationary)
 #' AnomAuthfit1$mxobj$fitfunction$result[[1]]
 #' gradientModel1 <- OpenMx::mxRun(OpenMx::mxModel(AnomAuthfit1$mxobj,
 #'                                                 OpenMx::mxComputeSequence(steps=list(
@@ -38,14 +44,14 @@
 #' centralGrandients
 #'
 #' ## with cpptsem
-#' cpptsemmodel1 <- cpptsemFromCtsem(ctsemModel = AnomAuthfit1)
+#' cpptsemmodel1 <- cpptsemFromCtsem(ctsemModel = AnomAuthfit1, wideData = AnomAuth)
 #' cpptsemmodel1$computeRAM()
 #' cpptsemmodel1$fitRAM()
 #' cpptsemmodel1$m2LL
 #' cpptsemmodel1$approxRAMGradients((1.1 * 10^(-16))^(1/3))[names(centralGrandients)]
 #'
 #' # change parameter values
-#' AnomAuthfit1_1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = T, stationary = stationary)
+#' AnomAuthfit1_1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = TRUE, stationary = stationary)
 #' newParameters <- omxGetParameters(AnomAuthfit1_1$mxobj)
 #' cpptsemmodel1$setParameterValues(newParameters, names(newParameters))
 #' cpptsemmodel1$computeRAM()
@@ -58,7 +64,7 @@
 #'                           MANIFESTVAR=diag(0, 2),
 #'                           TRAITVAR = "auto",
 #'                           CINT = CINT)
-#' AnomAuthfit2 <- ctFit(AnomAuth, AnomAuthmodel2, useOptimizer = F, stationary = stationary)
+#' AnomAuthfit2 <- ctFit(AnomAuth, AnomAuthmodel2, useOptimizer = FALSE, stationary = stationary)
 #' AnomAuthfit2$mxobj$fitfunction$result[[1]]
 #' gradientModel2 <- OpenMx::mxRun(OpenMx::mxModel(AnomAuthfit2$mxobj,
 #'                                                 OpenMx::mxComputeSequence(steps=list(
@@ -69,7 +75,7 @@
 #' names(centralGrandients) <- rownames(gradientModel2$compute$steps[[1]]$output[["gradient"]])
 #' centralGrandients
 #' ## with cpptsem
-#' cpptsemmodel2 <- cpptsemFromCtsem(AnomAuthfit2)
+#' cpptsemmodel2 <- cpptsemFromCtsem(AnomAuthfit2, wideData = AnomAuth)
 #' cpptsemmodel2$computeRAM()
 #' cpptsemmodel2$fitRAM()
 #' cpptsemmodel2$m2LL
@@ -125,9 +131,82 @@
 #' cpptsemmodel3$latentScores[1,]
 #' cpptsemmodel3$approxKalmanGradients((1.1 * 10^(-16))^(1/3))[names(centralGrandients)]
 #'
+#' ## Example 4: Kalman Filter with group or person specific parameter values
+#' set.seed(175446)
+#' ## define the population model:
+#' addCINT <- FALSE
+#' if(addCINT){
+#' CINT = matrix(c("cint1", "cint2"), nrow = 2, ncol = 1)
+#' }else{
+#' CINT = matrix(c(0,0), nrow = 2, ncol = 1)
+#' }
+#' stationary <- c('T0TRAITEFFECT','T0TIPREDEFFECT')
+#' # set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
+#' ct_drift1 <- matrix(c(-.3,.2,0,-.5), ncol = 2)
+#' ct_drift2 <- matrix(c(-.5,.1,.1,-.2), ncol = 2)
+#' generatingModel1<-ctsem::ctModel(Tpoints=200,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+#'                                  MANIFESTVAR=diag(0,2),
+#'                                  LAMBDA=diag(1,2),
+#'                                  DRIFT=ct_drift1,
+#'                                  DIFFUSION=matrix(c(.5,0,0,.5),2),
+#'                                  CINT=matrix(0,nrow = 2, ncol = 1),
+#'                                  T0MEANS=matrix(0,ncol=1,nrow=2),
+#'                                  T0VAR=diag(1,2), type = "omx")
+#' generatingModel2<-ctsem::ctModel(Tpoints=200,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+#'                                  MANIFESTVAR=diag(0,2),
+#'                                  LAMBDA=diag(1,2),
+#'                                  DRIFT=ct_drift2,
+#'                                  DIFFUSION=matrix(c(.5,0,0,.5),2),
+#'                                  CINT=matrix(0,nrow = 2, ncol = 1),
+#'                                  T0MEANS=matrix(0,ncol=1,nrow=2),
+#'                                  T0VAR=diag(1,2), type = "omx")
+# simulate a training data and testing data set
+#' traindata1 <- ctsem::ctGenerate(generatingModel1,n.subjects = 10, wide = TRUE)
+#' traindata2 <- ctsem::ctGenerate(generatingModel2,n.subjects = 10, wide = TRUE)
+#' traindata <- rbind(traindata1, traindata2)
+#' ## Build the analysis model.
+#' myModel <- ctsem::ctModel(Tpoints=200,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
+#'                           LAMBDA=diag(1,2),
+#'                           MANIFESTVAR=diag(0,2),
+#'                           CINT=CINT,
+#'                           DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
+#'                           T0MEANS=matrix(0,ncol=1,nrow=2),
+#'                           T0VAR="auto", type = "omx")
+#' myModel <- ctFit(myModel, dat = traindata, objective = "Kalman", useOptimizer = F, stationary = stationary)
+#'
+#' ## with cpptsem
+#' cpptsemmodel3 <- cpptsemFromCtsem(ctsemModel = myModel, wideData = traindata, group = c(rep(1,10), rep(2,10)), groupSpecificParameters = c(myModel$mxobj$DRIFT$labels))
+#'
+#' startingValues <- cpptsemmodel3$getParameterValues()
+#'
+#' m2LLCpptsem <- function(parameters, cpptsemmodel){
+#'   cpptsemmodel$setParameterValues(parameters, names(parameters))
+#'   # catching all errors from cpptsemmodel
+#' # when parameter values are impossible
+#'   invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(),
+#'                                          silent = TRUE),
+#'                            type = "message"))
+#'
+#'   if(class(KALMAN) == "try-error" | is.na(cpptsemmodel$m2LL)){
+#'     return(99999999)
+#'   }
+#'   return(cpptsemmodel$m2LL)
+#' }
+#'
+#' # compute
+#' kalmanCpptsemFit <- Rsolnp::solnp(pars = startingValues,
+#'                                   fun = m2LLCpptsem,
+#'                                   eqfun = NULL, eqB = NULL, ineqfun = NULL, ineqLB = NULL,
+#'                                   ineqUB = NULL, LB = NULL, UB = NULL, control = list(trace = 0),
+#'                                   cpptsemmodel3)
+#' kalmanCpptsemFit$pars
+#' ct_drift1
+#' }
+#'
+#'
 #' @export
 
-cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE){
+cpptsemFromCtsem <- function(ctsemModel, wideData, removeD = TRUE, group = NULL, groupSpecificParameters = NULL, silent = FALSE){
   if(!"T0TRAITEFFECT" %in% ctsemModel$ctfitargs$stationary){
     stop("Non-stationary trait effect not yet implemented")
   }
@@ -147,7 +226,11 @@ cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE){
   # step 2: prepare dataset
 
   if(tolower(ctsemModel$ctfitargs$objective) == "mxram"){
-    dataInformation <- constructDataset(wideData = mxObject$data$observed)
+    if(!is.null(group) || !is.null(groupSpecificParameters)){
+      stop("Group specific parameters can only be used with the Kalman filter.")
+    }
+
+    dataInformation <- constructDataset(wideData = wideData)
     dataForRAM <- prepareRAMData(dataset = dataInformation$dataset,
                                  individualMissingPatternID = dataInformation$individualMissingPatternID,
                                  uniqueMissingPatterns = dataInformation$uniqueMissingPatterns)
@@ -165,7 +248,7 @@ cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE){
   }
 
   # step 3: extract continuous time matrices and parameters
-  ctMatrices <- extractCtsemMatrices(mxObject = mxObject, nlatent = nlatent, nmanifest = nmanifest)
+  ctMatrices <- extractCtsemMatrices(mxObject = mxObject, nlatent = nlatent, nmanifest = nmanifest, silent = silent)
 
   # step 4: get parameter table from mxObject
   if(tolower(ctsemModel$ctfitargs$objective) == "mxram"){
@@ -179,6 +262,31 @@ cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE){
       # implementation used by cpptsem simply adds the manifestmeans to the predicted observed variables.
       parameterTable <- subset(parameterTable, !parameterTable$matrix == "D")
     }
+
+    # add columns for person specific parameters
+    parameterTable$groupID <- 0
+
+    if(!is.null(group) || !is.null(groupSpecificParameters)){
+      uniqueGroups <- unique(group)
+      for(gr in uniqueGroups){
+        grParameterTable <- parameterTable
+        grSpecificParameterTable <- subset(grParameterTable, label %in% groupSpecificParameters)
+        grSpecificParameterTable$label <- paste0(grSpecificParameterTable$label, paste0("_G", gr))
+        grParameterTable <- rbind(subset(grParameterTable, !label %in% groupSpecificParameters),
+                                  grSpecificParameterTable)
+        grParameterTable$groupID <- gr
+        if(gr == uniqueGroups[1]){
+          combinedGrParameterTable <- grParameterTable
+        }else{
+          combinedGrParameterTable <- rbind(combinedGrParameterTable, grParameterTable)
+        }
+      }
+      parameterTable <- combinedGrParameterTable
+    }else{
+      group <- rep(0, nrow(wideData))
+      parameterTable$groupID <- rep(0, nrow(parameterTable))
+    }
+    parameterTable$changed <- rep(TRUE, nrow(parameterTable))
   }
 
   if(tolower(ctsemModel$ctfitargs$objective) == "mxram"){
@@ -250,7 +358,9 @@ cpptsemFromCtsem <- function(ctsemModel, wideData = NULL, removeD = TRUE){
 
     cpptsem$setDiscreteTimeParameterNames(discreteTimeParameterNames)
 
-    cpptsem$setKalmanData(dataForKalman)
+    cpptsem$setKalmanData(dataForKalman, FALSE)
+
+    cpptsem$setKalmanGroupings(0:(nrow(wideData)-1), group)
 
     cpptsem$setKalmanMatrices(KalmanMatrices)
 
@@ -291,7 +401,7 @@ constructDataset <- function(wideData){
   for(mrow in 1:nrow(isMissing)){
     rowMissing <- apply(uniqueMissingPatterns, 1, function(x) all(isMissing[mrow,] == x))
     individualMissingPatternID <- c(individualMissingPatternID,
-                                     (1:nrow(uniqueMissingPatterns))[rowMissing])
+                                    (1:nrow(uniqueMissingPatterns))[rowMissing])
   }
 
   dataList <- list("dataset" = as.matrix(dataset),
@@ -363,7 +473,6 @@ prepareRAMData <- function(dataset, individualMissingPatternID, uniqueMissingPat
 #'
 #' Separates data and time intervals. Computes the number of unique time intervals and the unqiue missingness patterns
 #' @param wideData dataset in wide format compatible with ctsem
-#' @import mgcv
 #' @export
 constructDatasetKalman <- function(wideData){
   wideData <- as.matrix(wideData)
@@ -384,8 +493,13 @@ constructDatasetKalman <- function(wideData){
   # extract unique missingness patterns
 
   isMissing <- is.na(dataset)
-  uniqueMissingPatterns <- mgcv::uniquecombs(isMissing, ordered=FALSE)
-  individualMissingPatternID <- attr(uniqueMissingPatterns,"index")
+  uniqueMissingPatterns <- unique(isMissing)
+  individualMissingPatternID <- c()
+  for(mrow in 1:nrow(isMissing)){
+    rowMissing <- apply(uniqueMissingPatterns, 1, function(x) all(isMissing[mrow,] == x))
+    individualMissingPatternID <- c(individualMissingPatternID,
+                                    (1:nrow(uniqueMissingPatterns))[rowMissing])
+  }
 
   dataList <- list("dataset" = as.matrix(dataset),
                    "dT" = dT,
@@ -432,74 +546,78 @@ prepareKalmanData <- function(dataset, nlatent, nmanifest, dtIndicators, Tpoints
 #' @param mxObject mxObject from ctsemOMX
 #' @param nlatent number of latent variables
 #' @param nmanifest number of manifest variables
+#' @param silent suppress messages
 #' @import OpenMx
 #' @export
-extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
+extractCtsemMatrices <- function(mxObject, nlatent, nmanifest, silent = FALSE){
   ctMatrices <- list()
   ## latent
   # T0MEANS
-  cat("Translating model to C++. Found the following elements: ")
+  if(!silent){
+    cat("Translating model to C++. Found the following elements: ")
+  }
   if(!is.null(mxObject$T0MEANS)){
-    cat("T0MEANS, ")
+    if(!silent){cat("T0MEANS, ")}
     T0MEANS <- list("values" = NULL, "names" = NULL)
-    T0MEANS$values <- deepCopyNumericMatrix(mxObject$T0MEANS$values)
-    T0MEANS$names <- deepCopyStringMatrix(mxObject$T0MEANS$labels)
+    T0MEANS$values <- matrix(mxObject$T0MEANS$values, nrow = nrow(mxObject$T0MEANS$values), ncol = ncol(mxObject$T0MEANS$values))
+    T0MEANS$names <- matrix(mxObject$T0MEANS$labels, nrow = nrow(mxObject$T0MEANS$labels), ncol = ncol(mxObject$T0MEANS$labels))
     ctMatrices[["T0MEANS"]] <- T0MEANS
   }
 
   # T0VARbase
   if(!is.null(mxObject$T0VARbase)){
-    cat("T0VARbase, ")
+    if(!silent){cat("T0VARbase, ")}
     T0VARbase <- list("values" = NULL, "names" = NULL)
-    T0VARbase$values <- deepCopyNumericMatrix(mxObject$T0VARbase$values)
-    T0VARbase$names <- deepCopyStringMatrix(mxObject$T0VARbase$labels)
+    T0VARbase$values <- matrix(mxObject$T0VARbase$values, nrow = nrow(mxObject$T0VARbase$values), ncol = ncol(mxObject$T0VARbase$values))
+    T0VARbase$names <- matrix(mxObject$T0VARbase$labels, nrow = nrow(mxObject$T0VARbase$labels), ncol = ncol(mxObject$T0VARbase$labels))
     ctMatrices[["T0VARbase"]] <- T0VARbase
   }
 
 
   # DRIFT
   if(!is.null(mxObject$DRIFT)){
-    cat("DRIFT, ")
+    if(!silent){cat("DRIFT, ")}
     DRIFT <- list("values" = NULL, "names" = NULL)
-    DRIFT$values <- deepCopyNumericMatrix(mxObject$DRIFT$values)
-    DRIFT$names <- deepCopyStringMatrix(mxObject$DRIFT$labels)
+    DRIFT$values <- matrix(mxObject$DRIFT$values, nrow = nrow(mxObject$DRIFT$values), ncol = ncol(mxObject$DRIFT$values))
+    DRIFT$names <- matrix(mxObject$DRIFT$labels, nrow = nrow(mxObject$DRIFT$labels), ncol = ncol(mxObject$DRIFT$labels))
     ctMatrices[["DRIFT"]] <- DRIFT
   }
 
 
   # DIFFUSIONbase
   if(!is.null(mxObject$DIFFUSIONbase)){
-    cat("DIFFUSIONbase, ")
+    if(!silent){cat("DIFFUSIONbase, ")}
     DIFFUSIONbase <- list("values" = NULL, "names" = NULL)
-    DIFFUSIONbase$values <- deepCopyNumericMatrix(mxObject$DIFFUSIONbase$values)
-    DIFFUSIONbase$names <- deepCopyStringMatrix(mxObject$DIFFUSIONbase$labels)
+    DIFFUSIONbase$values <- matrix(mxObject$DIFFUSIONbase$values, nrow = nrow(mxObject$DIFFUSIONbase$values), ncol = ncol(mxObject$DIFFUSIONbase$values))
+    DIFFUSIONbase$names <- matrix(mxObject$DIFFUSIONbase$labels, nrow = nrow(mxObject$DIFFUSIONbase$labels), ncol = ncol(mxObject$DIFFUSIONbase$labels))
     ctMatrices[["DIFFUSIONbase"]] <- DIFFUSIONbase
   }
 
   # TRAITVARbase
   if(!is.null(mxObject$TRAITVARbase$values)){
-    cat("TRAITVARbase, ")
+    if(!silent){cat("TRAITVARbase, ")}
     TRAITVARbase <- list("values" = NULL, "names" = NULL)
-    TRAITVARbase$values <- deepCopyNumericMatrix(mxObject$TRAITVARbase$values)
-    TRAITVARbase$names <- deepCopyStringMatrix(mxObject$TRAITVARbase$labels)
+    TRAITVARbase$values <- matrix(mxObject$TRAITVARbase$values, nrow = nrow(mxObject$TRAITVARbase$values), ncol = ncol(mxObject$TRAITVARbase$values))
+    TRAITVARbase$names <- matrix(mxObject$TRAITVARbase$labels, nrow = nrow(mxObject$TRAITVARbase$labels), ncol = ncol(mxObject$TRAITVARbase$labels))
     ctMatrices[["TRAITVARbase"]] <- TRAITVARbase
   }
 
   # T0TRAITEFFECT
   if(!is.null(mxObject$T0TRAITEFFECT)){
-    cat("T0TRAITEFFECT, ")
+    if(!silent){cat("T0TRAITEFFECT, ")}
     T0TRAITEFFECT <- list("values" = NULL, "names" = NULL)
-    T0TRAITEFFECT$values <- deepCopyNumericMatrix(mxObject$T0TRAITEFFECT$values)
-    T0TRAITEFFECT$names <- deepCopyStringMatrix(mxObject$T0TRAITEFFECT$labels)
+    T0TRAITEFFECT$values <- matrix(mxObject$T0TRAITEFFECT$values, nrow = nrow(mxObject$T0TRAITEFFECT$values), ncol = ncol(mxObject$T0TRAITEFFECT$values))
+    T0TRAITEFFECT$names <- matrix(mxObject$T0TRAITEFFECT$labels, nrow = nrow(mxObject$T0TRAITEFFECT$labels), ncol = ncol(mxObject$T0TRAITEFFECT$labels))
     ctMatrices[["T0TRAITEFFECT"]] <- T0TRAITEFFECT
   }
 
   # CINT
   if(!is.null(mxObject$CINT)){
-    cat("CINT, ")
+    if(!silent){cat("CINT, ")}
     CINT <- list("values" = NULL, "names" = NULL)
-    CINT$values <- deepCopyNumericMatrix(mxObject$CINT$values)
-    CINT$names <- deepCopyStringMatrix(mxObject$CINT$labels)
+    CINT$values <- matrix(mxObject$CINT$values, nrow = nrow(mxObject$CINT$values), ncol = ncol(mxObject$CINT$values))
+    CINT$names <- matrix(mxObject$CINT$labels, nrow = nrow(mxObject$CINT$labels), ncol = ncol(mxObject$CINT$labels))
+
     ctMatrices[["CINT"]] <- CINT
   }
 
@@ -507,28 +625,28 @@ extractCtsemMatrices <- function(mxObject, nlatent, nmanifest){
 
   # MANIFESTMEANS
   if(!is.null(mxObject$MANIFESTMEANS)){
-    cat("MANIFESTMEANS, ")
+    if(!silent){cat("MANIFESTMEANS, ")}
     MANIFESTMEANS <- list("values" = NULL, "names" = NULL)
-    MANIFESTMEANS$values <- deepCopyNumericMatrix(mxObject$MANIFESTMEANS$values)
-    MANIFESTMEANS$names <- deepCopyStringMatrix(mxObject$MANIFESTMEANS$labels)
+    MANIFESTMEANS$values <- matrix(mxObject$MANIFESTMEANS$values, nrow = nrow(mxObject$MANIFESTMEANS$values), ncol = ncol(mxObject$MANIFESTMEANS$values))
+    MANIFESTMEANS$names <- matrix(mxObject$MANIFESTMEANS$labels, nrow = nrow(mxObject$MANIFESTMEANS$labels), ncol = ncol(mxObject$MANIFESTMEANS$labels))
     ctMatrices[["MANIFESTMEANS"]] <- MANIFESTMEANS
   }
 
   # LAMBDA
   if(!is.null(mxObject$LAMBDA)){
-    cat("LAMBDA, ")
+    if(!silent){cat("LAMBDA, ")}
     LAMBDA <- list("values" = NULL, "names" = NULL)
-    LAMBDA$values <- deepCopyNumericMatrix(mxObject$LAMBDA$values)
-    LAMBDA$names <- deepCopyStringMatrix(mxObject$LAMBDA$labels)
+    LAMBDA$values <- matrix(mxObject$LAMBDA$values, nrow = nrow(mxObject$LAMBDA$values), ncol = ncol(mxObject$LAMBDA$values))
+    LAMBDA$names <- matrix(mxObject$LAMBDA$labels, nrow = nrow(mxObject$LAMBDA$labels), ncol = ncol(mxObject$LAMBDA$labels))
     ctMatrices[["LAMBDA"]] <- LAMBDA
   }
 
   # MANIFESTVAR
   if(!is.null(mxObject$MANIFESTVARbase$values)){
-    cat("MANIFESTVARbase.")
+    if(!silent){cat("MANIFESTVARbase.")}
     MANIFESTVARbase <- list("values" = NULL, "names" = NULL)
-    MANIFESTVARbase$values <- deepCopyNumericMatrix(mxObject$MANIFESTVARbase$values)
-    MANIFESTVARbase$names <- deepCopyStringMatrix(mxObject$MANIFESTVARbase$labels)
+    MANIFESTVARbase$values <- matrix(mxObject$MANIFESTVARbase$values, nrow = nrow(mxObject$MANIFESTVARbase$values), ncol = ncol(mxObject$MANIFESTVARbase$values))
+    MANIFESTVARbase$names <- matrix(mxObject$MANIFESTVARbase$labels, nrow = nrow(mxObject$MANIFESTVARbase$labels), ncol = ncol(mxObject$MANIFESTVARbase$labels))
     ctMatrices[["MANIFESTVARbase"]] <- MANIFESTVARbase
   }
 
@@ -912,7 +1030,6 @@ prepareAMatrix <- function(mxObject, ctMatrices, nlatent, nmanifest, Tpoints, dT
 #' @param ctMatrices continuous time matrices
 #' @param nlatent number of latent variables
 #' @param nmanifest number of manifest variables
-#' @param dtIndicators indicators for discrete time parameters
 #' @param Tpoints number of time points
 #' @param dT time intervals
 #' @param stationaryT0VAR boolean: are variances stationary?
@@ -1102,7 +1219,6 @@ prepareFMatrix <- function(nlatent, nmanifest, Tpoints){
 #' @param ctMatrices continuous time matrices
 #' @param nlatent number of latent variables
 #' @param nmanifest number of manifest variables
-#' @param dtIndicators indicators for discrete time parameters
 #' @param Tpoints number of time points
 #' @param dT time intervals
 #' @param stationaryT0MEANS boolean: are Means stationary?
@@ -1227,7 +1343,6 @@ prepareMMatrix <- function(mxObject, ctMatrices, nlatent, nmanifest, Tpoints, dT
 #'
 #' @param nlatent number of latent variables
 #' @param nmanifest number of manifest variables
-#' @param dtIndicators indicators for discrete time parameters
 #' @param Tpoints number of time points
 #' @param sampleSize number of persons
 #' @export
@@ -1243,17 +1358,120 @@ prepareKalmanMatrices <- function(nlatent, nmanifest, Tpoints, sampleSize){
 
 
 #### Optimization ####
-
-#' approx_KalmanM2LLCpptsem
+#' fitCpptsem
 #'
-#' computes gradients for an approximate optimization of regularized ctsem based on cpptsem with Full Information Maximum Likelihood objective
-#' @param parameters paramneter values
+#' fits a cpptsem. Returns -2 log Likelihood
+#' @param parameterValues vector with labeled parameter values
+#' @param cpptsemObject cpptsem object
+#' @param objective ML or Kalman
+#' @param free vector of same length as cpptsemObject$getParameterValues, where for each element it is specified if the parameter is freely estimated (workaround for fixing parameters)
+#' @param failureReturns e.g., NA, Inf, ... adapt to optimizer settings
+#' @export
+fitCpptsem <- function(parameterValues, cpptsemObject, objective, free = labeledFree(parameterValues), failureReturns){
+  if(!all(free)){
+    parameters <- cpptsemObject$getParameterValues()
+    parameters[names(parameterValues)] <- parameterValues
+    cpptsemObject$setParameterValues(parameters, names(parameters))
+  }else{
+    cpptsemObject$setParameterValues(parameterValues, names(parameterValues))
+  }
+
+  if(tolower(objective) == "ml"){
+    # catching all errors from cpptsemObject
+    # when parameter values are impossible
+    invisible(capture.output(RAM <- try(cpptsemObject$computeRAM(),
+                                        silent = TRUE),
+                             type = "message"))
+    invisible(capture.output(FIT <- try(cpptsemObject$fitRAM(),
+                                        silent = TRUE),
+                             type = "message"))
+    if(class(RAM) == "try-error" | class(FIT) == "try-error"){
+      return(failureReturns)
+    }
+    m2LL <- cpptsemObject$m2LL
+    if(is.na(m2LL) | is.infinite(m2LL)){
+      return(failureReturns)
+    }
+    return(m2LL)
+  }
+  if(tolower(objective) == "kalman"){
+    # catching all errors from cpptsemObject
+    # when parameter values are impossible
+    invisible(capture.output(FIT <- try(cpptsemObject$computeAndFitKalman(),
+                                        silent = TRUE),
+                             type = "message"))
+    if(class(FIT) == "try-error"){
+      return(failureReturns)
+    }
+    m2LL <- cpptsemObject$m2LL
+    if(is.na(m2LL) | is.infinite(m2LL)){
+      return(failureReturns)
+    }
+    return(m2LL)
+  }
+  stop("Error while computing fit.")
+}
+
+#' gradCpptsem
+#'
+#' gradCpptsem will try to compute gradients with decreasing precision starting from the default in OpenMx. Allows for setting some parameters to fixed (difference to exact_getCppGradients)
+#'
+#' @param parameterValues vector with labeled parameter values
+#' @param cpptsemObject model of type cpptsem
+#' @param objective ml or Kalman
+#' @param free vector of same length as cpptsemObject$getParameterValues, where for each element it is specified if the parameter is freely estimated (workaround for fixing parameters)
+#' @param failureReturns value which is returned if gradCpptsem fails
+#' @export
+gradCpptsem <- function(parameterValues, cpptsemObject, objective, free = labeledFree(parameterValues), failureReturns = NA){
+  if(!all(free)){
+    parameters <- cpptsemObject$getParameterValues()
+    parameters[names(parameterValues)] <- parameterValues
+    cpptsemObject$setParameterValues(parameters, names(parameters))
+  }else{
+    cpptsemObject$setParameterValues(parameterValues, names(parameterValues))
+  }
+  # will try different precisions for the gradients
+  defaultPrecision <- OpenMx::imxAutoOptionValue("Gradient step size")
+  defaultPrecision2 <- (1.1 * 10^(-16))^(1/3)
+  precisions <- rev(seq(defaultPrecision, defaultPrecision2, length.out = 5))
+  for(precision in precisions){
+    if(tolower(objective) == "ml"){
+      invisible(capture.output(gradients <- try(cpptsemObject$approxRAMGradients(precision), silent = T), type = "message"))
+    }else{
+      invisible(capture.output(gradients <- try(cpptsemObject$approxKalmanGradients(precision), silent = T), type = "message"))
+    }
+    if(!(any(class(gradients) == "try-error")) &
+       !anyNA(gradients)){
+      break
+    }
+  }
+  gradients[is.na(gradients)] <- failureReturns
+  return(gradients[free[names(gradients)]])
+}
+
+#' labeledFree
+#'
+#' small helper function. Returns vector with TRUE of length x with same labels as x
+#' @param x vector with labeled values
+#' @export
+labeledFree <- function(x){
+  free <- rep(TRUE, length(x))
+  names(free) <- names(x)
+  return (free)
+}
+
+#' approx_RAMM2LLCpptsem
+#'
+#' computes fit for RAM model
+#' @param parameters parameter values
 #' @param cpptsemmodel model from cpptsem
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @author Jannik Orzek
 #' @export
 approx_RAMM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
-  cpptsemmodel$setParameterValues(parameters, names(parameters))
+
+  cpptsemObject$setParameterValues(parameterValues, names(parameterValues))
+
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
   invisible(capture.output(RAM <- try(cpptsemmodel$computeRAM(),
@@ -1280,14 +1498,15 @@ approx_RAMM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
 #' @param cpptsemmodel model returned from cpptsem
 #' @param adaptiveLassoWeights vector with weights of the adaptive lasso
 #' @param N sample size
-#' @param lambda tuning parameter lambda
+#' @param lambda_ tuning parameter lambda
 #' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
 #' @param epsilon tuning parameter for epsL1 approximation
 #' @param objective ML or Kalman
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @author Jannik Orzek
 #' @export
-approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, epsilon, objective, failureReturns){
+approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda_, regIndicators, targetVector, epsilon, objective, failureReturns){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
@@ -1301,17 +1520,52 @@ approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeig
     return(failureReturns)
   }
   m2LL <- cpptsemmodel$m2LL
-  regM2LL <- m2LL + sum(N*lambda*adaptiveLassoWeights[regIndicators] * abs(parameters[regIndicators]))
+  regM2LL <- m2LL + sum(N*lambda_*adaptiveLassoWeights[regIndicators] * abs(parameters[regIndicators] - targetVector[regIndicators]))
   if(is.na(regM2LL) | is.infinite(regM2LL)){
     return(failureReturns)
   }
   return(regM2LL)
 }
 
+#' ridgeRAMRegM2LLCpptsem
+#'
+#' approximates the regularized likelihood function using cpptsem and Full Information Maximum Likelihood
+#' @param parameters parameter values
+#' @param cpptsemmodel model returned from cpptsem
+#' @param adaptiveLassoWeights vector with weights of the adaptive lasso
+#' @param N sample size
+#' @param lambda_ tuning parameter lambda
+#' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
+#' @param epsilon NOT USED; Only required for the optimizer to call the function
+#' @param objective ML or Kalman
+#' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
+#' @author Jannik Orzek
+#' @export
+ridgeRAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda_, regIndicators, targetVector, epsilon, objective, failureReturns){
+  cpptsemmodel$setParameterValues(parameters, names(parameters))
+  # catching all errors from cpptsemmodel
+  # when parameter values are impossible
+  invisible(capture.output(RAM <- try(cpptsemmodel$computeRAM(),
+                                      silent = TRUE),
+                           type = "message"))
+  invisible(capture.output(FIT <- try(cpptsemmodel$fitRAM(),
+                                      silent = TRUE),
+                           type = "message"))
+  if(class(RAM) == "try-error" | class(FIT) == "try-error"){
+    return(failureReturns)
+  }
+  m2LL <- cpptsemmodel$m2LL
+  regM2LL <- m2LL + sum(N*lambda_*adaptiveLassoWeights[regIndicators] * (parameters[regIndicators] - targetVector[regIndicators])^2)
+  if(is.na(regM2LL) | is.infinite(regM2LL)){
+    return(failureReturns)
+  }
+  return(regM2LL)
+}
 
 #' approx_KalmanM2LLCpptsem
 #'
-#' computes gradients for an approximate optimization of regularized ctsem based on cpptsem with Kalman objective
+#' computes -2LogLikelihood for an approximate optimization of regularized ctsem based on cpptsem with Kalman objective
 #' @param parameters paramneter values
 #' @param cpptsemmodel model from cpptsem
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
@@ -1342,14 +1596,15 @@ approx_KalmanM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
 #' @param cpptsemmodel model returned from cpptsem
 #' @param adaptiveLassoWeights vector with weights of the adaptive lasso
 #' @param N sample size
-#' @param lambda tuning parameter lambda
+#' @param lambda_ tuning parameter lambda
 #' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
 #' @param epsilon tuning parameter for epsL1 approximation
 #' @param objective ML or Kalman
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @author Jannik Orzek
 #' @export
-approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, epsilon, objective, failureReturns){
+approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda_, regIndicators, targetVector, epsilon, objective, failureReturns){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
@@ -1360,7 +1615,40 @@ approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoW
     return(failureReturns)
   }
   m2LL <- cpptsemmodel$m2LL
-  regM2LL <- m2LL + sum(N*lambda*adaptiveLassoWeights[regIndicators] * abs(parameters[regIndicators]))
+  regM2LL <- m2LL + sum(N*lambda_*adaptiveLassoWeights[regIndicators] * abs(parameters[regIndicators] - targetVector[regIndicators]))
+  if(is.na(regM2LL) | is.infinite(regM2LL)){
+    return(failureReturns)
+  }
+  return(regM2LL)
+}
+
+#' ridgeKalmanRegM2LLCpptsem
+#'
+#' approximates the regularized likelihood function using cpptsem and Kalman
+#' @param parameters parameter values
+#' @param cpptsemmodel model returned from cpptsem
+#' @param adaptiveLassoWeights vector with weights of the adaptive lasso
+#' @param N sample size
+#' @param lambda_ tuning parameter lambda
+#' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
+#' @param epsilon NOT USED; Only required for the optimizer to call the function
+#' @param objective ML or Kalman
+#' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
+#' @author Jannik Orzek
+#' @export
+ridgeKalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda_, regIndicators, targetVector, epsilon, objective, failureReturns){
+  cpptsemmodel$setParameterValues(parameters, names(parameters))
+  # catching all errors from cpptsemmodel
+  # when parameter values are impossible
+  invisible(capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(),
+                                      silent = TRUE),
+                           type = "message"))
+  if(class(FIT) == "try-error"){
+    return(failureReturns)
+  }
+  m2LL <- cpptsemmodel$m2LL
+  regM2LL <- m2LL + sum(N*lambda_*adaptiveLassoWeights[regIndicators] * (parameters[regIndicators] - targetVector[regIndicators])^2)
   if(is.na(regM2LL) | is.infinite(regM2LL)){
     return(failureReturns)
   }
@@ -1371,19 +1659,19 @@ approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoW
 #'
 #' exact_getCppGradients will try to compute gradients with decreasing precision starting from the default in OpenMx. Sometimes the gradients will result in NA for a very specific setting of the precisions. Then it can help to slightly alter the precision
 #'
-#' @param cppmodel model of type cpptsem
+#' @param cpptsemObject model of type cpptsem
 #' @param objective ml or Kalman
 #' @export
-exact_getCppGradients <- function(cppmodel, objective){
+exact_getCppGradients <- function(cpptsemObject, objective){
   # will try different precisions for the gradients
   defaultPrecision <- OpenMx::imxAutoOptionValue("Gradient step size")
   defaultPrecision2 <- (1.1 * 10^(-16))^(1/3)
   precisions <- rev(seq(defaultPrecision, defaultPrecision2, length.out = 5))
   for(precision in precisions){
     if(tolower(objective) == "ml"){
-      invisible(capture.output(gradients <- try(cppmodel$approxRAMGradients(precision), silent = T), type = "message"))
+      invisible(capture.output(gradients <- try(cpptsemObject$approxRAMGradients(precision), silent = T), type = "message"))
     }else{
-      invisible(capture.output(gradients <- try(cppmodel$approxKalmanGradients(precision), silent = T), type = "message"))
+      invisible(capture.output(gradients <- try(cpptsemObject$approxKalmanGradients(precision), silent = T), type = "message"))
     }
     if(!(any(class(gradients) == "try-error")) &
        !anyNA(gradients)){
@@ -1398,19 +1686,19 @@ exact_getCppGradients <- function(cppmodel, objective){
 #'
 #' computes gradients for an approximate optimization of regularized ctsem based on cpptsem
 #' @param parameters parameter values
+#' @param cpptsemmodel Model of type cpptsem
 #' @param adaptiveLassoWeights vector with weights of the adaptive lasso
 #' @param N sample size
 #' @param lambda tuning parameter lambda
 #' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
 #' @param epsilon tuning parameter for epsL1 approximation
-#' @param maxit maximal number of iterations
 #' @param objective ML or Kalman
 #' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
-#' @param testGradients should be tested if the final parameters result in NA gradients?
 #' @author Jannik Orzek
 #' @export
-approx_gradCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, epsilon, objective, failureReturns){
-  invisible(capture.output(grad <- try(exact_getCppGradients(cppmodel = cpptsemmodel, objective = objective),
+approx_gradCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector, epsilon, objective, failureReturns){
+  invisible(capture.output(grad <- try(exact_getCppGradients(cpptsemObject = cpptsemmodel, objective = objective),
                                        silent = TRUE),
                            type = "message"))
   if(class(grad) == "try-error" || anyNA(grad)){
@@ -1419,10 +1707,129 @@ approx_gradCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N
     return(ret)
   }
   grad[regIndicators] <- grad[regIndicators] +
-    N*lambda*adaptiveLassoWeights[regIndicators] * parameters[regIndicators]/sqrt(parameters[regIndicators]^2+epsilon)
+    N*lambda*adaptiveLassoWeights[regIndicators] * (parameters[regIndicators] - targetVector[regIndicators])/sqrt((parameters[regIndicators] - targetVector[regIndicators])^2+epsilon)
   return(grad[names(parameters)])
 }
 
+
+#' approx_cpptsemRsolnp
+#'
+#' creates an approximate solution to regularized ctsem using Rsolnp::solnp
+#' @param cpptsemmodel model returned from cpptsem
+#' @param regM2LLCpptsem regularized fitting function
+#' @param gradCpptsem function for computing the gradients of regM2LLCpptsem
+#' @param startingValues starting values for optimization
+#' @param adaptiveLassoWeights vector with weights of the adaptive lasso
+#' @param N sample size
+#' @param lambda tuning parameter lambda
+#' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
+#' @param epsilon tuning parameter for epsL1 approximation
+#' @param objective ML or Kalman
+#' @param testGradients should be tested if the final parameters result in NA gradients?
+#' @param controlRsolnp additional arguments passed as control to solnp
+#' @param silent suppress warnings
+#' @author Jannik Orzek
+#' @import Rsolnp
+#' @export
+approx_cpptsemRsolnp <- function(cpptsemmodel,
+                                 regM2LLCpptsem,
+                                 gradCpptsem,
+                                 startingValues,
+                                 adaptiveLassoWeights,
+                                 N, lambda,
+                                 regIndicators,
+                                 targetVector,
+                                 epsilon,
+                                 objective,
+                                 testGradients,
+                                 controlRsolnp,
+                                 silent){
+  if("failureReturns" %in% names(controlRsolnp)){
+    failureReturns <- controlRsolnp$failureReturns
+  }else{
+    warning("No failureReturns for optimx. Using .Machine$double.xmax/2")
+    failureReturns <- .Machine$double.xmax/2
+  }
+  if("eqfun" %in% names(controlRsolnp)){
+    eqfun <- controlRsolnp$eqfun
+  }else{
+    eqfun <- NULL
+  }
+  if("eqB" %in% names(controlRsolnp)){
+    eqB <- controlRsolnp$eqB
+  }else{
+    eqB <- NULL
+  }
+  if("ineqfun" %in% names(controlRsolnp)){
+    ineqfun <- controlRsolnp$ineqfun
+  }else{
+    ineqfun <- NULL
+  }
+  if("ineqLB" %in% names(controlRsolnp)){
+    ineqLB <- controlRsolnp$ineqLB
+  }else{
+    ineqLB <- NULL
+  }
+  if("ineqUB" %in% names(controlRsolnp)){
+    ineqUB <- controlRsolnp$ineqUB
+  }else{
+    ineqUB <- NULL
+  }
+  if("LB" %in% names(controlRsolnp)){
+    LB <- controlRsolnp$LB
+  }else{
+    LB <- NULL
+  }
+  if("UB" %in% names(controlRsolnp)){
+    UB <- controlRsolnp$UB
+  }else{
+    UB <- NULL
+  }
+  if("control" %in% names(controlRsolnp)){
+    control <- controlRsolnp$control
+  }else{
+    "control" = list("trace" = 0)
+  }
+
+  invisible(capture.output(CpptsemFit <- try(Rsolnp::solnp(par = startingValues,
+                                                           fun = regM2LLCpptsem,
+                                                           #gr = gradCpptsem,
+                                                           eqfun = eqfun, eqB = eqB, ineqfun = ineqfun, ineqLB = ineqLB,
+                                                           ineqUB = ineqUB, LB = LB, UB = UB, control = control,
+                                                           cpptsemmodel = cpptsemmodel, adaptiveLassoWeights = adaptiveLassoWeights,
+                                                           N = N, lambda_ = lambda, regIndicators = regIndicators, targetVector = targetVector,
+                                                           epsilon = epsilon, objective = objective, failureReturns = failureReturns),
+                                             silent = TRUE), type = c("output", "message")))
+  if(any(class(CpptsemFit) == "try-error")){stop()}
+  if(CpptsemFit$convergence > 0 && !silent){warning(paste0("Rsolnp reports convcode  > 0: ", CpptsemFit$convergence, ". See ?Rsolnp::solnp for more details."))}
+
+  # compute unregularized fit
+  cpptsemmodel$setParameterValues(CpptsemFit$pars, names(CpptsemFit$pars))
+  if(tolower(objective) == "ml"){
+    cpptsemmodel$computeRAM()
+    cpptsemmodel$fitRAM()
+  }else{
+    cpptsemmodel$computeAndFitKalman()
+  }
+
+  if(testGradients){
+    grad <- try(gradCpptsem(parameters = CpptsemFit$pars,
+                            cpptsemmodel = cpptsemmodel,
+                            adaptiveLassoWeights = adaptiveLassoWeights,
+                            N =  N,lambda =  lambda, regIndicators = regIndicators,
+                            targetVector = targetVector,
+                            epsilon = epsilon, objective =  objective,
+                            failureReturns =  failureReturns))
+    if(any(class(grad) == "try-error") || anyNA(grad)){
+      stop("NA in gradients")
+    }
+  }
+
+  return(list("parameters" = CpptsemFit$pars,
+              "regM2LL" = CpptsemFit$values[length(CpptsemFit$values)],
+              "m2LL" = cpptsemmodel$m2LL))
+}
 
 #' approx_cpptsemOptim
 #'
@@ -1435,6 +1842,7 @@ approx_gradCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N
 #' @param N sample size
 #' @param lambda tuning parameter lambda
 #' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
 #' @param epsilon tuning parameter for epsL1 approximation
 #' @param maxit maximal number of iterations
 #' @param objective ML or Kalman
@@ -1449,6 +1857,7 @@ approx_cpptsemOptim <- function(cpptsemmodel,
                                 adaptiveLassoWeights,
                                 N, lambda,
                                 regIndicators,
+                                targetVector,
                                 epsilon,
                                 maxit,
                                 objective,
@@ -1457,7 +1866,8 @@ approx_cpptsemOptim <- function(cpptsemmodel,
   CpptsemFit <- optim(par = startingValues,
                       fn = regM2LLCpptsem,
                       gr = gradCpptsem,
-                      cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, epsilon, objective, failureReturns,
+                      cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector,
+                      epsilon, objective, failureReturns,
                       method = "BFGS",
                       control = list(maxit = maxit))
 
@@ -1465,7 +1875,8 @@ approx_cpptsemOptim <- function(cpptsemmodel,
     grad <- try(gradCpptsem(parameters = CpptsemFit$par,
                             cpptsemmodel = cpptsemmodel,
                             adaptiveLassoWeights = adaptiveLassoWeights,
-                            N =  N,lambda =  lambda, regIndicators = regIndicators,
+                            N =  N,lambda_ =  lambda, regIndicators = regIndicators,
+                            targetVector = targetVector,
                             epsilon = epsilon, objective =  objective,
                             failureReturns =  failureReturns))
     if(any(class(grad) == "try-error") || anyNA(grad)){
@@ -1477,10 +1888,9 @@ approx_cpptsemOptim <- function(cpptsemmodel,
               "regM2LL" = CpptsemFit$value))
 }
 
-
-#' approx_cpptsemSolnp
+#' approx_cpptsemOptimx
 #'
-#' creates an approximate solution to regularized ctsem using solnp
+#' creates an approximate solution to regularized ctsem using optimx
 #' @param cpptsemmodel model returned from cpptsem
 #' @param regM2LLCpptsem regularized fitting function
 #' @param gradCpptsem function for computing the gradients of regM2LLCpptsem
@@ -1489,37 +1899,103 @@ approx_cpptsemOptim <- function(cpptsemmodel,
 #' @param N sample size
 #' @param lambda tuning parameter lambda
 #' @param regIndicators string vector with names of regularized parameters
+#' @param targetVector named vector with values towards which the parameters are regularized
 #' @param epsilon tuning parameter for epsL1 approximation
-#' @param maxit maximal number of iterations
 #' @param objective ML or Kalman
-#' @param failureReturns value which is returned if regM2LLCpptsem or gradCpptsem fails
 #' @param testGradients should be tested if the final parameters result in NA gradients?
+#' @param controlOptimx additional arguments passed as control to optimx
+#' @param silent suppress warnings
 #' @author Jannik Orzek
-#' @import Rsolnp
+#' @import optimx
 #' @export
-approx_cpptsemSolnp <- function(cpptsemmodel,
-                                regM2LLCpptsem,
-                                gradCpptsem,
-                                startingValues,
-                                adaptiveLassoWeights,
-                                N, lambda,
-                                regIndicators,
-                                epsilon,
-                                maxit,
-                                objective,
-                                failureReturns = 1e24,
-                                testGradients){
-  CpptsemFit <- Rsolnp::solnp(pars = startingValues,
-                              fun = regM2LLCpptsem,
-                              eqfun = NULL, eqB = NULL, ineqfun = NULL, ineqLB = NULL,
-                              ineqUB = NULL, LB = NULL, UB = NULL, control = list(trace = 0, outer.iter = maxit),
-                              cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, epsilon, objective, failureReturns)
+approx_cpptsemOptimx <- function(cpptsemmodel,
+                                 regM2LLCpptsem,
+                                 gradCpptsem,
+                                 startingValues,
+                                 adaptiveLassoWeights,
+                                 N, lambda,
+                                 regIndicators,
+                                 targetVector,
+                                 epsilon,
+                                 objective,
+                                 testGradients,
+                                 controlOptimx,
+                                 silent){
+  if("failureReturns" %in% names(controlOptimx)){
+    failureReturns <- controlOptimx$controlOptimx
+  }else{
+    warning("No failureReturns for optimx. Using .Machine$double.xmax/2")
+    failureReturns <- .Machine$double.xmax/2
+  }
+  if("hess" %in% names(controlOptimx)){
+    hess <- controlOptimx$hess
+  }else{
+    hess <- NULL
+  }
+  if("lower" %in% names(controlOptimx)){
+    lower <- controlOptimx$lower
+  }else{
+    lower <- -Inf
+  }
+  if("upper" %in% names(controlOptimx)){
+    upper <- controlOptimx$upper
+  }else{
+    upper <- Inf
+  }
+  if("method" %in% names(controlOptimx)){
+    method <- controlOptimx$method
+  }else{
+    warning("No method selected for optimx. Using L-BFGS-B.")
+    method <- "L-BFGS-B"
+  }
+  if("hessian" %in% names(controlOptimx)){
+    hessian <- controlOptimx$hessian
+  }else{
+    hessian <- FALSE
+  }
+  if("itnmax" %in% names(controlOptimx)){
+    itnmax <- controlOptimx$itnmax
+  }else{
+    warning("No maximal number of iterations selected for optimx. Using 100.")
+    itnmax <- 100
+  }
+  if("control" %in% names(controlOptimx)){
+    control <- controlOptimx$control
+  }else{
+    "control" = list("dowarn" = FALSE,
+                     "kkt" = TRUE,
+                     "maxit" = itnmax)
+  }
+
+  invisible(capture.output(CpptsemFit <- try(optimx::optimx(par = startingValues,
+                                                            fn = regM2LLCpptsem,
+                                                            #gr = gradCpptsem,
+                                                            cpptsemmodel = cpptsemmodel, adaptiveLassoWeights = adaptiveLassoWeights,
+                                                            N = N, lambda_ = lambda, regIndicators = regIndicators, targetVector = targetVector,
+                                                            epsilon = epsilon, objective = objective, failureReturns = failureReturns,
+                                                            hess = hess, lower = lower, upper = upper, itnmax = itnmax,
+                                                            method = method,hessian = hessian, control = control),
+                                             silent = TRUE), type = c("output", "message")))
+  if(CpptsemFit$convcode > 0 && !silent){warning(paste0("Optimx reports convcode  > 0: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
+  if(any(class(CpptsemFit) == "try-error")){stop()}
+
+  # extract parameters
+  CpptsemFit <- extractOptimx(names(cpptsemmodel$getParameterValues()), CpptsemFit)
+  # compute unregularized fit
+  cpptsemmodel$setParameterValues(CpptsemFit$parameters, names(CpptsemFit$parameters))
+  if(tolower(objective) == "ml"){
+    cpptsemmodel$computeRAM()
+    cpptsemmodel$fitRAM()
+  }else{
+    cpptsemmodel$computeAndFitKalman()
+  }
 
   if(testGradients){
-    grad <- try(gradCpptsem(parameters = CpptsemFit$pars,
+    grad <- try(gradCpptsem(parameters = CpptsemFit$parameters,
                             cpptsemmodel = cpptsemmodel,
                             adaptiveLassoWeights = adaptiveLassoWeights,
                             N =  N,lambda =  lambda, regIndicators = regIndicators,
+                            targetVector = targetVector,
                             epsilon = epsilon, objective =  objective,
                             failureReturns =  failureReturns))
     if(any(class(grad) == "try-error") || anyNA(grad)){
@@ -1527,8 +2003,27 @@ approx_cpptsemSolnp <- function(cpptsemmodel,
     }
   }
 
-  return(list("parameters" = CpptsemFit$pars,
-              "regM2LL" = CpptsemFit$values[length(CpptsemFit$values)]))
+  return(list("parameters" = CpptsemFit$parameters,
+              "regM2LL" = CpptsemFit$fit,
+              "m2LL" = cpptsemmodel$m2LL))
+}
+
+#' extractOptimx
+#'
+#' sets the model parameters to the best values obtained from optimx
+#' @param parameterLabels vector with parameter labels
+#' @param opt result from calling psydiffOptimx
+#' @export
+#'
+extractOptimx <- function(parameterLabels, opt){
+  if(!any(class(opt) == "optimx")){
+    stop("opt has to be of class optimx")
+  }
+  values <- opt$value
+  bestValue <- which(values == min(values))[1] # if multiple optimizers find the same optimum, the first will be used
+  optimizer <- rownames(opt)[bestValue]
+  optimizedPars <- unlist(opt[optimizer,parameterLabels])
+  return(list("fit" = min(values), "parameters" = optimizedPars))
 }
 
 #' testall_cpptsem
@@ -1541,7 +2036,7 @@ testall_cpptsem <- function(){
   data(AnomAuth)
   AnomAuthmodel <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
                            Tpoints = 5, n.latent = 2, n.manifest = 2, MANIFESTVAR=diag(0, 2), TRAITVAR = "auto")
-  AnomAuthfit <- ctFit(AnomAuth, AnomAuthmodel, useOptimizer = F)
+  AnomAuthfit <- ctFit(AnomAuth, AnomAuthmodel, useOptimizer = FALSE)
   mxObject <- AnomAuthfit$mxobj
 
   # construct dataset and time intervals
@@ -1658,4 +2153,22 @@ testall_cpptsem <- function(){
   }
 }
 
-
+#' computeStandardErrors
+#'
+#' computes standard errors for a cpptsem object
+#' @param cpptsemObject fitted cpptsemObject
+#' @param objective Kalman or ML
+#' @param sampleSize sample size
+#' @author Jannik H. Orzek
+#' @export
+computeStandardErrors <- function(cpptsemObject, objective, sampleSize){
+  parameterValues <- cpptsemObject$getParameterValues()
+  Hessian <- optimHess(par = parameterValues, fn = regCtsem::fitCpptsem,
+                       cpptsemObject = cpptsemObject,
+                       objective = objective, failureReturns = .5*.Machine$double.xmax)
+  # Note: We are minimizing the negative log likelihood.
+  # The Hessian is therefore .5*"observed Fisher Information"
+  # and 2 times it's inverse is the covariance matrix of the parameters
+  standardErrors <- sqrt(diag(2*solve(Hessian)))
+  return(standardErrors)
+}

@@ -5,53 +5,41 @@
 \title{exact_bfgsGLMNET}
 \usage{
 exact_bfgsGLMNET(
-  ctsemObject,
-  mxObject,
+  cpptsemObject,
   dataset,
   objective,
-  regOn = "DRIFT",
   regIndicators,
   lambdas,
   adaptiveLassoWeights,
-  sparseParameters = NULL,
-  tryCpptsem,
-  forceCpptsem = FALSE,
-  stepSize = 1,
-  lineSearch = "none",
-  c1 = 1e-04,
-  c2 = 0.9,
-  sig = 10^(-5),
-  gam = 0,
-  differenceApprox = "central",
-  initialHessianApproximation = "OpenMx",
-  maxIter_out = 100,
-  maxIter_in = 1000,
-  maxIter_line = 500,
-  eps_out = 1e-10,
-  eps_in = 1e-10,
-  eps_WW = 1e-04,
-  scaleLambdaWithN = TRUE,
+  sparseParameters,
+  stepSize,
+  lineSearch,
+  c1,
+  c2,
+  sig,
+  gam,
+  initialHessianApproximation,
+  maxIter_out,
+  maxIter_in,
+  maxIter_line,
+  eps_out,
+  eps_in,
+  eps_WW,
+  scaleLambdaWithN,
   sampleSize,
-  approxFirst = 0,
-  numStart = 0,
-  approxOpt = T,
-  approxMaxIt = 5,
-  extraTries = 3,
-  verbose = 0,
-  progressBar = TRUE,
-  parallelProgressBar = NULL
+  approxFirst,
+  numStart,
+  controlApproxOptimizer,
+  extraTries,
+  verbose
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted ctsem object}
-
-\item{mxObject}{Object of type MxModel}
+\item{cpptsemObject}{Fitted object of class cpptsem}
 
 \item{dataset}{only required if objective = "Kalman". Please provide a data set in wide format compatible to ctsemOMX}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
-
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
 
 \item{regIndicators}{Vector with names of regularized parameters}
 
@@ -59,9 +47,7 @@ exact_bfgsGLMNET(
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
-\item{tryCpptsem}{should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models}
-
-\item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details}
+\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model.}
 
 \item{stepSize}{Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize * Stepdirection)}
 
@@ -74,8 +60,6 @@ exact_bfgsGLMNET(
 \item{sig}{only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.}
 
 \item{gam}{Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.}
-
-\item{differenceApprox}{Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
 
 \item{initialHessianApproximation}{Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian}
 
@@ -95,13 +79,11 @@ exact_bfgsGLMNET(
 
 \item{sampleSize}{sample size for scaling lambda with N}
 
-\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first lambda, 2 = optimization for all lambdas. 3 ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or OpenMx if cpptsem is not available, 5 = optimizing using Rsolnp or OpenMx if cpptsem is not available (requires installation of Rsolnp). "auto" will default to 3 if lambdas = "auto" and 4 otherwise}
+\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization?}
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{approxOpt}{Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp}
-
-\item{approxMaxIt}{Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .}
+\item{controlApproxOptimizer}{settings passed to optimx or Rsolnp}
 
 \item{extraTries}{number of extra tries in mxTryHard for warm start}
 
@@ -112,26 +94,4 @@ Performs GLMNET (see Friedman, 2010 & Yuan, 2011) with bfgs approximated Hessian
 }
 \details{
 NOTE: Function located in file GLMNET.R
-}
-\examples{
-library(regCtsem)
-library(ctsemOMX)
-
-# The following example is taken directly from the examples provided in the ctFit documentation of ctsemOMX
-### Example from Voelkle, Oud, Davidov, and Schmidt (2012) - anomia and authoritarianism.
-data(AnomAuth)
-AnomAuthmodel <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
-                         Tpoints = 5, n.latent = 2, n.manifest = 2, MANIFESTVAR=diag(0, 2), TRAITVAR = NULL)
-AnomAuthfit <- ctFit(AnomAuth, AnomAuthmodel, fit = T)
-
-# with GLMNET
-## with standardization
-reg <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = rev(seq(0,1,.1)), standardizeDrift = TRUE)
-reg$regM2LL
-reg$thetas
-
-## without standardization
-reg2 <- exact_bfgsGLMNET(mxObject = AnomAuthfit$mxobj, regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), lambdas = seq(0,1,.1), standardizeDrift = FALSE)
-reg2$regM2LL
-reg2$thetas
 }

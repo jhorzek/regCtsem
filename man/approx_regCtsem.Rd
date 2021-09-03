@@ -5,92 +5,62 @@
 \title{approx_regCtsem}
 \usage{
 approx_regCtsem(
-  ctsemObject = NULL,
-  mxObject = NULL,
-  dataset = NULL,
-  regOn = "DRIFT",
+  cpptsemObject,
+  dataset,
   regIndicators,
   lambdas,
-  lambdasAutoLength = 50,
-  penalty = "lasso",
-  adaptiveLassoWeights = NULL,
-  elastic_alpha = NULL,
-  elastic_gamma = NULL,
-  standardizeDrift = FALSE,
-  returnFitIndices = TRUE,
-  cvSample = NULL,
-  autoCV = FALSE,
-  k = 5,
-  objective = "ML",
-  KalmanStartValues = NULL,
-  optimizeKalman = TRUE,
-  epsilon = 0.001,
-  zeroThresh = 0.001,
-  extraTries = 1,
-  scaleLambdaWithN = T,
-  cores = 1,
-  verbose = 0,
-  silent = FALSE,
-  progressBar = TRUE,
-  parallelProgressBar = NULL
+  lambdasAutoLength,
+  targetVector,
+  penalty,
+  adaptiveLassoWeights,
+  returnFitIndices,
+  BICWithNAndT,
+  Tpoints,
+  cvSampleCpptsemObject,
+  objective,
+  epsilon,
+  zeroThresh,
+  controlApproxOptimizer,
+  scaleLambdaWithN,
+  verbose
 )
 }
 \arguments{
-\item{ctsemObject}{Fitted object of class ctsem.}
+\item{cpptsemObject}{Fitted object of class cpptsem}
 
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
+\item{dataset}{Please provide a data set in wide format compatible to ctsemOMX}
 
-\item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
+\item{regIndicators}{Labels for the regularized parameters (e.g. drift_eta1_eta2)}
 
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
-
-\item{regIndicators}{matrix with ones and zeros specifying which parameters in regOn should be regularized. Must be of same size as the regularized matrix. 1 = regularized, 0 = not regularized. Alternatively, labels for the regularized parameters can be used (e.g. drift_eta1_eta2)}
-
-\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01)}
+\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values}
 
 \item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
 
-\item{penalty}{Currently supported are lasso, adaptiveLasso, and ridge for optimization = approx and lasso and adaptiveLasso for optimization = exact}
+\item{targetVector}{named vector with values towards which the parameters are regularized}
 
-\item{adaptiveLassoWeights}{weights for the adaptive lasso.}
+\item{penalty}{Currently supported are ridge, lasso, and adaptiveLasso}
 
-\item{elastic_alpha}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{elastic_gamma}{placehoder for elastic net. NOT YET IMPLEMENTED}
-
-\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using T0VAR?}
+\item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 
-\item{cvSample}{cross-validation sample. Has to be of type mxData}
+\item{BICWithNAndT}{Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N))}
 
-\item{autoCV}{Boolean: Should automatic cross-validation be used?}
+\item{Tpoints}{Number of time points (used for BICWithNAndT)}
 
-\item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
+\item{cvSampleCpptsemObject}{cppstem for cross-validation}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
-
-\item{KalmanStartValues}{Optional starting values for the parameters when using Kalman filter}
-
-\item{optimizeKalman}{Boolen: Should the Kalman model be optimized in OpenMx first? If you want the Kalman model to start optimizing in regCtsem from the provided KalmanStartValues and not use OpenMx to optimize the initial Kalman model, set to FALSE}
 
 \item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
 
-\item{extraTries}{number of extra tries in mxTryHard}
+\item{controlApproxOptimizer}{settings passed to optimx or Rsolnp}
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 
-\item{cores}{how many computer cores should be used?}
-
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress}
-
-\item{silent}{silent execution}
-
-\item{progressBar}{Boolean: Should a progress bar be displayed}
-
-\item{parallelProgressBar}{list: used internally to display progress when executing in parallel}
 }
 \description{
 creates a regCtsem object for approximate optimization

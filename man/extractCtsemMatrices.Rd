@@ -4,7 +4,7 @@
 \alias{extractCtsemMatrices}
 \title{extractCtsemMatrices}
 \usage{
-extractCtsemMatrices(mxObject, nlatent, nmanifest)
+extractCtsemMatrices(mxObject, nlatent, nmanifest, silent = FALSE)
 }
 \arguments{
 \item{mxObject}{mxObject from ctsemOMX}
@@ -12,6 +12,8 @@ extractCtsemMatrices(mxObject, nlatent, nmanifest)
 \item{nlatent}{number of latent variables}
 
 \item{nmanifest}{number of manifest variables}
+
+\item{silent}{suppress messages}
 }
 \description{
 Extract DRIFT, DIFFUSION, etc from an mxObject

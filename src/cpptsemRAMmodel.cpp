@@ -165,7 +165,7 @@ void cpptsemRAMmodel::computeRAM(){
   if( ctMatrixList.containsElementNamed("DIFFUSIONbase") ){
     // get DIFFUSION
     Rcpp::List DIFFUSIONbaseList = ctMatrixList["DIFFUSIONbase"];
-    arma::mat DIFFUSIONbaseValues = DIFFUSIONbaseList["values"];
+    DIFFUSIONbaseValues = Rcpp::as<arma::mat>(DIFFUSIONbaseList["values"]);
     DIFFUSIONValues = getVarianceFromVarianceBase(DIFFUSIONbaseValues);
   }else{
     Rcpp::Rcout << "Could not find a DIFFUSION!" << std::endl;
@@ -185,13 +185,10 @@ void cpptsemRAMmodel::computeRAM(){
     TRAITVARValues = getVarianceFromVarianceBase(TRAITVARbaseValues);
   }
 
+  asymptoticDIFFUSION = -1*arma::inv(DRIFTHASH) * arma::vectorise(DIFFUSIONValues);
+  asymptoticDIFFUSION.reshape(DIFFUSIONValues.n_rows, DIFFUSIONValues.n_cols);
   if(stationaryT0VAR){
-    // compute asymptotic diffusion
-    arma::uword nrows = DIFFUSIONValues.n_rows;
-    arma::uword ncols = DIFFUSIONValues.n_cols;
-    arma::mat asymptoticDIFFUSION = -1*arma::inv(DRIFTHASH) * arma::vectorise(DIFFUSIONValues);
     T0VARValues = asymptoticDIFFUSION;
-    T0VARValues.reshape(nrows, ncols);
   }
 
   if( ctMatrixList.containsElementNamed("MANIFESTVARbase") ){
@@ -219,9 +216,6 @@ void cpptsemRAMmodel::computeRAM(){
   }else{
     Rcpp::Rcout << "DRIFTHASHExponentialUnique seems to be missing!" << std::endl;
   }
-
-  // compute asymptotic diffusion
-  //arma::mat asymptoticDIFFUSION = -1*arma::inv(DRIFTHASH) * arma::vectorise(DIFFUSIONValues);
 
   // compute discreteDIFFUSION
   if(hasDiscreteDIFFUSIONUnique){
@@ -711,9 +705,11 @@ RCPP_MODULE(cpptsemRAMmodel_cpp){
   .field_readonly( "discreteDIFFUSIONUnique", &cpptsemRAMmodel::discreteDIFFUSIONUnique, "discreteDIFFUSIONUnique")
   .field_readonly( "DRIFTValues", &cpptsemRAMmodel::DRIFTValues, "DRIFTValues")
   .field_readonly( "DIFFUSIONValues", &cpptsemRAMmodel::DIFFUSIONValues, "DIFFUSIONValues")
+  .field_readonly( "DIFFUSIONbaseValues", &cpptsemRAMmodel::DIFFUSIONbaseValues, "DIFFUSIONbaseValues")
   .field_readonly( "T0VARValues", &cpptsemRAMmodel::T0VARValues, "T0VARValues")
   .field_readonly( "T0MEANSValues", &cpptsemRAMmodel::T0MEANSValues, "T0MEANSValues")
   .field_readonly( "TRAITVARValues", &cpptsemRAMmodel::TRAITVARValues, "TRAITVARValues")
+  .field_readonly( "asymptoticDIFFUSION", &cpptsemRAMmodel::asymptoticDIFFUSION, "asymptoticDIFFUSION")
   .field_readonly( "MANIFESTMEANSValues", &cpptsemRAMmodel::MANIFESTMEANSValues, "MANIFESTMEANSValues")
   .field_readonly( "MANIFESTVARValues", &cpptsemRAMmodel::MANIFESTVARValues, "MANIFESTVARValues")
   .field_readonly( "LAMBDAValues", &cpptsemRAMmodel::LAMBDAValues, "LAMBDAValues")

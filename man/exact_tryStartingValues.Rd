@@ -5,48 +5,51 @@
 \title{exact_tryStartingValues}
 \usage{
 exact_tryStartingValues(
-  gradientModel,
-  cppmodel,
-  objective,
-  currentParameters,
-  sparseParameters,
+  startingValues,
+  returnAs,
+  approxFirst,
+  numStart,
+  controlApproxOptimizer,
+  lambda,
+  cpptsemObject,
   regIndicators,
-  newLambda,
+  targetVector,
   adaptiveLassoWeights,
-  differenceApprox,
-  numStartingValues,
-  optimize,
-  numOuter
+  objective,
+  sparseParameters
 )
 }
 \arguments{
-\item{gradientModel}{Model used for computing gradients (from OpenMx)}
+\item{startingValues}{start values for optimization}
 
-\item{cppmodel}{cpptsem object to compute gradients}
+\item{returnAs}{"vector" or "matrix"}
 
-\item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
+\item{approxFirst}{boolean: should the solution be approximated}
 
-\item{currentParameters}{current parameter values}
+\item{numStart}{number of starting values}
 
-\item{sparseParameters}{parameters of the sparsest model}
+\item{controlApproxOptimizer}{settings passed to optimx or Rsolnp}
 
-\item{regIndicators}{named vector of regularized parameters}
+\item{lambda}{tuning parameter value}
 
-\item{newLambda}{new lambda}
+\item{cpptsemObject}{object of type cpptsem}
 
-\item{adaptiveLassoWeights}{named vector with adaptive lasso weights}
+\item{regIndicators}{Labels for the regularized parameters (e.g. drift_eta1_eta2)}
 
-\item{differenceApprox}{difference approximation for gradients (detault should be central)}
+\item{targetVector}{named vector with values towards which the parameters are regularized}
 
-\item{numStartingValues}{How many starting values should be tried?}
+\item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
-\item{optimize}{1 = optimization with optim, 2 = optimization with Rsolnp}
+\item{objective}{which objective is used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
-\item{numOuter}{number of outer iterations of optim or Rsolnp}
+\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model.}
 }
 \description{
 tries different starting values to find a good starting point for exact optimization
 }
 \details{
 NOTE: Function located in file exact_optimization.R
+}
+\author{
+Jannik Orzek
 }

@@ -5,64 +5,54 @@
 \title{exact_GIST}
 \usage{
 exact_GIST(
-  ctsemObject,
-  mxObject,
+  cpptsemObject,
   dataset,
   objective,
-  regOn = "DRIFT",
   regIndicators,
+  targetVector,
   lambdas,
   adaptiveLassoWeights,
-  sparseParameters = NULL,
-  tryCpptsem,
-  forceCpptsem = FALSE,
-  eta = 2,
-  sig = 10^(-5),
-  initialStepsize = 1,
-  stepsizeMin = 1/(10^30),
-  stepsizeMax = 10^30,
-  GISTLinesearchCriterion = "monotone",
-  GISTNonMonotoneNBack = 5,
-  maxIter_out = 100,
-  maxIter_in = 1000,
-  break_outer = c(parameterChange = 10^(-5)),
-  scaleLambdaWithN = TRUE,
+  sparseParameters,
+  eta,
+  sig,
+  initialStepsize,
+  stepsizeMin,
+  stepsizeMax,
+  GISTLinesearchCriterion,
+  GISTNonMonotoneNBack,
+  maxIter_out,
+  maxIter_in,
+  break_outer,
+  scaleLambdaWithN,
   sampleSize,
-  approxFirst = 0,
-  numStart = 3,
-  approxOpt = T,
-  approxMaxIt = 5,
-  extraTries = 3,
-  differenceApprox = "central",
-  verbose = 0,
-  progressBar = TRUE,
-  parallelProgressBar = NULL
+  approxFirst,
+  numStart,
+  controlApproxOptimizer,
+  verbose
 )
 }
 \arguments{
-\item{ctsemObject}{if objective = "ML": Fitted object of class ctsem. If you want to use objective = "Kalman", pass an object of type ctsemInit from ctModel}
-
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject if objective = "ML". For objective = "Kalman" mxObject can not be used.}
+\item{cpptsemObject}{Fitted object of class cpptsem}
 
 \item{dataset}{only required if objective = "Kalman" and ctsemObject is of type ctsemInit. Please provide a data set in wide format compatible to ctsemOMX}
 
 \item{objective}{which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)}
 
-\item{regOn}{string specifying which matrix should be regularized. Currently only supports DRIFT}
-
 \item{regIndicators}{Vector with names of regularized parameters}
+
+\item{targetVector}{named vector with values towards which the parameters are regularized}
 
 \item{lambdas}{Vector with lambda values that should be tried}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
-\item{tryCpptsem}{should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models}
-
-\item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details}
+\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model.}
 
 \item{eta}{if the current step size fails, eta will decrease the step size. Must be > 1}
 
 \item{sig}{Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 < sigma < 1}
+
+\item{initialStepsize}{intial step size tested at the beginning of each optimization iteration}
 
 \item{stepsizeMin}{Minimal acceptable step size. Must be > 0. A larger number corresponds to a smaller step from one to the next iteration. All step sizes will be computed as described by Gong et al. (2013)}
 
@@ -82,19 +72,13 @@ exact_GIST(
 
 \item{sampleSize}{sample size for scaling lambda with N}
 
-\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 = only for first lambda, 2 = for all lambdas}
+\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization?}
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{approxOpt}{Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp}
-
-\item{approxMaxIt}{Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .}
-
-\item{extraTries}{number of extra tries in mxTryHard for warm start}
+\item{controlApproxOptimizer}{settings passed to optimx or Rsolnp}
 
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)}
-
-\item{stepSize}{Initial stepSize of the outer iteration}
 }
 \description{
 General Iterative Shrinkage and Thresholding Algorithm based on Gong, P., Zhang, C., Lu, Z., Huang, J., & Ye, J. (2013). A General Iterative Shrinkage and Thresholding Algorithm for Non-convex Regularized Optimization Problems. In S. Dasgupta & D. McAllester (Eds.), Proceedings of Machine Learning Research (PMLR; Vol. 28, Issue 2, pp. 37--45). PMLR. http://proceedings.mlr.press

@@ -5,20 +5,20 @@
 \title{getAdaptiveLassoWeights}
 \usage{
 getAdaptiveLassoWeights(
-  mxObject,
+  cpptsemObject,
   penalty,
   adaptiveLassoWeights,
   standardizeDrift
 )
 }
 \arguments{
-\item{mxObject}{Fitted object of class MxObject extracted from ctsemObject. Provide either ctsemObject or mxObject}
+\item{cpptsemObject}{Fitted object of class cpptsem}
 
-\item{penalty}{type. Currently supported are lasso and ridge for optimization = approx and lasso for optimization = exact}
+\item{penalty}{type}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
-\item{standardizeDrift}{Boolean: Should Drift parameters be standardized automatically using T0VAR?}
+\item{standardizeDrift}{Should Drift parameters be standardized automatically? Set to 'No' for no standardization, 'T0VAR' for standardization using the T0VAR or 'asymptoticDiffusion' for standardization using the asymptotic diffusion}
 }
 \description{
 Computes the adaptive lasso weights

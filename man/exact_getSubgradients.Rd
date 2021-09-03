@@ -9,7 +9,6 @@ exact_getSubgradients(
   jacobian,
   regIndicators,
   lambda,
-  lineSearch,
   adaptiveLassoWeightsMatrix
 )
 }
@@ -21,6 +20,8 @@ exact_getSubgradients(
 \item{regIndicators}{names of regularized parameters}
 
 \item{lambda}{lambda value}
+
+\item{adaptiveLassoWeightsMatrix}{matrix with adaptive lasso weights}
 }
 \description{
 Computes the subgradients of a lasso penalized likelihood f(theta) = L(theta)+lambda*p(theta)

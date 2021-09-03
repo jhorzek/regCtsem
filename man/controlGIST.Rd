@@ -4,18 +4,29 @@
 \alias{controlGIST}
 \title{controlGIST}
 \usage{
-controlGIST()
+controlGIST(
+  forceCpptsem = FALSE,
+  stepSize = 1,
+  sig = 10^(-5),
+  maxIter_out = 100,
+  maxIter_in = 1000,
+  break_outer = c(fitChange = 10^(-5)),
+  eta = 2,
+  stepsizeMin = 1/(10^30),
+  stepsizeMax = 10^30,
+  GISTLinesearchCriterion = "monotone",
+  GISTNonMonotoneNBack = 5,
+  approxFirst = TRUE,
+  numStart = 0,
+  controlApproxOptimizer = controlRsolnp(control = list(outer.iter = 50, trace = 0))
+)
 }
 \arguments{
-\item{tryCpptsem}{should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models}
-
 \item{forceCpptsem}{should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details}
 
 \item{stepSize}{initial step size of the outer iteration}
 
 \item{sig}{sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.}
-
-\item{differenceApprox}{Which approximation should be used for calculating the gradients in the gradientModel. central is recommended}
 
 \item{maxIter_out}{Maximal number of outer iterations}
 
@@ -33,13 +44,11 @@ controlGIST()
 
 \item{GISTNonMonotoneNBack}{in case of non-monotone line search: Number of preceding regM2LL values to consider}
 
-\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization? 1 and 2 are using OpenMx with 1 = optimization only for first lambda, 2 = optimization for all lambdas. 3 ensures that the fit will not be worse than in the sparse model if lambdas = "auto" or sparseParameters are provided. To this end, 10 models between the current parameter estimates and the sparse parameter estimates are tested and the one with the lowest regM2LL is used for starting values. 4 = optimizing using optim or OpenMx if cpptsem is not available, 5 = optimizing using Rsolnp or OpenMx if cpptsem is not available (requires installation of Rsolnp). "auto" will default to 3 if lambdas = "auto" and 4 otherwise}
+\item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization?}
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
 
-\item{approxOpt}{Used if approxFirst = 3. Should each of the generated starting values be optimized slightly? This can substantially improve the fit of the generated starting values. 1 = optimization with optim, 2 = optimization with Rsolnp}
-
-\item{approxMaxIt}{Used if approxFirst = 3 and approxOpt > 1. How many outer iterations should be given to each starting values vector? More will improve the selected starting values but slow down the computation. If approxFirst =  4, or approxFirst = 5 this will control the number of outer iteration in optim or solnp .}
+\item{controlApproxOptimizer}{settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox}
 }
 \description{
 The following arguments can be used to adjust the GIST optimization

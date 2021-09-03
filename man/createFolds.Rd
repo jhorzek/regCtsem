@@ -4,12 +4,10 @@
 \alias{createFolds}
 \title{createFolds}
 \usage{
-createFolds(mxObject, dataset = NULL, k)
+createFolds(sampleSize, k)
 }
 \arguments{
-\item{mxObject}{Object of class mxModel}
-
-\item{dataset}{data set}
+\item{sampleSize}{sample size}
 
 \item{k}{number of cross-validation folds (k-fold cross-validation)}
 }

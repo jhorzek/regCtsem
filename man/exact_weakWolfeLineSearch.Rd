@@ -5,9 +5,8 @@
 \title{exact_weakWolfeLineSearch}
 \usage{
 exact_weakWolfeLineSearch(
-  gradientModel,
+  cpptsemObject,
   objective,
-  gradientModelcpp = NULL,
   adaptiveLassoWeights,
   thetaNames,
   regIndicators,
@@ -16,18 +15,18 @@ exact_weakWolfeLineSearch(
   m2LL_kp1,
   g_kp1,
   d,
-  c1 = 1e-04,
-  c2 = 0.9,
-  stepSize = 1,
-  differenceApprox = "central",
-  maxIter_line = 100,
-  verbose = 0,
-  eps_WW = 1e-04,
-  eps_numericDerivative = (1.1 * 10^(-16))^(1/3)
+  c1,
+  c2,
+  stepSize,
+  maxIter_line,
+  verbose,
+  eps_WW
 )
 }
 \arguments{
-\item{gradientModel}{mxObject for computing the derivarive of the likelihood with respect to the parameter estimates}
+\item{cpptsemObject}{Object of type cpptsem}
+
+\item{objective}{Kalman or ML}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
@@ -51,15 +50,11 @@ exact_weakWolfeLineSearch(
 
 \item{stepSize}{Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)}
 
-\item{differenceApprox}{which approximation for the gradients should be used? Recommended is central}
-
 \item{maxIter_line}{maximal number of iterations for line search}
 
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress}
 
-\item{eps_numericDerivative}{controls the precision of the central gradient approximation. The default (1.1 * 10^(-16))^(1/3) is derived in Nocedal, J., & Wright, S. J. (2006). Numerical optimization (2nd ed), p. 197}
-
-\item{epsWW}{additional parameter to shorten the search if the upper and lower bound are already very close to each other}
+\item{eps_WW}{additional parameter to shorten the search if the upper and lower bound are already very close to each other}
 }
 \description{
 NOTE: Function located in file GLMNET.R

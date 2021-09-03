@@ -27,7 +27,7 @@ checkNonConvexity3D(
 
 \item{upperBound2}{double: upper bound for the second parameter}
 
-\item{nSample}{number of sample points between the lower and upper bound}
+\item{nSamples}{number of sample points between the lower and upper bound}
 }
 \value{
 returns the a list with arguments to pass to plot3D::persp (e.g. do.call(args, plot3D::persp))
@@ -38,5 +38,5 @@ returns the a list with arguments to pass to plot3D::persp (e.g. do.call(args, p
 provides a 3D plot of the likelihood surface for two selected variables
 }
 \details{
-The function generates nSample points within the provided parameter bounds. For each combination of sample point
+The function generates nSamples points within the provided parameter bounds. For each combination of sample point
 }
