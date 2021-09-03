@@ -881,7 +881,7 @@ exact_regCtsem <- function(  # model
   controlApproxOptimizer,
   # additional settings
   verbose # = 0
-  ){
+){
 
   exactArgsIn <- as.list(environment())
 
@@ -1059,7 +1059,7 @@ approx_regCtsem <- function(  # model
   # additional settings
   scaleLambdaWithN,# = TRUE,
   verbose# = 0
-  ){
+){
 
   approxArgsIn <- as.list(environment())
 
@@ -1491,13 +1491,64 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
     freeParam[regIndicatorsCurrent] <- FALSE
 
     cpptsemObject$setParameterValues(param, names(param))
+
+    # check if start values are feasible
+    tryFit <- fitCpptsem(parameterValues = param[freeParam],
+                         cpptsemObject = cpptsemObject,
+                         objective = objective,
+                         free = freeParam,
+                         failureReturns = NA)
+    if(is.na(tryFit)){
+      # set to defaults of ctsemOMX
+      paramterTable <- cpptsemObject$parameterTable
+      for(p in 1:length(paramterTable$label)){
+        if(!freeParam[paramterTable$label[p]]){next}
+        if(paramterTable$matrix[p] == "DRIFT"){
+          if(paramterTable$row[p] == paramterTable$col[p]){
+            param[paramterTable$label[p]] <- -.45
+          }else{
+            param[paramterTable$label[p]] <- -.05
+          }
+        }
+        if(paramterTable$matrix[p] == "DIFFUSIONbase"){
+          if(paramterTable$row[p] == paramterTable$col[p]){
+            param[paramterTable$label[p]] <- log(10)
+          }else{
+            param[paramterTable$label[p]] <- 0
+          }
+        }
+        if(paramterTable$matrix[p] == "T0VARbase"){
+          if(paramterTable$row[p] == paramterTable$col[p]){
+            param[paramterTable$label[p]] <- log(1)
+          }else{
+            param[paramterTable$label[p]] <- 0
+          }
+        }
+        if(paramterTable$matrix[p] == "MANIFESTMEANS"){
+            param[paramterTable$label[p]] <- 0
+        }
+      }
+      tryFit <- fitCpptsem(parameterValues = param[freeParam],
+                           cpptsemObject = cpptsemObject,
+                           objective = objective,
+                           free = freeParam,
+                           failureReturns = NA)
+      if(is.na(tryFit)){
+        if(it ==  0){
+          warning("Error when determining the lambdas automatically: Setting all regularized parameters to their target values resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to their target; however, this might result in a wrong maximum for the lambdas! Consider setting the lambdas manually.")
+        }
+        it <- it + 1
+        next
+      }
+    }
+
     # optimize
     invisible(capture.output(sparseModel <- try(Rsolnp::solnp(par = param[freeParam],
-                                                             fun = fitCpptsem,
-                                                             cpptsemObject = cpptsemObject,
-                                                             objective = objective,
-                                                             free = freeParam,
-                                                             failureReturns = .Machine$double.xmax/2),
+                                                              fun = fitCpptsem,
+                                                              cpptsemObject = cpptsemObject,
+                                                              objective = objective,
+                                                              free = freeParam,
+                                                              failureReturns = .Machine$double.xmax/2),
                                                 silent = TRUE), type = c("output", "message")))
 
     if(any(class(sparseModel) == "try-error")){
