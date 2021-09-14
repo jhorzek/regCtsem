@@ -2153,22 +2153,109 @@ testall_cpptsem <- function(){
   }
 }
 
-#' computeStandardErrors
+#' computeStandardErrorsRaw
 #'
-#' computes standard errors for a cpptsem object
+#' computes standard errors of the raw parameters for a cpptsem object
 #' @param cpptsemObject fitted cpptsemObject
 #' @param objective Kalman or ML
-#' @param sampleSize sample size
 #' @author Jannik H. Orzek
 #' @export
-computeStandardErrors <- function(cpptsemObject, objective, sampleSize){
+computeStandardErrorsRaw <- function(cpptsemObject, objective){
   parameterValues <- cpptsemObject$getParameterValues()
-  Hessian <- optimHess(par = parameterValues, fn = regCtsem::fitCpptsem,
+  Hessian <- optimHess(par = parameterValues,
+                       fn = regCtsem::fitCpptsem,
                        cpptsemObject = cpptsemObject,
-                       objective = objective, failureReturns = .5*.Machine$double.xmax)
-  # Note: We are minimizing the negative log likelihood.
-  # The Hessian is therefore .5*"observed Fisher Information"
+                       objective = objective,
+                       failureReturns = .5*.Machine$double.xmax)
+  # Note: We are minimizing the 2 times negative log likelihood.
+  # The Fisher Information is the negative expected Hessian of the log likelihood
+  # The Hessian of the 2 times negative log likelihood is therefore 2*"observed Fisher Information"
   # and 2 times it's inverse is the covariance matrix of the parameters
-  standardErrors <- sqrt(diag(2*solve(Hessian)))
-  return(standardErrors)
+  FisherInformation <- .5*(Hessian)
+  standardErrorsRaw <- sqrt(diag(solve(FisherInformation)))
+  return(list("standardErrorsRaw" = standardErrorsRaw,
+              "FisherInformation" = FisherInformation)
+         )
+}
+
+#' computeStandardErrorsDelta
+#'
+#' computes standard errors for the transformed parameters of a cpptsem object
+#' @param cpptsemObject fitted cpptsemObject
+#' @param cpptsemObject fitted cpptsemObject
+#' @param objective Kalman or ML
+#' @param eps epsilon for numerical approximation of derivatives
+#' @author Jannik H. Orzek
+#' @export
+computeStandardErrorsDelta <- function(cpptsemObject, objective, eps = (1.1 * 10^(-16))^(1/3)){
+  parameterValues <- t(t(cpptsemObject$getParameterValues()))
+  seRawCombined <- computeStandardErrorsRaw(cpptsemObject = cpptsemObject, objective = objective)
+  Sigma <- solve(seRawCombined$FisherInformation)
+  seRaw <- seRawCombined$standardErrorsRaw
+  # epsVals will be used to appoximate the derivative of the transformation
+  epsVals <- rep(0, nrow(parameterValues))
+  names(epsVals) <- rownames(parameterValues)
+
+  parameterTable <- cpptsemObject$parameterTable
+  parameterTable[] <- parameterTable[]
+  nlatent <- nrow(cpptsemObject$DRIFTValues)
+  nmanifest <- nrow(cpptsemObject$MANIFESTVARValues)
+
+  standardErrorsDelta <- c()
+  for(parMat in unique(parameterTable$matrix)){
+    if(grepl("base", parMat)){
+      matName <- strsplit(parMat, "base")[[1]]
+      if(matName == "MANIFESTVAR"){
+        nVariables <- nmanifest
+        variableNames <- "Y"
+      }else{
+        nVariables <- nlatent
+        variableNames <- "eta"
+      }
+
+      # to get the names of the transformed parameters:
+      temp <- getVariances(parameterEstimatesRaw = parameterValues,
+                           matName = matName,
+                           baseMatName = parMat,
+                           parameterTable = parameterTable,
+                           nVariables = nVariables,
+                           variableNames = variableNames)
+      gradientsApprox <- matrix(NA, nrow = nrow(temp), ncol = nrow(parameterValues))
+      colnames(gradientsApprox) <- rownames(parameterValues)
+      rownames(gradientsApprox) <- rownames(temp)
+
+      for(parameter in rownames(parameterValues)){
+        epsVals[] <- 0
+        epsVals[parameter] <- eps
+        lowerValues <- getVariances(parameterEstimatesRaw = parameterValues - epsVals,
+                                    matName = matName,
+                                    baseMatName = parMat,
+                                    parameterTable = parameterTable,
+                                    nVariables = nVariables,
+                                    variableNames = variableNames)
+        upperValues <- getVariances(parameterEstimatesRaw = parameterValues + epsVals,
+                                    matName = matName,
+                                    baseMatName = parMat,
+                                    parameterTable = parameterTable,
+                                    nVariables = nVariables,
+                                    variableNames = variableNames)
+        gradients <- (upperValues - lowerValues)/(2*eps)
+        gradientsApprox[rownames(gradients), parameter] <- gradients
+      }
+      for(r in 1:nrow(gradientsApprox)){
+        currentSE <- matrix(sqrt(t(gradientsApprox[r,])%*%Sigma%*%t(t(gradientsApprox[r,]))),
+                            nrow = 1, ncol = 1)
+        rownames(currentSE) <- rownames(gradientsApprox)[r]
+        standardErrorsDelta <- rbind(standardErrorsDelta,
+                                     currentSE
+        )
+      }
+    }else{
+      standardErrorsDelta <- rbind(standardErrorsDelta,
+                                   t(t(seRaw[parameterTable$label[parameterTable$matrix == parMat]]))
+      )
+    }
+  }
+  standardErrorsDelta <- standardErrorsDelta[sort(rownames(standardErrorsDelta)), ]
+  return(standardErrorsDelta)
 }
