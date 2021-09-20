@@ -58,6 +58,12 @@
 #' cpptsemmodel1$fitRAM()
 #' cpptsemmodel1$m2LL
 #'
+#' # Compute and compare standard errors
+#' ctsemSummary <- summary(AnomAuthfit1_1)
+#' ctsemSummary$ctparameters
+#' computeStandardErrorsDelta(cpptsemObject = cpptsemmodel1,
+#'                            objective = "ML")
+#'
 #' ## ctsem model with trait
 #' AnomAuthmodel2 <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
 #'                           Tpoints = 5, n.latent = 2, n.manifest = 2,
@@ -431,8 +437,9 @@ prepareRAMData <- function(dataset, individualMissingPatternID, uniqueMissingPat
 
   uniqueMissingPatternIDs <- unique(individualMissingPatternID)
   patternNames <- paste0("missingnessPattern_", seq_len(length(uniqueMissingPatternIDs)))
-  datasetRAM <- vector("list", length = length(uniqueMissingPatternIDs)+1)
-  names(datasetRAM) <- c("names", patternNames)
+  datasetRAM <- vector("list", length = length(uniqueMissingPatternIDs)+2)
+  names(datasetRAM) <- c("sampleSize", "names", patternNames)
+  datasetRAM[["sampleSize"]] <- nrow(dataset)
   datasetRAM[["names"]] <- patternNames
 
   for(id in uniqueMissingPatternIDs){
@@ -2161,6 +2168,10 @@ testall_cpptsem <- function(){
 #' @author Jannik H. Orzek
 #' @export
 computeStandardErrorsRaw <- function(cpptsemObject, objective){
+  sampleSize <- ifelse(tolower(objective) == "ml",
+                       cpptsemObject$RAMdata$sampleSize,
+                       cpptsemObject$KALMANdata$sampleSize
+                       )
   parameterValues <- cpptsemObject$getParameterValues()
   Hessian <- optimHess(par = parameterValues,
                        fn = regCtsem::fitCpptsem,
@@ -2171,10 +2182,10 @@ computeStandardErrorsRaw <- function(cpptsemObject, objective){
   # The Fisher Information is the negative expected Hessian of the log likelihood
   # The Hessian of the 2 times negative log likelihood is therefore 2*"observed Fisher Information"
   # and 2 times it's inverse is the covariance matrix of the parameters
-  FisherInformation <- .5*(Hessian)
-  standardErrorsRaw <- sqrt(diag(solve(FisherInformation)))
+  nFisherInformation <- .5*(Hessian)
+  standardErrorsRaw <- sqrt(diag(solve(nFisherInformation)))
   return(list("standardErrorsRaw" = standardErrorsRaw,
-              "FisherInformation" = FisherInformation)
+              "FisherInformation" = (1/sampleSize)*nFisherInformation)
          )
 }
 
@@ -2188,9 +2199,14 @@ computeStandardErrorsRaw <- function(cpptsemObject, objective){
 #' @author Jannik H. Orzek
 #' @export
 computeStandardErrorsDelta <- function(cpptsemObject, objective, eps = (1.1 * 10^(-16))^(1/3)){
+  sampleSize <- ifelse(tolower(objective) == "ml",
+                       cpptsemObject$RAMdata$sampleSize,
+                       cpptsemObject$KALMANdata$sampleSize
+  )
+
   parameterValues <- t(t(cpptsemObject$getParameterValues()))
   seRawCombined <- computeStandardErrorsRaw(cpptsemObject = cpptsemObject, objective = objective)
-  Sigma <- solve(seRawCombined$FisherInformation)
+  Sigma <- solve(sampleSize*seRawCombined$FisherInformation)
   seRaw <- seRawCombined$standardErrorsRaw
   # epsVals will be used to appoximate the derivative of the transformation
   epsVals <- rep(0, nrow(parameterValues))

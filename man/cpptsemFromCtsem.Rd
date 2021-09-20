@@ -73,6 +73,12 @@ cpptsemmodel1$computeRAM()
 cpptsemmodel1$fitRAM()
 cpptsemmodel1$m2LL
 
+# Compute and compare standard errors
+ctsemSummary <- summary(AnomAuthfit1_1)
+ctsemSummary$ctparameters
+computeStandardErrorsDelta(cpptsemObject = cpptsemmodel1,
+                           objective = "ML")
+
 ## ctsem model with trait
 AnomAuthmodel2 <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
                           Tpoints = 5, n.latent = 2, n.manifest = 2,
