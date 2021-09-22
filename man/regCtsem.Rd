@@ -32,7 +32,7 @@ regCtsem(
 \arguments{
 \item{ctsemObject}{Fitted object of class ctsemFit}
 
-\item{dataset}{Please provide a data set in wide format compatible to ctsemOMX}
+\item{dataset}{Please provide a data set in wide format compatible with ctsemOMX}
 
 \item{regIndicators}{Labels of the regularized parameters (e.g. drift_eta1_eta2).}
 
@@ -52,7 +52,7 @@ regCtsem(
 
 \item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
 
-\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.}
+\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. If regValues = "auto" the sparse parameters will be computed automatically.}
 
 \item{subjectSpecificParameters}{EXPERIMENTAL! A vector of parameter labels for parameters which should be estimated person-specific. If these parameter labels are also passed to regIndicators, all person-specific parameters will be regularized towards a group-parameter. This is a 2-step-procedure: In step 1 all parameters are constrained to equality between individuals to estimate the group parameters. In step 2 the parameters are estimated person-specific, but regularized towards the group parameter from step 1.}
 
@@ -62,9 +62,9 @@ regCtsem(
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 
-\item{BICWithNAndT}{Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use both N in the formula for the BIC (-2log L + log(N)). Defaults to TRUE if N = 1 and FALSE otherwise}
+\item{BICWithNAndT}{Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use N in the formula for the BIC (-2log L + log(N)). Defaults to TRUE if N = 1 and FALSE otherwise}
 
-\item{optimization}{which optimization procedure should be used. Possible are  "exact" or "approx". exact is recommended}
+\item{optimization}{which optimization procedure should be used. Possible are  "exact" or "approx". exact is recommended for sparsity inducing penalty functions (lasso and adaptive lasso)}
 
 \item{optimizer}{for exact optimization: Either GIST or GLMNET. When using optimization = "approx", Rsolnp or any of the optimizers in optimx can be used. See ?optimx}
 
@@ -73,7 +73,7 @@ regCtsem(
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress.}
 }
 \value{
-returns an object of class regCtsem. Without cross-validation, this object will have the fields setup (all arguments passed to the function), fitAndParameters (used internally to store the fit and the raw (i.e., untransformed) parameters), fit (fit indices, ect.), parameterEstimatesRaw (raw, i.e. untransformed parameters; used internally), and parameters (transformed parameters)#'
+returns an object of class regCtsem. Without cross-validation, this object will have the fields setup (all arguments passed to the function), fitAndParameters (used internally to store the fit and the raw (i.e., untransformed) parameters), fit (fit indices, ect.), parameterEstimatesRaw (raw, i.e. untransformed parameters; used internally), and parameters (transformed parameters)
 }
 \description{
 main function: performs regularized ctsem
