@@ -8,6 +8,7 @@ getAdaptiveLassoWeights(
   cpptsemObject,
   penalty,
   adaptiveLassoWeights,
+  adaptiveLassoPower,
   standardizeDrift
 )
 }
@@ -17,6 +18,8 @@ getAdaptiveLassoWeights(
 \item{penalty}{type}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
+
+\item{adaptiveLassoPower}{power of the adaptive lasso weights}
 
 \item{standardizeDrift}{Should Drift parameters be standardized automatically? Set to 'No' for no standardization, 'T0VAR' for standardization using the T0VAR or 'asymptoticDiffusion' for standardization using the asymptotic diffusion}
 }

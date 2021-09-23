@@ -12,6 +12,7 @@
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param penalty Currently supported are lasso, ridge and adaptiveLasso
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
+#' @param adaptiveLassoPower power for the adaptive lasso weights. The weights will be set to parameterValues^{adaptiveLassoPower}, where parameterValues refers to the unregularized maximum likelihood estimates
 #' @param cvSample cross-validation sample. Has to be in wide format and compatible with ctsemOMX
 #' @param autoCV Boolean: Should automatic cross-validation be used?
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
@@ -245,6 +246,7 @@ regCtsem <- function(
   lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
+  adaptiveLassoPower = -1,
   cvSample = NULL,
   autoCV = FALSE,
   k = 5,
@@ -451,7 +453,11 @@ regCtsem <- function(
 
   # set adaptiveLassoWeights
 
-  argsIn$adaptiveLassoWeights <- getAdaptiveLassoWeights(cpptsemObject = cpptsemObject, penalty = argsIn$penalty, adaptiveLassoWeights = argsIn$adaptiveLassoWeights, standardizeDrift = argsIn$standardizeDrift)
+  argsIn$adaptiveLassoWeights <- getAdaptiveLassoWeights(cpptsemObject = cpptsemObject,
+                                                         penalty = argsIn$penalty,
+                                                         adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
+                                                         adaptiveLassoPower =  argsIn$adaptiveLassoPower,
+                                                         standardizeDrift = argsIn$standardizeDrift)
 
   #### Exact Optimization ####
   #### without automatic cross-validation ####
@@ -1270,10 +1276,11 @@ checkSetup <- function(argsIn){
 #' @param cpptsemObject Fitted object of class cpptsem
 #' @param penalty type
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
+#' @param adaptiveLassoPower power of the adaptive lasso weights
 #' @param standardizeDrift Should Drift parameters be standardized automatically? Set to 'No' for no standardization, 'T0VAR' for standardization using the T0VAR or 'asymptoticDiffusion' for standardization using the asymptotic diffusion
 #' @author Jannik Orzek
 #' @export
-getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights, standardizeDrift){
+getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights, adaptiveLassoPower, standardizeDrift){
   if(!(standardizeDrift == "No" || standardizeDrift == "T0VAR" || standardizeDrift == "asymptoticDiffusion" )){
     stop("standardizeDrift has to be set to 'No', 'T0VAR' or 'asymptoticDiffusion'")
   }
@@ -1291,44 +1298,49 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
     # check if adaptiveLassoWeights were provided
     if(is.numeric(adaptiveLassoWeights)){ stop("standardizeDrift and provided adaptiveLassoWeights can not be combined automatically. Consider setting adaptiveLassoWeights = 'auto'") }
 
+    thetaNames <- names(cpptsemObject$getParameterValues())
+
     # check if lasso or adaptiveLasso
-    if(tolower(penalty) == "lasso"){
-      thetaNames <- names(cpptsemObject$getParameterValues())
+    if(tolower(penalty) == "lasso" || tolower(penalty) == "ridge"){
       adaptiveLassoWeights <- rep(1,length(thetaNames))
       names(adaptiveLassoWeights) <- thetaNames
-
-      # compute standardizers
-      if(standardizeDrift == "T0VAR"){
-        VARIs <- cpptsemObject$T0VARValues[]
-      }
-      if(standardizeDrift == "asymptoticDiffusion"){
-        VARIs <- cpptsemObject$asymptoticDIFFUSION[]
-      }
-      DRIFTS <- cpptsemObject$parameterTable[cpptsemObject$parameterTable$matrix == "DRIFT",]
-      driftLabels <- matrix("", nrow = nrow(cpptsemObject$DRIFTValues), ncol = ncol(cpptsemObject$DRIFTValues))
-      for(i in 1:nrow(DRIFTS)){
-        driftLabels[DRIFTS$row[i]+1, DRIFTS$col[i]+1] <- DRIFTS$label[i]
-      }
-
-      if(anyNA(driftLabels)){
-        autoDriftLabels <- matrix(paste0("_autoDriftLabel_", rep(seq_len(nrow(driftLabels)), each = ncol(driftLabels)), "_", seq_len(ncol(driftLabels))),
-                                  nrow = nrow(driftLabels), ncol = ncol(driftLabels), byrow = TRUE)
-        driftLabels[is.na(driftLabels)] <- autoDriftLabels[is.na(driftLabels)]
-      }
-
-      flatStandardizers <- regCtsem::getFlatStdizer(VARIs = VARIs, driftLabels = driftLabels)
-      flatStandardizers <- flatStandardizers[rownames(flatStandardizers) %in% thetaNames,]
-
-      for(thetaName in names(flatStandardizers)){
-        adaptiveLassoWeights[thetaName] <- flatStandardizers[thetaName]*adaptiveLassoWeights[thetaName]
-      }
-
-      return(adaptiveLassoWeights)
+    }else if(tolower(penalty) == "adaptivelasso"){
+      adaptiveLassoWeights <- abs(cpptsemObject$getParameterValues())^(-1)
+    }else{
+      stop(paste0("Unexpected penalty: ", penalty, ". Possible are lasso, ridge and adaptiveLasso."))
     }
-  }
 
-  if(tolower(penalty) == "adaptivelasso" && adaptiveLassoWeights == "auto"){
-    stop("Automatic standardization and adaptive lasso weights can not be combined.")
+    # compute standardizers
+    if(standardizeDrift == "T0VAR"){
+      VARIs <- cpptsemObject$T0VARValues[]
+    }
+    if(standardizeDrift == "asymptoticDiffusion"){
+      VARIs <- cpptsemObject$asymptoticDIFFUSION[]
+    }
+    DRIFTS <- cpptsemObject$parameterTable[cpptsemObject$parameterTable$matrix == "DRIFT",]
+    driftLabels <- matrix("", nrow = nrow(cpptsemObject$DRIFTValues), ncol = ncol(cpptsemObject$DRIFTValues))
+    for(i in 1:nrow(DRIFTS)){
+      driftLabels[DRIFTS$row[i]+1, DRIFTS$col[i]+1] <- DRIFTS$label[i]
+    }
+
+    if(anyNA(driftLabels)){
+      autoDriftLabels <- matrix(paste0("_autoDriftLabel_", rep(seq_len(nrow(driftLabels)), each = ncol(driftLabels)), "_", seq_len(ncol(driftLabels))),
+                                nrow = nrow(driftLabels), ncol = ncol(driftLabels), byrow = TRUE)
+      driftLabels[is.na(driftLabels)] <- autoDriftLabels[is.na(driftLabels)]
+    }
+
+    flatStandardizers <- regCtsem::getFlatStdizer(VARIs = VARIs, driftLabels = driftLabels)
+    flatStandardizers <- flatStandardizers[rownames(flatStandardizers) %in% thetaNames,]
+
+    for(thetaName in names(flatStandardizers)){
+      adaptiveLassoWeights[thetaName] <- flatStandardizers[thetaName]*adaptiveLassoWeights[thetaName]
+    }
+    if(tolower(penalty) == "adaptivelasso"){
+      # use exponent
+      adaptiveLassoWeights <- adaptiveLassoWeights^(abs(adaptiveLassoPower))
+    }
+
+    return(adaptiveLassoWeights)
   }
 
   ## if lasso was requested, but no automatic standardization
@@ -1339,6 +1351,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
     return(adaptiveLassoWeights)
   }
 
+  ## if ridge was requested, but no automatic standardization
   if(tolower(penalty) == "ridge"){
     thetaNames <- names(cpptsemObject$getParameterValues())
     adaptiveLassoWeights <- rep(1,length(thetaNames))
@@ -1346,9 +1359,9 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
     return(adaptiveLassoWeights)
   }
 
-  ## if adatpive lasso with automatic weigths was requested, but no automatic standardization
-  if(tolower(penalty) == "adaptivelasso" && adaptiveLassoWeights == "auto"){
-    adaptiveLassoWeights <- abs(cpptsemObject$getParameterValues())^(-1)
+  ## if adaptivelasso lasso was requested, but no automatic standardization
+  if(tolower(penalty) == "adaptivelasso" && is.null(adaptiveLassoWeights)){
+    adaptiveLassoWeights <- abs(cpptsemObject$getParameterValues())^(-abs(adaptiveLassoPower))
     return(adaptiveLassoWeights)
   }
 
@@ -1525,7 +1538,7 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
           }
         }
         if(paramterTable$matrix[p] == "MANIFESTMEANS"){
-            param[paramterTable$label[p]] <- 0
+          param[paramterTable$label[p]] <- 0
         }
       }
       tryFit <- fitCpptsem(parameterValues = param[freeParam],

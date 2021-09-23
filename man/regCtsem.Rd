@@ -14,6 +14,7 @@ regCtsem(
   lambdasAutoLength = 50,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
+  adaptiveLassoPower = -1,
   cvSample = NULL,
   autoCV = FALSE,
   k = 5,
@@ -45,6 +46,8 @@ regCtsem(
 \item{penalty}{Currently supported are lasso, ridge and adaptiveLasso}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
+
+\item{adaptiveLassoPower}{power for the adaptive lasso weights. The weights will be set to parameterValues^{adaptiveLassoPower}, where parameterValues refers to the unregularized maximum likelihood estimates}
 
 \item{cvSample}{cross-validation sample. Has to be in wide format and compatible with ctsemOMX}
 
