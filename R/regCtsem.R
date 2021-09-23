@@ -452,12 +452,14 @@ regCtsem <- function(
   }
 
   # set adaptiveLassoWeights
-
-  argsIn$adaptiveLassoWeights <- getAdaptiveLassoWeights(cpptsemObject = cpptsemObject,
-                                                         penalty = argsIn$penalty,
-                                                         adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
-                                                         adaptiveLassoPower =  argsIn$adaptiveLassoPower,
-                                                         standardizeDrift = argsIn$standardizeDrift)
+  if(!autoCV){
+    argsIn$adaptiveLassoWeights <- getAdaptiveLassoWeights(cpptsemObject = cpptsemObject,
+                                                           penalty = argsIn$penalty,
+                                                           adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
+                                                           adaptiveLassoPower =  argsIn$adaptiveLassoPower,
+                                                           standardizeDrift = argsIn$standardizeDrift)
+    # if autoCV the adaptive lasso weights have to be set for each sub-sample (see below)
+  }
 
   #### Exact Optimization ####
   #### without automatic cross-validation ####
@@ -534,6 +536,18 @@ regCtsem <- function(
       rownames(sparseParameters) <- names(cpptsemObject$getParameterValues())
     }
 
+    # prepare adaptive lasso weights
+    if(is.null(argsIn$adaptiveLassoWeights)){
+      argsIn$adaptiveLassoWeights <- matrix(NA, nrow = k, ncol = length(cpptsemObject$getParameterValues()))
+      rownames(argsIn$adaptiveLassoWeights) <- paste("CV", 1:k)
+      colnames(argsIn$adaptiveLassoWeights) <- names(cpptsemObject$getParameterValues())
+    }else{
+      coln <- names(argsIn$adaptiveLassoWeights)
+      argsIn$adaptiveLassoWeights <- matrix(rep(argsIn$adaptiveLassoWeights, k), nrow = k, ncol = length(argsIn$adaptiveLassoWeights), byrow = TRUE)
+      colnames(argsIn$adaptiveLassoWeights) <- coln
+    }
+
+
     for(i in 1:argsIn$k){
       cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
       # optimize
@@ -552,13 +566,22 @@ regCtsem <- function(
       }
       cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
 
+      # set adaptive lasso weights based on training-sample
+      if(all(is.na(argsIn$adaptiveLassoWeights[i,]))){
+      argsIn$adaptiveLassoWeights[i,] <- getAdaptiveLassoWeights(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
+                                                                 penalty = argsIn$penalty,
+                                                                 adaptiveLassoWeights = NULL,
+                                                                 adaptiveLassoPower =  argsIn$adaptiveLassoPower,
+                                                                 standardizeDrift = argsIn$standardizeDrift)[colnames(argsIn$adaptiveLassoWeights)]
+      }
+
       # compute lambda_max
       if(!is.numeric(lambdas) && lambdas == "auto"){
         maxLambda <- regCtsem::getMaxLambda(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
                                             objective = argsIn$objective,
                                             regIndicators = argsIn$regIndicators,
                                             targetVector = argsIn$targetVector,
-                                            adaptiveLassoWeights = argsIn$adaptiveLassoWeights)
+                                            adaptiveLassoWeights = argsIn$adaptiveLassoWeights[i,])
         maxLambdas[i] <- maxLambda$maxLambda
         sparseParameters[names(maxLambda$sparseParameters),i] <- maxLambda$sparseParameters
         argsIn$sparseParameters <- sparseParameters
@@ -589,7 +612,7 @@ regCtsem <- function(
                                                  lambdas = argsIn$lambdas,
                                                  lambdasAutoLength = argsIn$lambdasAutoLength,
                                                  penalty = argsIn$penalty,
-                                                 adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
+                                                 adaptiveLassoWeights = argsIn$adaptiveLassoWeights[i,],
                                                  returnFitIndices = argsIn$returnFitIndices,
                                                  BICWithNAndT = argsIn$BICWithNAndT,
                                                  Tpoints = argsIn$Tpoints,
@@ -702,6 +725,17 @@ regCtsem <- function(
       rownames(sparseParameters) <- names(cpptsemObject$getParameterValues())
     }
 
+    # prepare adaptive lasso weights
+    if(is.null(argsIn$adaptiveLassoWeights)){
+      argsIn$adaptiveLassoWeights <- matrix(NA, nrow = k, ncol = length(cpptsemObject$getParameterValues()))
+      rownames(argsIn$adaptiveLassoWeights) <- paste("CV", 1:k)
+      colnames(argsIn$adaptiveLassoWeights) <- names(cpptsemObject$getParameterValues())
+    }else{
+      coln <- names(argsIn$adaptiveLassoWeights)
+      argsIn$adaptiveLassoWeights <- matrix(rep(argsIn$adaptiveLassoWeights, k), nrow = k, ncol = length(argsIn$adaptiveLassoWeights), byrow = TRUE)
+      colnames(argsIn$adaptiveLassoWeights) <- coln
+    }
+
     for(i in 1:argsIn$k){
       cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
       # optimize
@@ -720,13 +754,22 @@ regCtsem <- function(
       }
       cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
 
+      # set adaptive lasso weights based on training-sample
+      if(all(is.na(argsIn$adaptiveLassoWeights[i,]))){
+        argsIn$adaptiveLassoWeights[i,] <- getAdaptiveLassoWeights(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
+                                                                   penalty = argsIn$penalty,
+                                                                   adaptiveLassoWeights = NULL,
+                                                                   adaptiveLassoPower =  argsIn$adaptiveLassoPower,
+                                                                   standardizeDrift = argsIn$standardizeDrift)[colnames(argsIn$adaptiveLassoWeights)]
+      }
+
       # compute lambda_max
       if(!is.numeric(lambdas) && lambdas == "auto"){
         maxLambda <- regCtsem::getMaxLambda(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
                                             objective = argsIn$objective,
                                             regIndicators = argsIn$regIndicators,
                                             targetVector = argsIn$targetVector,
-                                            adaptiveLassoWeights = argsIn$adaptiveLassoWeights)
+                                            adaptiveLassoWeights = argsIn$adaptiveLassoWeights[i,])
         maxLambdas[i] <- maxLambda$maxLambda
         sparseParameters[names(maxLambda$sparseParameters),i] <- maxLambda$sparseParameters
         argsIn$sparseParameters <- sparseParameters
@@ -758,7 +801,7 @@ regCtsem <- function(
                                                   lambdasAutoLength = argsIn$lambdasAutoLength,
                                                   targetVector = argsIn$targetVector,
                                                   penalty = argsIn$penalty,
-                                                  adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
+                                                  adaptiveLassoWeights = argsIn$adaptiveLassoWeights[i,],
                                                   # fit settings
                                                   returnFitIndices = argsIn$returnFitIndices,
                                                   BICWithNAndT = argsIn$BICWithNAndT,
@@ -1286,7 +1329,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
   }
 
   # if adaptiveLassoWeights were provided and no standardization is requested:
-  if(tolower(penalty) == "adaptivelasso" & is.numeric(adaptiveLassoWeights) & (standardizeDrift != "No")){
+  if(tolower(penalty) == "adaptivelasso" && is.numeric(adaptiveLassoWeights) && (standardizeDrift == "No")){
     return(adaptiveLassoWeights)
   }
 
