@@ -5,7 +5,7 @@
 #' NOTE: Function located in file regCtsem.R
 #'
 #' @param ctsemObject Fitted object of class ctsemFit
-#' @param dataset Please provide a data set in wide format compatible with ctsemOMX
+#' @param dataset Data set in wide format compatible with ctsemOMX
 #' @param regIndicators Labels of the regularized parameters (e.g. drift_eta1_eta2).
 #' @param targetVector named vector with values towards which the parameters are regularized (Standard is regularization towards zero)
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values

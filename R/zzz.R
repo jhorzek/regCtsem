@@ -1,6 +1,6 @@
 #' regCtsem
 #'
-#' This package is based on ctsem and can regularize Drift parameters in continuous time structural equation models
+#' regCtsem uses objects from ctsemOMX and implements lasso, adaptive lasso and ridge regularization.
 #'
 #' @docType package
 #' @author Jannik Orzek <orzek@mpib-berlin.mpg.de>

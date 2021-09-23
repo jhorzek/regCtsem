@@ -33,7 +33,7 @@ regCtsem(
 \arguments{
 \item{ctsemObject}{Fitted object of class ctsemFit}
 
-\item{dataset}{Please provide a data set in wide format compatible with ctsemOMX}
+\item{dataset}{Data set in wide format compatible with ctsemOMX}
 
 \item{regIndicators}{Labels of the regularized parameters (e.g. drift_eta1_eta2).}
 
@@ -81,7 +81,7 @@ returns an object of class regCtsem. Without cross-validation, this object will 
 \description{
 main function: performs regularized ctsem
 
-This package is based on ctsem and can regularize Drift parameters in continuous time structural equation models
+regCtsem uses objects from ctsemOMX and implements lasso, adaptive lasso and ridge regularization.
 }
 \details{
 NOTE: Function located in file regCtsem.R
