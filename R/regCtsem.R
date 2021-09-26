@@ -14,8 +14,8 @@
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
 #' @param adaptiveLassoPower power for the adaptive lasso weights. The weights will be set to parameterValues^{adaptiveLassoPower}, where parameterValues refers to the unregularized maximum likelihood estimates
 #' @param cvSample cross-validation sample. Has to be in wide format and compatible with ctsemOMX
-#' @param autoCV Boolean: Should automatic cross-validation be used?
-#' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
+#' @param autoCV Should automatic cross-validation be used? Possible are "No", "kFold" or "Blocked". kFold splits the dataset in k groups by selecting independent units from the rows. Blocked is a within-unit split, where for each person blocks of observations are deleted. See Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740–756. https://doi.org/10.1037/met0000178 for a more detailed explanation
+#' @param k number of cross-validation folds if autoCV = "kFold" or autoCV = "Blocked"
 #' @param sparseParameters labeled vector with parameter estimates of the most sparse model. If regValues = "auto" the sparse parameters will be computed automatically.
 #' @param subjectSpecificParameters EXPERIMENTAL! A vector of parameter labels for parameters which should be estimated person-specific. If these parameter labels are also passed to regIndicators, all person-specific parameters will be regularized towards a group-parameter. This is a 2-step-procedure: In step 1 all parameters are constrained to equality between individuals to estimate the group parameters. In step 2 the parameters are estimated person-specific, but regularized towards the group parameter from step 1.
 #' @param standardizeDrift Should Drift parameters be standardized automatically? Set to 'No' for no standardization, 'T0VAR' for standardization using the T0VAR or 'asymptoticDiffusion' for standardization using the asymptotic diffusion
@@ -248,7 +248,7 @@ regCtsem <- function(
   adaptiveLassoWeights = NULL,
   adaptiveLassoPower = -1,
   cvSample = NULL,
-  autoCV = FALSE,
+  autoCV = "No",
   k = 5,
   sparseParameters = NULL,
   subjectSpecificParameters = NULL,
@@ -280,8 +280,8 @@ regCtsem <- function(
     if(argsIn$objective != "Kalman"){
       stop("Subject-specific parameters are only supported for models fitted with Kalman filter.")
     }
-    if(!is.null(cvSample) || autoCV){
-      stop("Cross-validation not supported with subject-specific parameters.")
+    if(!is.null(cvSample) || (autoCV == "kFold")){
+      stop("kFold Cross-validation not supported with subject-specific parameters. Use 'No' or 'Blocked' instead.")
     }
     if(tolower(argsIn$optimizer) != "gist"){
       stop("Only GIST optimizer allows for person-specific parameters")
@@ -342,7 +342,7 @@ regCtsem <- function(
   }
   # check setup
   #checkSetup(argsIn)
-  if(!is.null(cvSample) && autoCV){stop("Either provide a cvSample or use autoCV. Combinations of both are currently not supported.")}
+  if(!is.null(cvSample) && (autoCV != "No")){stop("Either provide a cvSample or use autoCV. Combinations of both are currently not supported.")}
 
   # check if all targets are in the regIndicators
   if(!is.null(targetVector)){
@@ -452,7 +452,7 @@ regCtsem <- function(
   }
 
   # set adaptiveLassoWeights
-  if(!autoCV){
+  if(autoCV == "No"){
     argsIn$adaptiveLassoWeights <- getAdaptiveLassoWeights(cpptsemObject = cpptsemObject,
                                                            penalty = argsIn$penalty,
                                                            adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
@@ -463,7 +463,7 @@ regCtsem <- function(
 
   #### Exact Optimization ####
   #### without automatic cross-validation ####
-  if(!autoCV && argsIn$optimization == "exact"){
+  if(autoCV == "No" && argsIn$optimization == "exact"){
     regCtsemObject <- regCtsem::exact_regCtsem(cpptsemObject = cpptsemObject,
                                                dataset = argsIn$dataset,
                                                regIndicators = argsIn$regIndicators,
@@ -528,8 +528,12 @@ regCtsem <- function(
 
   #### with automatic cross-validation ####
   # generate splits
-  if(autoCV && argsIn$optimization == "exact"){
-    cvFoldsAndModels <- regCtsem::createCVFoldsAndModels(dataset = argsIn$dataset, k = argsIn$k)
+  if((autoCV == "kFold" || autoCV == "Blocked") && argsIn$optimization == "exact"){
+    cvFoldsAndModels <- regCtsem::createCVFoldsAndModels(dataset = argsIn$dataset,
+                                                         Tpoints = argsIn$Tpoints,
+                                                         manifestNames = ctsemObject$ctmodelobj$manifestNames,
+                                                         k = argsIn$k, autoCV,
+                                                         initialPars = ("T0MEANS" %in%  argsIn$cpptsemObject$parameterTable$matrix) || ("T0VARbase" %in%  argsIn$cpptsemObject$parameterTable$matrix))
     if(!is.numeric(lambdas) && lambdas == "auto"){
       maxLambdas <- matrix(NA, nrow = 1, ncol = argsIn$k)
       sparseParameters <- matrix(NA, nrow = length(cpptsemObject$getParameterValues()), ncol = argsIn$k)
@@ -546,7 +550,6 @@ regCtsem <- function(
       argsIn$adaptiveLassoWeights <- matrix(rep(argsIn$adaptiveLassoWeights, k), nrow = k, ncol = length(argsIn$adaptiveLassoWeights), byrow = TRUE)
       colnames(argsIn$adaptiveLassoWeights) <- coln
     }
-
 
     for(i in 1:argsIn$k){
       cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
@@ -568,15 +571,16 @@ regCtsem <- function(
 
       # set adaptive lasso weights based on training-sample
       if(all(is.na(argsIn$adaptiveLassoWeights[i,]))){
-      argsIn$adaptiveLassoWeights[i,] <- getAdaptiveLassoWeights(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
-                                                                 penalty = argsIn$penalty,
-                                                                 adaptiveLassoWeights = NULL,
-                                                                 adaptiveLassoPower =  argsIn$adaptiveLassoPower,
-                                                                 standardizeDrift = argsIn$standardizeDrift)[colnames(argsIn$adaptiveLassoWeights)]
+        argsIn$adaptiveLassoWeights[i,] <- getAdaptiveLassoWeights(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
+                                                                   penalty = argsIn$penalty,
+                                                                   adaptiveLassoWeights = NULL,
+                                                                   adaptiveLassoPower =  argsIn$adaptiveLassoPower,
+                                                                   standardizeDrift = argsIn$standardizeDrift)[colnames(argsIn$adaptiveLassoWeights)]
       }
 
       # compute lambda_max
       if(!is.numeric(lambdas) && lambdas == "auto"){
+        cat(paste0("Fold ", i, ": "))
         maxLambda <- regCtsem::getMaxLambda(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
                                             objective = argsIn$objective,
                                             regIndicators = argsIn$regIndicators,
@@ -670,7 +674,7 @@ regCtsem <- function(
   #### Approximate Optimization ####
 
   #### without cross-validation ####
-  if(!autoCV && tolower(optimization) == "approx"){
+  if(autoCV == "No" && tolower(optimization) == "approx"){
     regCtsemObject <- regCtsem::approx_regCtsem(cpptsemObject = cpptsemObject,
                                                 dataset = argsIn$dataset,
                                                 # penalty settings
@@ -717,8 +721,12 @@ regCtsem <- function(
 
   #### with automatic cross-validation ####
   # generate splits
-  if(autoCV && tolower(optimization) == "approx"){
-    cvFoldsAndModels <- regCtsem::createCVFoldsAndModels(dataset = argsIn$dataset, k = argsIn$k)
+  if((autoCV == "kFold" || autoCV == "Blocked") && tolower(optimization) == "approx"){
+    cvFoldsAndModels <- regCtsem::createCVFoldsAndModels(dataset = argsIn$dataset,
+                                                         Tpoints = argsIn$Tpoints,
+                                                         manifestNames = ctsemObject$ctmodelobj$manifestNames,
+                                                         k = argsIn$k, autoCV,
+                                                         initialPars = ("T0MEANS" %in%  argsIn$cpptsemObject$parameterTable$matrix) || ("T0VARbase" %in%  argsIn$cpptsemObject$parameterTable$matrix))
     if(!is.numeric(lambdas) && lambdas == "auto"){
       maxLambdas <- matrix(NA, nrow = 1, ncol = argsIn$k)
       sparseParameters <- matrix(NA, nrow = length(cpptsemObject$getParameterValues()), ncol = argsIn$k)
@@ -1181,43 +1189,93 @@ approx_regCtsem <- function(  # model
 #' NOTE: Function located in file regCtsem.R
 #'
 #' @param dataset Please provide a data set in wide format compatible to ctsemOMX
+#' @param Tpoints Number of time points
+#' @param manifestNames names of manifest variables
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
+#' @param autoCV Form of cross-validation: 'kFold' or 'Blocked'
+#' @param initialPars are any of the initial parameters (T0MEANS or T0VAR) estimated? If so, 10% of the initial observations will not be used in cross-validation when autoCV = "Blocked". Otherwise the initial parameters will be very poorly estimated
 #' @author Jannik Orzek
 #' @export
-createCVFoldsAndModels <- function(dataset, k){
+createCVFoldsAndModels <- function(dataset, Tpoints, manifestNames, k, autoCV, initialPars){
   fullData <- dataset
 
-  cvFolds <- regCtsem::createFolds(nrow(fullData), k = k)
+  if(autoCV == "kFold"){
+    cvFolds <- regCtsem::createFolds(nrow(fullData), k = k)
 
-  testSets <- vector("list", length = k)
-  names(testSets) <- names(cvFolds)
-  for(foldNumber in 1:k){
-    if(is.vector(fullData[cvFolds[[foldNumber]],])){
-      # if a single row is selected, R extracts this row as vector, not as matrix
-      testSets[[foldNumber]] <-  t(as.matrix(fullData[cvFolds[[foldNumber]],]))
-    }else{
-      testSets[[foldNumber]] <-  fullData[cvFolds[[foldNumber]],]
+    testSets <- vector("list", length = k)
+    names(testSets) <- names(cvFolds)
+    for(foldNumber in 1:k){
+      if(is.vector(fullData[cvFolds[[foldNumber]],])){
+        # if a single row is selected, R extracts this row as vector, not as matrix
+        testSets[[foldNumber]] <-  t(as.matrix(fullData[cvFolds[[foldNumber]],]))
+      }else{
+        testSets[[foldNumber]] <-  fullData[cvFolds[[foldNumber]],]
+      }
     }
+
+    trainSets <- vector("list", length = k)
+    names(trainSets) <- names(cvFolds)
+    for(foldNumber in 1:k){
+      if(is.vector(fullData[-cvFolds[[foldNumber]],])){
+        # if a single row is selected, R extracts this row as vector, not as matrix
+        trainSets[[foldNumber]] <-  t(as.matrix(fullData[-cvFolds[[foldNumber]],]))
+      }else{
+        trainSets[[foldNumber]] <- fullData[-cvFolds[[foldNumber]],]
+      }
+    }
+
+    trainModels <- vector("list", length = k)
+    names(trainModels) <- names(cvFolds)
+
+    testModels <- vector("list", length = k)
+    names(testModels) <- names(cvFolds)
+
+    return(list("fullData" = fullData, "cvFolds" = cvFolds, "testSets" = testSets, "trainSets" = trainSets, "trainModels" = trainModels, "testModels" = testModels))
   }
 
-  trainSets <- vector("list", length = k)
-  names(trainSets) <- names(cvFolds)
-  for(foldNumber in 1:k){
-    if(is.vector(fullData[-cvFolds[[foldNumber]],])){
-      # if a single row is selected, R extracts this row as vector, not as matrix
-      trainSets[[foldNumber]] <-  t(as.matrix(fullData[-cvFolds[[foldNumber]],]))
+  if(autoCV == "Blocked"){
+    warning("Blocked CV naively builds blocks of the data of each individual and does not account for dependencies which still exist in the training and test set (see Bergmeir, C., & Benítez, J. M. (2012). On the use of cross-validation for time series predictor evaluation. Information Sciences, 191, 192–213. https://doi.org/10.1016/j.ins.2011.12.028 and Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740–756. https://doi.org/10.1037/met0000178). Also, different time intervals are not accounted for. More sophisticated forms of cross-validation currently have to be implemented manually.")
+    if(initialPars){
+      Folds <- (max(1, Tpoints %/% 10)):(Tpoints-1)
+      ignore <- paste0(paste0(manifestNames, "_T"), rep(0:(max(1, Tpoints %/% 10)-1), each = length(manifestNames)))
+      warning(paste0("Some of the initial values (T0MEANS or T0VARs) in the model are estimated. max(1, Tpoints %/% 10) = ", max(1, Tpoints %/% 10), " of the initial observations will not be used in blocked CV. Otherwise the initial parameters will be very poorly estimated."))
     }else{
-      trainSets[[foldNumber]] <- fullData[-cvFolds[[foldNumber]],]
+      ignore  <- c()
+      Folds <- 0:(Tpoints-1)
     }
+
+
+    cvFolds <- split(Folds, cut(x = 1:length(Folds), breaks = k, labels = paste0("fold", 1:k)))
+
+    testSets <- vector("list", length = k)
+    names(testSets) <- names(cvFolds)
+    for(foldNumber in 1:k){
+      # select all data except the test set
+      testColumns <- paste0(paste0(manifestNames, "_T"), rep(cvFolds[[foldNumber]], each = length(manifestNames)))
+      dTs <- colnames(fullData)[grepl("dT", colnames(fullData))]
+      testSet <- fullData
+      testSet[,!(colnames(testSet) %in% c(ignore, testColumns, dTs))] <- NA # remove all but the test set
+      testSets[[foldNumber]] <-  testSet
+    }
+
+    trainSets <- vector("list", length = k)
+    names(trainSets) <- names(cvFolds)
+    for(foldNumber in 1:k){
+      testColumns <- paste0(paste0(manifestNames, "_T"), rep(cvFolds[[foldNumber]], each = length(manifestNames)))
+      trainSet <- fullData
+      trainSet[,testColumns] <- NA # remove test set
+      trainSets[[foldNumber]] <- trainSet
+    }
+
+    trainModels <- vector("list", length = k)
+    names(trainModels) <- names(cvFolds)
+
+    testModels <- vector("list", length = k)
+    names(testModels) <- names(cvFolds)
+
+    return(list("fullData" = fullData, "cvFolds" = cvFolds, "testSets" = testSets, "trainSets" = trainSets, "trainModels" = trainModels, "testModels" = testModels))
   }
-
-  trainModels <- vector("list", length = k)
-  names(trainModels) <- names(cvFolds)
-
-  testModels <- vector("list", length = k)
-  names(testModels) <- names(cvFolds)
-
-  return(list("fullData" = fullData, "cvFolds" = cvFolds, "testSets" = testSets, "trainSets" = trainSets, "trainModels" = trainModels, "testModels" = testModels))
+  stop("Error in createCVFoldsAndModels: autoCV must be set to 'kFold' or 'Blocked'")
 }
 
 

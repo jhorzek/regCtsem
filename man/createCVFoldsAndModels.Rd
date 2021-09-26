@@ -4,12 +4,20 @@
 \alias{createCVFoldsAndModels}
 \title{createCVFoldsAndModels}
 \usage{
-createCVFoldsAndModels(dataset, k)
+createCVFoldsAndModels(dataset, Tpoints, manifestNames, k, autoCV, initialPars)
 }
 \arguments{
 \item{dataset}{Please provide a data set in wide format compatible to ctsemOMX}
 
+\item{Tpoints}{Number of time points}
+
+\item{manifestNames}{names of manifest variables}
+
 \item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
+
+\item{autoCV}{Form of cross-validation: 'kFold' or 'Blocked'}
+
+\item{initialPars}{are any of the initial parameters (T0MEANS or T0VAR) estimated? If so, 10% of the initial observations will not be used in cross-validation when autoCV = "Blocked". Otherwise the initial parameters will be very poorly estimated}
 }
 \description{
 NOTE: Function located in file regCtsem.R

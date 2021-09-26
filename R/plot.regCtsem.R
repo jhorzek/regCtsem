@@ -43,7 +43,7 @@ plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xla
     mtext("# parameters on target",3,line=3,at=mean(lambdas),col="black", cex = 1)
 
     par(mar=c(5, 4, 4, 2) + 0.1, xpd=TRUE)
-    return()
+    return(invisible())
   }
 
   if(tolower(what) == "drift"){
@@ -75,7 +75,7 @@ plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xla
     mtext("# parameters on target",3,line=3,at=mean(lambdas),col="black", cex = 1)
 
     par(mar=c(5, 4, 4, 2) + 0.1, xpd=TRUE)
-    return()
+    return(invisible())
   }
   if(tolower(what) == "parameters"){
     if(!"parameters" %in% names(regCtsemObject)){stop("Plot of drift values not possible for cross-validation. Use what = 'fit' to plot the fit.")}
@@ -127,7 +127,7 @@ plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xla
     legend(legend = criterion, "bottomright",
            lty = lty[1:length(criterion)],
            col = color[1:length(criterion)])
-    return()
+    return(invisible())
   }
 
   stop("Select what = 'drift', 'parameters', or 'fit' to generate a plot.")
@@ -245,7 +245,7 @@ plot.regCtsemMultiSubject <- function(regCtsemObject, what = "drift", groups = N
       readline(prompt="Press [Enter] for next plot... ")
     }
     par(mar=c(5, 4, 4, 2) + 0.1, xpd=TRUE)
-    return()
+    return(invisible())
   }
   if(tolower(what) == "parameters"){
     if(!"parameters" %in% names(regCtsemObject)){stop("Plot of drift values not possible for cross-validation. Use what = 'fit' to plot the fit.")}
@@ -279,7 +279,7 @@ plot.regCtsemMultiSubject <- function(regCtsemObject, what = "drift", groups = N
       readline(prompt="Press [Enter] for next plot... ")
     }
     par(mar=c(5, 4, 4, 2) + 0.1, xpd=TRUE)
-    return()
+    return(invisible())
   }
   if(tolower(what) == "fit"){
     if(! "fit" %in% names(regCtsemObject)){
@@ -312,7 +312,7 @@ plot.regCtsemMultiSubject <- function(regCtsemObject, what = "drift", groups = N
     legend(legend = criterion, "bottomright",
            lty = lty[1:length(criterion)],
            col = color[1:length(criterion)])
-    return()
+    return(invisible())
   }
 
   stop("Select what = 'drift', 'parameters', or 'fit' to generate a plot.")

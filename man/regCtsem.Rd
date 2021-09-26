@@ -16,7 +16,7 @@ regCtsem(
   adaptiveLassoWeights = NULL,
   adaptiveLassoPower = -1,
   cvSample = NULL,
-  autoCV = FALSE,
+  autoCV = "No",
   k = 5,
   sparseParameters = NULL,
   subjectSpecificParameters = NULL,
@@ -51,9 +51,9 @@ regCtsem(
 
 \item{cvSample}{cross-validation sample. Has to be in wide format and compatible with ctsemOMX}
 
-\item{autoCV}{Boolean: Should automatic cross-validation be used?}
+\item{autoCV}{Should automatic cross-validation be used? Possible are "No", "kFold" or "Blocked". kFold splits the dataset in k groups by selecting independent units from the rows. Blocked is a within-unit split, where for each person blocks of observations are deleted. See Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740–756. https://doi.org/10.1037/met0000178 for a more detailed explanation}
 
-\item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
+\item{k}{number of cross-validation folds if autoCV = "kFold" or autoCV = "Blocked"}
 
 \item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. If regValues = "auto" the sparse parameters will be computed automatically.}
 
