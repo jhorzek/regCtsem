@@ -552,7 +552,13 @@ regCtsem <- function(
     }
 
     for(i in 1:argsIn$k){
-      cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
+
+      if(!is.null(subjectSpecificParameters)){
+        cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
+        cvFoldsAndModels$trainModels[[i]]$setParameterValues(cpptsemObject$getParameterValues(), names(cpptsemObject$getParameterValues()))
+      }else{
+        cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
+      }
       # optimize
       fitTrain <- try(optim(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(),
                             fn = fitCpptsem,
@@ -567,7 +573,13 @@ regCtsem <- function(
       }else{
         stop("Error while optimizing training models. This is often a sign that the sample size of the cross-validation training sets is to small. Consider using a higher k or rerun the analysis with a differnt seed to get a new split of the samples.")
       }
-      cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
+
+      if(!is.null(subjectSpecificParameters)){
+        cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
+      }else{
+        cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
+      }
+
 
       # set adaptive lasso weights based on training-sample
       if(all(is.na(argsIn$adaptiveLassoWeights[i,]))){
@@ -745,7 +757,12 @@ regCtsem <- function(
     }
 
     for(i in 1:argsIn$k){
-      cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
+      if(!is.null(subjectSpecificParameters)){
+        cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
+        cvFoldsAndModels$trainModels[[i]]$setParameterValues(cpptsemObject$getParameterValues(), names(cpptsemObject$getParameterValues()))
+      }else{
+        cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
+      }
       # optimize
       fitTrain <- try(optim(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(),
                             fn = fitCpptsem,
@@ -760,7 +777,12 @@ regCtsem <- function(
       }else{
         stop("Error while optimizing training models. This is often a sign that the sample size of the cross-validation training sets is too small. Consider using a higher k or rerun the analysis with a different seed to get a new split of the samples.")
       }
-      cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
+
+      if(!is.null(subjectSpecificParameters)){
+        cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
+      }else{
+        cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
+      }
 
       # set adaptive lasso weights based on training-sample
       if(all(is.na(argsIn$adaptiveLassoWeights[i,]))){
