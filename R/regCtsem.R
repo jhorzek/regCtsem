@@ -1260,7 +1260,7 @@ createCVFoldsAndModels <- function(dataset, Tpoints, manifestNames, k, autoCV, i
     if(initialPars){
       Folds <- (max(1, Tpoints %/% 10)):(Tpoints-1)
       ignore <- paste0(paste0(manifestNames, "_T"), rep(0:(max(1, Tpoints %/% 10)-1), each = length(manifestNames)))
-      warning(paste0("Some of the initial values (T0MEANS or T0VARs) in the model are estimated. max(1, Tpoints %/% 10) = ", max(1, Tpoints %/% 10), " of the initial observations will not be used in blocked CV. Otherwise the initial parameters will be very poorly estimated."))
+      warning(paste0("Bergmeir & Benítez, (2012) do not recommend the use of cross-validation with non-stationary time series! However, your model seems to not assume stationarity. Keep this in mind when interpreting the results. max(1, Tpoints %/% 10) = ", max(1, Tpoints %/% 10), " of the initial observations will not be used in blocked CV. Otherwise the initial parameters will be very poorly estimated."))
     }else{
       ignore  <- c()
       Folds <- 0:(Tpoints-1)
@@ -1509,7 +1509,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
 #' @import OpenMx
 #' @export
 getFinalParameters <- function(regCtsemObject, criterion, raw = TRUE){
-  if(!regCtsemObject$setup$autoCV){
+  if(regCtsemObject$setup$autoCV == "No"){
     minCriterionValue <- max(which(regCtsemObject$fit[criterion,] == min(regCtsemObject$fit[criterion,], na.rm = TRUE)))
     lambdas <- regCtsemObject$setup$lambdas
     bestLambda <- lambdas[minCriterionValue]
@@ -1541,7 +1541,7 @@ getFinalParameters <- function(regCtsemObject, criterion, raw = TRUE){
 #' @import OpenMx
 #' @export
 getFinalModel <- function(regCtsemObject, criterion){
-  if(regCtsemObject$setup$autoCV){
+  if(regCtsemObject$setup$autoCV != "No"){
     stop("getFinalModel not supported for automatic cross-validation. At the moment, you have to manually re-run the model with the best lambda value using the whole sample.")
   }
 
