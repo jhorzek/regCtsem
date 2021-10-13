@@ -285,6 +285,8 @@ profileLikelihoodFromCpptsem <- function(cpptsemObject, parameter, values){
 
   lambda <- 0
   startingValues <- cpptsemObject$getParameterValues()
+  resetTo <- startingValues[]
+
   adaptiveLassoWeights <- startingValues
   adaptiveLassoWeights[] <- 0
   regIndicators <- c()
@@ -305,6 +307,18 @@ profileLikelihoodFromCpptsem <- function(cpptsemObject, parameter, values){
        xlab = parameter,
        ylab = ifelse(lambda > 0, "regularized likelihood value", "likelihood value"),
        type = "l")
+
+  cpptsemObject$setParameterValues(resetTo, names(resetTo))
+  if(any(class(cpptsemObject) == "Rcpp_cpptsemRAMmodel")){
+    cpptsemObject$computeRAM()
+    cpptsemObject$fitRAM()
+  }else if (any(class(cpptsemObject) ==  "Rcpp_cpptsemKalmanModel")){
+    cpptsemObject$computeAndFitKalman()
+  }else{
+    stop("Object has to be of type Rcpp_cpptsemRAMmodel or Rcpp_cpptsemKalmanModel")
+  }
+  points(resetTo[parameter], cpptsemObject$m2LL, col = "blue")
+
   return(pl)
 }
 
