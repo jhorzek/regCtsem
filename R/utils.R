@@ -19,13 +19,17 @@ profileLikelihood <- function(cpptsemObject,
                               targetVector,
                               epsilon = 1e-4,
                               controlRsolnp = regCtsem::controlRsolnp()
-                              ){
-  warning("Currently only using approximate regularization and lasso type regularitation!")
+){
+  if(lambda > 0){
+    warning("Currently only using approximate regularization and lasso type regularization!")
+  }
   # set objective function
   if(any(class(cpptsemObject) == "Rcpp_cpptsemRAMmodel")){
     objective <- "ML"
-  }else{
+  }else if (any(class(cpptsemObject) ==  "Rcpp_cpptsemKalmanModel")){
     objective <- "Kalman"
+  }else{
+    stop("Object has to be of type Rcpp_cpptsemRAMmodel or Rcpp_cpptsemKalmanModel")
   }
 
   # set optimizer
@@ -88,26 +92,26 @@ profileLikelihood <- function(cpptsemObject,
 
     # call actual fit function
     regM2LL <- ifelse(tolower(objective) == "ml",
-           regCtsem::approx_RAMRegM2LLCpptsem(parameters = currentValues,
-                                              cpptsemmodel = cpptsemObject,
-                                              adaptiveLassoWeights = adaptiveLassoWeights,
-                                              N = N,
-                                              lambda_ = lambda_,
-                                              regIndicators = regIndicators,
-                                              targetVector = targetVector,
-                                              epsilon = epsilon,
-                                              objective = objective,
-                                              failureReturns = failureReturns),
-           regCtsem::approx_KalmanRegM2LLCpptsem(parameters = currentValues,
-                                                 cpptsemmodel = cpptsemObject,
-                                                 adaptiveLassoWeights = adaptiveLassoWeights,
-                                                 N = N,
-                                                 lambda_ = lambda_,
-                                                 regIndicators = regIndicators,
-                                                 targetVector = targetVector,
-                                                 epsilon = epsilon,
-                                                 objective = objective,
-                                                 failureReturns = failureReturns))
+                      regCtsem::approx_RAMRegM2LLCpptsem(parameters = currentValues,
+                                                         cpptsemmodel = cpptsemObject,
+                                                         adaptiveLassoWeights = adaptiveLassoWeights,
+                                                         N = N,
+                                                         lambda_ = lambda_,
+                                                         regIndicators = regIndicators,
+                                                         targetVector = targetVector,
+                                                         epsilon = epsilon,
+                                                         objective = objective,
+                                                         failureReturns = failureReturns),
+                      regCtsem::approx_KalmanRegM2LLCpptsem(parameters = currentValues,
+                                                            cpptsemmodel = cpptsemObject,
+                                                            adaptiveLassoWeights = adaptiveLassoWeights,
+                                                            N = N,
+                                                            lambda_ = lambda_,
+                                                            regIndicators = regIndicators,
+                                                            targetVector = targetVector,
+                                                            epsilon = epsilon,
+                                                            objective = objective,
+                                                            failureReturns = failureReturns))
     return(regM2LL)
   }
 
@@ -150,6 +154,7 @@ profileLikelihood <- function(cpptsemObject,
 #' @param values values for the parameter at which the profile likelihood will be computed
 #' @param lambda penalty value
 #' @examples
+#' \dontrun{
 #' set.seed(17046)
 #'
 #' library(regCtsem)
@@ -211,6 +216,7 @@ profileLikelihood <- function(cpptsemObject,
 #' pl2 <- profileLikelihoodFromRegCtsem(regCtsemObject = regModel, parameter = "drift_eta2_eta1",
 #'                                      values = seq(-1,1,.1),
 #'                                      lambda = 10)
+#'  }
 #' @export
 profileLikelihoodFromRegCtsem <- function(regCtsemObject, parameter, values, lambda){
   if(!(regModel$setup$penalty == "lasso" || regModel$setup$penalty == "adaptiveLasso")){
@@ -234,7 +240,70 @@ profileLikelihoodFromRegCtsem <- function(regCtsemObject, parameter, values, lam
   plot(x = pl$parameterValue, y = pl$Likelihood,
        main = "Profile Likelihood",
        xlab = parameter,
-       ylab = "regularized likelihood value",
+       ylab = ifelse(lambda > 0, "regularized likelihood value", "likelihood value"),
+       type = "l")
+  return(pl)
+}
+
+#' profileLikelihoodFromCpptsem
+#'
+#' computes the profile likelihood for a selected parameter based on a cpptsem
+#'
+#' @param regCtsemObject model of type regCtsem
+#' @param parameter label of the parameter for which the profile likelihood should be computed
+#' @param values values for the parameter at which the profile likelihood will be computed
+#' @param lambda penalty value
+#' @examples
+#' \dontrun{
+#' library(regCtsem)
+#'
+#' CINT = matrix(c(0,0), nrow = 2, ncol = 1)
+#'
+#' stationary <- c('T0TRAITEFFECT','T0TIPREDEFFECT')
+#'
+#' ## ctsem model without trait
+#' AnomAuthmodel1 <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2),
+#'                           Tpoints = 5, n.latent = 2, n.manifest = 2,
+#'                           MANIFESTVAR=diag(0, 2),
+#'                           TRAITVAR = NULL,
+#'                           CINT = CINT)
+#' AnomAuthfit1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = TRUE, stationary = stationary)
+#'
+#' ## with cpptsem
+#' cpptsemModel <- cpptsemFromCtsem(ctsemModel = AnomAuthfit1, wideData = AnomAuth)
+#' pl <- profileLikelihoodFromCpptsem(cpptsemObject = cpptsemModel, parameter = "drift_eta1_eta2", values = seq(-1,1,.2))
+#' }
+#' @export
+profileLikelihoodFromCpptsem <- function(cpptsemObject, parameter, values){
+  if(any(class(cpptsemObject) == "Rcpp_cpptsemRAMmodel")){
+    objective <- "ML"
+  }else if (any(class(cpptsemObject) ==  "Rcpp_cpptsemKalmanModel")){
+    objective <- "Kalman"
+  }else{
+    stop("Object has to be of type Rcpp_cpptsemRAMmodel or Rcpp_cpptsemKalmanModel")
+  }
+
+  lambda <- 0
+  startingValues <- cpptsemObject$getParameterValues()
+  adaptiveLassoWeights <- startingValues
+  adaptiveLassoWeights[] <- 0
+  regIndicators <- c()
+  targetVector <- startingValues
+  targetVector[] <- 0
+  pl <- profileLikelihood(cpptsemObject = cpptsemObject,
+                          parameter = parameter,
+                          values = values,
+                          lambda = lambda,
+                          startingValues = startingValues,
+                          adaptiveLassoWeights = adaptiveLassoWeights,
+                          N = 1,
+                          regIndicators = regIndicators,
+                          targetVector = targetVector
+  )
+  plot(x = pl$parameterValue, y = pl$Likelihood,
+       main = "Profile Likelihood",
+       xlab = parameter,
+       ylab = ifelse(lambda > 0, "regularized likelihood value", "likelihood value"),
        type = "l")
   return(pl)
 }

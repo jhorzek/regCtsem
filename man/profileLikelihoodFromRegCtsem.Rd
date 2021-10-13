@@ -19,6 +19,7 @@ profileLikelihoodFromRegCtsem(regCtsemObject, parameter, values, lambda)
 computes the profile likelihood for a selected parameter based on a regularized model
 }
 \examples{
+\dontrun{
 set.seed(17046)
 
 library(regCtsem)
@@ -80,4 +81,5 @@ pl1 <- profileLikelihoodFromRegCtsem(regCtsemObject = regModel, parameter = "dri
 pl2 <- profileLikelihoodFromRegCtsem(regCtsemObject = regModel, parameter = "drift_eta2_eta1",
                                      values = seq(-1,1,.1),
                                      lambda = 10)
+ }
 }
