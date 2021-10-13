@@ -1456,6 +1456,41 @@ gradCpptsem <- function(parameterValues, cpptsemObject, objective, free = labele
   return(gradients[free[names(gradients)]])
 }
 
+#' optimizeCpptsem
+#'
+#' generic optimization with Rslonp
+#'
+#' @param cpptsemObject model of type cpptsem
+#' @param ... additional arguments passed to Rsonlp::solnp
+#' @export
+optimizeCpptsem <- function(cpptsemObject, free = "all", ...){
+  # determine if Kalman or ML
+  if(any(class(cpptsemObject) == "Rcpp_cpptsemKalmanModel")){
+    objective <- "Kalman"
+  }else{
+    objective <- "ML"
+  }
+  # starting values
+  startingValues <- cpptsemObject$getParameterValues()
+  if(all(free == "all")){
+    free <- rep(TRUE, length(startingValues))
+    names(free) <- names(startingValues)
+  }
+  failureReturns <- .Machine$double.xmax/2
+
+  invisible(capture.output(CpptsemFit <- try(Rsolnp::solnp(par = startingValues,
+                                                           fun = fitCpptsem,
+                                                           #gr = gradCpptsem,
+                                                           ...,
+                                                           cpptsemObject = cpptsemObject,
+                                                           objective = objective,
+                                                           free = free,
+                                                           failureReturns = failureReturns),
+                                             silent = TRUE), type = c("output", "message")))
+  return(CpptsemFit)
+
+}
+
 #' labeledFree
 #'
 #' small helper function. Returns vector with TRUE of length x with same labels as x
@@ -1744,7 +1779,8 @@ approx_cpptsemRsolnp <- function(cpptsemmodel,
                                  gradCpptsem,
                                  startingValues,
                                  adaptiveLassoWeights,
-                                 N, lambda,
+                                 N,
+                                 lambda,
                                  regIndicators,
                                  targetVector,
                                  epsilon,
@@ -2171,7 +2207,7 @@ computeStandardErrorsRaw <- function(cpptsemObject, objective){
   sampleSize <- ifelse(tolower(objective) == "ml",
                        cpptsemObject$RAMdata$sampleSize,
                        cpptsemObject$KALMANdata$sampleSize
-                       )
+  )
   parameterValues <- cpptsemObject$getParameterValues()
   Hessian <- optimHess(par = parameterValues,
                        fn = regCtsem::fitCpptsem,
@@ -2186,7 +2222,7 @@ computeStandardErrorsRaw <- function(cpptsemObject, objective){
   standardErrorsRaw <- sqrt(diag(solve(nFisherInformation)))
   return(list("standardErrorsRaw" = standardErrorsRaw,
               "FisherInformation" = (1/sampleSize)*nFisherInformation)
-         )
+  )
 }
 
 #' computeStandardErrorsDelta

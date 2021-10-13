@@ -112,7 +112,7 @@ getVarianceFromVarianceBase <- function(varianceBaseValues) {
     .Call('_regCtsem_getVarianceFromVarianceBase', PACKAGE = 'regCtsem', varianceBaseValues)
 }
 
-kalmanFit <- function(sampleSize, Tpoints, nlatent, nmanifest, kalmanData, latentScores, predictedManifestValues, discreteTimeParameterNames, T0MEANSValues, T0VARValues, discreteDRIFTUnique, discreteCINTUnique, discreteTRAITUnique, discreteDIFFUSIONUnique, LAMBDAValues, MANIFESTMEANSValues, MANIFESTVARValues) {
-    .Call('_regCtsem_kalmanFit', PACKAGE = 'regCtsem', sampleSize, Tpoints, nlatent, nmanifest, kalmanData, latentScores, predictedManifestValues, discreteTimeParameterNames, T0MEANSValues, T0VARValues, discreteDRIFTUnique, discreteCINTUnique, discreteTRAITUnique, discreteDIFFUSIONUnique, LAMBDAValues, MANIFESTMEANSValues, MANIFESTVARValues)
+kalmanFit <- function(update, sampleSize, Tpoints, nlatent, nmanifest, kalmanData, latentScores, predictedManifestValues, discreteTimeParameterNames, T0MEANSValues, T0VARValues, discreteDRIFTUnique, discreteCINTUnique, discreteTRAITUnique, discreteDIFFUSIONUnique, LAMBDAValues, MANIFESTMEANSValues, MANIFESTVARValues) {
+    .Call('_regCtsem_kalmanFit', PACKAGE = 'regCtsem', update, sampleSize, Tpoints, nlatent, nmanifest, kalmanData, latentScores, predictedManifestValues, discreteTimeParameterNames, T0MEANSValues, T0VARValues, discreteDRIFTUnique, discreteCINTUnique, discreteTRAITUnique, discreteDIFFUSIONUnique, LAMBDAValues, MANIFESTMEANSValues, MANIFESTVARValues)
 }
 

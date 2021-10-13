@@ -32,6 +32,10 @@ cpptsemKalmanModel::cpptsemKalmanModel(std::string mName,
 }
 
 // Basic functions
+void cpptsemKalmanModel::setUpdate(bool mUpdate){
+  // Should the predictions be updated in the Kalman filter?
+  update = mUpdate;
+}
 
 void cpptsemKalmanModel::setDiscreteDRIFTUnique(Rcpp::List mDiscreteDRIFTUnique){
   // list with labels of the unique discrete drifts, corresponding time intervals and results
@@ -347,7 +351,8 @@ void cpptsemKalmanModel::computeAndFitKalman(){
     currentPredictedManifest.fill(arma::datum::nan);
 
     // Kalman filter: Prediction and Updating
-    currentIndM2LL = kalmanFit(currentSampleSize,
+    currentIndM2LL = kalmanFit(update,
+                               currentSampleSize,
                                Tpoints,
                                nlatent,
                                nmanifest,
@@ -767,6 +772,7 @@ RCPP_EXPOSED_CLASS(cpptsemKalmanModel)
     Rcpp::class_<cpptsemKalmanModel>( "cpptsemKalmanModel" )
       .constructor<std::string, Rcpp::List, Rcpp::DataFrame, bool, bool>("Creates a new model. Expects a model name, ctMatrixList, parameterTable")
       .field_readonly( "name", &cpptsemKalmanModel::name, "Name of the model")
+      .field_readonly( "update", &cpptsemKalmanModel::update, "Are the latent scores updated in the Kalman filter?")
       .field_readonly( "ctMatrixList", &cpptsemKalmanModel::ctMatrixList, "List of ct matrices")
       .field_readonly( "parameterTable", &cpptsemKalmanModel::parameterTable, "Data frame of model parameters")
       .field_readonly( "discreteDRIFTUnique", &cpptsemKalmanModel::discreteDRIFTUnique, "discreteDRIFTUnique")
@@ -792,6 +798,7 @@ RCPP_EXPOSED_CLASS(cpptsemKalmanModel)
 
 
     // methods
+    .method( "setUpdate", &cpptsemKalmanModel::setUpdate, "Should the latent scores be updated in the Kalman Filter procedure? Expects a boolean.")
     .method( "setParameterValues", &cpptsemKalmanModel::setParameterValues, "Set the parameters. Expects a vector with parametervalues and a stringvector with labels")
     .method( "setDiscreteDRIFTUnique", &cpptsemKalmanModel::setDiscreteDRIFTUnique, "Set the number of discrete time drifts, corresponding dts and values")
     .method( "setDiscreteTRAITUnique", &cpptsemKalmanModel::setDiscreteTRAITUnique, "Set the number of discrete time traits, corresponding dts and values")

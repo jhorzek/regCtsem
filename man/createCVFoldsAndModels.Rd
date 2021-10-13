@@ -15,11 +15,14 @@ createCVFoldsAndModels(dataset, Tpoints, manifestNames, k, autoCV, initialPars)
 
 \item{k}{number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)}
 
-\item{autoCV}{Form of cross-validation: 'kFold' or 'Blocked'}
+\item{autoCV}{Form of cross-validation: "kFold" or "Blocked"}
 
-\item{initialPars}{are any of the initial parameters (T0MEANS or T0VAR) estimated? If so, 10% of the initial observations will not be used in cross-validation when autoCV = "Blocked". Otherwise the initial parameters will be very poorly estimated}
+\item{initialPars}{are any of the initial parameters (T0MEANS or T0VAR) estimated? If so, 10 percent of the initial observations will not be used in cross-validation when autoCV = "Blocked". Otherwise the initial parameters will be very poorly estimated}
 }
 \description{
+creates cv folds and models
+}
+\details{
 NOTE: Function located in file regCtsem.R
 }
 \author{

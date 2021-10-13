@@ -6,23 +6,24 @@
 // Performs the prediciton and updating step for the Kalman Filter
 using namespace Rcpp;
 // [[Rcpp::export]]
-arma::colvec kalmanFit(const int sampleSize,
-                 const int Tpoints,
-                 const int nlatent,
-                 int nmanifest,
-                 const arma::mat kalmanData,
-                 arma::mat &latentScores,
-                 arma::mat &predictedManifestValues,
-                 const Rcpp::List& discreteTimeParameterNames,
-                 const arma::colvec& T0MEANSValues,
-                 const arma::mat& T0VARValues,
-                 const Rcpp::List& discreteDRIFTUnique,
-                 const Rcpp::List& discreteCINTUnique,
-                 const Rcpp::List& discreteTRAITUnique,
-                 const Rcpp::List& discreteDIFFUSIONUnique,
-                 const arma::mat& LAMBDAValues,
-                 const arma::colvec& MANIFESTMEANSValues,
-                 const arma::mat& MANIFESTVARValues) {
+arma::colvec kalmanFit(bool update,
+                       const int sampleSize,
+                       const int Tpoints,
+                       const int nlatent,
+                       int nmanifest,
+                       const arma::mat kalmanData,
+                       arma::mat &latentScores,
+                       arma::mat &predictedManifestValues,
+                       const Rcpp::List& discreteTimeParameterNames,
+                       const arma::colvec& T0MEANSValues,
+                       const arma::mat& T0VARValues,
+                       const Rcpp::List& discreteDRIFTUnique,
+                       const Rcpp::List& discreteCINTUnique,
+                       const Rcpp::List& discreteTRAITUnique,
+                       const Rcpp::List& discreteDIFFUSIONUnique,
+                       const arma::mat& LAMBDAValues,
+                       const arma::colvec& MANIFESTMEANSValues,
+                       const arma::mat& MANIFESTVARValues) {
 
   double m2LL = 0; // -2 log likelihood
   double currentM2LL = 0;
@@ -71,14 +72,16 @@ arma::colvec kalmanFit(const int sampleSize,
                                                                             predictedLatentVariance,
                                                                             MANIFESTVARNotNA);
 
-      // Kalman Gain
-      KalmanGain = predictedLatentVariance * arma::trans(LAMBDANotNA) * arma::inv(predictedMANIFESTVariance);
+      if(update){
+        // Kalman Gain
+        KalmanGain = predictedLatentVariance * arma::trans(LAMBDANotNA) * arma::inv(predictedMANIFESTVariance);
 
-      // compute residuals: observed-predicted
-      residual = observed - predictedManifest;
-      // update predicted latent scores and latent variance
-      currentLatentScores = currentLatentScores + KalmanGain*(residual(nonmissing));
-      predictedLatentVariance = predictedLatentVariance - KalmanGain * LAMBDANotNA * predictedLatentVariance;
+        // compute residuals: observed-predicted
+        residual = observed - predictedManifest;
+        // update predicted latent scores and latent variance
+        currentLatentScores = currentLatentScores + KalmanGain*(residual(nonmissing));
+        predictedLatentVariance = predictedLatentVariance - KalmanGain * LAMBDANotNA * predictedLatentVariance;
+      }
 
       // compute Likelihood --nonmissing
       filteredData = observed(nonmissing);
@@ -148,14 +151,16 @@ arma::colvec kalmanFit(const int sampleSize,
                                                                               predictedLatentVariance,
                                                                               MANIFESTVARNotNA);
 
-        // Kalman Gain
-        KalmanGain = predictedLatentVariance * arma::trans(LAMBDANotNA) * arma::inv(predictedMANIFESTVariance);
+        if(update){
+          // Kalman Gain
+          KalmanGain = predictedLatentVariance * arma::trans(LAMBDANotNA) * arma::inv(predictedMANIFESTVariance);
 
-        // compute residuals
-        residual = observed - predictedManifest;
-        // update scores and latent variance
-        currentLatentScores = currentLatentScores + KalmanGain*(residual(nonmissing));
-        predictedLatentVariance = predictedLatentVariance - KalmanGain * LAMBDANotNA * predictedLatentVariance;
+          // compute residuals
+          residual = observed - predictedManifest;
+          // update scores and latent variance
+          currentLatentScores = currentLatentScores + KalmanGain*(residual(nonmissing));
+          predictedLatentVariance = predictedLatentVariance - KalmanGain * LAMBDANotNA * predictedLatentVariance;
+        }
 
         // compute Likelihood --nonmissing
         filteredData = observed(nonmissing);

@@ -1208,14 +1208,16 @@ approx_regCtsem <- function(  # model
 
 #' createCVFoldsAndModels
 #'
+#' creates cv folds and models
+#'
 #' NOTE: Function located in file regCtsem.R
 #'
 #' @param dataset Please provide a data set in wide format compatible to ctsemOMX
 #' @param Tpoints Number of time points
 #' @param manifestNames names of manifest variables
 #' @param k number of cross-validation folds if autoCV = TRUE (k-fold cross-validation)
-#' @param autoCV Form of cross-validation: 'kFold' or 'Blocked'
-#' @param initialPars are any of the initial parameters (T0MEANS or T0VAR) estimated? If so, 10% of the initial observations will not be used in cross-validation when autoCV = "Blocked". Otherwise the initial parameters will be very poorly estimated
+#' @param autoCV Form of cross-validation: "kFold" or "Blocked"
+#' @param initialPars are any of the initial parameters (T0MEANS or T0VAR) estimated? If so, 10 percent of the initial observations will not be used in cross-validation when autoCV = "Blocked". Otherwise the initial parameters will be very poorly estimated
 #' @author Jannik Orzek
 #' @export
 createCVFoldsAndModels <- function(dataset, Tpoints, manifestNames, k, autoCV, initialPars){

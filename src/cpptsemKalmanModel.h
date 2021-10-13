@@ -31,7 +31,8 @@ public:
   arma::mat LAMBDAValues;
   arma::colvec MANIFESTMEANSValues;
   arma::mat asymptoticDIFFUSION;
-  bool hasDiscreteDRIFTUnique = false,
+  bool update = true,
+    hasDiscreteDRIFTUnique = false,
     hasDiscreteTRAITUnique = false,
     hasDRIFTHASHExponentialUnique = false,
     hasDiscreteDIFFUSIONUnique = false,
@@ -51,6 +52,7 @@ public:
                      bool mStationaryT0MEANS);
 
   // setter
+  void setUpdate(bool mUpdate);
   void setParameterValues(Rcpp::NumericVector mParameters, Rcpp::StringVector parameterLabels);
   void setKalmanMatrixValues(int selectedGroup);
   void setDiscreteDRIFTUnique(Rcpp::List mDiscreteDRIFTUnique);

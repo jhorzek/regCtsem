@@ -358,11 +358,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // kalmanFit
-arma::colvec kalmanFit(const int sampleSize, const int Tpoints, const int nlatent, int nmanifest, const arma::mat kalmanData, arma::mat& latentScores, arma::mat& predictedManifestValues, const Rcpp::List& discreteTimeParameterNames, const arma::colvec& T0MEANSValues, const arma::mat& T0VARValues, const Rcpp::List& discreteDRIFTUnique, const Rcpp::List& discreteCINTUnique, const Rcpp::List& discreteTRAITUnique, const Rcpp::List& discreteDIFFUSIONUnique, const arma::mat& LAMBDAValues, const arma::colvec& MANIFESTMEANSValues, const arma::mat& MANIFESTVARValues);
-RcppExport SEXP _regCtsem_kalmanFit(SEXP sampleSizeSEXP, SEXP TpointsSEXP, SEXP nlatentSEXP, SEXP nmanifestSEXP, SEXP kalmanDataSEXP, SEXP latentScoresSEXP, SEXP predictedManifestValuesSEXP, SEXP discreteTimeParameterNamesSEXP, SEXP T0MEANSValuesSEXP, SEXP T0VARValuesSEXP, SEXP discreteDRIFTUniqueSEXP, SEXP discreteCINTUniqueSEXP, SEXP discreteTRAITUniqueSEXP, SEXP discreteDIFFUSIONUniqueSEXP, SEXP LAMBDAValuesSEXP, SEXP MANIFESTMEANSValuesSEXP, SEXP MANIFESTVARValuesSEXP) {
+arma::colvec kalmanFit(bool update, const int sampleSize, const int Tpoints, const int nlatent, int nmanifest, const arma::mat kalmanData, arma::mat& latentScores, arma::mat& predictedManifestValues, const Rcpp::List& discreteTimeParameterNames, const arma::colvec& T0MEANSValues, const arma::mat& T0VARValues, const Rcpp::List& discreteDRIFTUnique, const Rcpp::List& discreteCINTUnique, const Rcpp::List& discreteTRAITUnique, const Rcpp::List& discreteDIFFUSIONUnique, const arma::mat& LAMBDAValues, const arma::colvec& MANIFESTMEANSValues, const arma::mat& MANIFESTVARValues);
+RcppExport SEXP _regCtsem_kalmanFit(SEXP updateSEXP, SEXP sampleSizeSEXP, SEXP TpointsSEXP, SEXP nlatentSEXP, SEXP nmanifestSEXP, SEXP kalmanDataSEXP, SEXP latentScoresSEXP, SEXP predictedManifestValuesSEXP, SEXP discreteTimeParameterNamesSEXP, SEXP T0MEANSValuesSEXP, SEXP T0VARValuesSEXP, SEXP discreteDRIFTUniqueSEXP, SEXP discreteCINTUniqueSEXP, SEXP discreteTRAITUniqueSEXP, SEXP discreteDIFFUSIONUniqueSEXP, SEXP LAMBDAValuesSEXP, SEXP MANIFESTMEANSValuesSEXP, SEXP MANIFESTVARValuesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< bool >::type update(updateSEXP);
     Rcpp::traits::input_parameter< const int >::type sampleSize(sampleSizeSEXP);
     Rcpp::traits::input_parameter< const int >::type Tpoints(TpointsSEXP);
     Rcpp::traits::input_parameter< const int >::type nlatent(nlatentSEXP);
@@ -380,7 +381,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type LAMBDAValues(LAMBDAValuesSEXP);
     Rcpp::traits::input_parameter< const arma::colvec& >::type MANIFESTMEANSValues(MANIFESTMEANSValuesSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type MANIFESTVARValues(MANIFESTVARValuesSEXP);
-    rcpp_result_gen = Rcpp::wrap(kalmanFit(sampleSize, Tpoints, nlatent, nmanifest, kalmanData, latentScores, predictedManifestValues, discreteTimeParameterNames, T0MEANSValues, T0VARValues, discreteDRIFTUnique, discreteCINTUnique, discreteTRAITUnique, discreteDIFFUSIONUnique, LAMBDAValues, MANIFESTMEANSValues, MANIFESTVARValues));
+    rcpp_result_gen = Rcpp::wrap(kalmanFit(update, sampleSize, Tpoints, nlatent, nmanifest, kalmanData, latentScores, predictedManifestValues, discreteTimeParameterNames, T0MEANSValues, T0VARValues, discreteDRIFTUnique, discreteCINTUnique, discreteTRAITUnique, discreteDIFFUSIONUnique, LAMBDAValues, MANIFESTMEANSValues, MANIFESTVARValues));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -416,7 +417,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_regCtsem_fillS", (DL_FUNC) &_regCtsem_fillS, 8},
     {"_regCtsem_getMatrixExponential", (DL_FUNC) &_regCtsem_getMatrixExponential, 1},
     {"_regCtsem_getVarianceFromVarianceBase", (DL_FUNC) &_regCtsem_getVarianceFromVarianceBase, 1},
-    {"_regCtsem_kalmanFit", (DL_FUNC) &_regCtsem_kalmanFit, 17},
+    {"_regCtsem_kalmanFit", (DL_FUNC) &_regCtsem_kalmanFit, 18},
     {"_rcpp_module_boot_cpptsemKalmanModel_cpp", (DL_FUNC) &_rcpp_module_boot_cpptsemKalmanModel_cpp, 0},
     {"_rcpp_module_boot_cpptsemRAMmodel_cpp", (DL_FUNC) &_rcpp_module_boot_cpptsemRAMmodel_cpp, 0},
     {NULL, NULL, 0}

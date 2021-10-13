@@ -1,3 +1,245 @@
+#' profileLikelihood
+#'
+#' computes the profile likelihood for a selected parameter
+#'
+#' @param cpptsemObject model of type cpptsem
+#' @param parameter label of the parameter for which the profile likelihood should be computed
+#' @param values values for the parameter at which the profile likelihood will be computed
+#' @param lambda penalty value
+#' @param startingValues starting values
+#' @export
+profileLikelihood <- function(cpptsemObject,
+                              parameter,
+                              values,
+                              lambda,
+                              startingValues = cpptsemObject$getParameterValues(),
+                              adaptiveLassoWeights,
+                              N,
+                              regIndicators,
+                              targetVector,
+                              epsilon = 1e-4,
+                              controlRsolnp = regCtsem::controlRsolnp()
+                              ){
+  warning("Currently only using approximate regularization and lasso type regularitation!")
+  # set objective function
+  if(any(class(cpptsemObject) == "Rcpp_cpptsemRAMmodel")){
+    objective <- "ML"
+  }else{
+    objective <- "Kalman"
+  }
+
+  # set optimizer
+  if("failureReturns" %in% names(controlRsolnp)){
+    failureReturns <- controlRsolnp$failureReturns
+  }else{
+    warning("No failureReturns for optimx. Using .Machine$double.xmax/2")
+    failureReturns <- .Machine$double.xmax/2
+  }
+  if("eqfun" %in% names(controlRsolnp)){
+    eqfun <- controlRsolnp$eqfun
+  }else{
+    eqfun <- NULL
+  }
+  if("eqB" %in% names(controlRsolnp)){
+    eqB <- controlRsolnp$eqB
+  }else{
+    eqB <- NULL
+  }
+  if("ineqfun" %in% names(controlRsolnp)){
+    ineqfun <- controlRsolnp$ineqfun
+  }else{
+    ineqfun <- NULL
+  }
+  if("ineqLB" %in% names(controlRsolnp)){
+    ineqLB <- controlRsolnp$ineqLB
+  }else{
+    ineqLB <- NULL
+  }
+  if("ineqUB" %in% names(controlRsolnp)){
+    ineqUB <- controlRsolnp$ineqUB
+  }else{
+    ineqUB <- NULL
+  }
+  if("LB" %in% names(controlRsolnp)){
+    LB <- controlRsolnp$LB
+  }else{
+    LB <- NULL
+  }
+  if("UB" %in% names(controlRsolnp)){
+    UB <- controlRsolnp$UB
+  }else{
+    UB <- NULL
+  }
+  if("control" %in% names(controlRsolnp)){
+    control <- controlRsolnp$control
+  }else{
+    "control" = list("trace" = 0)
+  }
+
+  # set free parameters
+  free <- rep(TRUE, length(startingValues))
+  names(free) <- names(startingValues)
+  free[parameter] <- FALSE
+
+  fitFunction <- function(parameters, cpptsemObject, free, adaptiveLassoWeights, N, lambda_, regIndicators, targetVector, epsilon, objective, failureReturns){
+    currentValues <- cpptsemObject$getParameterValues()
+    # change free parameter only
+    currentValues[free] <- parameters[free][names(currentValues[free])]
+
+    # call actual fit function
+    regM2LL <- ifelse(tolower(objective) == "ml",
+           regCtsem::approx_RAMRegM2LLCpptsem(parameters = currentValues,
+                                              cpptsemmodel = cpptsemObject,
+                                              adaptiveLassoWeights = adaptiveLassoWeights,
+                                              N = N,
+                                              lambda_ = lambda_,
+                                              regIndicators = regIndicators,
+                                              targetVector = targetVector,
+                                              epsilon = epsilon,
+                                              objective = objective,
+                                              failureReturns = failureReturns),
+           regCtsem::approx_KalmanRegM2LLCpptsem(parameters = currentValues,
+                                                 cpptsemmodel = cpptsemObject,
+                                                 adaptiveLassoWeights = adaptiveLassoWeights,
+                                                 N = N,
+                                                 lambda_ = lambda_,
+                                                 regIndicators = regIndicators,
+                                                 targetVector = targetVector,
+                                                 epsilon = epsilon,
+                                                 objective = objective,
+                                                 failureReturns = failureReturns))
+    return(regM2LL)
+  }
+
+  lik <- rep(NA, length(values))
+
+  for(value in values){
+    # set parameter
+    startingValues[parameter] <- value
+    cpptsemObject$setParameterValues(startingValues, names(startingValues))
+
+    # optimize model
+    invisible(capture.output(currentFit <- try(Rsolnp::solnp(par = startingValues,
+                                                             fun = fitFunction,
+                                                             #gr = gradCpptsem,
+                                                             eqfun = eqfun, eqB = eqB, ineqfun = ineqfun, ineqLB = ineqLB,
+                                                             ineqUB = ineqUB, LB = LB, UB = UB, control = control,
+                                                             cpptsemObject = cpptsemObject, free = free,
+                                                             adaptiveLassoWeights = adaptiveLassoWeights,
+                                                             N = N, lambda_ = lambda, regIndicators = regIndicators, targetVector = targetVector,
+                                                             epsilon = epsilon, objective = objective, failureReturns = failureReturns),
+                                               silent = TRUE), type = c("output", "message")))
+    if(any(class(currentFit) == "try-error")){
+      warning(paste0("Optimization for ", parameter, " = ", value, " failed."))
+      next}
+    if(currentFit$convergence > 0 && !silent){
+      warning(paste0("Rsolnp reports convcode = ", currentFit$convergence, " for ", parameter, " = ", value, ". See ?Rsolnp::solnp for more details."))}
+    lik[which(value == values)] <- currentFit$values[length(currentFit$values)]
+  }
+
+  return(data.frame("parameterValue" = values, "Likelihood" = lik))
+
+}
+
+#' profileLikelihoodFromRegCtsem
+#'
+#' computes the profile likelihood for a selected parameter based on a regularized model
+#'
+#' @param regCtsemObject model of type regCtsem
+#' @param parameter label of the parameter for which the profile likelihood should be computed
+#' @param values values for the parameter at which the profile likelihood will be computed
+#' @param lambda penalty value
+#' @examples
+#' set.seed(17046)
+#'
+#' library(regCtsem)
+#'
+#' #### Example 1 ####
+#' ## Regularization with FIML objective function
+#'
+#' ## Population model:
+#'
+#' # set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
+#' ct_drift <- matrix(c(-.3,.2,0,-.5), ncol = 2)
+#'
+#' generatingModel<-ctsem::ctModel(Tpoints=10,n.latent=2,n.TDpred=0,
+#'                                 n.TIpred=0,n.manifest=2,
+#'                                 MANIFESTVAR=diag(0,2),
+#'                                 LAMBDA=diag(1,2),
+#'                                 DRIFT=ct_drift,
+#'                                 DIFFUSION=matrix(c(.5,0,0,.5),2),
+#'                                 CINT=matrix(c(0,0),nrow=2),
+#'                                 T0MEANS=matrix(0,ncol=1,nrow=2),
+#'                                 T0VAR=diag(1,2), type = "omx")
+#'
+#' # simulate a training data set
+#' dat <- ctsem::ctGenerate(generatingModel, n.subjects = 100, wide = TRUE)
+#'
+#' ## Build the analysis model. Note that drift eta1_eta2 is freely estimated
+#' # although it is 0 in the population.
+#' myModel <- ctsem::ctModel(Tpoints=10,n.latent=2,n.TDpred=0,
+#'                           n.TIpred=0,n.manifest=2,
+#'                           LAMBDA=diag(1,2),
+#'                           MANIFESTVAR=diag(0,2),
+#'                           CINT=matrix(c(0,0),nrow=2),
+#'                           DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
+#'                           T0MEANS=matrix(0,ncol=1,nrow=2),
+#'                           T0VAR="auto", type = "omx")
+#'
+#' # fit the model using ctsemOMX:
+#' fit_myModel <- ctsemOMX::ctFit(dat, myModel)
+#'
+#' # select DRIFT values for regularization:
+#' regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
+#' # Note: If you are unsure what the parameters are called in
+#' # your model, check: fit_myModel$ctmodelobj$DRIFT for the drift or
+#' # omxGetParameters(fit_myModel$ctmodelobj) for all parameters
+#'
+#' # Optimize model using GIST with lasso penalty
+#' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+#'                                dataset = dat,
+#'                                regIndicators = regIndicators,
+#'                                lambdas = "auto",
+#'                                lambdasAutoLength = 5)
+#'
+#' # compute profile likelihood for drift_eta2_eta1 and lambda = 0
+#' pl1 <- profileLikelihoodFromRegCtsem(regCtsemObject = regModel, parameter = "drift_eta2_eta1",
+#'                                      values = seq(-1,1,.1),
+#'                                      lambda = 0)
+#'
+#' # compute profile likelihood for drift_eta2_eta1 and lambda = 10
+#' pl2 <- profileLikelihoodFromRegCtsem(regCtsemObject = regModel, parameter = "drift_eta2_eta1",
+#'                                      values = seq(-1,1,.1),
+#'                                      lambda = 10)
+#' @export
+profileLikelihoodFromRegCtsem <- function(regCtsemObject, parameter, values, lambda){
+  if(!(regModel$setup$penalty == "lasso" || regModel$setup$penalty == "adaptiveLasso")){
+    stop("Only implemented for lasso or adaptive lasso")
+  }
+  lambdas <- regModel$setup$lambdas
+  closestLambda <- which(abs(lambdas - lambda) == min(abs(lambdas - lambda)))[1]
+  startingValues <- regModel$parameterEstimatesRaw[,closestLambda]
+  pl <- profileLikelihood(cpptsemObject = regModel$setup$cpptsemObject,
+                          parameter = parameter,
+                          values = values,
+                          lambda = lambda,
+                          startingValues = startingValues,
+                          adaptiveLassoWeights = regModel$setup$adaptiveLassoWeights,
+                          N = ifelse(regModel$setup$scaleLambdaWithN,
+                                     nrow(regModel$setup$dataset),
+                                     1),
+                          regIndicators = regModel$setup$regIndicators,
+                          targetVector = regModel$setup$targetVector
+  )
+  plot(x = pl$parameterValue, y = pl$Likelihood,
+       main = "Profile Likelihood",
+       xlab = parameter,
+       ylab = "regularized likelihood value",
+       type = "l")
+  return(pl)
+}
+
+
 #' checkIdentification
 #'
 #' Checks the local identification of a model around the provided parameters
