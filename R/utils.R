@@ -1,3 +1,36 @@
+#' restore
+#'
+#' restore the cpptsem object in a regCtsem object.
+#'
+#' After saving and loading a regCtsem object, the underlying C++ model will be lost. This function resores that model
+#' @param regCtsemObject object of type regCtsem
+#' @export
+restore <- function(regCtsemObject){
+  if(regCtsemObject$setup$autoCV != "No"){
+    stop("Restoring currently not supported for models with automatic cross-validation")
+  }
+  if(is.null(regCtsemObject$setup$subjectSpecificParameters)){
+    regCtsemObject$setup$cpptsemObject <- cpptsemFromCtsem(ctsemModel = regCtsemObject$setup$ctsemObject, wideData = regCtsemObject$setup$dataset, removeD = TRUE)
+  }else{
+    regCtsemObject$setup$cpptsemObject <- cpptsemFromCtsem(ctsemModel = regCtsemObject$setup$ctsemObject, wideData = regCtsemObject$setup$dataset, removeD = TRUE, group = seq(1,nrow(regCtsemObject$setup$dataset)), groupSpecificParameters = regCtsemObject$setup$subjectSpecificParameters)
+  }
+  if(!is.null(regCtsemObject$parameterEstimatesRaw)){
+    regCtsemObject$setup$cpptsemObject$setParameterValues(regCtsemObject$parameterEstimatesRaw[,1], rownames(regCtsemObject$parameterEstimatesRaw))
+  }
+
+  if(regCtsemObject$setup$objective == "Kalman"){
+    regCtsemObject$setup$cpptsemObject$computeAndFitKalman()
+  }
+
+  if(regCtsemObject$setup$objective == "ML"){
+    regCtsemObject$setup$cpptsemObject$computeRAM()
+    regCtsemObject$setup$cpptsemObject$fitRAM()
+  }
+
+  return(regCtsemObject)
+}
+
+
 #' profileLikelihood
 #'
 #' computes the profile likelihood for a selected parameter
@@ -116,8 +149,10 @@ profileLikelihood <- function(cpptsemObject,
   }
 
   lik <- rep(NA, length(values))
+  pb <- txtProgressBar(min = 1, max = length(values))
 
   for(value in values){
+    setTxtProgressBar(pb, which(values == value))
     # set parameter
     startingValues[parameter] <- value
     cpptsemObject$setParameterValues(startingValues, names(startingValues))
@@ -219,23 +254,23 @@ profileLikelihood <- function(cpptsemObject,
 #'  }
 #' @export
 profileLikelihoodFromRegCtsem <- function(regCtsemObject, parameter, values, lambda){
-  if(!(regModel$setup$penalty == "lasso" || regModel$setup$penalty == "adaptiveLasso")){
+  if(!(regCtsemObject$setup$penalty == "lasso" || regCtsemObject$setup$penalty == "adaptiveLasso")){
     stop("Only implemented for lasso or adaptive lasso")
   }
-  lambdas <- regModel$setup$lambdas
+  lambdas <- regCtsemObject$setup$lambdas
   closestLambda <- which(abs(lambdas - lambda) == min(abs(lambdas - lambda)))[1]
-  startingValues <- regModel$parameterEstimatesRaw[,closestLambda]
-  pl <- profileLikelihood(cpptsemObject = regModel$setup$cpptsemObject,
+  startingValues <- regCtsemObject$parameterEstimatesRaw[,closestLambda]
+  pl <- profileLikelihood(cpptsemObject = regCtsemObject$setup$cpptsemObject,
                           parameter = parameter,
                           values = values,
                           lambda = lambda,
                           startingValues = startingValues,
-                          adaptiveLassoWeights = regModel$setup$adaptiveLassoWeights,
-                          N = ifelse(regModel$setup$scaleLambdaWithN,
-                                     nrow(regModel$setup$dataset),
+                          adaptiveLassoWeights = regCtsemObject$setup$adaptiveLassoWeights,
+                          N = ifelse(regCtsemObject$setup$scaleLambdaWithN,
+                                     nrow(regCtsemObject$setup$dataset),
                                      1),
-                          regIndicators = regModel$setup$regIndicators,
-                          targetVector = regModel$setup$targetVector
+                          regIndicators = regCtsemObject$setup$regIndicators,
+                          targetVector = regCtsemObject$setup$targetVector
   )
   plot(x = pl$parameterValue, y = pl$Likelihood,
        main = "Profile Likelihood",

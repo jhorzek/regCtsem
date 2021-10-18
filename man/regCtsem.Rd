@@ -150,6 +150,13 @@ plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 # WARNING: The returned model is of type cpptsem. You can access it's elements with the
 # $ operator. For example: bestModel$DRIFTValues
 
+# WARNING: If you load an existing regCtsem object, the underlying C++ model will no longer
+# exist. You can restore this model with restore(). Example:
+# save(regModel, file = "regModel.RData")
+# load("regModel.RData")
+# regModel <- restore(regModel)
+# regModel$setup$cpptsemObject$DRIFTValues
+
 # Optimize model using GLMNET with lasso penalty
 regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
                                dataset = dat,
