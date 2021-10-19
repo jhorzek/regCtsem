@@ -567,13 +567,12 @@ regCtsem <- function(
         cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
       }
       # optimize
-      fitTrain <- try(optim(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(),
-                            fn = fitCpptsem,
-                            gr = gradCpptsem,
-                            method = "L-BFGS-B",
-                            cpptsemObject = cvFoldsAndModels$trainModels[[i]],
-                            objective = argsIn$objective,
-                            failureReturns = NA
+      fitTrain <- try(Rsolnp::solnp(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(),
+                                    fn = fitCpptsem,
+                                    #gr = gradCpptsem,
+                                    cpptsemObject = cvFoldsAndModels$trainModels[[i]],
+                                    objective = argsIn$objective,
+                                    failureReturns = .Machine$double.xmax/2
       ), silent = TRUE)
       if(!any(class(fitTrain) == "try-error")){
         cvFoldsAndModels$trainModels[[i]]$setParameterValues(fitTrain$par, names(fitTrain$par))
@@ -771,13 +770,12 @@ regCtsem <- function(
         cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
       }
       # optimize
-      fitTrain <- try(optim(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(),
+      fitTrain <- try(Rsolnp::solnp(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(),
                             fn = fitCpptsem,
-                            gr = gradCpptsem,
-                            method = "L-BFGS-B",
+                            #gr = gradCpptsem,
                             cpptsemObject = cvFoldsAndModels$trainModels[[i]],
                             objective = argsIn$objective,
-                            failureReturns = NA
+                            failureReturns = .Machine$double.xmax/2
       ), silent = TRUE)
       if(!any(class(fitTrain) == "try-error")){
         cvFoldsAndModels$trainModels[[i]]$setParameterValues(fitTrain$par, names(fitTrain$par))

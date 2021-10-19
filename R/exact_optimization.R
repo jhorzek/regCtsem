@@ -377,12 +377,18 @@ exact_tryStartingValues <- function(startingValues,
     if(numStart > 0){
       warning("Can not try different starting values because sparseParameters is empty.")
     }
-    invisible(capture.output(newStartingValues <- tryApproxFirst(startingValues = startingValues, returnAs = returnAs,
-                                     approxFirst = approxFirst, numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
-                                     lambda = lambda,
-                                     cpptsemObject = cpptsemObject,
-                                     regIndicators = regIndicators, targetVector = targetVector,
-                                     adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters), type = "message"))
+    invisible(capture.output(newStartingValues <- tryApproxFirst(startingValues = startingValues,
+                                                                 returnAs = returnAs,
+                                                                 approxFirst = approxFirst,
+                                                                 numStart = numStart,
+                                                                 controlApproxOptimizer = controlApproxOptimizer,
+                                                                 lambda = lambda,
+                                                                 cpptsemObject = cpptsemObject,
+                                                                 regIndicators = regIndicators,
+                                                                 targetVector = targetVector,
+                                                                 adaptiveLassoWeights = adaptiveLassoWeights,
+                                                                 objective = objective,
+                                                                 sparseParameters = sparseParameters), type = "message"))
     if(any(class(newStartingValues) == "try-error")){
       return(startingValues)
     }
@@ -404,13 +410,19 @@ exact_tryStartingValues <- function(startingValues,
     parameterValues_i <- weight*startingValues[parameterNames]+(1-weight)*sparseParameters[parameterNames]
     startValuesTable[parameterNames,i] <- parameterValues_i[parameterNames]
     # set parameters
-    invisible(capture.output(optimized <- try(tryApproxFirst(startingValues = parameterValues_i, returnAs = "full",
-                                    approxFirst = approxFirst, numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
-                                    lambda = lambda,
-                                    cpptsemObject = cpptsemObject,
-                                    regIndicators = regIndicators, targetVector = targetVector,
-                                    adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters),
-                     silent = TRUE), type = "message"))
+    invisible(capture.output(optimized <- try(tryApproxFirst(startingValues = parameterValues_i,
+                                                             returnAs = "full",
+                                                             approxFirst = approxFirst,
+                                                             numStart = numStart,
+                                                             controlApproxOptimizer = controlApproxOptimizer,
+                                                             lambda = lambda,
+                                                             cpptsemObject = cpptsemObject,
+                                                             regIndicators = regIndicators,
+                                                             targetVector = targetVector,
+                                                             adaptiveLassoWeights = adaptiveLassoWeights,
+                                                             objective = objective,
+                                                             sparseParameters = sparseParameters),
+                                              silent = TRUE), type = "message"))
     if(any(class(optimized) == "try-error")){
       next
     }
@@ -467,22 +479,41 @@ tryApproxFirst <- function(startingValues, returnAs,
   }
 
   if(approxFirst && !is.null(cpptsemObject)){
+    if(!is.null(controlApproxOptimizer$nudgeVariancesLambda) && controlApproxOptimizer$nudgeVariancesLambda > 0){
+      varianceLabels <- cpptsemObject$parameterTable$label[grepl("base", cpptsemObject$parameterTable$matrix) & cpptsemObject$parameterTable$row == cpptsemObject$parameterTable$col]
+      if(!any(varianceLabels %in% regIndicators)){
+        # only use nudging if variances are not already regularized
+        regIndicators_nudged <- c(regIndicators, varianceLabels)
+        targetVector_nudged <- c(targetVector, rep(controlApproxOptimizer$nudgeVariancesTarget, length(varianceLabels))) # exp(-1.609438) = .2
+        names(targetVector_nudged) <- regIndicators_nudged
+        adaptiveLassoWeights_nudged <- adaptiveLassoWeights
+        adaptiveLassoWeights_nudged[varianceLabels] <- ifelse(lambda == 0, 0, controlApproxOptimizer$nudgeVariancesLambda/lambda)
+      }else{
+        regIndicators_nudged <- regIndicators
+        targetVector_nudged <- targetVector
+        adaptiveLassoWeights_nudged <- adaptiveLassoWeights
+      }
+    }else{
+      regIndicators_nudged <- regIndicators
+      targetVector_nudged <- targetVector
+      adaptiveLassoWeights_nudged <- adaptiveLassoWeights
+    }
     if(controlApproxOptimizer$package == "optimx"){
-    optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
-                                          regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                  regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                  regCtsem::approx_KalmanRegM2LLCpptsem),
-                                          gradCpptsem = regCtsem::approx_gradCpptsem,
-                                          startingValues = startingValues,
-                                          adaptiveLassoWeights = adaptiveLassoWeights,
-                                          N = 1, # lambda is already adjusted
-                                          lambda = lambda,
-                                          regIndicators = regIndicators,
-                                          targetVector = targetVector,
-                                          epsilon = 10^(-8),
-                                          objective = objective,
-                                          testGradients = TRUE,
-                                          controlOptimx = controlApproxOptimizer, silent = TRUE), silent = TRUE)
+      optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
+                                            regM2LLCpptsem = ifelse(tolower(objective) == "ml",
+                                                                    regCtsem::approx_RAMRegM2LLCpptsem,
+                                                                    regCtsem::approx_KalmanRegM2LLCpptsem),
+                                            gradCpptsem = regCtsem::approx_gradCpptsem,
+                                            startingValues = startingValues,
+                                            adaptiveLassoWeights = adaptiveLassoWeights_nudged,
+                                            N = 1, # lambda is already adjusted
+                                            lambda = lambda,
+                                            regIndicators = regIndicators_nudged,
+                                            targetVector = targetVector_nudged,
+                                            epsilon = 10^(-8),
+                                            objective = objective,
+                                            testGradients = TRUE,
+                                            controlOptimx = controlApproxOptimizer, silent = TRUE), silent = TRUE)
     }else if(tolower(controlApproxOptimizer$package) == "rsolnp"){
       optimized <- try(approx_cpptsemRsolnp(cpptsemmodel = cpptsemObject,
                                             regM2LLCpptsem = ifelse(tolower(objective) == "ml",
@@ -490,11 +521,11 @@ tryApproxFirst <- function(startingValues, returnAs,
                                                                     regCtsem::approx_KalmanRegM2LLCpptsem),
                                             gradCpptsem = regCtsem::approx_gradCpptsem,
                                             startingValues = startingValues,
-                                            adaptiveLassoWeights = adaptiveLassoWeights,
+                                            adaptiveLassoWeights = adaptiveLassoWeights_nudged,
                                             N = 1, # lambda is already adjusted
                                             lambda = lambda,
-                                            regIndicators = regIndicators,
-                                            targetVector = targetVector,
+                                            regIndicators = regIndicators_nudged,
+                                            targetVector = targetVector_nudged,
                                             epsilon = 10^(-8),
                                             objective = objective,
                                             testGradients = TRUE,

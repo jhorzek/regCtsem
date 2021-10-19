@@ -24,6 +24,8 @@ controlApprox <- function(forceCpptsem = FALSE, # should the C++ translation be 
 #'
 #' list with settings used for optimization with optimx
 #' @param package set to "optimx"
+#' @param nudgeVariancesLambda numeric value >= 0. The variances in ctsem and cpptsem are implemented with the log-Chol decomposition and result in a very flat likelihood. This can be address by nudging the covariance parameters towards a more sensible area to get better starting values. nudgeVariancesLambda controls the strength if this nudging and nudgeVariancesTarget the target towards which the variances are nudged.
+#' @param nudgeVariancesTarget target value towards which the variance estimates are nudged in the approximate optimization. This is only used when the approximate optimization is followed by an exact optimization. The value log(.4) means that the variance parameters are regularized towards .4; note that this might not be a very sensible value for your specific application. The sole purpose for this nudging is to get in an area of the exp-function exp(x) where a change in x has some considerable impact on exp(x). plot(seq(-10,0,length.out = 1000), exp(seq(-10,0,length.out = 1000)), type = "l")
 #' @param failureReturns what will the fitting function return if the current points are impossible? Depends on the method used
 #' @param hess Should the Hessian be computed at the solution
 #' @param lower lower bounds for paramters
@@ -33,6 +35,8 @@ controlApprox <- function(forceCpptsem = FALSE, # should the C++ translation be 
 #' @param control control passed to optimx
 #' @export
 controlOptimx <- function(package = "optimx",
+                          nudgeVariancesLambda = 0,
+                          nudgeVariancesTarget = log(.4),
                           failureReturns = .Machine$double.xmax/2,
                           hess = NULL,
                           lower = -Inf,
@@ -45,6 +49,8 @@ controlOptimx <- function(package = "optimx",
                                          "maxit" = 200)){
   return(list(
     "package" = package, # package from where the optimizer is taken
+    "nudgeVariancesLambda" = nudgeVariancesLambda,
+    "nudgeVariancesTarget" = nudgeVariancesTarget,
     "failureReturns" = failureReturns, # not part of the optimx documentation; controls the value that will be returned if the current paramter values are impossible
     "hess" = hess,
     "lower" = lower,
@@ -60,6 +66,8 @@ controlOptimx <- function(package = "optimx",
 #'
 #' list with settings used for optimization with Rsolnp
 #' @param package set to "Rsolnp"
+#' @param nudgeVariancesLambda numeric value >= 0. The variances in ctsem and cpptsem are implemented with the log-Chol decomposition and result in a very flat likelihood. This can be address by nudging the covariance parameters towards a more sensible area to get better starting values. nudgeVariancesLambda controls the strength if this nudging and nudgeVariancesTarget the target towards which the variances are nudged.
+#' @param nudgeVariancesTarget target value towards which the variance estimates are nudged in the approximate optimization. This is only used when the approximate optimization is followed by an exact optimization. The value log(.4) means that the variance parameters are regularized towards .4; note that this might not be a very sensible value for your specific application. The sole purpose for this nudging is to get in an area of the exp-function exp(x) where a change in x has some considerable impact on exp(x). plot(seq(-10,0,length.out = 1000), exp(seq(-10,0,length.out = 1000)), type = "l")
 #' @param failureReturns what will the fitting function return if the current points are impossible?
 #' @param eqfun Equality constraints function. See ?Rsolnp::solnp
 #' @param eqB Equality constraints. See ?Rsolnp::solnp
@@ -71,6 +79,8 @@ controlOptimx <- function(package = "optimx",
 #' @param control control passed to Rsolnp
 #' @export
 controlRsolnp <- function(package = "Rsolnp",
+                          nudgeVariancesLambda = 0,
+                          nudgeVariancesTarget = log(.4),
                           failureReturns = .Machine$double.xmax/2,
                           eqfun = NULL, eqB = NULL, ineqfun = NULL, ineqLB = NULL,
                           ineqUB = NULL, LB = NULL, UB = NULL,
@@ -78,6 +88,8 @@ controlRsolnp <- function(package = "Rsolnp",
 ){
   return(list(
     "package" = package, # package from where the optimizer is taken
+    "nudgeVariancesLambda" = nudgeVariancesLambda,
+    "nudgeVariancesTarget" = nudgeVariancesTarget,
     "failureReturns" = failureReturns, # not part of the optimx documentation; controls the value that will be returned if the current paramter values are impossible
     "eqfun" = eqfun,
     "eqB" = eqB,
@@ -122,7 +134,10 @@ controlGIST <- function(forceCpptsem = FALSE, # should the C++ translation be en
                         GISTNonMonotoneNBack = 5,# in case of non-monotone line search: Number of preceding regM2LL values to consider
                         approxFirst = TRUE, # Should approximate optimization be used first to obtain start values for exact optimization?
                         numStart = 0, # Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-                        controlApproxOptimizer = controlRsolnp(control = list("outer.iter" = 50, "trace" = 0))){
+                        controlApproxOptimizer = controlRsolnp(
+                          nudgeVariancesLambda = .2,
+                          nudgeVariancesTarget = log(.4),
+                          control = list("outer.iter" = 50, "trace" = 0))){
   return(controlGIST <- list(
     "forceCpptsem" = forceCpptsem, # should the C++ translation be enforced even if results differ from ctsem? Sometimes differences between the C++ implementation and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
     "stepSize" =  stepSize, # initial step size of the outer iteration
@@ -166,24 +181,26 @@ controlGIST <- function(forceCpptsem = FALSE, # should the C++ translation be en
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
 #' @param controlApproxOptimizer settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox
 #' @export
-controlGLMNET <- function(      tryCpptsem = TRUE, # should regCtsem try to translate the model to C++? This can speed up the computation considerably but might fail for some models
-                                forceCpptsem = FALSE, # should the C++ translation be enforced even if results differ from ctsem? Sometimes differences between the C++ implementation and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
-                                stepSize =  1, # initial step size of the outer iteration
-                                lineSearch = "GLMNET", # String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.
-                                c1 = .0001, # c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"
-                                c2 = .9, # c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
-                                sig = 10^(-5), # for lineSearch = 'GLMNET': Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 < sigma < 1
-                                gam = 0, # for lineSearch = 'GLMNET': Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 <= gamma < 1
-                                initialHessianApproximation = "OpenMx", # Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian
-                                maxIter_out = 100, # Maximal number of outer iterations
-                                maxIter_in = 1000, # Maximal number of inner iterations
-                                maxIter_line = 500, # Maximal number of iterations for the lineSearch procedure
-                                eps_out = .0000000001, # Stopping criterion for outer iterations
-                                eps_in = .0000000001, # Stopping criterion for inner iterations
-                                eps_WW = .0001, #Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
-                                approxFirst = TRUE, # Should approximate optimization be used first to obtain start values for exact optimization?
-                                numStart = 0, # Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
-                                controlApproxOptimizer = controlRsolnp(control = list("outer.iter" = 50, "trace" = 0))){
+controlGLMNET <- function(tryCpptsem = TRUE, # should regCtsem try to translate the model to C++? This can speed up the computation considerably but might fail for some models
+                          forceCpptsem = FALSE, # should the C++ translation be enforced even if results differ from ctsem? Sometimes differences between the C++ implementation and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
+                          stepSize =  1, # initial step size of the outer iteration
+                          lineSearch = "GLMNET", # String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.
+                          c1 = .0001, # c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"
+                          c2 = .9, # c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
+                          sig = 10^(-5), # for lineSearch = 'GLMNET': Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 < sigma < 1
+                          gam = 0, # for lineSearch = 'GLMNET': Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421, Equation 20. Defaults to 0. Has to be in 0 <= gamma < 1
+                          initialHessianApproximation = "OpenMx", # Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian
+                          maxIter_out = 100, # Maximal number of outer iterations
+                          maxIter_in = 1000, # Maximal number of inner iterations
+                          maxIter_line = 500, # Maximal number of iterations for the lineSearch procedure
+                          eps_out = .0000000001, # Stopping criterion for outer iterations
+                          eps_in = .0000000001, # Stopping criterion for inner iterations
+                          eps_WW = .0001, #Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
+                          approxFirst = TRUE, # Should approximate optimization be used first to obtain start values for exact optimization?
+                          numStart = 0, # Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+                          controlApproxOptimizer = controlRsolnp(nudgeVariancesLambda = .2,
+                                                                 nudgeVariancesTarget = log(.4),
+                                                                 control = list("outer.iter" = 50, "trace" = 0))){
   return(
     controlGLMNET <- list(
       "tryCpptsem" = tryCpptsem, # should regCtsem try to translate the model to C++? This can speed up the computation considerably but might fail for some models

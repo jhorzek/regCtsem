@@ -55,7 +55,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
                        numStart,# = 3,
                        controlApproxOptimizer,
                        verbose# = 0
-                       ){
+){
   # Setup
   # get parameter values
   initialParameters <- cpptsemObject$getParameterValues()
@@ -96,22 +96,39 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
 
     # should the results first be approximated?
     if(approxFirst){
-      startingValues <- exact_tryStartingValues(startingValues = startingValues, returnAs = "vector",
-                                       approxFirst = approxFirst, numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
-                                       lambda = lambda,
-                                       cpptsemObject = cpptsemObject,
-                                       regIndicators = regIndicators, targetVector = targetVector,
-                                       adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters)
+      startingValues <- exact_tryStartingValues(startingValues = startingValues,
+                                                returnAs = "vector",
+                                                approxFirst = approxFirst,
+                                                numStart = numStart,
+                                                controlApproxOptimizer = controlApproxOptimizer,
+                                                lambda = lambda,
+                                                cpptsemObject = cpptsemObject,
+                                                regIndicators = regIndicators,
+                                                targetVector = targetVector,
+                                                adaptiveLassoWeights = adaptiveLassoWeights,
+                                                objective = objective,
+                                                sparseParameters = sparseParameters)
     }
     # use Gist
     if(is.null(targetVector) || all(targetVector == 0)){
-      resGIST <- try(regCtsem::GIST(cpptsemObject = cpptsemObject, startingValues = startingValues,
-                                    objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
+      resGIST <- try(regCtsem::GIST(cpptsemObject = cpptsemObject,
+                                    startingValues = startingValues,
+                                    objective = objective,
+                                    lambda = lambda,
+                                    adaptiveLassoWeights = adaptiveLassoWeights,
                                     regularizedParameters = regIndicators,
-                                    eta = eta, sig = sig, initialStepsize = initialStepsize, stepsizeMin = stepsizeMin, stepsizeMax = stepsizeMax,
-                                    GISTLinesearchCriterion = GISTLinesearchCriterion, GISTNonMonotoneNBack = GISTNonMonotoneNBack,
-                                    maxIter_out = maxIter_out, maxIter_in = maxIter_in,
-                                    break_outer = break_outer, verbose = verbose, silent = FALSE))
+                                    eta = eta,
+                                    sig = sig,
+                                    initialStepsize = initialStepsize,
+                                    stepsizeMin = stepsizeMin,
+                                    stepsizeMax = stepsizeMax,
+                                    GISTLinesearchCriterion = GISTLinesearchCriterion,
+                                    GISTNonMonotoneNBack = GISTNonMonotoneNBack,
+                                    maxIter_out = maxIter_out,
+                                    maxIter_in = maxIter_in,
+                                    break_outer = break_outer,
+                                    verbose = verbose,
+                                    silent = FALSE))
     }else{
       resGIST <- try(regCtsem::GISTWithTarget(cpptsemObject = cpptsemObject, startingValues = startingValues,
                                               objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
@@ -221,7 +238,7 @@ GIST <- function(cpptsemObject,
                  break_outer,# = c("parameterChange" = 10^(-5)),
                  verbose,# = 0,
                  silent # = FALSE
-                 ){
+){
   break_crit <- names(break_outer)
   # iteration counter
   k_out <- 1
@@ -587,7 +604,7 @@ GISTWithTarget <- function(cpptsemObject,
                            break_outer,# = c("parameterChange" = 10^(-5)),
                            verbose,# = 0,
                            silent # = FALSE
-                           ){
+){
   break_crit <- names(break_outer)
   # iteration counter
   k_out <- 1
