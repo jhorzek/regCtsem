@@ -5,16 +5,19 @@
 #' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
+#' @param nMultistart controls how many different starting values are tried when estimating lambda_max
 #' @param controlApproxOptimizer settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox
 #' @export
 controlApprox <- function(forceCpptsem = FALSE, # should the C++ translation be enforced even if results differ from ctsem? Sometimes differences between the C++ implementation and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
                           epsilon = .001, # epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
                           zeroThresh = .04, # threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
+                          nMultistart = 5,
                           controlApproxOptimizer = controlRsolnp(control = list("outer.iter" = 500, "trace" = 0))){
   return(controlApprox <- list(
     "forceCpptsem" = forceCpptsem, # should the C++ translation be enforced even if results differ from ctsem? Sometimes differences between the C++ implementation and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
     "epsilon" = epsilon, # epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
     "zeroThresh" = zeroThresh, # threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
+    "nMultistart" = nMultistart,
     "controlApproxOptimizer" = controlApproxOptimizer
   )
   )
@@ -119,6 +122,7 @@ controlRsolnp <- function(package = "Rsolnp",
 #' @param GISTNonMonotoneNBack in case of non-monotone line search: Number of preceding regM2LL values to consider
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+#' @param nMultistart controls how many different starting values are tried when estimating lambda_max
 #' @param controlApproxOptimizer settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox
 #' @export
 controlGIST <- function(forceCpptsem = FALSE, # should the C++ translation be enforced even if results differ from ctsem? Sometimes differences between the C++ implementation and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
@@ -134,6 +138,7 @@ controlGIST <- function(forceCpptsem = FALSE, # should the C++ translation be en
                         GISTNonMonotoneNBack = 5,# in case of non-monotone line search: Number of preceding regM2LL values to consider
                         approxFirst = TRUE, # Should approximate optimization be used first to obtain start values for exact optimization?
                         numStart = 0, # Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+                        nMultistart = 5,
                         controlApproxOptimizer = controlRsolnp(
                           nudgeVariancesLambda = .2,
                           nudgeVariancesTarget = log(.4),
@@ -151,7 +156,8 @@ controlGIST <- function(forceCpptsem = FALSE, # should the C++ translation be en
     "GISTLinesearchCriterion" = GISTLinesearchCriterion, # criterion for accepting a step. Possible are 'monotone' which enforces a monotone decrease in the objective function or 'non-monotone' which also accepts some increase.
     "GISTNonMonotoneNBack" = GISTNonMonotoneNBack,# in case of non-monotone line search: Number of preceding regM2LL values to consider
     "approxFirst" = approxFirst, # Should approximate optimization be used first to obtain start values for exact optimization?
-    "numStart" = numStart, # Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+    "numStart" = numStart, # Used if approxFirst = TRUE. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+    "nMultistart" = nMultistart,
     "controlApproxOptimizer" = controlApproxOptimizer
   )
   )
@@ -179,6 +185,7 @@ controlGIST <- function(forceCpptsem = FALSE, # should the C++ translation be en
 #' @param eps_WW Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+#' @param nMultistart controls how many different starting values are tried when estimating lambda_max´
 #' @param controlApproxOptimizer settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox
 #' @export
 controlGLMNET <- function(tryCpptsem = TRUE, # should regCtsem try to translate the model to C++? This can speed up the computation considerably but might fail for some models
@@ -197,7 +204,8 @@ controlGLMNET <- function(tryCpptsem = TRUE, # should regCtsem try to translate 
                           eps_in = .0000000001, # Stopping criterion for inner iterations
                           eps_WW = .0001, #Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
                           approxFirst = TRUE, # Should approximate optimization be used first to obtain start values for exact optimization?
-                          numStart = 0, # Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+                          numStart = 0, # Used if approxFirst = TRUE. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+                          nMultistart = 5,
                           controlApproxOptimizer = controlRsolnp(nudgeVariancesLambda = .2,
                                                                  nudgeVariancesTarget = log(.4),
                                                                  control = list("outer.iter" = 50, "trace" = 0))){
@@ -220,6 +228,7 @@ controlGLMNET <- function(tryCpptsem = TRUE, # should regCtsem try to translate 
       "eps_WW" = eps_WW, #Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
       "approxFirst" = approxFirst, # Should approximate optimization be used first to obtain start values for exact optimization?
       "numStart" = numStart, # Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
+      "nMultistart" = nMultistart,
       "controlApproxOptimizer" = controlApproxOptimizer
     )
   )

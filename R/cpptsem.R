@@ -1461,9 +1461,11 @@ gradCpptsem <- function(parameterValues, cpptsemObject, objective, free = labele
 #' generic optimization with Rslonp
 #'
 #' @param cpptsemObject model of type cpptsem
+#' @param free named logical vector indicating which of the parameters in cpptsemObject$getParameterValues() are free
+#' @param nMultistart number of multi-start iterations
 #' @param ... additional arguments passed to Rsonlp::solnp
 #' @export
-optimizeCpptsem <- function(cpptsemObject, free = "all", ...){
+optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
   # determine if Kalman or ML
   if(any(class(cpptsemObject) == "Rcpp_cpptsemKalmanModel")){
     objective <- "Kalman"
@@ -1476,9 +1478,74 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", ...){
     free <- rep(TRUE, length(startingValues))
     names(free) <- names(startingValues)
   }
+
+  if(nMultistart > 1){
+    startingValuesTable <- matrix(nrow = length(startingValues), ncol = nMultistart)
+    rownames(startingValuesTable) <- names(startingValues)
+    startingValuesTable[,1] <- startingValues
+    parameterTable <- cpptsemObject$parameterTable
+    for(parameter in 1:length(startingValues)){
+      if(!free[parameter]) {
+        startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- rep(parameterTable$value[parameter], nMultistart-1)
+        next
+      }
+      if(parameterTable$matrix[parameter] == "DRIFT"){
+        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], -.5, length.out = nMultistart-1)
+        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
+        next
+      }
+
+      if(parameterTable$matrix[parameter] == "DIFFUSIONbase"){
+        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], log(.5), length.out = nMultistart-1)
+        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
+        next
+      }
+
+      if(parameterTable$matrix[parameter] == "DIFFUSIONbase"){
+        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], log(.5), length.out = nMultistart-1)
+        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
+        next
+      }
+
+      if(parameterTable$matrix[parameter] == "T0VARbase"){
+        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], log(.5), length.out = nMultistart-1)
+        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
+        next
+      }
+
+      if(parameterTable$matrix[parameter] == "T0MEANS"){
+        startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
+        next
+      }
+
+      if(parameterTable$matrix[parameter] == "MANIFESTMEANS"){
+        startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
+        next
+      }
+      startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- rep(parameterTable$value[parameter], nMultistart-1)
+    }
+
+    optimizedValuesTable <- matrix(nrow = length(startingValues), ncol = nMultistart)
+    rownames(optimizedValuesTable) <- names(startingValues)
+    fit <- rep(NA, nMultistart)
+    for(it in 1:nMultistart){
+      cpptsemObject$setParameterValues(startingValuesTable[,it], rownames(startingValuesTable))
+      tryFit <- try(fitCpptsem(parameterValues = startingValuesTable[,it], cpptsemObject = cpptsemObject, objective = objective, free = free, failureReturns = .Machine$double.xmax/2), silent = TRUE)
+      if(any(class(tryFit) == "try-error") || tryFit == .Machine$double.xmax/2){next}
+      opt <- try(optimizeCpptsem(cpptsemObject = cpptsemObject, free = free, nMultistart = 0, ... = ...))
+      if(any(class(opt) == "try-error") || opt$values[length(opt$values)] == .Machine$double.xmax/2){next}
+      optimizedValuesTable[names(opt$pars),it] <- opt$pars
+      fit[it] <- opt$values[length(opt$values)]
+    }
+    if(all(is.na(fit))){stop("All fit attempts resulted in errors. Check your starting values")}
+    bestValues <- optimizedValuesTable[,which(fit == min(fit, na.rm = TRUE))[1]]
+    cpptsemObject$setParameterValues(bestValues, names(bestValues))
+    return(optimizeCpptsem(cpptsemObject = cpptsemObject, free = free, nMultistart = 0, ... = ...))
+  }
+
   failureReturns <- .Machine$double.xmax/2
 
-  invisible(capture.output(CpptsemFit <- try(Rsolnp::solnp(par = startingValues,
+  invisible(capture.output(CpptsemFit <- try(Rsolnp::solnp(par = startingValues[free],
                                                            fun = fitCpptsem,
                                                            #gr = gradCpptsem,
                                                            ...,

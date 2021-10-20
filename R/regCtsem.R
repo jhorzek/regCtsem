@@ -428,11 +428,11 @@ regCtsem <- function(
     # optimize subject specific model
     message("Fitting model with person-specific parameter estimates.")
     startingValues <- cpptsemObject$getParameterValues()
-    invisible(capture.output(CpptsemFit <- try(Rsolnp::solnp(par = startingValues,
-                                                             fun = regCtsem::approx_KalmanM2LLCpptsem,
-                                                             #gr = gradCpptsem,
-                                                             cpptsemmodel = cpptsemObject, failureReturns = .5*.Machine$double.xmax
-    ), silent = TRUE), type = c("output", "message")))
+
+    # optimize
+    invisible(capture.output(CpptsemFit <- try(optimizeCpptsem(cpptsemObject = cpptsemObject, nMultistart = argsIn$nMultistart),
+                                                silent = TRUE), type = c("output", "message")))
+
     if(CpptsemFit$convergence > 0){warning(paste0("Rsolnp reports convcode  > 0 for the model with person-specific parameter estimates: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
     if(any(class(CpptsemFit) == "try-error")){stop("Rsolnp for the model with person-specific parameter estimates resulted in errors.")}
 
@@ -508,6 +508,7 @@ regCtsem <- function(
                                                scaleLambdaWithN = argsIn$scaleLambdaWithN,
                                                approxFirst = argsIn$approxFirst,
                                                numStart = argsIn$numStart,
+                                               nMultistart = argsIn$nMultistart,
                                                controlApproxOptimizer = argsIn$controlApproxOptimizer,
                                                verbose = argsIn$verbose)
 
@@ -566,14 +567,11 @@ regCtsem <- function(
       }else{
         cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
       }
+
       # optimize
-      fitTrain <- try(Rsolnp::solnp(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(),
-                                    fn = fitCpptsem,
-                                    #gr = gradCpptsem,
-                                    cpptsemObject = cvFoldsAndModels$trainModels[[i]],
-                                    objective = argsIn$objective,
-                                    failureReturns = .Machine$double.xmax/2
-      ), silent = TRUE)
+      invisible(capture.output(fitTrain <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], nMultistart = argsIn$nMultistart),
+                                                  silent = TRUE), type = c("output", "message")))
+
       if(!any(class(fitTrain) == "try-error")){
         cvFoldsAndModels$trainModels[[i]]$setParameterValues(fitTrain$par, names(fitTrain$par))
       }else{
@@ -603,7 +601,8 @@ regCtsem <- function(
                                             objective = argsIn$objective,
                                             regIndicators = argsIn$regIndicators,
                                             targetVector = argsIn$targetVector,
-                                            adaptiveLassoWeights = argsIn$adaptiveLassoWeights[i,])
+                                            adaptiveLassoWeights = argsIn$adaptiveLassoWeights[i,],
+                                            nMultistart = argsIn$nMultistart)
         maxLambdas[i] <- maxLambda$maxLambda
         sparseParameters[names(maxLambda$sparseParameters),i] <- maxLambda$sparseParameters
         argsIn$sparseParameters <- sparseParameters
@@ -664,6 +663,7 @@ regCtsem <- function(
                                                  scaleLambdaWithN = argsIn$scaleLambdaWithN,
                                                  approxFirst = argsIn$approxFirst,
                                                  numStart = argsIn$numStart,
+                                                 nMultistart = argsIn$nMultistart,
                                                  controlApproxOptimizer = argsIn$controlApproxOptimizer,
                                                  verbose = argsIn$verbose)
 
@@ -712,6 +712,7 @@ regCtsem <- function(
                                                 epsilon = argsIn$epsilon,
                                                 zeroThresh = argsIn$zeroThresh,
                                                 controlApproxOptimizer = argsIn$controlApproxOptimizer,
+                                                nMultistart = argsIn$nMultistart,
                                                 # additional settings
                                                 scaleLambdaWithN = argsIn$scaleLambdaWithN,
                                                 verbose = argsIn$verbose)
@@ -769,14 +770,11 @@ regCtsem <- function(
       }else{
         cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
       }
+
       # optimize
-      fitTrain <- try(Rsolnp::solnp(par = cvFoldsAndModels$trainModels[[i]]$getParameterValues(),
-                            fn = fitCpptsem,
-                            #gr = gradCpptsem,
-                            cpptsemObject = cvFoldsAndModels$trainModels[[i]],
-                            objective = argsIn$objective,
-                            failureReturns = .Machine$double.xmax/2
-      ), silent = TRUE)
+      invisible(capture.output(sparseModel <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], free = freeParam, nMultistart = nMultistart),
+                                                  silent = TRUE), type = c("output", "message")))
+
       if(!any(class(fitTrain) == "try-error")){
         cvFoldsAndModels$trainModels[[i]]$setParameterValues(fitTrain$par, names(fitTrain$par))
       }else{
@@ -804,7 +802,8 @@ regCtsem <- function(
                                             objective = argsIn$objective,
                                             regIndicators = argsIn$regIndicators,
                                             targetVector = argsIn$targetVector,
-                                            adaptiveLassoWeights = argsIn$adaptiveLassoWeights[i,])
+                                            adaptiveLassoWeights = argsIn$adaptiveLassoWeights[i,],
+                                            nMultistart = control$nMultistart)
         maxLambdas[i] <- maxLambda$maxLambda
         sparseParameters[names(maxLambda$sparseParameters),i] <- maxLambda$sparseParameters
         argsIn$sparseParameters <- sparseParameters
@@ -846,6 +845,7 @@ regCtsem <- function(
                                                   objective = argsIn$objective,
                                                   epsilon = argsIn$epsilon,
                                                   zeroThresh = argsIn$zeroThresh,
+                                                  nMultistart = argsIn$nMultistart,
                                                   controlApproxOptimizer = argsIn$controlApproxOptimizer,
                                                   # additional settings
                                                   scaleLambdaWithN = argsIn$scaleLambdaWithN,
@@ -913,6 +913,7 @@ regCtsem <- function(
 #' @param approxFirst Should approximate optimization be used first to obtain start values for exact optimization?
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
 #' @param controlApproxOptimizer settings passed to optimx or Rsolnp
+#' @param nMultistart controls how many different starting values are tried when estimating lambda_max
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #'
 #' @author Jannik Orzek
@@ -962,6 +963,7 @@ exact_regCtsem <- function(  # model
   scaleLambdaWithN,# = TRUE,
   approxFirst,# = FALSE,
   numStart,# = 0,
+  nMultistart,
   controlApproxOptimizer,
   # additional settings
   verbose # = 0
@@ -987,7 +989,8 @@ exact_regCtsem <- function(  # model
                               objective = objective,
                               regIndicators = regIndicators,
                               targetVector = targetVector,
-                              adaptiveLassoWeights = adaptiveLassoWeights)
+                              adaptiveLassoWeights = adaptiveLassoWeights,
+                              nMultistart = nMultistart)
     sparseParameters <- maxLambda$sparseParameters
     maxLambda <- maxLambda$maxLambda + maxLambda$maxLambda/25 # adding some wiggle room as there will always be some deviations
     lambdas <- seq(0,maxLambda, length.out = lambdasAutoLength)
@@ -1113,6 +1116,7 @@ exact_regCtsem <- function(  # model
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
+#' @param nMultistart controls how many different starting values are tried when estimating lambda_max
 #' @param controlApproxOptimizer settings passed to optimx or Rsolnp
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
@@ -1140,6 +1144,7 @@ approx_regCtsem <- function(  # model
   epsilon,# = .001,
   zeroThresh,# = .001,
   controlApproxOptimizer,
+  nMultistart,
   # additional settings
   scaleLambdaWithN,# = TRUE,
   verbose# = 0
@@ -1165,7 +1170,8 @@ approx_regCtsem <- function(  # model
                               objective = objective,
                               regIndicators = regIndicators,
                               targetVector = targetVector,
-                              adaptiveLassoWeights = adaptiveLassoWeights)
+                              adaptiveLassoWeights = adaptiveLassoWeights,
+                              nMultistart = nMultistart)
     sparseParameters <- maxLambda$sparseParameters
     maxLambda <- maxLambda$maxLambda + maxLambda$maxLambda/25 # adding some wiggle room as there will always be some deviations
     lambdas <- seq(0,maxLambda, length.out = lambdasAutoLength)
@@ -1598,14 +1604,14 @@ getFlatStdizer <- function(VARIs, driftLabels){
 #' @param regIndicators Labels of the regularized parameters (e.g. drift_eta1_eta2)
 #' @param targetVector vector with target values
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the unregularized parameter estimates.
+#' @param nMultistart number of multi-start iterations
 #' @author Jannik Orzek
 #' @import OpenMx
 #' @export
-getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, adaptiveLassoWeights){
+getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, adaptiveLassoWeights, nMultistart){
   # This function is adapted from Murphy (2012) Machine learning: a probabilistic perspective. See p. 434 for more details.
   cat("Computing lambda_max ... ")
   converged <- FALSE
-  # warning("automatically determining the maximal lambda with getLambdaMax is still experimental! It only produces an approximation of the required lambdaMax which can be too large or too small.")
 
   it <- 0
   # save parameters
@@ -1686,12 +1692,7 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
     }
 
     # optimize
-    invisible(capture.output(sparseModel <- try(Rsolnp::solnp(par = param[freeParam],
-                                                              fun = fitCpptsem,
-                                                              cpptsemObject = cpptsemObject,
-                                                              objective = objective,
-                                                              free = freeParam,
-                                                              failureReturns = .Machine$double.xmax/2),
+    invisible(capture.output(sparseModel <- try(optimizeCpptsem(cpptsemObject = cpptsemObject, free = freeParam, nMultistart = nMultistart),
                                                 silent = TRUE), type = c("output", "message")))
 
     if(any(class(sparseModel) == "try-error")){
