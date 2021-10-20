@@ -744,7 +744,8 @@ regCtsem <- function(
     cvFoldsAndModels <- regCtsem::createCVFoldsAndModels(dataset = argsIn$dataset,
                                                          Tpoints = argsIn$Tpoints,
                                                          manifestNames = ctsemObject$ctmodelobj$manifestNames,
-                                                         k = argsIn$k, autoCV,
+                                                         k = argsIn$k,
+                                                         autoCV = autoCV,
                                                          initialPars = ("T0MEANS" %in%  argsIn$cpptsemObject$parameterTable$matrix) || ("T0VARbase" %in%  argsIn$cpptsemObject$parameterTable$matrix))
     if(!is.numeric(lambdas) && lambdas == "auto"){
       maxLambdas <- matrix(NA, nrow = 1, ncol = argsIn$k)
@@ -772,7 +773,7 @@ regCtsem <- function(
       }
 
       # optimize
-      invisible(capture.output(sparseModel <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], free = freeParam, nMultistart = nMultistart),
+      invisible(capture.output(sparseModel <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], nMultistart = nMultistart),
                                                   silent = TRUE), type = c("output", "message")))
 
       if(!any(class(fitTrain) == "try-error")){
