@@ -150,7 +150,7 @@ profileLikelihood <- function(cpptsemObject,
 
   lik <- rep(NA, length(values))
   pb <- txtProgressBar(min = 1, max = length(values))
-
+  startingValues2 <- startingValues[] # startingValues2 will be used as an alternative set of starting values based on the previous iteration
   for(value in values){
     setTxtProgressBar(pb, which(values == value))
     # set parameter
@@ -168,13 +168,37 @@ profileLikelihood <- function(cpptsemObject,
                                                              N = N, lambda_ = lambda, regIndicators = regIndicators, targetVector = targetVector,
                                                              epsilon = epsilon, objective = objective, failureReturns = failureReturns),
                                                silent = TRUE), type = c("output", "message")))
-    if(any(class(currentFit) == "try-error")){
+
+    if(!is.null(startingValues2)){
+      startingValues2[parameter] <- value
+      cpptsemObject$setParameterValues(startingValues2, names(startingValues2))
+
+      # optimize model
+      invisible(capture.output(currentFit2 <- try(Rsolnp::solnp(par = startingValues2,
+                                                               fun = fitFunction,
+                                                               #gr = gradCpptsem,
+                                                               eqfun = eqfun, eqB = eqB, ineqfun = ineqfun, ineqLB = ineqLB,
+                                                               ineqUB = ineqUB, LB = LB, UB = UB, control = control,
+                                                               cpptsemObject = cpptsemObject, free = free,
+                                                               adaptiveLassoWeights = adaptiveLassoWeights,
+                                                               N = N, lambda_ = lambda, regIndicators = regIndicators, targetVector = targetVector,
+                                                               epsilon = epsilon, objective = objective, failureReturns = failureReturns),
+                                                 silent = TRUE), type = c("output", "message")))
+
+    }
+    if(any(class(currentFit) == "try-error") && any(class(currentFit2) == "try-error")){
       warning(paste0("Optimization for ", parameter, " = ", value, " failed."))
       next}
-    if(currentFit$convergence > 0){
-      warning(paste0("Rsolnp reports convcode = ", currentFit$convergence, " for ", parameter, " = ", value, ". Skipping this value. See ?Rsolnp::solnp for more details."))
+    if((any(class(currentFit) == "try-error" || currentFit$convergence > 0) && (any(class(currentFit2) == "try-error") || currentFit2$convergence > 0))){
+      warning(paste0("Rsolnp resulted in errors for ", parameter, " = ", value, ". Skipping this value."))
       next
-      }
+    }
+    if(any(class(currentFit) == "try-error") || currentFit$convergence > 0 || currentFit$values[length(currentFit$values)] > currentFit2$values[length(currentFit2$values)]){
+      startingValues2 <- currentFit2$pars
+      lik[which(value == values)] <- currentFit2$values[length(currentFit2$values)]
+      next
+    }
+    startingValues2 <- currentFit$pars
     lik[which(value == values)] <- currentFit$values[length(currentFit$values)]
   }
 
