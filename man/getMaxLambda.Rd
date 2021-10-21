@@ -9,7 +9,8 @@ getMaxLambda(
   objective,
   regIndicators,
   targetVector,
-  adaptiveLassoWeights
+  adaptiveLassoWeights,
+  nMultistart
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ getMaxLambda(
 \item{targetVector}{vector with target values}
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the unregularized parameter estimates.}
+
+\item{nMultistart}{number of multi-start iterations}
 }
 \description{
 computes an approximation of the lowest lambda which will set all regularized parameters to zero. This function is adapted from Murphy (2012) Machine learning: a probabilistic perspective. See p. 434 for more details.

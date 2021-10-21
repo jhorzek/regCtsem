@@ -6,6 +6,8 @@
 \usage{
 controlOptimx(
   package = "optimx",
+  nudgeVariancesLambda = 0,
+  nudgeVariancesTarget = log(0.4),
   failureReturns = .Machine$double.xmax/2,
   hess = NULL,
   lower = -Inf,
@@ -18,6 +20,10 @@ controlOptimx(
 }
 \arguments{
 \item{package}{set to "optimx"}
+
+\item{nudgeVariancesLambda}{numeric value >= 0. The variances in ctsem and cpptsem are implemented with the log-Chol decomposition and result in a very flat likelihood. This can be address by nudging the covariance parameters towards a more sensible area to get better starting values. nudgeVariancesLambda controls the strength if this nudging and nudgeVariancesTarget the target towards which the variances are nudged.}
+
+\item{nudgeVariancesTarget}{target value towards which the variance estimates are nudged in the approximate optimization. This is only used when the approximate optimization is followed by an exact optimization. The value log(.4) means that the variance parameters are regularized towards .4; note that this might not be a very sensible value for your specific application. The sole purpose for this nudging is to get in an area of the exp-function exp(x) where a change in x has some considerable impact on exp(x). plot(seq(-10,0,length.out = 1000), exp(seq(-10,0,length.out = 1000)), type = "l")}
 
 \item{failureReturns}{what will the fitting function return if the current points are impossible? Depends on the method used}
 

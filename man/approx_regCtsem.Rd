@@ -21,6 +21,7 @@ approx_regCtsem(
   epsilon,
   zeroThresh,
   controlApproxOptimizer,
+  nMultistart,
   scaleLambdaWithN,
   verbose
 )
@@ -57,6 +58,8 @@ approx_regCtsem(
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
 
 \item{controlApproxOptimizer}{settings passed to optimx or Rsolnp}
+
+\item{nMultistart}{controls how many different starting values are tried when estimating lambda_max}
 
 \item{scaleLambdaWithN}{Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent}
 

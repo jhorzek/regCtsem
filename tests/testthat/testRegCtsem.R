@@ -3,7 +3,7 @@
 library(regCtsem)
 
 testthat::test_that(desc = "Testing basic features of regCtsem", code = {
-
+  skip_on_cran()
   set.seed(175446)
 
   ## define the population model:

@@ -3,6 +3,7 @@
 #' used in testthat to check the automatic k-fold cross-validation feature of regCtsem
 #' @param ctInit init object from ctsem
 #' @param regCtsemObject object from regCtsem
+#' @export
 checkAutoKFold <- function(ctInit, regCtsemObject){
   if(regCtsemObject$setup$autoCV != "kFold") stop("Only valid for kFold cross-validation")
 
@@ -38,6 +39,7 @@ checkAutoKFold <- function(ctInit, regCtsemObject){
 #' @param mxObject object from openmx
 #' @param regCtsemObject object from regCtsem
 #' @param cvModel optional cross-validation model
+#' @export
 checkFI <- function(mxObject, regCtsemObject, cvModel = NULL){
   works <- FALSE
   ## get parameter labels

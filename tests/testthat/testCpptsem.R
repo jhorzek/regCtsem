@@ -3,6 +3,7 @@
 library(regCtsem)
 
 testthat::test_that(desc = "Testing implementation of cpptsem", code = {
+  skip_on_cran()
   for(addCINT in c(TRUE,FALSE)){
     if(addCINT){
       CINT = matrix(c("cint1", "cint2"), nrow = 2, ncol = 1)

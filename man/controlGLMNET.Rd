@@ -22,7 +22,9 @@ controlGLMNET(
   eps_WW = 1e-04,
   approxFirst = TRUE,
   numStart = 0,
-  controlApproxOptimizer = controlRsolnp(control = list(outer.iter = 50, trace = 0))
+  nMultistart = 5,
+  controlApproxOptimizer = controlRsolnp(nudgeVariancesLambda = 0.2,
+    nudgeVariancesTarget = log(0.4), control = list(outer.iter = 50, trace = 0))
 )
 }
 \arguments{
@@ -59,6 +61,8 @@ controlGLMNET(
 \item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization?}
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
+
+\item{nMultistart}{controls how many different starting values are tried when estimating lambda_max´}
 
 \item{controlApproxOptimizer}{settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox}
 

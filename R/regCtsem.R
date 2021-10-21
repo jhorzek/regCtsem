@@ -773,7 +773,7 @@ regCtsem <- function(
       }
 
       # optimize
-      invisible(capture.output(sparseModel <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], nMultistart = nMultistart),
+      invisible(capture.output(fitTrain <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], nMultistart = argsIn$nMultistart),
                                                   silent = TRUE), type = c("output", "message")))
 
       if(!any(class(fitTrain) == "try-error")){
@@ -804,7 +804,7 @@ regCtsem <- function(
                                             regIndicators = argsIn$regIndicators,
                                             targetVector = argsIn$targetVector,
                                             adaptiveLassoWeights = argsIn$adaptiveLassoWeights[i,],
-                                            nMultistart = control$nMultistart)
+                                            nMultistart = argsIn$nMultistart)
         maxLambdas[i] <- maxLambda$maxLambda
         sparseParameters[names(maxLambda$sparseParameters),i] <- maxLambda$sparseParameters
         argsIn$sparseParameters <- sparseParameters
@@ -1693,8 +1693,8 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
     }
 
     # optimize
-    invisible(capture.output(sparseModel <- try(optimizeCpptsem(cpptsemObject = cpptsemObject, free = freeParam, nMultistart = nMultistart),
-                                                silent = TRUE), type = c("output", "message")))
+    sparseModel <- try(optimizeCpptsem(cpptsemObject = cpptsemObject, free = freeParam, nMultistart = nMultistart),
+                                                silent = TRUE)
 
     if(any(class(sparseModel) == "try-error")){
       if(it ==  0){

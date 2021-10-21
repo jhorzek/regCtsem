@@ -171,8 +171,10 @@ profileLikelihood <- function(cpptsemObject,
     if(any(class(currentFit) == "try-error")){
       warning(paste0("Optimization for ", parameter, " = ", value, " failed."))
       next}
-    if(currentFit$convergence > 0 && !silent){
-      warning(paste0("Rsolnp reports convcode = ", currentFit$convergence, " for ", parameter, " = ", value, ". See ?Rsolnp::solnp for more details."))}
+    if(currentFit$convergence > 0){
+      warning(paste0("Rsolnp reports convcode = ", currentFit$convergence, " for ", parameter, " = ", value, ". Skipping this value. See ?Rsolnp::solnp for more details."))
+      next
+      }
     lik[which(value == values)] <- currentFit$values[length(currentFit$values)]
   }
 

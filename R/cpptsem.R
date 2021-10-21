@@ -1485,8 +1485,9 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
     startingValuesTable[,1] <- startingValues
     parameterTable <- cpptsemObject$parameterTable
     for(parameter in 1:length(startingValues)){
-      if(!free[parameter]) {
-        startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- rep(parameterTable$value[parameter], nMultistart-1)
+      parameterLabel <- parameterTable$label[parameter]
+      if(!free[parameterLabel]) {
+        startingValuesTable[parameterLabel,2:nMultistart] <- rep(parameterTable$value[parameter], nMultistart-1)
         next
       }
       if(parameterTable$matrix[parameter] == "DRIFT"){
@@ -1496,19 +1497,13 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
       }
 
       if(parameterTable$matrix[parameter] == "DIFFUSIONbase"){
-        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], log(.5), length.out = nMultistart-1)
-        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
-        next
-      }
-
-      if(parameterTable$matrix[parameter] == "DIFFUSIONbase"){
-        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], log(.5), length.out = nMultistart-1)
+        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], log(2), length.out = nMultistart-1)
         if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
         next
       }
 
       if(parameterTable$matrix[parameter] == "T0VARbase"){
-        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], log(.5), length.out = nMultistart-1)
+        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], log(2), length.out = nMultistart-1)
         if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
         next
       }
@@ -1525,19 +1520,40 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
       startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- rep(parameterTable$value[parameter], nMultistart-1)
     }
 
-    optimizedValuesTable <- matrix(nrow = length(startingValues), ncol = nMultistart)
-    rownames(optimizedValuesTable) <- names(startingValues)
+    optimizedValuesTable <- startingValuesTable
     fit <- rep(NA, nMultistart)
+    convergence <- rep(FALSE, nMultistart)
+    cat("\n")
     for(it in 1:nMultistart){
+      if(it == 1){
+        currentItLabel <- paste0("- Trying different starting values [1/",nMultistart, "] ")
+        cat(currentItLabel)
+      }else{
+        cat(paste0(paste0(rep("\r", nchar(currentItLabel)), collapse = ""), "- Trying different starting values [", it, "/", nMultistart, "] "))
+        currentItLabel <- paste0("- Trying different starting values [", it, "/", nMultistart, "] ")
+      }
+
       cpptsemObject$setParameterValues(startingValuesTable[,it], rownames(startingValuesTable))
-      tryFit <- try(fitCpptsem(parameterValues = startingValuesTable[,it], cpptsemObject = cpptsemObject, objective = objective, free = free, failureReturns = .Machine$double.xmax/2), silent = TRUE)
+      tryFit <- try(fitCpptsem(parameterValues = startingValuesTable[,it],
+                               cpptsemObject = cpptsemObject,
+                               objective = objective, free = free, failureReturns = .Machine$double.xmax/2), silent = TRUE)
       if(any(class(tryFit) == "try-error") || tryFit == .Machine$double.xmax/2){next}
       opt <- try(optimizeCpptsem(cpptsemObject = cpptsemObject, free = free, nMultistart = 0, ... = ...))
       if(any(class(opt) == "try-error") || opt$values[length(opt$values)] == .Machine$double.xmax/2){next}
       optimizedValuesTable[names(opt$pars),it] <- opt$pars
       fit[it] <- opt$values[length(opt$values)]
+      convergence[it] <- opt$convergence == 0
     }
+    cat("\n")
     if(all(is.na(fit))){stop("All fit attempts resulted in errors. Check your starting values")}
+    # check for different local minima
+
+    differencesBetweenParameters <- apply(optimizedValuesTable[free[rownames(optimizedValuesTable)], convergence], 1, function(x) abs((x-mean(x)) / sd(x)))
+    if(any(differencesBetweenParameters > 2)){
+      optimizedValuesTable <<- optimizedValuesTable
+      correspondingFit <<- fit
+      warning("Using solnp with multiple starting values indicated that there might be local minima for your model and data. Returning optimizedValuesTable and correspondingFit as global variables for you to check. You can check the profile likelihood of models using profileLikelihoodFromRegCtsem.")
+    }
     bestValues <- optimizedValuesTable[,which(fit == min(fit, na.rm = TRUE))[1]]
     cpptsemObject$setParameterValues(bestValues, names(bestValues))
     return(optimizeCpptsem(cpptsemObject = cpptsemObject, free = free, nMultistart = 0, ... = ...))

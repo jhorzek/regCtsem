@@ -42,6 +42,7 @@ exact_regCtsem(
   scaleLambdaWithN,
   approxFirst,
   numStart,
+  nMultistart,
   controlApproxOptimizer,
   verbose
 )
@@ -120,6 +121,8 @@ exact_regCtsem(
 \item{approxFirst}{Should approximate optimization be used first to obtain start values for exact optimization?}
 
 \item{numStart}{Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)}
+
+\item{nMultistart}{controls how many different starting values are tried when estimating lambda_max}
 
 \item{controlApproxOptimizer}{settings passed to optimx or Rsolnp}
 

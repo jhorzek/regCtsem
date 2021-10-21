@@ -8,6 +8,7 @@ controlApprox(
   forceCpptsem = FALSE,
   epsilon = 0.001,
   zeroThresh = 0.04,
+  nMultistart = 5,
   controlApproxOptimizer = controlRsolnp(control = list(outer.iter = 500, trace = 0))
 )
 }
@@ -17,6 +18,8 @@ controlApprox(
 \item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
 
 \item{zeroThresh}{threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx}
+
+\item{nMultistart}{controls how many different starting values are tried when estimating lambda_max}
 
 \item{controlApproxOptimizer}{settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox}
 }

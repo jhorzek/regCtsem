@@ -4,10 +4,14 @@
 \alias{optimizeCpptsem}
 \title{optimizeCpptsem}
 \usage{
-optimizeCpptsem(cpptsemObject, free = "all", ...)
+optimizeCpptsem(cpptsemObject, free = "all", nMultistart = 0, ...)
 }
 \arguments{
 \item{cpptsemObject}{model of type cpptsem}
+
+\item{free}{named logical vector indicating which of the parameters in cpptsemObject$getParameterValues() are free}
+
+\item{nMultistart}{number of multi-start iterations}
 
 \item{...}{additional arguments passed to Rsonlp::solnp}
 }
