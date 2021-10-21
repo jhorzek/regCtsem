@@ -206,6 +206,65 @@ profileLikelihood <- function(cpptsemObject,
 
 }
 
+#' profileLikelihoodFromMx
+#'
+#' computes the profile likelihood for a selected parameter based on an mxModel
+#'
+#' @param mxModelObject model from OpenMx
+#' @param parameter label of the parameter for which the profile likelihood should be computed
+#' @param values values for the parameter at which the profile likelihood will be computed
+#' @param startingValues starting values
+#' @export
+profileLikelihoodFromMx <- function(mxModelObject,
+                              parameter,
+                              values,
+                              startingValues = omxGetParameters(mxModelObject),
+                              tryHard = FALSE
+){
+
+  lik <- rep(NA, length(values))
+  startingValues2 <- startingValues[] # startingValues2 will be used as an alternative set of starting values based on the previous iteration
+  free <- rep(TRUE, length(startingValues))
+  free[names(startingValues) == parameter] <- FALSE
+  for(value in values){
+    cat(paste0(which(values == value), " of ", length(values)), "\n")
+    # set parameter
+    startingValues[parameter] <- value
+    mxModelObject1 <- omxSetParameters(mxModelObject, values = startingValues, labels = names(startingValues), free = free)
+
+    # optimize model
+    invisible(capture.output(mxModelObjectFit <- try(mxTryHardctsem(mxModelObject1, extraTries = ifelse(tryHard,10,0), silent = TRUE),
+                                               silent = TRUE), type = c("output", "message")))
+
+    if(!is.null(startingValues2)){
+      startingValues2[parameter] <- value
+      mxModelObject2 <- omxSetParameters(mxModelObject, values = startingValues, labels = names(startingValues), free = free)
+
+      # optimize model
+      invisible(capture.output(mxModelObjectFit2 <- try(mxTryHardctsem(mxModelObject2, extraTries = ifelse(tryHard,10,0), silent = TRUE),
+                                                       silent = TRUE), type = c("output", "message")))
+
+    }
+    if(any(class(mxModelObjectFit) == "try-error") && any(class(mxModelObjectFit2) == "try-error")){
+      warning(paste0("Optimization for ", parameter, " = ", value, " failed."))
+      next}
+    if((any(class(mxModelObjectFit) == "try-error" || mxModelObjectFit$output$status$code > 0) && (any(class(mxModelObjectFit2) == "try-error") || mxModelObjectFit2$output$status$code > 0))){
+      warning(paste0("Optimization resulted in errors for ", parameter, " = ", value, ". Skipping this value."))
+      next
+    }
+    if(any(class(mxModelObjectFit) == "try-error") || mxModelObjectFit$output$status$code > 0 || mxModelObjectFit$fitfunction$result[[1]] > mxModelObjectFit2$fitfunction$result[[1]]){
+      startingValues2 <- omxGetParameters(mxModelObjectFit2)
+      lik[which(value == values)] <- mxModelObjectFit2$fitfunction$result[[1]]
+      next
+    }
+    startingValues2 <- omxGetParameters(mxModelObjectFit)
+    lik[which(value == values)] <- mxModelObjectFit$fitfunction$result[[1]]
+  }
+
+  return(data.frame("parameterValue" = values, "Likelihood" = lik))
+
+}
+
 #' profileLikelihoodFromRegCtsem
 #'
 #' computes the profile likelihood for a selected parameter based on a regularized model
