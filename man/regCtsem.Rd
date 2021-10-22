@@ -27,7 +27,8 @@ regCtsem(
   optimization = "exact",
   optimizer = "GIST",
   control = list(),
-  verbose = 0
+  verbose = 0,
+  trainingWheels = TRUE
 )
 }
 \arguments{
@@ -74,6 +75,8 @@ regCtsem(
 \item{control}{List with control arguments for the optimizer. See ?controlGIST, ?controlGLMNET and ?controlApprox for the respective parameters}
 
 \item{verbose}{0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress.}
+
+\item{trainingWheels}{If set to FALSE all bells and whistles used to keep regCtsem on track are turned off (no multiple starting values, no initial optimization with solnp or optimx). The focus is speed instead of accuracy. This might work in simulated data, but is NOT recommended with real data. The optimizer is quite likely to get stuck in local minima.}
 }
 \value{
 returns an object of class regCtsem. Without cross-validation, this object will have the fields setup (all arguments passed to the function), fitAndParameters (used internally to store the fit and the raw (i.e., untransformed) parameters), fit (fit indices, ect.), parameterEstimatesRaw (raw, i.e. untransformed parameters; used internally), and parameters (transformed parameters)

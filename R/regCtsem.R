@@ -26,6 +26,7 @@
 #' @param optimizer for exact optimization: Either GIST or GLMNET. When using optimization = "approx", Rsolnp or any of the optimizers in optimx can be used. See ?optimx
 #' @param control List with control arguments for the optimizer. See ?controlGIST, ?controlGLMNET and ?controlApprox for the respective parameters
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress.
+#' @param trainingWheels If set to FALSE all bells and whistles used to keep regCtsem on track are turned off (no multiple starting values, no initial optimization with solnp or optimx). The focus is speed instead of accuracy. This might work in simulated data, but is NOT recommended with real data. The optimizer is quite likely to get stuck in local minima.
 #' @return returns an object of class regCtsem. Without cross-validation, this object will have the fields setup (all arguments passed to the function), fitAndParameters (used internally to store the fit and the raw (i.e., untransformed) parameters), fit (fit indices, ect.), parameterEstimatesRaw (raw, i.e. untransformed parameters; used internally), and parameters (transformed parameters)
 #' @examples
 #' \donttest{
@@ -269,7 +270,8 @@ regCtsem <- function(
   optimizer = "GIST",
   control = list(),
   # additional settings
-  verbose = 0
+  verbose = 0,
+  trainingWheels = TRUE
 ){
   if(is.null(dataset)){stop("Data set in wide format required!")}
 
@@ -309,6 +311,24 @@ regCtsem <- function(
     }
   }
 
+  if(!trainingWheels){
+    if(optimization == "approx"){
+      controlTemp <- controlApprox(forceCpptsem = TRUE, nMultistart = 0)
+      if(tolower(optimizer) == "gist" || tolower(optimizer) == "glmnet"){
+        if(controlTemp$controlApproxOptimizer$package == "optimx"){
+          optimizer <- controlTemp$controlApproxOptimizer$method
+        }else{
+          optimizer <- "solnp"
+        }
+      }
+    } else if(optimization == "exact" && optimizer == "GIST"){
+      controlTemp <- controlGIST(forceCpptsem = TRUE, approxFirst = FALSE, numStart = 0, nMultistart = 0)
+    }else if(optimization == "exact" && optimizer == "GLMNET"){
+      controlTemp <- controlGLMNET(tryCpptsem = TRUE, approxFirst = FALSE, numStart = 0, nMultistart = 0)
+    }else{
+      stop("Unknown optimization or optimizer specified. Possible are exact or approx for optimization and GIST or GLMNET for optimizer")
+    }
+  }else{
   if(optimization == "approx"){
     controlTemp <- controlApprox()
     if(tolower(optimizer) == "gist" || tolower(optimizer) == "glmnet"){
@@ -325,7 +345,7 @@ regCtsem <- function(
   }else{
     stop("Unknown optimization or optimizer specified. Possible are exact or approx for optimization and GIST or GLMNET for optimizer")
   }
-
+}
   controlExpectedNames <- names(controlTemp)
   controlReceivedNames <- names(control)
   if(!all(controlReceivedNames %in% controlExpectedNames)){
