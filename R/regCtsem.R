@@ -1442,6 +1442,10 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
     stop("standardizeDrift has to be set to 'No', 'T0VAR' or 'asymptoticDiffusion'")
   }
 
+  if(standardizeDrift == "No"){
+    warning("Not using any automatic standardization.")
+  }
+
   # if adaptiveLassoWeights were provided and no standardization is requested:
   if(tolower(penalty) == "adaptivelasso" && is.numeric(adaptiveLassoWeights) && (standardizeDrift == "No")){
     return(adaptiveLassoWeights)
