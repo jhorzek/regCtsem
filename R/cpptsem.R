@@ -1484,40 +1484,41 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
     rownames(startingValuesTable) <- names(startingValues)
     startingValuesTable[,1] <- startingValues
     parameterTable <- cpptsemObject$parameterTable
-    for(parameter in 1:length(startingValues)){
+    for(parameter in 1:length(parameterTable$label)){
       parameterLabel <- parameterTable$label[parameter]
+      parameterValue <- parameterTable$value[parameter]
       if(!free[parameterLabel]) {
-        startingValuesTable[parameterLabel,2:nMultistart] <- rep(parameterTable$value[parameter], nMultistart-1)
+        startingValuesTable[parameterLabel,2:nMultistart] <- rep(parameterValue, nMultistart-1)
         next
       }
       if(parameterTable$matrix[parameter] == "DRIFT"){
-        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], -.5, length.out = nMultistart-1)
-        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
+        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, -.5, length.out = nMultistart-1)
+        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, 0, length.out = nMultistart-1)
         next
       }
 
       if(parameterTable$matrix[parameter] == "DIFFUSIONbase"){
-        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], log(2), length.out = nMultistart-1)
-        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
+        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, log(2), length.out = nMultistart-1)
+        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, 0, length.out = nMultistart-1)
         next
       }
 
       if(parameterTable$matrix[parameter] == "T0VARbase"){
-        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], log(2), length.out = nMultistart-1)
-        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
+        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, log(2), length.out = nMultistart-1)
+        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, 0, length.out = nMultistart-1)
         next
       }
 
       if(parameterTable$matrix[parameter] == "T0MEANS"){
-        startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
+        startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, 0, length.out = nMultistart-1)
         next
       }
 
       if(parameterTable$matrix[parameter] == "MANIFESTMEANS"){
-        startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- seq(parameterTable$value[parameter], 0, length.out = nMultistart-1)
+        startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, 0, length.out = nMultistart-1)
         next
       }
-      startingValuesTable[parameterTable$label[parameter],2:nMultistart] <- rep(parameterTable$value[parameter], nMultistart-1)
+      startingValuesTable[parameterLabel,2:nMultistart] <- rep(parameterValue, nMultistart-1)
     }
 
     optimizedValuesTable <- startingValuesTable

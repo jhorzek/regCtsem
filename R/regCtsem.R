@@ -329,23 +329,23 @@ regCtsem <- function(
       stop("Unknown optimization or optimizer specified. Possible are exact or approx for optimization and GIST or GLMNET for optimizer")
     }
   }else{
-  if(optimization == "approx"){
-    controlTemp <- controlApprox()
-    if(tolower(optimizer) == "gist" || tolower(optimizer) == "glmnet"){
-      if(controlTemp$controlApproxOptimizer$package == "optimx"){
-        optimizer <- controlTemp$controlApproxOptimizer$method
-      }else{
-        optimizer <- "solnp"
+    if(optimization == "approx"){
+      controlTemp <- controlApprox()
+      if(tolower(optimizer) == "gist" || tolower(optimizer) == "glmnet"){
+        if(controlTemp$controlApproxOptimizer$package == "optimx"){
+          optimizer <- controlTemp$controlApproxOptimizer$method
+        }else{
+          optimizer <- "solnp"
+        }
       }
+    } else if(optimization == "exact" && optimizer == "GIST"){
+      controlTemp <- controlGIST()
+    }else if(optimization == "exact" && optimizer == "GLMNET"){
+      controlTemp <- controlGLMNET()
+    }else{
+      stop("Unknown optimization or optimizer specified. Possible are exact or approx for optimization and GIST or GLMNET for optimizer")
     }
-  } else if(optimization == "exact" && optimizer == "GIST"){
-    controlTemp <- controlGIST()
-  }else if(optimization == "exact" && optimizer == "GLMNET"){
-    controlTemp <- controlGLMNET()
-  }else{
-    stop("Unknown optimization or optimizer specified. Possible are exact or approx for optimization and GIST or GLMNET for optimizer")
   }
-}
   controlExpectedNames <- names(controlTemp)
   controlReceivedNames <- names(control)
   if(!all(controlReceivedNames %in% controlExpectedNames)){
@@ -450,11 +450,11 @@ regCtsem <- function(
     startingValues <- cpptsemObject$getParameterValues()
 
     # optimize
-    invisible(capture.output(CpptsemFit <- try(optimizeCpptsem(cpptsemObject = cpptsemObject, nMultistart = argsIn$nMultistart),
-                                                silent = TRUE), type = c("output", "message")))
+    CpptsemFit <- try(optimizeCpptsem(cpptsemObject = cpptsemObject, nMultistart = argsIn$nMultistart),
+                      silent = TRUE)
 
-    if(CpptsemFit$convergence > 0){warning(paste0("Rsolnp reports convcode  > 0 for the model with person-specific parameter estimates: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
     if(any(class(CpptsemFit) == "try-error")){stop("Rsolnp for the model with person-specific parameter estimates resulted in errors.")}
+    if(CpptsemFit$convergence > 0){warning(paste0("Rsolnp reports convcode  > 0 for the model with person-specific parameter estimates: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
 
     # compute unregularized fit
     cpptsemObject$setParameterValues(CpptsemFit$pars, names(CpptsemFit$pars))
@@ -590,7 +590,7 @@ regCtsem <- function(
 
       # optimize
       invisible(capture.output(fitTrain <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], nMultistart = argsIn$nMultistart),
-                                                  silent = TRUE), type = c("output", "message")))
+                                               silent = TRUE), type = c("output", "message")))
 
       if(!any(class(fitTrain) == "try-error")){
         cvFoldsAndModels$trainModels[[i]]$setParameterValues(fitTrain$par, names(fitTrain$par))
@@ -794,7 +794,7 @@ regCtsem <- function(
 
       # optimize
       invisible(capture.output(fitTrain <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], nMultistart = argsIn$nMultistart),
-                                                  silent = TRUE), type = c("output", "message")))
+                                               silent = TRUE), type = c("output", "message")))
 
       if(!any(class(fitTrain) == "try-error")){
         cvFoldsAndModels$trainModels[[i]]$setParameterValues(fitTrain$par, names(fitTrain$par))
@@ -1714,7 +1714,7 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
 
     # optimize
     sparseModel <- try(optimizeCpptsem(cpptsemObject = cpptsemObject, free = freeParam, nMultistart = nMultistart),
-                                                silent = TRUE)
+                       silent = TRUE)
 
     if(any(class(sparseModel) == "try-error")){
       if(it ==  0){
