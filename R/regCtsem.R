@@ -354,6 +354,20 @@ regCtsem <- function(
   controlTemp[controlReceivedNames] <- control[controlReceivedNames]
 
   argsIn <- c(argsIn, controlTemp)
+  if(optimization == "exact" && optimizer == "GLMNET" && !is.matrix(argsIn$initialHessianApproximation)){
+    if(argsIn$initialHessianApproximation == "OpenMx"){
+      if(!is.null(ctsemObject$mxobj$output$hessian)){
+        argsIn$initialHessianApproximation <- ctsemObject$mxobj$output$hessian
+      }else{
+        warning("Extracting Hessian from OpenMx failed. Using identity")
+        argsIn$initialHessianApproximation <- "identity"
+      }
+    }
+
+    if(tolower(argsIn$initialHessianApproximation) == "identity"){
+        argsIn$initialHessianApproximation <- diag(length(omxGetParameters(ctsemObject$mxobj)))
+    }
+  }
 
   if(!is.null(targetVector) && any(targetVector!=0)){
     if(optimizer == "GLMNET"){
@@ -370,6 +384,12 @@ regCtsem <- function(
   # check setup
   #checkSetup(argsIn)
   if(!is.null(cvSample) && (autoCV != "No")){stop("Either provide a cvSample or use autoCV. Combinations of both are currently not supported.")}
+  if(autoCV == "kFold"){
+    message("k-Fold cross-validation requested. Please note that between-person standardizing of data (mean centering or scaling) prior to the analysis can invalidate the results of cross-validation as it will result in dependencies between the training and validation set.")
+  }
+  if(autoCV == "Blocked"){
+    message("Blocked cross-validation requested. Please note that within-person standardizing of data (mean centering or scaling) prior to the analysis can invalidate the results of cross-validation as it will result in dependencies between the training and validation set.")
+  }
 
   # check if all targets are in the regIndicators
   if(!is.null(targetVector)){
@@ -917,7 +937,7 @@ regCtsem <- function(
 #' @param c2 GLMNET: c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
 #' @param sig GLMNET & GIST: GLMNET: only relevant when lineSearch = 'GLMNET' | GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
 #' @param gam GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
-#' @param initialHessianApproximation GLMNET: Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian
+#' @param initialHessianApproximation GLMNET: Which initial hessian approximation should be used? Possible are: 'identity' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. "estimate" will estimate the Hessian using optimHess. All of these approaches work most of the time, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian
 #' @param maxIter_out GLMNET & GIST: Maximal number of outer iterations
 #' @param maxIter_in GLMNET & GIST: Maximal number of inner iterations
 #' @param maxIter_line GLMNET: Maximal number of iterations for the lineSearch procedure
@@ -1454,7 +1474,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
   # otherwise: set adaptiveLassoWeights
   ## if automatic drift standardization was requested
   if(standardizeDrift == "T0VAR" || standardizeDrift == "asymptoticDiffusion"){
-    print(paste0("Standardizing drift parameters with ", standardizeDrift))
+    cat(paste0("Standardizing drift parameters with ", standardizeDrift, "\n"))
 
     # check if adaptiveLassoWeights were provided
     if(is.numeric(adaptiveLassoWeights)){ stop("standardizeDrift and provided adaptiveLassoWeights can not be combined automatically. Consider setting adaptiveLassoWeights = 'auto'") }

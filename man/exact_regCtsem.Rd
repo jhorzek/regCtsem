@@ -90,7 +90,7 @@ exact_regCtsem(
 
 \item{gam}{GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.}
 
-\item{initialHessianApproximation}{GLMNET: Which initial hessian approximation should be used? Possible are: 'ident' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. This works sometimes, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian}
+\item{initialHessianApproximation}{GLMNET: Which initial hessian approximation should be used? Possible are: 'identity' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. "estimate" will estimate the Hessian using optimHess. All of these approaches work most of the time, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian}
 
 \item{maxIter_out}{GLMNET & GIST: Maximal number of outer iterations}
 
