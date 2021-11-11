@@ -200,8 +200,8 @@ controlGLMNET <- function(tryCpptsem = TRUE, # should regCtsem try to translate 
                           maxIter_out = 100, # Maximal number of outer iterations
                           maxIter_in = 1000, # Maximal number of inner iterations
                           maxIter_line = 500, # Maximal number of iterations for the lineSearch procedure
-                          eps_out = .0000000001, # Stopping criterion for outer iterations
-                          eps_in = .0000000001, # Stopping criterion for inner iterations
+                          eps_out = 1e-6, # Stopping criterion for outer iterations
+                          eps_in = 1e-6, # Stopping criterion for inner iterations
                           eps_WW = .0001, #Stopping criterion for weak Wolfe line search. If the upper - lower bound of the interval is < epsWW, line search will be stopped and stepSize will be returned
                           approxFirst = TRUE, # Should approximate optimization be used first to obtain start values for exact optimization?
                           numStart = 0, # Used if approxFirst = TRUE. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)

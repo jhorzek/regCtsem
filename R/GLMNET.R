@@ -64,17 +64,17 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
 
   ## compute Hessian
   if(!is.matrix(initialHessianApproximation)){
-    Hessian <- try(optimHess(par = parameters, fn = fitCpptsem,
+    initialHessian <- try(optimHess(par = parameters, fn = fitCpptsem,
                              cpptsemObject = cpptsemObject,
                              objective = objective,
                              failureReturns = NA
     ), silent = TRUE)
     if(any(class(Hessian) == "try-error")){
       warning("Could not compute Hessian. Using Identity")
-      Hessian <- diag(.1, length(parameters))
+      initialHessian <- diag(.1, length(parameters))
     }
   }else{
-    Hessian <- initialHessianApproximation
+    initialHessian <- initialHessianApproximation
   }
 
   # get parameter values
@@ -87,7 +87,7 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
   initialGradients <- g_kp1
 
   # get initial Hessian
-  H_kp1 <- Hessian
+  H_kp1 <- initialHessian
   eigenDecomp <- eigen(H_kp1)
   if(any(eigenDecomp$values < 0)){
     warning("Initial Hessian is not positive definite. Flipping Eigen values to obtain a positive definite initial Hessian.")
@@ -315,8 +315,8 @@ exact_outerGLMNET <- function(cpptsemObject,
     if(iter_out > 1){
       # requires a direction vector d; therefore, we cannot evaluate the
       # convergence in the first iteration
-      convergenceCriterion <- max(diag(diag(oldHessian))%*%d^2) < eps_out
-      if(is.na(convergenceCriterion)){
+      convergenceCriterion <- try(max(diag(diag(oldHessian))%*%d^2) < eps_out, silent = TRUE)
+      if(any(class(convergenceCriterion) == "try-error") || is.na(convergenceCriterion)){
         converged <- FALSE
         # save last working parameters
         newParameters <- oldParameters

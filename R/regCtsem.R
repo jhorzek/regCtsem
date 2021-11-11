@@ -364,7 +364,7 @@ regCtsem <- function(
       }
     }
 
-    if(tolower(argsIn$initialHessianApproximation) == "identity"){
+    if(!is.matrix(argsIn$initialHessianApproximation) && tolower(argsIn$initialHessianApproximation) == "identity"){
         argsIn$initialHessianApproximation <- diag(length(omxGetParameters(ctsemObject$mxobj)))
     }
   }
