@@ -23,7 +23,7 @@ regCtsem(
   standardizeDrift = "No",
   scaleLambdaWithN = TRUE,
   returnFitIndices = TRUE,
-  BICWithNAndT = nrow(dataset) == 1,
+  BICWithNAndT = FALSE,
   optimization = "exact",
   optimizer = "GIST",
   control = list(),
@@ -66,7 +66,7 @@ regCtsem(
 
 \item{returnFitIndices}{Boolean: should fit indices be returned?}
 
-\item{BICWithNAndT}{Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use N in the formula for the BIC (-2log L + log(N)). Defaults to TRUE if N = 1 and FALSE otherwise}
+\item{BICWithNAndT}{Boolean: TRUE = Use N and T in the formula for the BIC (-2log L + log(N+T)*k, where k is the number of parameters in the model). FALSE = Use N in the formula for the BIC (-2log L + log(N)). Defaults to FALSE}
 
 \item{optimization}{which optimization procedure should be used. Possible are  "exact" or "approx". exact is recommended for sparsity inducing penalty functions (lasso and adaptive lasso)}
 
