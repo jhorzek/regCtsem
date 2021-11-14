@@ -2290,7 +2290,7 @@ testall_cpptsem <- function(){
 computeStandardErrorsRaw <- function(cpptsemObject, objective){
   sampleSize <- ifelse(tolower(objective) == "ml",
                        cpptsemObject$RAMdata$sampleSize,
-                       cpptsemObject$KALMANdata$sampleSize
+                       nrow(cppMod$kalmanData)
   )
   parameterValues <- cpptsemObject$getParameterValues()
   Hessian <- optimHess(par = parameterValues,
@@ -2321,7 +2321,7 @@ computeStandardErrorsRaw <- function(cpptsemObject, objective){
 computeStandardErrorsDelta <- function(cpptsemObject, objective, eps = (1.1 * 10^(-16))^(1/3)){
   sampleSize <- ifelse(tolower(objective) == "ml",
                        cpptsemObject$RAMdata$sampleSize,
-                       cpptsemObject$KALMANdata$sampleSize
+                       nrow(cppMod$kalmanData)
   )
 
   parameterValues <- t(t(cpptsemObject$getParameterValues()))

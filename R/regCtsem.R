@@ -1312,11 +1312,15 @@ createCVFoldsAndModels <- function(dataset, Tpoints, manifestNames, k, autoCV, i
   if(autoCV == "Blocked"){
     warning("Blocked CV naively builds blocks of the data of each individual and does not account for dependencies which still exist in the training and test set (see Bergmeir, C., & Benítez, J. M. (2012). On the use of cross-validation for time series predictor evaluation. Information Sciences, 191, 192–213. https://doi.org/10.1016/j.ins.2011.12.028 and Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740–756. https://doi.org/10.1037/met0000178). Also, different time intervals are not accounted for. More sophisticated forms of cross-validation currently have to be implemented manually.")
     if(initialPars){
+      # If initial parameters are estimated we will force the first few observations to always be used in the training
+      # set. This is to ensure that the estimates for the initial parameters are somewhat more reliable.
       Folds <- (max(1, Tpoints %/% 10)):(Tpoints-1)
-      ignore <- paste0(paste0(manifestNames, "_T"), rep(0:(max(1, Tpoints %/% 10)-1), each = length(manifestNames)))
+      #ignore <- paste0(paste0(manifestNames, "_T"), rep(0:(max(1, Tpoints %/% 10)-1), each = length(manifestNames)))
       warning(paste0("Bergmeir & Benítez, (2012) do not recommend the use of cross-validation with non-stationary time series! However, your model seems to not assume stationarity. Keep this in mind when interpreting the results. max(1, Tpoints %/% 10) = ", max(1, Tpoints %/% 10), " of the initial observations will not be used in blocked CV. Otherwise the initial parameters will be very poorly estimated."))
     }else{
-      ignore  <- c()
+      #ignore  <- c()
+      # If stationarity is assumed, all time points are used in the cross-validation. No special treatment
+      # for the first few observations.
       Folds <- 0:(Tpoints-1)
     }
 
@@ -1330,7 +1334,7 @@ createCVFoldsAndModels <- function(dataset, Tpoints, manifestNames, k, autoCV, i
       testColumns <- paste0(paste0(manifestNames, "_T"), rep(cvFolds[[foldNumber]], each = length(manifestNames)))
       dTs <- colnames(fullData)[grepl("dT", colnames(fullData))]
       testSet <- fullData
-      testSet[,!(colnames(testSet) %in% c(ignore, testColumns, dTs))] <- NA # remove all but the test set
+      testSet[,!(colnames(testSet) %in% c(testColumns, dTs))] <- NA # remove all but the test set
       testSets[[foldNumber]] <-  testSet
     }
 
