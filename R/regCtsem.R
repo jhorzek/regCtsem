@@ -1576,9 +1576,9 @@ getFinalParameters <- function(regCtsemObject, criterion, raw = TRUE){
     lambdas <- regCtsemObject$setup$lambdas
     bestLambda <- lambdas[minCriterionValue]
     if(raw){
-      parameters <- regCtsemObject$parameterEstimatesRaw[,as.character(bestLambda)]
+      parameters <- regCtsemObject$parameterEstimatesRaw[,minCriterionValue]
     }else{
-      parameters <- regCtsemObject$parameters[,as.character(bestLambda)]
+      parameters <- regCtsemObject$parameters[,minCriterionValue]
     }
     return(list("criterion" = criterion,
                 "lambda" = bestLambda,
