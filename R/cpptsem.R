@@ -396,6 +396,20 @@ constructDataset <- function(wideData){
 
   dataset <- subset(wideData, select = !grepl("dT", colnames(wideData)) & !grepl("intervalID", colnames(wideData)) )
 
+  # check sorting of data
+  timesAre <- sub(".*?_T", "", colnames(dataset))
+  if(!all(timesAre == sort(timesAre))){
+    stop(
+      paste0(
+        "Your data seems to not be sorted by time. The columnames read ",
+        paste0("..._T", timesAre, collapse = " "),
+        ". regCtsem currently only supports data that is already sorted by time. That is: ",
+        paste0("..._T", sort(timesAre), collapse = " "),
+        "."
+      )
+    )
+  }
+
   # extract unique dts
   dTUnique <- unique(dT)
 
