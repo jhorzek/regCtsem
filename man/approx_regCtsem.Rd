@@ -10,6 +10,7 @@ approx_regCtsem(
   regIndicators,
   lambdas,
   lambdasAutoLength,
+  lambdasAutoCurve,
   targetVector,
   penalty,
   adaptiveLassoWeights,
@@ -36,6 +37,8 @@ approx_regCtsem(
 \item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values}
 
 \item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
+
+\item{lambdasAutoCurve}{It is often a good idea to have unequally spaced lambda steps (e.g., .01,.02,.05,1,5,20). If lambdasAutoCurve is close to 1 lambda values will be equally spaced, if lambdasAutoCurve is large lambda values will be more concentrated close to 0. See ?getCurvedLambda for more informations.}
 
 \item{targetVector}{named vector with values towards which the parameters are regularized}
 

@@ -10,6 +10,7 @@
 #' @param targetVector named vector with values towards which the parameters are regularized (Standard is regularization towards zero)
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
+#' @param lambdasAutoCurve It is often a good idea to have unequally spaced lambda steps (e.g., .01,.02,.05,1,5,20). If lambdasAutoCurve is close to 1 lambda values will be equally spaced, if lambdasAutoCurve is large lambda values will be more concentrated close to 0. See ?getCurvedLambda for more informations.
 #' @param penalty Currently supported are lasso, ridge and adaptiveLasso
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
 #' @param adaptiveLassoPower power for the adaptive lasso weights. The weights will be set to parameterValues^{adaptiveLassoPower}, where parameterValues refers to the unregularized maximum likelihood estimates
@@ -252,6 +253,7 @@ regCtsem <- function(
   targetVector = NULL,
   lambdas = "auto",
   lambdasAutoLength = 50,
+  lambdasAutoCurve = 10,
   penalty = "lasso",
   adaptiveLassoWeights = NULL,
   adaptiveLassoPower = -1,
@@ -517,6 +519,7 @@ regCtsem <- function(
                                                targetVector = argsIn$targetVector,
                                                lambdas = argsIn$lambdas,
                                                lambdasAutoLength = argsIn$lambdasAutoLength,
+                                               lambdasAutoCurve = argsIn$lambdasAutoCurve,
                                                penalty = argsIn$penalty,
                                                adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
                                                returnFitIndices = argsIn$returnFitIndices,
@@ -655,7 +658,9 @@ regCtsem <- function(
         maxLambdas <- maxLambdas/sampleSize
       }
       maxLambda <- maxLambdas + maxLambdas/25 # adding some wiggle room as there will always be some deviations
-      argsIn$lambdas <- seq(0, max(maxLambdas, na.rm = TRUE), length.out = argsIn$lambdasAutoLength)
+      argsIn$lambdas <- getCurvedLambda(maxLambda = max(maxLambda, na.rm = TRUE),
+                                        lambdasAutoCurve = argsIn$lambdasAutoCurve,
+                                        lambdasAutoLength = argsIn$lambdasAutoLength)
     }
 
     ## fit models
@@ -672,6 +677,7 @@ regCtsem <- function(
                                                  targetVector = argsIn$targetVector,
                                                  lambdas = argsIn$lambdas,
                                                  lambdasAutoLength = argsIn$lambdasAutoLength,
+                                                 lambdasAutoCurve = argsIn$lambdasAutoCurve,
                                                  penalty = argsIn$penalty,
                                                  adaptiveLassoWeights = argsIn$adaptiveLassoWeights[i,],
                                                  returnFitIndices = argsIn$returnFitIndices,
@@ -739,6 +745,7 @@ regCtsem <- function(
                                                 regIndicators = argsIn$regIndicators,
                                                 lambdas = argsIn$lambdas,
                                                 lambdasAutoLength = argsIn$lambdasAutoLength,
+                                                lambdasAutoCurve = argsIn$lambdasAutoCurve,
                                                 targetVector = argsIn$targetVector,
                                                 penalty = argsIn$penalty,
                                                 adaptiveLassoWeights = argsIn$adaptiveLassoWeights,
@@ -857,7 +864,9 @@ regCtsem <- function(
         maxLambdas <- maxLambdas/sampleSize
       }
       maxLambda <- maxLambdas + maxLambdas/25 # adding some wiggle room as there will always be some deviations
-      argsIn$lambdas <- seq(0, max(maxLambdas, na.rm = TRUE), length.out = argsIn$lambdasAutoLength)
+      argsIn$lambdas <- getCurvedLambda(maxLambda = max(maxLambda, na.rm = TRUE),
+                                        lambdasAutoCurve = argsIn$lambdasAutoCurve,
+                                        lambdasAutoLength = argsIn$lambdasAutoLength)
     }
 
     ## fit models
@@ -874,6 +883,7 @@ regCtsem <- function(
                                                   regIndicators = argsIn$regIndicators,
                                                   lambdas = argsIn$lambdas,
                                                   lambdasAutoLength = argsIn$lambdasAutoLength,
+                                                  lambdasAutoCurve = argsIn$lambdasAutoCurve,
                                                   targetVector = argsIn$targetVector,
                                                   penalty = argsIn$penalty,
                                                   adaptiveLassoWeights = argsIn$adaptiveLassoWeights[i,],
@@ -922,6 +932,7 @@ regCtsem <- function(
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
+#' @param lambdasAutoCurve It is often a good idea to have unequally spaced lambda steps (e.g., .01,.02,.05,1,5,20). If lambdasAutoCurve is close to 1 lambda values will be equally spaced, if lambdasAutoCurve is large lambda values will be more concentrated close to 0. See ?getCurvedLambda for more informations.
 #' @param penalty Currently supported are ridge, lasso, and adaptiveLasso
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
 #' @param returnFitIndices Boolean: should fit indices be returned?
@@ -968,6 +979,7 @@ exact_regCtsem <- function(  # model
   targetVector,
   lambdas,# = "auto",
   lambdasAutoLength,# = 50,
+  lambdasAutoCurve,
   penalty,# = "lasso",
   adaptiveLassoWeights,# = NULL,
   # fit settings
@@ -1034,7 +1046,9 @@ exact_regCtsem <- function(  # model
                               nMultistart = nMultistart)
     sparseParameters <- maxLambda$sparseParameters
     maxLambda <- maxLambda$maxLambda + maxLambda$maxLambda/25 # adding some wiggle room as there will always be some deviations
-    lambdas <- seq(0,maxLambda, length.out = lambdasAutoLength)
+    lambdas <- getCurvedLambda(maxLambda = maxLambda,
+                               lambdasAutoCurve = lambdasAutoCurve,
+                               lambdasAutoLength = lambdasAutoLength)
     # if scaleLambdaWithN = TRUE, the lambda values will be multiplied with N later on
     # we need to ensure that this will not change the values:
     if(scaleLambdaWithN){
@@ -1148,6 +1162,7 @@ exact_regCtsem <- function(  # model
 #' @param targetVector named vector with values towards which the parameters are regularized
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
+#' @param lambdasAutoCurve It is often a good idea to have unequally spaced lambda steps (e.g., .01,.02,.05,1,5,20). If lambdasAutoCurve is close to 1 lambda values will be equally spaced, if lambdasAutoCurve is large lambda values will be more concentrated close to 0. See ?getCurvedLambda for more informations.
 #' @param penalty Currently supported are ridge, lasso, and adaptiveLasso
 #' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
 #' @param returnFitIndices Boolean: should fit indices be returned?
@@ -1172,6 +1187,7 @@ approx_regCtsem <- function(  # model
   regIndicators,
   lambdas,
   lambdasAutoLength,# = 50,
+  lambdasAutoCurve,
   targetVector,
   penalty,# = "lasso",
   adaptiveLassoWeights,# = NULL,
@@ -1215,7 +1231,9 @@ approx_regCtsem <- function(  # model
                               nMultistart = nMultistart)
     sparseParameters <- maxLambda$sparseParameters
     maxLambda <- maxLambda$maxLambda + maxLambda$maxLambda/25 # adding some wiggle room as there will always be some deviations
-    lambdas <- seq(0,maxLambda, length.out = lambdasAutoLength)
+    lambdas <- getCurvedLambda(maxLambda = maxLambda,
+                               lambdasAutoCurve = lambdasAutoCurve,
+                               lambdasAutoLength = lambdasAutoLength)
     # if scaleLambdaWithN = TRUE, the lambda values will be multiplied with N later on
     # we need to ensure that this will not change the values:
     if(scaleLambdaWithN){
@@ -1786,6 +1804,26 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
   return(list("maxLambda" = maxLambda, "sparseParameters" = param))
 }
 
+#' getCurvedLambda
+#'
+#' generates lambda values between 0 and lambdaMax using the function described here: https://math.stackexchange.com/questions/384613/exponential-function-with-values-between-0-and-1-for-x-values-between-0-and-1.
+#' @param maxLambda maximal lambda value
+#' @param lambdasAutoCurve controls the curve. A value close to 1 will result in a linear increase, larger values in lambdas more concentrated around 0
+#' @param lambdasAutoLength number of lambda values to generate
+#' @examples
+#' plot(getCurvedLambda(10,1,100))
+#' plot(getCurvedLambda(10,5,100))
+#' plot(getCurvedLambda(10,100,100))
+#' @export
+getCurvedLambda <- function(maxLambda, lambdasAutoCurve, lambdasAutoLength){
+  if(lambdasAutoCurve < 1) stop("lambdasAutoCurve parameter must be >= 1")
+  if(lambdasAutoCurve == 1){
+    return(seq(0,maxLambda,length.out = lambdasAutoLength))
+  }
+  lambdas <- seq(0,1,length.out = lambdasAutoLength)
+  lambdas <- (lambdasAutoCurve^lambdas-1)/(lambdasAutoCurve-1)
+  return(lambdas*maxLambda)
+}
 
 #' getT0VAR
 #'

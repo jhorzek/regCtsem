@@ -70,7 +70,7 @@ testthat::test_that(desc = "Testing implementation of cpptsem", code = {
     expect_equal(sum(round(cpptsemmodel2$approxRAMGradients((1.1 * 10^(-16))^(1/3))[names(centralGrandients)] - centralGrandients,2)), 0)
 
     ## Example 3: Kalman Filter
-    set.seed(175446)
+    set.seed(17544)
     ## define the population model:
 
     # set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
