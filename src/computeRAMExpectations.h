@@ -4,7 +4,7 @@
 #include <RcppArmadillo.h>
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-arma::mat computeRAMExpectedCovariance(arma::mat F, arma::mat A, arma::mat S);
-arma::mat computeRAMExpectedMeans(arma::mat F, arma::mat A, arma::colvec M);
+arma::mat computeRAMExpectedCovariance(const arma::mat& F, const arma::mat& A, const arma::mat& S);
+arma::mat computeRAMExpectedMeans(const arma::mat& F, const arma::mat& A, const arma::colvec& M);
 
 #endif

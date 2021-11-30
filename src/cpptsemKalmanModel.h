@@ -53,46 +53,24 @@ public:
 
   // setter
   void setUpdate(bool mUpdate);
-  void setParameterValues(Rcpp::NumericVector mParameters, Rcpp::StringVector parameterLabels);
-  void setKalmanMatrixValues(int selectedGroup);
+  void setParameterValues(const Rcpp::NumericVector& mParameters, Rcpp::StringVector& parameterLabels);
+  void setKalmanMatrixValues(const int selectedGroup);
   void setDiscreteDRIFTUnique(Rcpp::List mDiscreteDRIFTUnique);
   void setDiscreteTRAITUnique(Rcpp::List mDiscreteTRAITUnique);
   void setDRIFTHASHExponentialUnique(Rcpp::List mDRIFTHASHExponentialUnique);
   void setDiscreteDIFFUSIONUnique(Rcpp::List mDiscreteDIFFUSIONUnique);
   void setDiscreteCINTUnique(Rcpp::List mDiscreteCINTUnique);
 
-  void setKalmanData(Rcpp::List mKalmanData, bool mhasDefinitionVariables);
+  void setKalmanData(const Rcpp::List mKalmanData, const bool mhasDefinitionVariables);
   void setKalmanGroupings(arma::colvec mPersons, arma::colvec mGroup);
-  void setDiscreteTimeParameterNames(Rcpp::List mDiscreteTimeParameterNames);
-  void setKalmanMatrices(Rcpp::List mKalmanMatrices);
+  void setDiscreteTimeParameterNames(const Rcpp::List mDiscreteTimeParameterNames);
+  void setKalmanMatrices(const Rcpp::List& mKalmanMatrices);
 
   // computation
   void computeAndFitKalman();
-  Rcpp::NumericVector approxKalmanGradients(double epsilon = .000001);
+  Rcpp::NumericVector approxKalmanGradients(const double epsilon = .000001);
 
-  Rcpp::NumericVector approxKalmanGradient(double epsilon, Rcpp::String parName);
-
-  double computePenalty(Rcpp::NumericVector pars,
-                        Rcpp::StringVector regIndicators,
-                        Rcpp::NumericVector lambda);
-
-  Rcpp::NumericVector computeSubgradients(Rcpp::NumericVector pars,
-                                          Rcpp::NumericVector gradients,
-                                          Rcpp::StringVector regIndicators,
-                                          Rcpp::NumericVector lambdas);
-
-  Rcpp::List GIST(
-      Rcpp::NumericVector pars,
-      Rcpp::StringVector regIndicators,
-      Rcpp::NumericVector lambda,
-      double eta, double sig,
-      Rcpp::NumericVector gradient_epsilons,
-      double initialStepsize, double stepsizeMin = 0, double stepsizeMax = 999999999,
-      std::string GISTLinesearchCriterion = "monotone",
-      int GISTNonMonotoneNBack = 5,
-      int maxIter_out = 100, int maxIter_in = 100,
-      double break_outer = .00000001,
-      std::string break_crit = "parameterChange", int verbose = 0);
+  Rcpp::NumericVector approxKalmanGradient(const double epsilon, const Rcpp::String parName);
 
   // getter
   Rcpp::NumericVector getParameterValues();

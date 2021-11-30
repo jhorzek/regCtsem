@@ -6,7 +6,7 @@
 //'
 //' @export
 // [[Rcpp::export]]
-arma::mat computeDRIFTHASH(arma::mat DRIFTValues) {
+arma::mat computeDRIFTHASH(const arma::mat& DRIFTValues) {
 
   arma::mat DRIFTHASH =  kron(DRIFTValues, eye( size(DRIFTValues) )) +  kron(eye( size(DRIFTValues) ),DRIFTValues);
 

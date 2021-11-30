@@ -5,9 +5,9 @@
 // Computes the prediction step for the latent states when using the Kalman filter
 using namespace Rcpp;
 // [[Rcpp::export]]
-arma::colvec computeKalmanLatentStatePrediction(arma::mat discreteDRIFTValues,
-                                                arma::colvec previousStates,
-                                                arma::colvec discreteCINTValues){
+arma::colvec computeKalmanLatentStatePrediction(const arma::mat& discreteDRIFTValues,
+                                                const arma::colvec& previousStates,
+                                                const arma::colvec& discreteCINTValues){
   arma::colvec predictedStates = discreteDRIFTValues*previousStates + discreteCINTValues;
 
   return(predictedStates);

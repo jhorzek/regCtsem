@@ -5,13 +5,13 @@
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
 // computes the -2 log likelihood for RAM specified models
-double computeRAMM2LL(Rcpp::List RAMdata, arma::colvec expectedMeans, arma::mat expectedCovariance);
+double computeRAMM2LL(const Rcpp::List& RAMdata, const arma::colvec& expectedMeans, const arma::mat& expectedCovariance);
 
 // for N = 1
-double computeIndividualM2LL(int nObservedVariables, arma::colvec rawData,  arma::colvec expectedMeans, arma::mat expectedCovariance);
+double computeIndividualM2LL(const int nObservedVariables, const arma::colvec& rawData, const arma::colvec& expectedMeans, const arma::mat& expectedCovariance);
 
 // for N > 1
-double computeGroupM2LL(int sampleSize, int nObservedVariables, arma::colvec observedMeans, arma::mat observedCov,
-                        arma::colvec expectedMeans, arma::mat expectedCovariance);
+double computeGroupM2LL(const int sampleSize, const int nObservedVariables, const arma::colvec& observedMeans, const arma::mat& observedCov,
+                        const arma::colvec& expectedMeans, const arma::mat& expectedCovariance);
 
 #endif

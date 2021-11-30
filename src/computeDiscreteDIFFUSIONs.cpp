@@ -6,8 +6,8 @@
 // DRIFTHASHExponentialUnique (list with expm(drifthash)-names, dTs and results), and discreteDIFFUSIONUnique (list with diffusion-names, dTs and results)
 using namespace Rcpp;
 // [[Rcpp::export]]
-Rcpp::List computeDiscreteDIFFUSIONs(arma::mat DRIFTHASHInverse, arma::mat DIFFUSION,
-                                     Rcpp::List DRIFTHASHExponentialUnique, Rcpp::List discreteDIFFUSIONUnique) {
+Rcpp::List computeDiscreteDIFFUSIONs(const arma::mat& DRIFTHASHInverse, const arma::mat& DIFFUSION,
+                                     const Rcpp::List& DRIFTHASHExponentialUnique, Rcpp::List discreteDIFFUSIONUnique) {
 
   Rcpp::StringVector discreteDIFFUSIONUniqueLabels = discreteDIFFUSIONUnique["labels"];
   arma::vec dTDIFFUSION = discreteDIFFUSIONUnique["dT"];

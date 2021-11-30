@@ -7,353 +7,353 @@
 using namespace Rcpp;
 
 // armaExpmat
-arma::mat armaExpmat(arma::mat m);
+arma::mat armaExpmat(const arma::mat& m);
 RcppExport SEXP _regCtsem_armaExpmat(SEXP mSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type m(mSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type m(mSEXP);
     rcpp_result_gen = Rcpp::wrap(armaExpmat(m));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeDRIFTHASH
-arma::mat computeDRIFTHASH(arma::mat DRIFTValues);
+arma::mat computeDRIFTHASH(const arma::mat& DRIFTValues);
 RcppExport SEXP _regCtsem_computeDRIFTHASH(SEXP DRIFTValuesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type DRIFTValues(DRIFTValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type DRIFTValues(DRIFTValuesSEXP);
     rcpp_result_gen = Rcpp::wrap(computeDRIFTHASH(DRIFTValues));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeDRIFTHASHExponentials
-Rcpp::List computeDRIFTHASHExponentials(arma::mat DRIFTHASH, Rcpp::List DRIFTHASHExponentialUnique);
+Rcpp::List computeDRIFTHASHExponentials(const arma::mat& DRIFTHASH, Rcpp::List DRIFTHASHExponentialUnique);
 RcppExport SEXP _regCtsem_computeDRIFTHASHExponentials(SEXP DRIFTHASHSEXP, SEXP DRIFTHASHExponentialUniqueSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type DRIFTHASH(DRIFTHASHSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type DRIFTHASH(DRIFTHASHSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type DRIFTHASHExponentialUnique(DRIFTHASHExponentialUniqueSEXP);
     rcpp_result_gen = Rcpp::wrap(computeDRIFTHASHExponentials(DRIFTHASH, DRIFTHASHExponentialUnique));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeDiscreteCINTs
-Rcpp::List computeDiscreteCINTs(Rcpp::List discreteCINTUnique, arma::mat DRIFTInverseValues, Rcpp::List discreteDRIFTUnique, arma::colvec CINTValues);
+Rcpp::List computeDiscreteCINTs(Rcpp::List discreteCINTUnique, const arma::mat& DRIFTInverseValues, const Rcpp::List& discreteDRIFTUnique, const arma::colvec& CINTValues);
 RcppExport SEXP _regCtsem_computeDiscreteCINTs(SEXP discreteCINTUniqueSEXP, SEXP DRIFTInverseValuesSEXP, SEXP discreteDRIFTUniqueSEXP, SEXP CINTValuesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type discreteCINTUnique(discreteCINTUniqueSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type DRIFTInverseValues(DRIFTInverseValuesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type discreteDRIFTUnique(discreteDRIFTUniqueSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type CINTValues(CINTValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type DRIFTInverseValues(DRIFTInverseValuesSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type discreteDRIFTUnique(discreteDRIFTUniqueSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type CINTValues(CINTValuesSEXP);
     rcpp_result_gen = Rcpp::wrap(computeDiscreteCINTs(discreteCINTUnique, DRIFTInverseValues, discreteDRIFTUnique, CINTValues));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeDiscreteDIFFUSIONs
-Rcpp::List computeDiscreteDIFFUSIONs(arma::mat DRIFTHASHInverse, arma::mat DIFFUSION, Rcpp::List DRIFTHASHExponentialUnique, Rcpp::List discreteDIFFUSIONUnique);
+Rcpp::List computeDiscreteDIFFUSIONs(const arma::mat& DRIFTHASHInverse, const arma::mat& DIFFUSION, const Rcpp::List& DRIFTHASHExponentialUnique, Rcpp::List discreteDIFFUSIONUnique);
 RcppExport SEXP _regCtsem_computeDiscreteDIFFUSIONs(SEXP DRIFTHASHInverseSEXP, SEXP DIFFUSIONSEXP, SEXP DRIFTHASHExponentialUniqueSEXP, SEXP discreteDIFFUSIONUniqueSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type DRIFTHASHInverse(DRIFTHASHInverseSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type DIFFUSION(DIFFUSIONSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type DRIFTHASHExponentialUnique(DRIFTHASHExponentialUniqueSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type DRIFTHASHInverse(DRIFTHASHInverseSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type DIFFUSION(DIFFUSIONSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type DRIFTHASHExponentialUnique(DRIFTHASHExponentialUniqueSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type discreteDIFFUSIONUnique(discreteDIFFUSIONUniqueSEXP);
     rcpp_result_gen = Rcpp::wrap(computeDiscreteDIFFUSIONs(DRIFTHASHInverse, DIFFUSION, DRIFTHASHExponentialUnique, discreteDIFFUSIONUnique));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeDiscreteDRIFTs
-Rcpp::List computeDiscreteDRIFTs(arma::mat DRIFTValues, Rcpp::List discreteDRIFTUnique);
+Rcpp::List computeDiscreteDRIFTs(const arma::mat& DRIFTValues, Rcpp::List discreteDRIFTUnique);
 RcppExport SEXP _regCtsem_computeDiscreteDRIFTs(SEXP DRIFTValuesSEXP, SEXP discreteDRIFTUniqueSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type DRIFTValues(DRIFTValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type DRIFTValues(DRIFTValuesSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type discreteDRIFTUnique(discreteDRIFTUniqueSEXP);
     rcpp_result_gen = Rcpp::wrap(computeDiscreteDRIFTs(DRIFTValues, discreteDRIFTUnique));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeDiscreteTRAITs
-Rcpp::List computeDiscreteTRAITs(Rcpp::List discreteDRIFTUnique, Rcpp::List discreteTRAITUnique);
+Rcpp::List computeDiscreteTRAITs(const Rcpp::List& discreteDRIFTUnique, Rcpp::List discreteTRAITUnique);
 RcppExport SEXP _regCtsem_computeDiscreteTRAITs(SEXP discreteDRIFTUniqueSEXP, SEXP discreteTRAITUniqueSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type discreteDRIFTUnique(discreteDRIFTUniqueSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type discreteDRIFTUnique(discreteDRIFTUniqueSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type discreteTRAITUnique(discreteTRAITUniqueSEXP);
     rcpp_result_gen = Rcpp::wrap(computeDiscreteTRAITs(discreteDRIFTUnique, discreteTRAITUnique));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeGroupM2LL
-double computeGroupM2LL(int sampleSize, int nObservedVariables, arma::colvec observedMeans, arma::mat observedCov, arma::colvec expectedMeans, arma::mat expectedCovariance);
+double computeGroupM2LL(const int sampleSize, const int nObservedVariables, const arma::colvec& observedMeans, const arma::mat& observedCov, const arma::colvec& expectedMeans, const arma::mat& expectedCovariance);
 RcppExport SEXP _regCtsem_computeGroupM2LL(SEXP sampleSizeSEXP, SEXP nObservedVariablesSEXP, SEXP observedMeansSEXP, SEXP observedCovSEXP, SEXP expectedMeansSEXP, SEXP expectedCovarianceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type sampleSize(sampleSizeSEXP);
-    Rcpp::traits::input_parameter< int >::type nObservedVariables(nObservedVariablesSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type observedMeans(observedMeansSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type observedCov(observedCovSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type expectedMeans(expectedMeansSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type expectedCovariance(expectedCovarianceSEXP);
+    Rcpp::traits::input_parameter< const int >::type sampleSize(sampleSizeSEXP);
+    Rcpp::traits::input_parameter< const int >::type nObservedVariables(nObservedVariablesSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type observedMeans(observedMeansSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type observedCov(observedCovSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type expectedMeans(expectedMeansSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type expectedCovariance(expectedCovarianceSEXP);
     rcpp_result_gen = Rcpp::wrap(computeGroupM2LL(sampleSize, nObservedVariables, observedMeans, observedCov, expectedMeans, expectedCovariance));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeIndividualM2LL
-double computeIndividualM2LL(int nObservedVariables, arma::colvec rawData, arma::colvec expectedMeans, arma::mat expectedCovariance);
+double computeIndividualM2LL(const int nObservedVariables, const arma::colvec& rawData, const arma::colvec& expectedMeans, const arma::mat& expectedCovariance);
 RcppExport SEXP _regCtsem_computeIndividualM2LL(SEXP nObservedVariablesSEXP, SEXP rawDataSEXP, SEXP expectedMeansSEXP, SEXP expectedCovarianceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type nObservedVariables(nObservedVariablesSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type rawData(rawDataSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type expectedMeans(expectedMeansSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type expectedCovariance(expectedCovarianceSEXP);
+    Rcpp::traits::input_parameter< const int >::type nObservedVariables(nObservedVariablesSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type rawData(rawDataSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type expectedMeans(expectedMeansSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type expectedCovariance(expectedCovarianceSEXP);
     rcpp_result_gen = Rcpp::wrap(computeIndividualM2LL(nObservedVariables, rawData, expectedMeans, expectedCovariance));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeKalmanLatentCovariancePrediction
-arma::mat computeKalmanLatentCovariancePrediction(arma::mat discreteDRIFTValues, arma::mat previousCovariances, arma::mat discreteDIFFUSIONValues);
+arma::mat computeKalmanLatentCovariancePrediction(const arma::mat& discreteDRIFTValues, const arma::mat& previousCovariances, const arma::mat& discreteDIFFUSIONValues);
 RcppExport SEXP _regCtsem_computeKalmanLatentCovariancePrediction(SEXP discreteDRIFTValuesSEXP, SEXP previousCovariancesSEXP, SEXP discreteDIFFUSIONValuesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type discreteDRIFTValues(discreteDRIFTValuesSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type previousCovariances(previousCovariancesSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type discreteDIFFUSIONValues(discreteDIFFUSIONValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type discreteDRIFTValues(discreteDRIFTValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type previousCovariances(previousCovariancesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type discreteDIFFUSIONValues(discreteDIFFUSIONValuesSEXP);
     rcpp_result_gen = Rcpp::wrap(computeKalmanLatentCovariancePrediction(discreteDRIFTValues, previousCovariances, discreteDIFFUSIONValues));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeKalmanLatentStatePrediction
-arma::colvec computeKalmanLatentStatePrediction(arma::mat discreteDRIFTValues, arma::colvec previousStates, arma::colvec discreteCINTValues);
+arma::colvec computeKalmanLatentStatePrediction(const arma::mat& discreteDRIFTValues, const arma::colvec& previousStates, const arma::colvec& discreteCINTValues);
 RcppExport SEXP _regCtsem_computeKalmanLatentStatePrediction(SEXP discreteDRIFTValuesSEXP, SEXP previousStatesSEXP, SEXP discreteCINTValuesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type discreteDRIFTValues(discreteDRIFTValuesSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type previousStates(previousStatesSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type discreteCINTValues(discreteCINTValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type discreteDRIFTValues(discreteDRIFTValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type previousStates(previousStatesSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type discreteCINTValues(discreteCINTValuesSEXP);
     rcpp_result_gen = Rcpp::wrap(computeKalmanLatentStatePrediction(discreteDRIFTValues, previousStates, discreteCINTValues));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeKalmanManifestCovariancePrediction
-arma::mat computeKalmanManifestCovariancePrediction(arma::mat LAMBDA, arma::mat predictedLatentCovariances, arma::mat currentMANIFESTVAR);
+arma::mat computeKalmanManifestCovariancePrediction(const arma::mat& LAMBDA, const arma::mat& predictedLatentCovariances, const arma::mat& currentMANIFESTVAR);
 RcppExport SEXP _regCtsem_computeKalmanManifestCovariancePrediction(SEXP LAMBDASEXP, SEXP predictedLatentCovariancesSEXP, SEXP currentMANIFESTVARSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type LAMBDA(LAMBDASEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type predictedLatentCovariances(predictedLatentCovariancesSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type currentMANIFESTVAR(currentMANIFESTVARSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type LAMBDA(LAMBDASEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type predictedLatentCovariances(predictedLatentCovariancesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type currentMANIFESTVAR(currentMANIFESTVARSEXP);
     rcpp_result_gen = Rcpp::wrap(computeKalmanManifestCovariancePrediction(LAMBDA, predictedLatentCovariances, currentMANIFESTVAR));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeKalmanManifestPrediction
-arma::colvec computeKalmanManifestPrediction(arma::mat LAMBDAValues, arma::colvec predictedStates, arma::colvec MANIFESTMEANSValues);
+arma::colvec computeKalmanManifestPrediction(const arma::mat& LAMBDAValues, const arma::colvec& predictedStates, const arma::colvec& MANIFESTMEANSValues);
 RcppExport SEXP _regCtsem_computeKalmanManifestPrediction(SEXP LAMBDAValuesSEXP, SEXP predictedStatesSEXP, SEXP MANIFESTMEANSValuesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type LAMBDAValues(LAMBDAValuesSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type predictedStates(predictedStatesSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type MANIFESTMEANSValues(MANIFESTMEANSValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type LAMBDAValues(LAMBDAValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type predictedStates(predictedStatesSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type MANIFESTMEANSValues(MANIFESTMEANSValuesSEXP);
     rcpp_result_gen = Rcpp::wrap(computeKalmanManifestPrediction(LAMBDAValues, predictedStates, MANIFESTMEANSValues));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeRAMExpectedCovariance
-arma::mat computeRAMExpectedCovariance(arma::mat F, arma::mat A, arma::mat S);
+arma::mat computeRAMExpectedCovariance(const arma::mat& F, const arma::mat& A, const arma::mat& S);
 RcppExport SEXP _regCtsem_computeRAMExpectedCovariance(SEXP FSEXP, SEXP ASEXP, SEXP SSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type F(FSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type F(FSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
     rcpp_result_gen = Rcpp::wrap(computeRAMExpectedCovariance(F, A, S));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeRAMExpectedMeans
-arma::mat computeRAMExpectedMeans(arma::mat F, arma::mat A, arma::colvec M);
+arma::mat computeRAMExpectedMeans(const arma::mat& F, const arma::mat& A, const arma::colvec& M);
 RcppExport SEXP _regCtsem_computeRAMExpectedMeans(SEXP FSEXP, SEXP ASEXP, SEXP MSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type F(FSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type F(FSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type M(MSEXP);
     rcpp_result_gen = Rcpp::wrap(computeRAMExpectedMeans(F, A, M));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeRAMM2LL
-double computeRAMM2LL(Rcpp::List RAMdata, arma::colvec expectedMeans, arma::mat expectedCovariance);
+double computeRAMM2LL(const Rcpp::List& RAMdata, const arma::colvec& expectedMeans, const arma::mat& expectedCovariance);
 RcppExport SEXP _regCtsem_computeRAMM2LL(SEXP RAMdataSEXP, SEXP expectedMeansSEXP, SEXP expectedCovarianceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type RAMdata(RAMdataSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type expectedMeans(expectedMeansSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type expectedCovariance(expectedCovarianceSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type RAMdata(RAMdataSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type expectedMeans(expectedMeansSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type expectedCovariance(expectedCovarianceSEXP);
     rcpp_result_gen = Rcpp::wrap(computeRAMM2LL(RAMdata, expectedMeans, expectedCovariance));
     return rcpp_result_gen;
 END_RCPP
 }
 // deepCopyNumericVector
-Rcpp::NumericVector deepCopyNumericVector(Rcpp::NumericVector x);
+Rcpp::NumericVector deepCopyNumericVector(const Rcpp::NumericVector x);
 RcppExport SEXP _regCtsem_deepCopyNumericVector(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector >::type x(xSEXP);
     rcpp_result_gen = Rcpp::wrap(deepCopyNumericVector(x));
     return rcpp_result_gen;
 END_RCPP
 }
 // deepCopyNumericMatrix
-Rcpp::NumericMatrix deepCopyNumericMatrix(Rcpp::NumericMatrix x);
+Rcpp::NumericMatrix deepCopyNumericMatrix(const Rcpp::NumericMatrix x);
 RcppExport SEXP _regCtsem_deepCopyNumericMatrix(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix >::type x(xSEXP);
     rcpp_result_gen = Rcpp::wrap(deepCopyNumericMatrix(x));
     return rcpp_result_gen;
 END_RCPP
 }
 // deepCopyStringVector
-Rcpp::StringVector deepCopyStringVector(Rcpp::StringVector x);
+Rcpp::StringVector deepCopyStringVector(const Rcpp::StringVector x);
 RcppExport SEXP _regCtsem_deepCopyStringVector(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::StringVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::StringVector >::type x(xSEXP);
     rcpp_result_gen = Rcpp::wrap(deepCopyStringVector(x));
     return rcpp_result_gen;
 END_RCPP
 }
 // deepCopyStringMatrix
-Rcpp::StringMatrix deepCopyStringMatrix(Rcpp::StringMatrix x);
+Rcpp::StringMatrix deepCopyStringMatrix(const Rcpp::StringMatrix x);
 RcppExport SEXP _regCtsem_deepCopyStringMatrix(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::StringMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::StringMatrix >::type x(xSEXP);
     rcpp_result_gen = Rcpp::wrap(deepCopyStringMatrix(x));
     return rcpp_result_gen;
 END_RCPP
 }
 // deepCopyList
-Rcpp::List deepCopyList(Rcpp::List x);
+Rcpp::List deepCopyList(const Rcpp::List x);
 RcppExport SEXP _regCtsem_deepCopyList(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List >::type x(xSEXP);
     rcpp_result_gen = Rcpp::wrap(deepCopyList(x));
     return rcpp_result_gen;
 END_RCPP
 }
 // deepCopyDataFrame
-Rcpp::DataFrame deepCopyDataFrame(Rcpp::DataFrame x);
+Rcpp::DataFrame deepCopyDataFrame(const Rcpp::DataFrame x);
 RcppExport SEXP _regCtsem_deepCopyDataFrame(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::DataFrame >::type x(xSEXP);
     rcpp_result_gen = Rcpp::wrap(deepCopyDataFrame(x));
     return rcpp_result_gen;
 END_RCPP
 }
 // fillA
-arma::mat fillA(arma::mat A, bool hasDiscreteDRIFTUnique, Rcpp::List discreteDRIFTUnique, bool hasDiscreteTRAITUnique, Rcpp::List discreteTRAITUnique, arma::mat LAMBDA, Rcpp::DataFrame AParameterIndicators);
+arma::mat fillA(arma::mat A, const bool hasDiscreteDRIFTUnique, const Rcpp::List& discreteDRIFTUnique, const bool hasDiscreteTRAITUnique, const Rcpp::List& discreteTRAITUnique, const arma::mat& LAMBDA, const Rcpp::DataFrame& AParameterIndicators);
 RcppExport SEXP _regCtsem_fillA(SEXP ASEXP, SEXP hasDiscreteDRIFTUniqueSEXP, SEXP discreteDRIFTUniqueSEXP, SEXP hasDiscreteTRAITUniqueSEXP, SEXP discreteTRAITUniqueSEXP, SEXP LAMBDASEXP, SEXP AParameterIndicatorsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
-    Rcpp::traits::input_parameter< bool >::type hasDiscreteDRIFTUnique(hasDiscreteDRIFTUniqueSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type discreteDRIFTUnique(discreteDRIFTUniqueSEXP);
-    Rcpp::traits::input_parameter< bool >::type hasDiscreteTRAITUnique(hasDiscreteTRAITUniqueSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type discreteTRAITUnique(discreteTRAITUniqueSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type LAMBDA(LAMBDASEXP);
-    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type AParameterIndicators(AParameterIndicatorsSEXP);
+    Rcpp::traits::input_parameter< const bool >::type hasDiscreteDRIFTUnique(hasDiscreteDRIFTUniqueSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type discreteDRIFTUnique(discreteDRIFTUniqueSEXP);
+    Rcpp::traits::input_parameter< const bool >::type hasDiscreteTRAITUnique(hasDiscreteTRAITUniqueSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type discreteTRAITUnique(discreteTRAITUniqueSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type LAMBDA(LAMBDASEXP);
+    Rcpp::traits::input_parameter< const Rcpp::DataFrame& >::type AParameterIndicators(AParameterIndicatorsSEXP);
     rcpp_result_gen = Rcpp::wrap(fillA(A, hasDiscreteDRIFTUnique, discreteDRIFTUnique, hasDiscreteTRAITUnique, discreteTRAITUnique, LAMBDA, AParameterIndicators));
     return rcpp_result_gen;
 END_RCPP
 }
 // fillM
-arma::colvec fillM(arma::colvec M, arma::colvec T0MEANS, arma::colvec MANIFESTMEANS, bool hasDiscreteCINTUnique, Rcpp::List discreteCINTUnique, Rcpp::DataFrame cppMParameterIndicators);
+arma::colvec fillM(arma::colvec M, const arma::colvec& T0MEANS, const arma::colvec& MANIFESTMEANS, const bool hasDiscreteCINTUnique, const Rcpp::List& discreteCINTUnique, const Rcpp::DataFrame& cppMParameterIndicators);
 RcppExport SEXP _regCtsem_fillM(SEXP MSEXP, SEXP T0MEANSSEXP, SEXP MANIFESTMEANSSEXP, SEXP hasDiscreteCINTUniqueSEXP, SEXP discreteCINTUniqueSEXP, SEXP cppMParameterIndicatorsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::colvec >::type M(MSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type T0MEANS(T0MEANSSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type MANIFESTMEANS(MANIFESTMEANSSEXP);
-    Rcpp::traits::input_parameter< bool >::type hasDiscreteCINTUnique(hasDiscreteCINTUniqueSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type discreteCINTUnique(discreteCINTUniqueSEXP);
-    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type cppMParameterIndicators(cppMParameterIndicatorsSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type T0MEANS(T0MEANSSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type MANIFESTMEANS(MANIFESTMEANSSEXP);
+    Rcpp::traits::input_parameter< const bool >::type hasDiscreteCINTUnique(hasDiscreteCINTUniqueSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type discreteCINTUnique(discreteCINTUniqueSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::DataFrame& >::type cppMParameterIndicators(cppMParameterIndicatorsSEXP);
     rcpp_result_gen = Rcpp::wrap(fillM(M, T0MEANS, MANIFESTMEANS, hasDiscreteCINTUnique, discreteCINTUnique, cppMParameterIndicators));
     return rcpp_result_gen;
 END_RCPP
 }
 // fillS
-arma::mat fillS(arma::mat S, arma::mat T0VAR, arma::mat MANIFESTVAR, bool hasDiscreteTRAITUnique, arma::mat TRAITVAR, bool hasDiscreteDIFFUSIONUnique, Rcpp::List discreteDIFFUSIONUnique, Rcpp::DataFrame SParameterIndicators);
+arma::mat fillS(arma::mat S, const arma::mat& T0VAR, const arma::mat& MANIFESTVAR, const bool hasDiscreteTRAITUnique, const arma::mat& TRAITVAR, const bool hasDiscreteDIFFUSIONUnique, const Rcpp::List& discreteDIFFUSIONUnique, const Rcpp::DataFrame& SParameterIndicators);
 RcppExport SEXP _regCtsem_fillS(SEXP SSEXP, SEXP T0VARSEXP, SEXP MANIFESTVARSEXP, SEXP hasDiscreteTRAITUniqueSEXP, SEXP TRAITVARSEXP, SEXP hasDiscreteDIFFUSIONUniqueSEXP, SEXP discreteDIFFUSIONUniqueSEXP, SEXP SParameterIndicatorsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type S(SSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type T0VAR(T0VARSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type MANIFESTVAR(MANIFESTVARSEXP);
-    Rcpp::traits::input_parameter< bool >::type hasDiscreteTRAITUnique(hasDiscreteTRAITUniqueSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type TRAITVAR(TRAITVARSEXP);
-    Rcpp::traits::input_parameter< bool >::type hasDiscreteDIFFUSIONUnique(hasDiscreteDIFFUSIONUniqueSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type discreteDIFFUSIONUnique(discreteDIFFUSIONUniqueSEXP);
-    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type SParameterIndicators(SParameterIndicatorsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type T0VAR(T0VARSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type MANIFESTVAR(MANIFESTVARSEXP);
+    Rcpp::traits::input_parameter< const bool >::type hasDiscreteTRAITUnique(hasDiscreteTRAITUniqueSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type TRAITVAR(TRAITVARSEXP);
+    Rcpp::traits::input_parameter< const bool >::type hasDiscreteDIFFUSIONUnique(hasDiscreteDIFFUSIONUniqueSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type discreteDIFFUSIONUnique(discreteDIFFUSIONUniqueSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::DataFrame& >::type SParameterIndicators(SParameterIndicatorsSEXP);
     rcpp_result_gen = Rcpp::wrap(fillS(S, T0VAR, MANIFESTVAR, hasDiscreteTRAITUnique, TRAITVAR, hasDiscreteDIFFUSIONUnique, discreteDIFFUSIONUnique, SParameterIndicators));
     return rcpp_result_gen;
 END_RCPP
 }
 // getMatrixExponential
-arma::mat getMatrixExponential(arma::mat mat);
+arma::mat getMatrixExponential(const arma::mat& mat);
 RcppExport SEXP _regCtsem_getMatrixExponential(SEXP matSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mat(matSEXP);
     rcpp_result_gen = Rcpp::wrap(getMatrixExponential(mat));
     return rcpp_result_gen;
 END_RCPP
 }
 // getVarianceFromVarianceBase
-arma::mat getVarianceFromVarianceBase(arma::mat varianceBaseValues);
+arma::mat getVarianceFromVarianceBase(const arma::mat& varianceBaseValues);
 RcppExport SEXP _regCtsem_getVarianceFromVarianceBase(SEXP varianceBaseValuesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type varianceBaseValues(varianceBaseValuesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type varianceBaseValues(varianceBaseValuesSEXP);
     rcpp_result_gen = Rcpp::wrap(getVarianceFromVarianceBase(varianceBaseValues));
     return rcpp_result_gen;
 END_RCPP
 }
 // kalmanFit
-arma::colvec kalmanFit(bool update, const int sampleSize, const int Tpoints, const int nlatent, int nmanifest, const arma::mat kalmanData, arma::mat& latentScores, arma::mat& predictedManifestValues, const Rcpp::List& discreteTimeParameterNames, const arma::colvec& T0MEANSValues, const arma::mat& T0VARValues, const Rcpp::List& discreteDRIFTUnique, const Rcpp::List& discreteCINTUnique, const Rcpp::List& discreteTRAITUnique, const Rcpp::List& discreteDIFFUSIONUnique, const arma::mat& LAMBDAValues, const arma::colvec& MANIFESTMEANSValues, const arma::mat& MANIFESTVARValues);
+arma::colvec kalmanFit(bool update, const int sampleSize, const int Tpoints, const int nlatent, const int nmanifest, const arma::mat kalmanData, arma::mat& latentScores, arma::mat& predictedManifestValues, const Rcpp::List& discreteTimeParameterNames, const arma::colvec& T0MEANSValues, const arma::mat& T0VARValues, const Rcpp::List& discreteDRIFTUnique, const Rcpp::List& discreteCINTUnique, const Rcpp::List& discreteTRAITUnique, const Rcpp::List& discreteDIFFUSIONUnique, const arma::mat& LAMBDAValues, const arma::colvec& MANIFESTMEANSValues, const arma::mat& MANIFESTVARValues);
 RcppExport SEXP _regCtsem_kalmanFit(SEXP updateSEXP, SEXP sampleSizeSEXP, SEXP TpointsSEXP, SEXP nlatentSEXP, SEXP nmanifestSEXP, SEXP kalmanDataSEXP, SEXP latentScoresSEXP, SEXP predictedManifestValuesSEXP, SEXP discreteTimeParameterNamesSEXP, SEXP T0MEANSValuesSEXP, SEXP T0VARValuesSEXP, SEXP discreteDRIFTUniqueSEXP, SEXP discreteCINTUniqueSEXP, SEXP discreteTRAITUniqueSEXP, SEXP discreteDIFFUSIONUniqueSEXP, SEXP LAMBDAValuesSEXP, SEXP MANIFESTMEANSValuesSEXP, SEXP MANIFESTVARValuesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -362,7 +362,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type sampleSize(sampleSizeSEXP);
     Rcpp::traits::input_parameter< const int >::type Tpoints(TpointsSEXP);
     Rcpp::traits::input_parameter< const int >::type nlatent(nlatentSEXP);
-    Rcpp::traits::input_parameter< int >::type nmanifest(nmanifestSEXP);
+    Rcpp::traits::input_parameter< const int >::type nmanifest(nmanifestSEXP);
     Rcpp::traits::input_parameter< const arma::mat >::type kalmanData(kalmanDataSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type latentScores(latentScoresSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type predictedManifestValues(predictedManifestValuesSEXP);

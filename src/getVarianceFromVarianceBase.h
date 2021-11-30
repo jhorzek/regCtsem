@@ -4,6 +4,6 @@
 #include <RcppArmadillo.h>
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-arma::mat getVarianceFromVarianceBase(arma::mat varianceBaseValues);
+arma::mat getVarianceFromVarianceBase(const arma::mat& varianceBaseValues);
 
 #endif

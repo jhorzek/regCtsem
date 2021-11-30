@@ -4,6 +4,6 @@
 #include <RcppArmadillo.h>
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-arma::mat getMatrixExponential(arma::mat mat);
+arma::mat getMatrixExponential(const arma::mat& mat);
 
 #endif

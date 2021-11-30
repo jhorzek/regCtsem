@@ -6,8 +6,8 @@
 // observedMeans within this sample, observedCov within this sample, filtered expectedMeans, and filtered expectedCovariance.
 using namespace Rcpp;
 // [[Rcpp::export]]
-double computeGroupM2LL(int sampleSize, int nObservedVariables, arma::colvec observedMeans, arma::mat observedCov,
-                        arma::colvec expectedMeans, arma::mat expectedCovariance){
+double computeGroupM2LL(const int sampleSize, const int nObservedVariables, const arma::colvec& observedMeans, const arma::mat& observedCov,
+                        const arma::colvec& expectedMeans, const arma::mat& expectedCovariance){
   double m2LL;
   double Nklog2pi = sampleSize*nObservedVariables*std::log(2*M_PI);
   double NlogDetExpCov = sampleSize*std::log(arma::det(expectedCovariance));

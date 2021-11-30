@@ -5,7 +5,7 @@
 // Computes the discrete time drift matrices given the drift and discreteDRIFTUnique (list with discrete drift names, dTs and results)
 using namespace Rcpp;
 // [[Rcpp::export]]
-Rcpp::List computeDiscreteDRIFTs(arma::mat DRIFTValues, Rcpp::List discreteDRIFTUnique) {
+Rcpp::List computeDiscreteDRIFTs(const arma::mat& DRIFTValues, Rcpp::List discreteDRIFTUnique) {
 
   Rcpp::StringVector discreteDRIFTUniqueLabels = discreteDRIFTUnique["labels"];
   arma::vec dT = discreteDRIFTUnique["dT"];

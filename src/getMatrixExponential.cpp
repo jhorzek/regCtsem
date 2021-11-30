@@ -6,6 +6,6 @@
 using namespace Rcpp;
 // [[Rcpp::export]]
 
-arma::mat getMatrixExponential(arma::mat mat){
+arma::mat getMatrixExponential(const arma::mat& mat){
   return(arma::expmat(mat));
 }

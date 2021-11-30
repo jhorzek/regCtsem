@@ -8,10 +8,14 @@
 using namespace Rcpp;
 // [[Rcpp::export]]
 
-arma::mat  fillS(arma::mat S, arma::mat T0VAR, arma::mat MANIFESTVAR,
-                 bool hasDiscreteTRAITUnique, arma::mat TRAITVAR,
-                 bool hasDiscreteDIFFUSIONUnique, Rcpp::List discreteDIFFUSIONUnique,
-                 Rcpp::DataFrame SParameterIndicators){
+arma::mat  fillS(arma::mat S,
+                 const arma::mat& T0VAR,
+                 const arma::mat& MANIFESTVAR,
+                 const bool hasDiscreteTRAITUnique,
+                 const arma::mat& TRAITVAR,
+                 const bool hasDiscreteDIFFUSIONUnique,
+                 const Rcpp::List& discreteDIFFUSIONUnique,
+                 const Rcpp::DataFrame& SParameterIndicators){
   // extract labels of elements in S
   Rcpp::StringVector  SElementLabels = SParameterIndicators["label"];
   arma::uvec  SElementRowStart = SParameterIndicators["row_start"];

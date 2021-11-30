@@ -5,7 +5,7 @@
 // Computes the discrete time latent intercept values (list with discreteCINT-names, dTs and results) given the inverse of the drift (DRIFTInverseValues), the discreteDRIFTUnique (list with discreteDRIFT-names, dTs and results) and CINTValues
 using namespace Rcpp;
 // [[Rcpp::export]]
-Rcpp::List computeDiscreteCINTs(Rcpp::List discreteCINTUnique,arma::mat DRIFTInverseValues, Rcpp::List discreteDRIFTUnique, arma::colvec CINTValues) {
+Rcpp::List computeDiscreteCINTs(Rcpp::List discreteCINTUnique, const arma::mat& DRIFTInverseValues, const Rcpp::List& discreteDRIFTUnique, const arma::colvec& CINTValues) {
 
   Rcpp::StringVector discreteCINTUniqueLabels = discreteCINTUnique["labels"];
   arma::vec dtCINT = discreteCINTUnique["dT"];

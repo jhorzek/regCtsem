@@ -5,7 +5,7 @@
 // Computes the -2log likelihood in a RAM model for a  single person given the number of non-missing variables (nObservedVariables), x (rawData), filtered expectedMeans, and filtered expectedCovariance.
 using namespace Rcpp;
 // [[Rcpp::export]]
-double computeIndividualM2LL(int nObservedVariables, arma::colvec rawData,  arma::colvec expectedMeans, arma::mat expectedCovariance){
+double computeIndividualM2LL(const int nObservedVariables, const arma::colvec& rawData, const arma::colvec& expectedMeans, const arma::mat& expectedCovariance){
   double m2LL;
   double klog2pi = nObservedVariables*std::log(2*M_PI);
   double logDetExpCov = std::log(arma::det(expectedCovariance));

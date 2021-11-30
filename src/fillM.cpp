@@ -8,9 +8,12 @@
 using namespace Rcpp;
 // [[Rcpp::export]]
 
-arma::colvec fillM(arma::colvec M, arma::colvec T0MEANS, arma::colvec MANIFESTMEANS,
-                   bool hasDiscreteCINTUnique, Rcpp::List discreteCINTUnique,
-                   Rcpp::DataFrame cppMParameterIndicators){
+arma::colvec fillM(arma::colvec M,
+                   const arma::colvec& T0MEANS,
+                   const arma::colvec& MANIFESTMEANS,
+                   const bool hasDiscreteCINTUnique,
+                   const Rcpp::List& discreteCINTUnique,
+                   const Rcpp::DataFrame& cppMParameterIndicators){
   // extract labels of elements in A
   Rcpp::StringVector  MElementLabels = cppMParameterIndicators["label"];
   arma::uvec  MElementRowStart = cppMParameterIndicators["row_start"];

@@ -6,7 +6,7 @@
 using namespace Rcpp;
 // [[Rcpp::export]]
 
-arma::mat computeKalmanManifestCovariancePrediction(arma::mat LAMBDA, arma::mat predictedLatentCovariances, arma::mat currentMANIFESTVAR){
+arma::mat computeKalmanManifestCovariancePrediction(const arma::mat& LAMBDA, const arma::mat& predictedLatentCovariances, const arma::mat& currentMANIFESTVAR){
   arma::mat predictedManifestCovariances = LAMBDA * predictedLatentCovariances * arma::trans(LAMBDA) + currentMANIFESTVAR;
 
   return(predictedManifestCovariances);

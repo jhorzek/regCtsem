@@ -5,16 +5,25 @@
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
 arma::mat fillA(arma::mat A,
-                bool hasDiscreteDRIFTUnique, Rcpp::List discreteDRIFTUnique,
-                bool hasDiscreteTRAITUnique, Rcpp::List discreteTRAITUnique,
-                arma::mat LAMBDA,
-                Rcpp::DataFrame AParameterIndicators);
-arma::mat fillS(arma::mat S, arma::mat T0VAR, arma::mat MANIFESTVAR,
-                bool hasDiscreteTRAITUnique,arma::mat TRAITVAR,
-                bool hasDiscreteDIFFUSIONUnique, Rcpp::List discreteDIFFUSIONUnique,
-                Rcpp::DataFrame SParameterIndicators);
-arma::colvec fillM(arma::colvec M, arma::colvec T0MEANS, arma::colvec MANIFESTMEANS,
-                   bool hasDiscreteCINTUnique, Rcpp::List discreteCINTUnique,
-                   Rcpp::DataFrame cppMParameterIndicators);
+                const bool hasDiscreteDRIFTUnique,
+                const Rcpp::List& discreteDRIFTUnique,
+                const bool hasDiscreteTRAITUnique,
+                const Rcpp::List& discreteTRAITUnique,
+                const arma::mat& LAMBDA,
+                const Rcpp::DataFrame& AParameterIndicators);
+arma::mat fillS(arma::mat S,
+                const arma::mat& T0VAR,
+                const arma::mat& MANIFESTVAR,
+                const bool hasDiscreteTRAITUnique,
+                const arma::mat& TRAITVAR,
+                const bool hasDiscreteDIFFUSIONUnique,
+                const Rcpp::List& discreteDIFFUSIONUnique,
+                const Rcpp::DataFrame& SParameterIndicators);
+arma::colvec fillM(arma::colvec M,
+                   const arma::colvec& T0MEANS,
+                   const arma::colvec& MANIFESTMEANS,
+                   const bool hasDiscreteCINTUnique,
+                   const Rcpp::List& discreteCINTUnique,
+                   const Rcpp::DataFrame& cppMParameterIndicators);
 
 #endif

@@ -59,7 +59,7 @@ class cpptsemRAMmodel{
                   bool mStationaryT0MEANS);
 
   // setter
-  void setParameterValues(Rcpp::NumericVector mParameters, Rcpp::StringVector parameterLabels);
+  void setParameterValues(const Rcpp::NumericVector& mParameters, Rcpp::StringVector& parameterLabels);
   void setDiscreteDRIFTUnique(Rcpp::List mDiscreteDRIFTUnique);
   void setDiscreteTRAITUnique(Rcpp::List mDiscreteTRAITUnique);
   void setDRIFTHASHExponentialUnique(Rcpp::List mDRIFTHASHExponentialUnique);
@@ -79,30 +79,8 @@ class cpptsemRAMmodel{
   // computation
   void computeRAM();
   void fitRAM();
-  Rcpp::NumericVector approxRAMGradients(double epsilon);
-  Rcpp::NumericVector approxRAMGradient(double epsilon, Rcpp::String parName);
-
-  double computePenalty(Rcpp::NumericVector pars,
-                        Rcpp::StringVector regIndicators,
-                        Rcpp::NumericVector lambda);
-
-  Rcpp::NumericVector computeSubgradients(Rcpp::NumericVector pars,
-                                          Rcpp::NumericVector gradients,
-                                          Rcpp::StringVector regIndicators,
-                                          Rcpp::NumericVector lambdas);
-
-  Rcpp::List GIST(
-      Rcpp::NumericVector pars,
-      Rcpp::StringVector regIndicators,
-      Rcpp::NumericVector lambda,
-      double eta, double sig,
-      Rcpp::NumericVector gradient_epsilons,
-      double initialStepsize, double stepsizeMin = 0, double stepsizeMax = 999999999,
-      std::string GISTLinesearchCriterion = "monotone",
-      int GISTNonMonotoneNBack = 5,
-      int maxIter_out = 100, int maxIter_in = 100,
-      double break_outer = .00000001,
-      std::string break_crit = "parameterChange", int verbose = 0);
+  Rcpp::NumericVector approxRAMGradients(const double epsilon);
+  Rcpp::NumericVector approxRAMGradient(const double epsilon, const Rcpp::String parName);
 
   // getter
   Rcpp::NumericVector getParameterValues();

@@ -10,7 +10,7 @@ arma::colvec kalmanFit(
     const int sampleSize,
                        const int Tpoints,
                        const int nlatent,
-                       int nmanifest,
+                       const int nmanifest,
                        const arma::mat kalmanData,
                        arma::mat &latentScores,
                        arma::mat &predictedManifestValues,
@@ -25,20 +25,20 @@ arma::colvec kalmanFit(
                        const arma::colvec& MANIFESTMEANSValues,
                        const arma::mat& MANIFESTVARValues);
 
-arma::colvec computeKalmanLatentStatePrediction(arma::mat discreteDRIFTValues,
-                                                arma::colvec previousStates,
-                                                arma::colvec discreteCINTValues);
+arma::colvec computeKalmanLatentStatePrediction(const arma::mat& discreteDRIFTValues,
+                                                const arma::colvec& previousStates,
+                                                const arma::colvec& discreteCINTValues);
 
-arma::mat computeKalmanLatentCovariancePrediction(arma::mat discreteDRIFTValues,
-                                                  arma::mat previousCovariances,
-                                                  arma::mat discreteDIFFUSIONValues);
+arma::mat computeKalmanLatentCovariancePrediction(const arma::mat& discreteDRIFTValues,
+                                                  const arma::mat& previousCovariances,
+                                                  const arma::mat& discreteDIFFUSIONValues);
 
-arma::colvec computeKalmanManifestPrediction(arma::mat LAMBDAValues,
-                                             arma::colvec predictedStates,
-                                             arma::colvec MANIFESTMEANSValues);
+arma::colvec computeKalmanManifestPrediction(const arma::mat& LAMBDAValues,
+                                             const arma::colvec& predictedStates,
+                                             const arma::colvec& MANIFESTMEANSValues);
 
-arma::mat computeKalmanManifestCovariancePrediction(arma::mat LAMBDA,
-                                                       arma::mat predictedLatentCovariances,
-                                                       arma::mat currentMANIFESTVAR);
+arma::mat computeKalmanManifestCovariancePrediction(const arma::mat& LAMBDA,
+                                                    const arma::mat& predictedLatentCovariances,
+                                                    const arma::mat& currentMANIFESTVAR);
 
 #endif

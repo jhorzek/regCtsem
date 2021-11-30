@@ -6,9 +6,9 @@
 using namespace Rcpp;
 // [[Rcpp::export]]
 
-arma::mat computeKalmanLatentCovariancePrediction(arma::mat discreteDRIFTValues,
-                                                  arma::mat previousCovariances,
-                                                  arma::mat discreteDIFFUSIONValues){
+arma::mat computeKalmanLatentCovariancePrediction(const arma::mat& discreteDRIFTValues,
+                                                  const arma::mat& previousCovariances,
+                                                  const arma::mat& discreteDIFFUSIONValues){
   arma::mat predictedLatentCovariances = discreteDRIFTValues * previousCovariances * arma::trans(discreteDRIFTValues) + discreteDIFFUSIONValues;
 
   return(predictedLatentCovariances);

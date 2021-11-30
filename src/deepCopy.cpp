@@ -5,26 +5,26 @@ using namespace Rcpp;
 // we do not simply build a reference to their location
 
 // [[Rcpp::export]]
-Rcpp::NumericVector deepCopyNumericVector(Rcpp::NumericVector x) {
+Rcpp::NumericVector deepCopyNumericVector(const Rcpp::NumericVector x) {
   return Rcpp::clone(x);
 }
 // [[Rcpp::export]]
-Rcpp::NumericMatrix deepCopyNumericMatrix(Rcpp::NumericMatrix x) {
+Rcpp::NumericMatrix deepCopyNumericMatrix(const Rcpp::NumericMatrix x) {
   return Rcpp::clone(x);
 }
 // [[Rcpp::export]]
-Rcpp::StringVector deepCopyStringVector(Rcpp::StringVector x) {
+Rcpp::StringVector deepCopyStringVector(const Rcpp::StringVector x) {
   return Rcpp::clone(x);
 }
 // [[Rcpp::export]]
-Rcpp::StringMatrix deepCopyStringMatrix(Rcpp::StringMatrix x) {
+Rcpp::StringMatrix deepCopyStringMatrix(const Rcpp::StringMatrix x) {
   return Rcpp::clone(x);
 }
 // [[Rcpp::export]]
-Rcpp::List deepCopyList(Rcpp::List x) {
+Rcpp::List deepCopyList(const Rcpp::List x) {
   return Rcpp::clone(x);
 }
 // [[Rcpp::export]]
-Rcpp::DataFrame deepCopyDataFrame(Rcpp::DataFrame x) {
+Rcpp::DataFrame deepCopyDataFrame(const Rcpp::DataFrame x) {
   return Rcpp::clone(x);
 }

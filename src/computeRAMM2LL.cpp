@@ -6,7 +6,7 @@
 // DRIFTHASHExponentialUnique (list with expm(drifthash)-names, dTs and results), and discreteDIFFUSIONUnique (list with diffusion-names, dTs and results)
 using namespace Rcpp;
 // [[Rcpp::export]]
-double computeRAMM2LL(Rcpp::List RAMdata, arma::colvec expectedMeans, arma::mat expectedCovariance){
+double computeRAMM2LL(const Rcpp::List& RAMdata, const arma::colvec& expectedMeans, const arma::mat& expectedCovariance){
   double m2LL = 0, currentM2LL;
   int sampleSize;
   int nObservedVariables;

@@ -69,7 +69,7 @@ void cpptsemKalmanModel::setKalmanGroupings(arma::colvec mPersons, arma::colvec 
   group = mGroup;
 }
 
-void cpptsemKalmanModel::setParameterValues(Rcpp::NumericVector mParameters, Rcpp::StringVector parameterLabels){
+void cpptsemKalmanModel::setParameterValues(const Rcpp::NumericVector& mParameters, Rcpp::StringVector& parameterLabels){
   Rcpp::StringVector personExpectedParameterLabels, personMatrixLabels;
   Rcpp::NumericVector personCurrentParameters, personRow, personCol;
   Rcpp::LogicalVector groupSelector, personChanged;
@@ -129,7 +129,7 @@ void cpptsemKalmanModel::setParameterValues(Rcpp::NumericVector mParameters, Rcp
 
 }
 
-void cpptsemKalmanModel::setKalmanMatrixValues(int selectedGroup){
+void cpptsemKalmanModel::setKalmanMatrixValues(const int selectedGroup){
   // sets the values of the drift, diffusion, etc matrices to the values of a specific group.
   Rcpp::StringVector personExpectedParameterLabels, personMatrixLabels;
   Rcpp::NumericVector personCurrentParameters, personRow, personCol;
@@ -185,14 +185,14 @@ Rcpp::NumericVector cpptsemKalmanModel::getParameterValues() {
 
 // Kalman specific functions
 
-void cpptsemKalmanModel::setKalmanMatrices(Rcpp::List mKalmanMatrices){
+void cpptsemKalmanModel::setKalmanMatrices(const Rcpp::List& mKalmanMatrices){
 
   latentScores = Rcpp::as<arma::mat>(mKalmanMatrices["latentScores"]);
   predictedManifestValues = Rcpp::as<arma::mat>(mKalmanMatrices["predictedManifestValues"]);
 
 }
 
-void cpptsemKalmanModel::setKalmanData(Rcpp::List mKalmanData, bool mhasDefinitionVariables){
+void cpptsemKalmanModel::setKalmanData(const Rcpp::List mKalmanData, const bool mhasDefinitionVariables){
   kalmanData = Rcpp::as<arma::mat>(mKalmanData["dataset"]);
   sampleSize = mKalmanData["sampleSize"];
   Tpoints = mKalmanData["Tpoints"];
@@ -204,7 +204,7 @@ void cpptsemKalmanModel::setKalmanData(Rcpp::List mKalmanData, bool mhasDefiniti
   indM2LL = tempIndM2ll;
 }
 
-void cpptsemKalmanModel::setDiscreteTimeParameterNames(Rcpp::List mDiscreteTimeParameterNames){
+void cpptsemKalmanModel::setDiscreteTimeParameterNames(const Rcpp::List mDiscreteTimeParameterNames){
   discreteTimeParameterNames = mDiscreteTimeParameterNames;
 }
 
@@ -378,7 +378,7 @@ void cpptsemKalmanModel::computeAndFitKalman(){
 }
 
 // compute gradient vector. Returns the central gradient approximation
-Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradients(double epsilon){
+Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradients(const double epsilon){
   Rcpp::NumericVector parameterValues = getParameterValues();
   Rcpp::StringVector parameterNames = parameterValues.names();
   Rcpp::NumericMatrix likelihoods( parameterValues.length() , 2 );
@@ -419,7 +419,7 @@ Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradients(double epsilon){
 }
 
 // compute single gradient value. Returns the central gradient approximation
-Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradient(double epsilon, Rcpp::String parName){
+Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradient(const double epsilon, const Rcpp::String parName){
   Rcpp::NumericVector parameterValues = getParameterValues();
   Rcpp::StringVector parameterNames = parameterValues.names();
   Rcpp::NumericMatrix likelihoods( 1 , 2 );
@@ -455,315 +455,6 @@ Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradient(double epsilon, Rcp
 
 
   return(Rcpp::clone(gradient));
-}
-
-Rcpp::List cpptsemKalmanModel::GIST(
-    Rcpp::NumericVector pars,
-    Rcpp::StringVector regIndicators,
-    Rcpp::NumericVector lambda,
-    double eta, double sig,
-    Rcpp::NumericVector gradient_epsilons,
-    double initialStepsize, double stepsizeMin, double stepsizeMax,
-    std::string GISTLinesearchCriterion,
-    int GISTNonMonotoneNBack,
-    int maxIter_out, int maxIter_in,
-    double break_outer, std::string break_crit, int verbose){
-
-  if(!(pars.length() == lambda.length())){Rcpp::stop("Lambda has to be a vector of the same length as pars.");}
-
-  int k_out = 0, k = 0;
-  bool convergence = false, breakCriterion = false,
-    breakOuter = false, smallStep = false, largeStep = false, tempComparison = false;
-  double gradient_epsilon, m2LL_k, m2LL_kp1, regM2LL_k, regM2LL_kp1, lambda_i;
-  arma::mat stepsize(1,1, arma::fill::zeros);
-  Rcpp::String parameterName;
-  Rcpp::NumericVector regM2LLs;
-
-  // initialize parameters
-  Rcpp::StringVector parameterNames = pars.names();
-  setParameterValues(pars, parameterNames);
-  Rcpp::NumericVector gradients_km1, gradients_k, gradients_kp1, subgradients,
-  parameters_km1 = Rcpp::clone(pars), parameters_k = Rcpp::clone(pars), parameters_kp1 = Rcpp::clone(pars),
-  x_kRcpp, y_kRcpp, u_kRcpp;
-  arma::colvec x_k, y_k;
-  arma::rowvec u_k;
-
-  parameters_km1.fill(arma::datum::nan);
-  parameters_kp1.fill(arma::datum::nan);
-
-  // get initial fit and gradients
-  computeAndFitKalman();
-
-  if (indM2LL.has_nan()){
-    Rcpp::stop("Infeasible initial values: Could not compute gradients.");
-  }
-
-  m2LL_k = m2LL;
-  regM2LL_k = m2LL + computePenalty(parameters_k,
-                                    regIndicators,
-                                    lambda);
-  try{
-    for(int i = 0; i < gradient_epsilons.length(); i++){
-      gradient_epsilon = gradient_epsilons[i];
-      gradients_k = approxKalmanGradients(gradient_epsilon);
-      tempComparison = Rcpp::any(Rcpp::is_na(gradients_k));
-      if (!tempComparison){
-        break;
-      }
-      if(i == gradient_epsilons.length()-1){
-        Rcpp::stop("Infeasible initial values: Could not compute gradients.");
-      }
-    }
-  }catch(...){
-    Rcpp::stop("Infeasible initial values: Could not compute gradients.");
-  }
-
-  while(k_out < maxIter_out){
-    Rcpp::checkUserInterrupt();
-    k_out += 1;
-
-    // set step size
-    if(k_out == 1){
-      stepsize = initialStepsize;
-    }else{
-      x_k = parameters_k - parameters_km1;
-      y_k = gradients_k - gradients_km1;
-      x_kRcpp = x_k;
-      y_kRcpp = y_k;
-      x_kRcpp.names() = parameterNames;
-      y_kRcpp.names() = parameterNames;
-
-      stepsize = (arma::trans(x_k)*y_k)/(arma::trans(x_k)*x_k);
-
-      if(stepsize.has_nan() || stepsize.has_inf()){
-        stepsize = initialStepsize;
-      }
-
-      smallStep = stepsize(0,0) < stepsizeMin;
-      largeStep = stepsize(0,0) > stepsizeMax;
-      if(smallStep || largeStep){
-        stepsize = initialStepsize;
-      }
-    }// end step size setting
-
-    // inner iterations
-    while(k < maxIter_in){
-      //Rcpp::Rcout << "stepsize: " << stepsize(0,0) << std::endl;
-      //Rcpp::Rcout << "parameters_k: " << parameters_k << std::endl;
-      //Rcpp::Rcout << "gradients_k: " << gradients_k << std::endl;
-      u_k = parameters_k - gradients_k/(stepsize(0,0));
-      u_kRcpp = u_k;
-      u_kRcpp.names() = parameterNames;
-
-      parameters_kp1.fill(arma::datum::nan);
-
-      for(int i = 0; i < parameters_kp1.length(); i++){
-        parameterName = parameterNames[i];
-        lambda_i = lambda[parameterName];
-
-        bool isRegularized = false;
-        for(int j = 0; j < regIndicators.length(); j++){
-          isRegularized = (parameterName == regIndicators[j]);
-          if(isRegularized){break;}
-        }
-
-        if(isRegularized){
-          // update parameter i with lasso
-          parameters_kp1[parameterName] = std::copysign(1.0, u_kRcpp[parameterName])*std::max(0.0, std::abs(u_kRcpp[parameterName]) - lambda_i/stepsize(0,0));
-        }else{
-          parameters_kp1[parameterName] = u_kRcpp[parameterName];
-        }
-      }
-
-      try{
-        // fit model with new parameters
-        setParameterValues(parameters_kp1, parameterNames);
-
-        // get initial fit and gradients
-        computeAndFitKalman();
-      }catch(...){
-        // update step size
-        stepsize = eta*stepsize;
-
-        // update iteration counter
-        k +=1;
-
-        // skip rest
-        continue;
-      }
-
-      if (indM2LL.has_nan()){
-        // update step size
-        stepsize = eta*stepsize;
-
-        // update iteration counter
-        k +=1;
-
-        // skip rest
-        continue;
-      }
-
-      m2LL_kp1 = m2LL;
-      regM2LL_kp1 = m2LL_kp1 + computePenalty(parameters_kp1,
-                                              regIndicators,
-                                              lambda);
-
-      if(!arma::is_finite(m2LL_kp1)){
-
-        // update step size
-        stepsize = eta*stepsize;
-
-        // update iteration counter
-        k +=1;
-
-        // skip rest
-        continue;
-      }
-
-      // break if line search condition is satisfied
-      if(GISTLinesearchCriterion == "monotone"){
-        arma::colvec parameterDiff = parameters_k - parameters_kp1;
-        arma::mat sumSquared(1,1);
-        sumSquared = sum(arma::pow(parameterDiff, 2));
-        double comparisonValue = regM2LL_k - (sig/2) * stepsize(0,0) * sumSquared(0,0);
-        breakCriterion = regM2LL_kp1 < comparisonValue;
-      }else if(GISTLinesearchCriterion == "non-monotone"){
-        Rcpp::stop("Non-monotone linesearch not implemented in C++");
-        //int nBack = std::max(1,k_out-GISTNonMonotoneNBack);
-        //arma::colvec parameterDiff = parameters_k - parameters_kp1;
-        //breakCriterion <- regM2LL_kp1 <= max(regM2LL[nBack:k_out]) - (sig/2) * stepsize * sum((parameters_k - parameters_kp1)^2)
-      }else{
-        Rcpp::stop("Unknown GISTLinesearchCriterion. Possible are monotone and non-monotone.");
-      }
-      if(breakCriterion){
-        break;
-      }
-
-      // update step size
-      stepsize = eta*stepsize;
-
-      // update iteration counter
-      k +=1;
-
-    } // end inner iteration
-
-    // Compute gradients
-    try{
-      for(int i = 0; i < gradient_epsilons.length(); i++){
-        gradient_epsilon = gradient_epsilons[i];
-        gradients_kp1 = approxKalmanGradients(gradient_epsilon);
-        tempComparison = Rcpp::any(Rcpp::is_na(gradients_kp1));
-        if (!tempComparison){
-          break;
-        }
-        if(i == gradient_epsilons.length()-1){
-          Rcpp::stop("No gradients in outer iteration");
-        }
-      }
-    }catch(...){
-      Rcpp::stop("No gradients in outer iteration");
-    }
-
-    // update parameters for next iteration
-    parameters_km1 = Rcpp::clone(parameters_k);
-    parameters_k = Rcpp::clone(parameters_kp1);
-    gradients_km1 = Rcpp::clone(gradients_k);
-    gradients_k = Rcpp::clone(gradients_kp1);
-    m2LL_k = m2LL_kp1;
-    regM2LL_k = regM2LL_kp1;
-    //regM2LLs.push_back(regM2LL_kp1);
-
-    if(verbose == 1){
-      Rcpp::Rcout << "Parameter in iteration " << k_out << ": " << parameters_k << std::endl;
-    }
-
-    //regM2LL[k_out] = regM2LL_k
-
-    // break outer loop if stopping criterion is satisfied
-    if(break_crit == "gradient"){
-
-      // Gradient based break condition: Problem: gradients extremely dependent on the epsilon in the approximation
-
-      subgradients = computeSubgradients(parameters_k, gradients_k, regIndicators, lambda);
-
-      breakOuter = Rcpp::max(Rcpp::abs(subgradients)) < break_outer;
-
-    }else if(break_crit == "parameterChange"){
-      arma::colvec parameterDiff = parameters_k - parameters_km1;
-      arma::colvec temppars = parameters_km1;
-      arma::mat sumSquared1(1,1);
-      arma::mat sumSquared2(1,1);
-      sumSquared1 = sum(arma::pow(parameterDiff, 2));
-      sumSquared2 = sum(arma::pow(temppars, 2));
-      double comparisonValue = sqrt(sumSquared1(0,0))/sqrt(sumSquared2(0,0));
-      breakOuter = comparisonValue < break_outer;
-
-    }else{
-      Rcpp::stop("Unknown breaking criterion. The value passed to break_crit has to be named (either 'parameterChange' or 'gradient') See ?controlGIST for details on break_outer");
-    }
-    if(breakOuter){
-      //Rcpp::Rcout << "Break outer" << std::endl;
-      convergence = true;
-      break;
-    }
-
-  }// end outer loop
-
-  if(k_out == maxIter_out){
-    Rcpp::Rcout << "Warning: Maximal number if outer iterations used. Increase number of outer iterations or take smaller lambda-steps.";
-  }
-
-  subgradients = computeSubgradients(parameters_k, gradients_k, regIndicators, lambda);
-
-  Rcpp::List retList = Rcpp::List::create(Named("par") = parameters_k , _["m2LL"] = m2LL, _["subgradients"] = subgradients, _["regM2LLs"] = regM2LLs, _["converged"] = convergence);
-
-  return(retList);
-}// end GIST
-
-
-double cpptsemKalmanModel::computePenalty(Rcpp::NumericVector pars,
-                                          Rcpp::StringVector regIndicators,
-                                          Rcpp::NumericVector lambda){
-  Rcpp::String currentParName;
-  double penaltyValue = 0.0;
-
-  for(int i = 0; i < regIndicators.length(); i++){
-    currentParName = regIndicators[i];
-    penaltyValue += lambda[currentParName]*std::abs(pars[currentParName]);
-  }
-  return(penaltyValue);
-}
-
-Rcpp::NumericVector cpptsemKalmanModel::computeSubgradients(Rcpp::NumericVector pars, Rcpp::NumericVector gradients, Rcpp::StringVector regIndicators, Rcpp::NumericVector lambdas){
-  double absoluteValueOf, penaltyGradient, penaltyGradientLower, penaltyGradientUpper;
-  bool setZero;
-  // extract names
-  Rcpp::String parameterNames = pars.names();
-  Rcpp::String currentParLabel;
-  // first part: derivative of Likelihood
-  Rcpp::NumericVector subgradient = Rcpp::clone(gradients);
-
-  // second part: derivative of penalty term
-  for(int i = 0; i < regIndicators.length(); i++){
-    currentParLabel = regIndicators(i);
-    absoluteValueOf = pars[currentParLabel];
-
-    if(!(absoluteValueOf == 0)){
-      penaltyGradient = lambdas[currentParLabel]*std::copysign(1.0, absoluteValueOf);
-      subgradient[currentParLabel] = subgradient[currentParLabel] + penaltyGradient;
-    }else{
-      penaltyGradientLower = -1.0*lambdas[currentParLabel];
-      penaltyGradientUpper = lambdas[currentParLabel];
-      // check if likelihood gradient is within interval:
-      setZero = (subgradient[currentParLabel] > penaltyGradientLower) & (subgradient[currentParLabel] < penaltyGradientUpper);
-      if(setZero){
-        subgradient[currentParLabel] = 0;
-      }else{
-        subgradient[currentParLabel] = std::copysign(1.0, subgradient[currentParLabel])*(std::abs(subgradient[currentParLabel]) - lambdas[currentParLabel]);
-      }
-    } // end is zero
-  } // end for
-  return(subgradient);
 }
 
 RCPP_EXPOSED_CLASS(cpptsemKalmanModel)
@@ -813,9 +504,6 @@ RCPP_EXPOSED_CLASS(cpptsemKalmanModel)
     .method( "computeAndFitKalman", &cpptsemKalmanModel::computeAndFitKalman, "Computes the Kalman matrices")
     .method( "approxKalmanGradients", &cpptsemKalmanModel::approxKalmanGradients, "Returns a central approximation of the gradients.")
     .method( "approxKalmanGradient", &cpptsemKalmanModel::approxKalmanGradient, "Returns a central approximation of a single gradient.")
-    .method( "GIST", &cpptsemKalmanModel::GIST, "Optimizes with GIST")
-    .method( "computePenalty", &cpptsemKalmanModel::computePenalty, "Computes penalty value")
-    .method( "computeSubgradients", &cpptsemKalmanModel::computeSubgradients, "Computes subgradients")
     ;
   }
 

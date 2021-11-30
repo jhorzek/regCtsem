@@ -9,10 +9,12 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 
 arma::mat fillA(arma::mat A,
-                bool hasDiscreteDRIFTUnique, Rcpp::List discreteDRIFTUnique,
-                bool hasDiscreteTRAITUnique, Rcpp::List discreteTRAITUnique,
-                arma::mat LAMBDA,
-                Rcpp::DataFrame AParameterIndicators){
+                const bool hasDiscreteDRIFTUnique,
+                const Rcpp::List& discreteDRIFTUnique,
+                const bool hasDiscreteTRAITUnique,
+                const Rcpp::List& discreteTRAITUnique,
+                const arma::mat& LAMBDA,
+                const Rcpp::DataFrame& AParameterIndicators){
   // extract labels of elements in A
   Rcpp::StringVector  AElementLabels = AParameterIndicators["label"];
   arma::uvec  AElementRowStart = AParameterIndicators["row_start"];
