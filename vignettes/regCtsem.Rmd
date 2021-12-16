@@ -14,52 +14,388 @@ knitr::opts_chunk$set(
 )
 ```
 
-# THIS DOCUMENT IS WORK IN PROGRESS
+# General Introduction
 
-# regCtsem
-
-*regCtsem* is an R package for regularized continuous time dynamic models. It is based on the *ctsem* package and allows for regularization of the drift matrix. The general model equation is:
+REGularized Continuous Time Structural Equation Models (regCtsem) implements least absolute shrinkage and selection operator (LASSO; Tibshirani, 1996) and adaptive LASSO (Zou, 2006) regularization for models of the following form:
 
 $$
-\text{d}\boldsymbol{\eta}(t) = \Big(\mathbf A \boldsymbol{\eta}(t) + \mathbf b + \boldsymbol\kappa \Big) \text{d} t + \mathbf G\text d \mathbf W(t)
+\begin{aligned}
+\text{d}\pmb{\eta}(t) &= \Big(\pmb A \boldsymbol{\eta}(t) + \pmb b + \pmb\kappa \Big) \text{d} t + \pmb G\text d \pmb W(t)\\
+\end{aligned}
 $$
-$\boldsymbol\eta$ is a vector of latent variables, $\mathbf A$ is the so-called drift matrix, $\mathbf b$ the continuous time intercept, $\boldsymbol \kappa$ allows for trait variance and $\mathbf G$ is the diffusion matrix which allows modulation of the stochastic part of the model (the Wiener process $\mathbf W$). The latent variables $\boldsymbol \eta$ can be related to manifest measurements by the following measurement equation:
-
-$$
-\mathbf y_{t_u} = \mathbf C \boldsymbol{\eta}_{t_u} + \mathbf d +  \boldsymbol{\epsilon}_{t_u}
-$$
-
-More details on continuous time structural equation models can be found in Voelkle et al. (2012). For details on fitting these models using R, see ctsem.
-
-As mentioned above, regCtsem allows for regularization of the drift matrix $\mathbf A$. The objectives are to improve the generalization of continuous time structural equation models to new data sets and to introduce sparsity to the drift. This can considerably simplify the interpretation of the model.
-
-At the time of writing, regCtsem supports lasso (Tibshirani, 1998), and adaptive lasso (?????) regularization. To this end a penalty term is added to the fitting function of continuous time structural equation models. Let $L(\boldsymbol\theta)$ denote the -2-log-Likelihood and $P(\boldsymbol \theta)$ a penalty function, where $\boldsymbol \theta$ is a vector with model parameters. Then the new fitting function is given by:
-
-$$f(\boldsymbol\theta) = L(\boldsymbol\theta) + P(\boldsymbol \theta)$$
-In lasso regularization, $P(\boldsymbol \theta)$ is set to: 
-
-$$P(\boldsymbol \theta) = N\lambda\sum_{j\in J}|\theta_j|$$
-where $N$ is the sample size, $\lambda \geq 0$ is a tuning parameter weighting the relative importance of the likelihood and the penalty term and $J$ is a set of indices of parameters which should be regularized. Note that only a subset of the parameters are regularized. The multiplication with $N$ is introduced because the likelihood in structural equation models is sample size dependent.
-
-In adaptive lasso $P(\boldsymbol \theta)$ is set to: 
+$\pmb\eta (t)$ is a vector with states of the latent variables $\pmb \eta$ at time point $t$. $\mathbf A$ is the drift matrix with auto-effects in the diagonal and cross-effects in the off-diagonal, $\pmb b$ is a vector with continuous time intercepts, $\pmb \kappa$ allows for trait variance and $\pmb G$ is the diffusion matrix which allows modulation of the stochastic part of the model (the Wiener process $\mathbf W$). The latent variables $\pmb \eta$ is related to manifest measurements by the following measurement equation:
 
 $$
-\mathcal{P}(\boldsymbol{\theta}) = N\lambda \sum_{j\in J}\hat{\omega}_j|\theta_j|,
+\pmb y(t_u) = \pmb d + \pmb C\pmb \eta(t_u) + \pmb \varepsilon_{t_u}
 $$
-The only difference to lasso regularization is the term $\hat{\omega}_j$. This allows for parameter specific modulation of the penalty term. Typically, the objective is to drive parameters which are zero in the population to zero while leaving non-zero parameters unpenalized. By default, $\hat{\omega}_j = \frac{1}{|\theta_j|}$.
+Here, $\pmb y(t_u)$ is a vector with observations at time $t_u$ of measurement occasion $u$, $\pmb d$ is a vector with discrete time intercepts, $\pmb C$ a matrix with loadings, and $\pmb \varepsilon_{t_u}$ a vector with residuals. A thorough introduction to continuous time structural equation models is provided by Voelkle et al. (2012). 
 
-A challenge when using lasso and adaptive lasso regularization is that the penalty term can be driven by the units of the penalized parameters. Typically, this is adressed by first standardizing the variables, which can be very challenging in longitudinal models. regCtsem offers a simple solution which is based on the idea of pre-multiplying each regularized parameter in the penalty term with a scaling factor (see harrellRegressionModelingStrategies2015). To this end, $\hat{\omega}_j$ in the adaptive lasso is set to $\hat{\omega}_j = \frac{\sqrt{\hat{\phi}_{\eta_{\text{pred.},t_0}}}}{\sqrt{\hat{\phi}_{\eta_{\text{crit.},t_0}}}}$ with $\hat{\phi}_{t_0}$ refering to the initial variances of the unregularized model. However, this procedure is not yet well tested and researchers using regCtsem should try to standardize the latent variables in the model prior to the analysis if possible.
+In R, models of the form shown above can, for instance, be fitted with the packages **ctsemOMX** and **ctsem** (Driver et al., 2017) which **regCtsem** builds on. 
 
-The tuning parameter $\lambda$ has to be set by the researcher. Typically, a set of $\lambda$ values is specified and separate models for each of those $\lambda$ is fitted. Increasing $\lambda$ will result in more weight given to the penalty term and increase the sparsity of the model. Finally, the best among the fitted models is selected based on information criteria such as the AIC, BIC or cross-validation. The AIC and BIC will reward model sparseness, while cross-validation will solely focus on out of sample prediction.
+## Regularization
 
-At the time of writing, regCtsem offers three different options for fitting regularized continuous time structural equation models. The first option is an approximate optimization of the penalized likelihood function $f(\boldsymbol\theta)$. This procedure cannot take the non-differentiability of the penalty terms into account and will not result in sparse solutions. Therefore, a threshold parameter has to be specified, below which parameters are set to zero. However, the results tend to be highly dependent on the choice of this threshold parameter. On the plus side, the approximate procedure relies on the internal optimizers of OpenMx, which are well established in structural equation modeling.
+**regCtsem** extends **ctsemOMX** by allowing for LASSO and adaptive LASSO regularization. The objective function is given by 
+$$f(\pmb\theta) = L(\pmb\theta) + N\sum_{j\in J}\lambda_j|\theta_j - \tau_j|$$
+where $f(\pmb\theta)$ is the regularized objective function, $L(\pmb \theta)$ is the -2 log Likelihood of the model $N$ is the sample size and $\sum_{j\in J}\lambda_j|\theta_j - \tau_j|$ is the penalty term. Here, $J$ is a set of parameters $\theta_{j,j\in J}$ which are to be regularized. This will become more clear in the following examples. In the penalty term $\tau_j$ is the target towards which the parameter $\theta_j$ is regularized. By default this is set to $0$. $\lambda_j$ controls the relative importance of the -2 log Likelihood and the penalty term. For larger $\lambda_j$, parameter $\theta_j$ will be pulled towards $\tau_j$. By default, the same $\lambda$ is used for all regularized parameters. This is shown in the figure below, where the x-Axis shows the $\lambda$ values and the blue lines are two regularized parameters. For larger $\lambda$, these are pulled towards the target $0$.
 
-The other two options are specialized optimizers. Currently regCtsem supports a variant of the newGLMNET (Yuan et al. 2011, Friedman et al. 2010) optimizer and the GIST (Gong et al. 2013) optimizer. 
+```{r, echo=FALSE, results='hide', message = FALSE, warning=FALSE}
+set.seed(17046)
 
-Workflow
+library(regCtsem)
 
-* set up for mx and Kalman
-* starting values for Kalman
-* verbose, multi-core
-* cpptsem
+#### Example 1 ####
+## Regularization with FIML objective function
+
+## Population model:
+
+# set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
+ct_drift <- matrix(c(-.3,.2,0,-.5), ncol = 2)
+
+generatingModel<-ctsem::ctModel(Tpoints=10,n.latent=2,n.TDpred=0,
+                                n.TIpred=0,n.manifest=2,
+                                MANIFESTVAR=diag(0,2),
+                                LAMBDA=diag(1,2),
+                                DRIFT=ct_drift,
+                                DIFFUSION=matrix(c(.5,0,0,.5),2),
+                                CINT=matrix(c(0,0),nrow=2),
+                                T0MEANS=matrix(0,ncol=1,nrow=2),
+                                T0VAR=diag(1,2), type = "omx")
+
+# simulate a training data set
+dat <- ctsem::ctGenerate(generatingModel, n.subjects = 100, wide = TRUE)
+
+## Build the analysis model. Note that drift eta1_eta2 is freely estimated
+# although it is 0 in the population.
+myModel <- ctsem::ctModel(Tpoints=10,n.latent=2,n.TDpred=0,
+                          n.TIpred=0,n.manifest=2,
+                          LAMBDA=diag(1,2),
+                          MANIFESTVAR=diag(0,2),
+                          CINT=matrix(c(0,0),nrow=2),
+                          DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
+                          T0MEANS=matrix(0,ncol=1,nrow=2),
+                          T0VAR="auto", type = "omx")
+
+# fit the model using ctsemOMX:
+fit_myModel <- ctsemOMX::ctFit(dat, myModel)
+
+# select DRIFT values for regularization:
+regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
+# Note: If you are unsure what the parameters are called in
+# your model, check: fit_myModel$ctmodelobj$DRIFT for the drift or
+# omxGetParameters(fit_myModel$ctmodelobj) for all parameters
+
+# Optimize model using GIST with lasso penalty
+regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+                               dataset = dat,
+                               regIndicators = regIndicators,
+                               lambdas = "auto",
+                               lambdasAutoLength = 20)
+
+```
+```{r,echo = FALSE}
+plot(regModel)
+```
+
+Using LASSO and adaptive LASSO regularization automatically generates models of increasing sparsity. Among these models, we can select the best generalizing one based on cross-validation or information criteria.
+
+
+# Getting Started
+
+As outlined above, **regCtsem** builds on **ctsemOMX**. Many models fitted with **ctsemOMX** can directly be passed to **regCtsem**. Therefore, we highly recommend that you familiarize yourself with **ctsemOMX**. In the most basic setup **regCtsem** expects a fitted model from **ctsemOMX** and the data set in wide format as well as a vector with names of the parameters which should be regularized. The following example is taken from the documentation of ctFit:
+
+```{r, results='hide', message = FALSE, warning=FALSE}
+library(regCtsem)
+set.seed(38723)
+## Directly taken from ?ctFit:
+###Example from Voelkle, Oud, Davidov, and Schmidt (2012) - anomia and authoritarianism.  
+data(AnomAuth) 
+AnomAuthmodel <- ctModel(LAMBDA = matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2), 
+                         Tpoints = 5, n.latent = 2, n.manifest = 2, MANIFESTVAR=diag(0, 2), TRAITVAR = NULL) 
+AnomAuthfit <- ctFit(AnomAuth, AnomAuthmodel)
+
+# regularization
+regularizedModel1 <- regCtsem(ctsemObject = AnomAuthfit, 
+                              dataset = AnomAuth, 
+                              regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"))
+```
+
+By default **regCtsem** will use 50 different values for $\lambda$. The maximally required $\lambda$ is automatically computed ($\lambda_\max$) and values in between $0$ and $\lambda_\max$ are generated with getCurvedLambda() (see ?getCurvedLambda). More $\lambda$ values can be requested with the lambdasAutoLength argument (e.g., lambdasAutoLength = 100). Additionally, **regCtsem** will default generating more $\lambda$ values close to $0$ and less close to $\lambda_max$ (see ?getCurvedLambda). This can be changed with lambasAutoCurve. Finally, specific $\lambda$ values can be passed to the function as follows:
+
+```{r, results='hide', message = FALSE, warning=FALSE}
+regularizedMode2 <- regCtsem(ctsemObject = AnomAuthfit, 
+                             dataset = AnomAuth,
+                             lambdas = seq(0,.1,.01),
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"))
+```
+
+This allows for further "zooming in" on specific regions.
+
+The results can be plot with the generic plot function:
+
+```{r}
+plot(regularizedModel1)
+```
+```{r}
+plot(regularizedModel2)
+```
+
+If 50 $\lambda$ values are used (the default), this internally results in 50 different models with increasing sparsity. An important question now is, how the best model can be found. By default **regCstem** will compute the AIC and BIC for each of these models. They can be accessed with:
+
+```{r}
+regularizedModel1$fit[,1:5]
+```
+The best model can be extracted with the summary function:
+
+```{r}
+summary(regularizedModel1, criterion = "AIC")
+```
+
+In this case, the unregularized model outperforms the regularized models.
+
+Alternatively, cross-validation can be used. However, to this end the model must be refit requesting cross-validation. Depending on the model and the number of cross-validation sets requested, this can take some time.
+
+```{r, results='hide', message = FALSE, warning=FALSE}
+regularizedModel <- regCtsem(ctsemObject = AnomAuthfit, 
+                             dataset = AnomAuth,
+                             lambdas = seq(0,.1,.01),
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"),
+                             autoCV = "kFold", # k-Fold cross-validation
+                             k = 3 # k = 3 folds
+)
+```
+Now the fit for the cross-validation is given in regularizedModel:
+
+```{r}
+regularizedModel$fit[,1:5]
+```
+Finally, note that **regCtsem** internally translates the models with **RcppArmadillo** to C++ with regCtsem::cpptsemFromCtsem (see ?cpptsemFromCtsem). Currently, some specific model settings from **ctsemOMX** will not be available in **regCtsem**. 
+
+## LASSO and adaptive LASSO
+
+A difficulty when using the LASSO is that the same $\lambda$ is used for all regularized parameters. This is only justified if the regularized parameters have the same units (i.e., they all have the same scale). In latent variable models this is difficult to control. Therefore, **regCtsem** offers an approximate standardization only. To this end, the T0-variance or the asymptotic diffusion can be used:
+
+```{r, eval = FALSE, results='hide', message = FALSE, warning=FALSE}
+regularizedModel <- regCtsem(ctsemObject = AnomAuthfit, 
+                             dataset = AnomAuth,
+                             lambdas = seq(0,.1,.01),
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"),
+                             standardizeDrift = "T0VAR")
+regularizedModel <- regCtsem(ctsemObject = AnomAuthfit, 
+                             dataset = AnomAuth,
+                             lambdas = seq(0,.1,.01),
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"),
+                             standardizeDrift = "asymptoticDiffusion")
+```
+
+Also, the adaptive LASSO can be thought of as a form of standardization. By default $\lambda_j = \frac{\lambda}{|\hat\theta_j|}$, where $\hat \lambda_j$ is the maximum likelihood estimate for $\lambda_j$.
+
+```{r, results='hide', message = FALSE, warning=FALSE}
+regularizedModel <- regCtsem(ctsemObject = AnomAuthfit, 
+                             dataset = AnomAuth,
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"),
+                             penalty = "adaptiveLASSO")
+```
+```{r}
+plot(regularizedModel)
+```
+
+## Full Information Maximum Likelihood and Kalman Filter
+
+The -2 log Likelihood $L(\pmb \theta)$ shown above can be computed with the Full Information Maximum Likelihood (FIML) procedure and the Kalman filter. They result in the same fit, but might show very different run times. In general, if the sample size is large, the number of unique time intervals between measurement occasions is small, and many individuals were observed at the same time points FIML will be much faster. On the other hand, if the sample size is small, most time intervals are unique, and there is a large number of time points the Kalman filter will be much faster. To swith between both estimation procedures, we have to change the objective in ctFit first:
+
+```{r, results='hide', message = FALSE, warning=FALSE}
+startFIML <- Sys.time()
+AnomAuthfitFIML <- ctFit(AnomAuth, AnomAuthmodel, 
+                         objective = "mxRAM") # Use FIML
+endFIML <- Sys.time()
+
+startKalman <- Sys.time()
+AnomAuthfitKalman <- ctFit(AnomAuth, AnomAuthmodel, 
+                           objective = "Kalman") # use Kalman filter
+endKalman <- Sys.time()
+```
+
+If we look at the run times for these examples, we will see that for our example FIML is a lot faster:
+
+```{r}
+print(endFIML - startFIML)
+print(endKalman - startKalman)
+```
+
+If a model is fitted with Kalman filter in **ctsemOMX** and then passed to **regCtsem**, **regCtsem** will also use the Kalman filter (don't run the following code, it will take a very long time):
+
+```{r, eval = FALSE, results='hide', message = FALSE, warning=FALSE}
+regularizedModel <- regCtsem(ctsemObject = AnomAuthfitKalman, 
+                             dataset = AnomAuth,
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"),
+                             penalty = "adaptiveLASSO")
+```
+
+Now, to give an example, where the Kalman filter excels:
+
+```{r, results='hide', message = FALSE, warning=FALSE}
+set.seed(175446)
+
+## define the population model:
+
+# set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
+ct_drift <- matrix(c(-.3,.2,0,-.5), ncol = 2)
+
+generatingModel<-ctsem::ctModel(Tpoints=100,n.latent=2,
+                                n.TDpred=0,n.TIpred=0,n.manifest=2,
+                                MANIFESTVAR=diag(0,2),
+                                LAMBDA=diag(1,2),
+                                DRIFT=ct_drift,
+                                DIFFUSION=matrix(c(.5,0,0,.5),2),
+                                CINT=matrix(c(0,0),nrow=2),
+                                T0MEANS=matrix(0,ncol=1,nrow=2),
+                                T0VAR=diag(1,2), type = "omx")
+
+# simulate a training data and testing data set
+traindata <- ctsem::ctGenerate(generatingModel,n.subjects = 10, wide = TRUE)
+
+## Build the analysis model. Note that drift eta1_eta2 is freely estimated
+# although it is 0 in the population.
+myModel <- ctsem::ctModel(Tpoints=100,n.latent=2,n.TDpred=0,
+                          n.TIpred=0,n.manifest=2,
+                          LAMBDA=diag(1,2),
+                          MANIFESTVAR=diag(0,2),
+                          CINT=matrix(c(0,0),nrow=2),
+                          DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
+                          T0MEANS=matrix(0,ncol=1,nrow=2),
+                          T0VAR="auto", type = "omx")
+fit_myModel <- ctFit(dat = traindata, ctmodelobj = myModel, objective = "Kalman")
+
+# select DRIFT values:
+regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
+
+## Optimization with GIST:
+regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+                               dataset = traindata,
+                               regIndicators = regIndicators,
+                               lambdasAutoLength = 20
+)
+```
+
+```{r}
+plot(regModel)
+```
+
+## Extracting the Best Parameters and Models
+
+Extracting the best parameters from the regularized model can be achieved with 
+```{r}
+getFinalParameters(regCtsemObject = regModel, 
+                   criterion = "AIC", 
+                   raw = T) 
+# raw means that the parameters are returned
+# exactly in the form they are implemented in ctsemOMX and cpptsem. 
+# If you set raw = F the diffusion and T0Var will be computed from
+# the internal parameter specifications:
+getFinalParameters(regCtsemObject = regModel, 
+                   criterion = "AIC", 
+                   raw = F) 
+```
+The best model can be returned as follows:
+
+```{r}
+finalModel <- getFinalModel(regCtsemObject = regModel, 
+                            criterion = "AIC")
+```
+While this model is implemented in C++, many of its components are accessible with the $ operator:
+
+```{r}
+finalModel$DRIFTValues
+```
+
+## Saving and Restoring Models
+
+As usual, objects created with **regCtsem** can be saved as follows:
+
+```{r, eval = FALSE, results='hide', message = FALSE, warning=FALSE}
+save(regModel, file = "regModel.RData")
+```
+
+However, when loading the model in the next session, the underlying C++ model will be lost. This model can restored, however:
+
+```{r,eval =FALSE}
+load("regModel.RData")
+regModel <- restore(regModel)
+```
+
+## Pracitical Considerations
+
+Fitting regularized CTSEM to empirical data can be challenging and requires several decisions for which we want to give some guidelines.
+
+### Chosing between Full Information Maximum Likelihood and the Kalman Filter
+
+As outlined above, researchers have to chose between the FIML and Kalman filter for optimization. Fortunately, switching between both options in **ctsemOMX** only requires setting objective = 'mxRAM' (FIML) to objective = 'Kalman' (Kalman filter) in the ctFit function. Comparing the runtimes directly informs the choice between both options.
+
+### Avoiding Local Minima
+
+When working with real data local minima appear to be relatively common. **regCtsem** therefore makes extensive use of multiple starting values and additionally relies on approximating the solution with established optimizers. These safety features come at a considerable increase in runtime and adjusting the settings can - in turn - speed up the computation at the price of an increased risk of running into local minima. We recommend using the implemented safety features when working with empirical data; with simulated data we observed that local minima are less common and turning off the safety features might not affect the results. Turning off all safety features can be done as follows:
+
+```{r, eval = FALSE}
+regularizedModel <- regCtsem(ctsemObject = AnomAuthfit, 
+                             dataset = AnomAuth, 
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"), 
+                             trainingWheels = FALSE) # switch off all safety features
+```
+
+### Setting $\lambda$
+
+Select reasonable values for $\lambda$ can be challenging in practice. In general, initially running **regCtsem** with a limited number of $\lambda$ values between $0$ and the automatically chosen $\lambda_{\max}$ can provide a good overview. Afterwards rerunning the model with more informed $\lambda$ values might be advisable (e.g., $0$ to $.05$). The number of $\lambda$ values also directly affects runtimes and results. When using cross-validation to select the final model we recommend testing as many $\lambda$ values as possible. For the AIC and BIC $\lambda$ should be chosen such that the number of zeroed parameters changes gradually (i.e., not jumping from $2$ to $10$ zeroed parameters in a single step). 
+
+### Optimziation
+
+**regCtsem** currently supports three different optimization approaches:
+
+The default, is to use an exact optimization. Or, to be more specific, to first use the approximate one and then fine tune the results with the exact optimizer. Two different exact optimizers are currently supported: *GIST* (Gong et al., 2013) and *GLMNET* (Friedman et al., 2010, Yuan et al., 2012). In most cases both optimizers should return similar results and we therefore default to GIST. However, depending on the specific data set at hand and the settings of the optimizer, one might see one outperforming the other. Switching between the optimizers can be done as follows:
+
+```{r, eval = FALSE}
+regularizedModel <- regCtsem(ctsemObject = AnomAuthfit, 
+                             dataset = AnomAuth, 
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"),
+                             optimizer = "GIST")
+regularizedModel <- regCtsem(ctsemObject = AnomAuthfit, 
+                             dataset = AnomAuth, 
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"),
+                             optimizer = "GLMNET")
+```
+
+Both optimizers can be fine tuned. See ?controlGIST and ?controlGLMNET for more details. For instance, one might want to adjust the maximal number of outer iterations for GIST:
+
+```{r, eval = FALSE}
+regularizedModel <- regCtsem(ctsemObject = AnomAuthfit, 
+                             dataset = AnomAuth, 
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"),
+                             optimizer = "GIST",
+                             control = controlGIST(maxIter_out = 200))
+```
+
+
+An *approximate optimization* is provided based on **Rsolnp** or **optimx**. The most basic specification is given by:
+
+```{r, eval = FALSE}
+regularizedModel <- regCtsem(ctsemObject = AnomAuthfit, 
+                             dataset = AnomAuth, 
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"),
+                             optimization = "approx")
+```
+
+The control argument allows for further fine tuning the optimizer. See ?controlApprox for more details.
+
+### Parallelization
+
+Given that \textbf{regCtsem} can result in long runtimes one might want to parallelize the computation. This is currently not supported by the package itself. However, if cross-validation is used one can start multiple instances of the scripts and pass the training and validation set manually to **regCtsem** as follows:
+```{r, eval = FALSE}
+regularizedModel <- regCtsem(ctsemObject = AnomAuthfit, 
+                             dataset = AnomAuth, 
+                             regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"),
+                             cvSample = validationSet
+)
+```
+
+
+Additionally, the $\lambda$ values could be split (e.g., $\{0,.1,.2\}$ and $\{.3,.4,.5\}$) and different cores could be used to optimize the subsets. Here, we found that this can result in suboptimal solutions for some subsets (e.g., due to local minima) which is why it is currently not implemented in **regCtsem**.
 

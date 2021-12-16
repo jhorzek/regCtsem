@@ -21,19 +21,15 @@ c<sub>++</sub>tsem relies heavily on the RcppArmadillo library. This can sometim
 Example:
 
 ```{r}
-library(Rcpp)
-library(RcppArmadillo)
-library(OpenMx)
+library(regCtsem)
 set.seed(53455)
-cppFunction('arma::mat expMat(arma::mat matrix){
-             return(arma::expmat( matrix));}
-            ',depends="RcppArmadillo")
+
 randMat <- matrix(rnorm(n = 64, 
                         mean = 0, 
                         sd = 10), 
                   nrow = 8, ncol = 8)
 
-expMat(randMat) - OpenMx::expm(randMat)
+regCtsem:::armaExpmat(randMat) - OpenMx::expm(randMat)
 ```
 
 Note that there are huge differences in the matrix exponential using RcppArmadillo and OpenMx.
