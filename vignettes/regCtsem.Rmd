@@ -359,7 +359,8 @@ Both regularized parameters are now regularized towards .5. #parameters on targe
 ```{r}
 plot(regModel)
 ```
-Regularizing parameters towards specific targets can be used to model selected parameters person-specific while regularizing the towards the group value. This feature is still experimental, but can be used as follows:
+
+Regularizing parameters towards specific targets can be used to model selected parameters person-specific while regularizing them towards the group value. This feature is still experimental, but can be used as follows:
 
 ```{r, results='hide', message = FALSE, warning=FALSE}
 regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
