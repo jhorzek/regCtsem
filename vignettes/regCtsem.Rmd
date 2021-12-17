@@ -23,7 +23,7 @@ $$
 \text{d}\pmb{\eta}(t) &= \Big(\pmb A \boldsymbol{\eta}(t) + \pmb b + \pmb\kappa \Big) \text{d} t + \pmb G\text d \pmb W(t)\\
 \end{aligned}
 $$
-$\pmb\eta (t)$ is a vector with states of the latent variables $\pmb \eta$ at time point $t$. $\mathbf A$ is the drift matrix with auto-effects in the diagonal and cross-effects in the off-diagonal, $\pmb b$ is a vector with continuous time intercepts, $\pmb \kappa$ allows for trait variance and $\pmb G$ is the diffusion matrix which allows modulation of the stochastic part of the model (the Wiener process $\mathbf W$). The latent variables $\pmb \eta$ is related to manifest measurements by the following measurement equation:
+$\pmb\eta (t)$ is a vector with states of the latent variables $\pmb \eta$ at time point $t$. $\mathbf A$ is the drift matrix with auto-effects in the diagonal and cross-effects in the off-diagonal, $\pmb b$ is a vector with continuous time intercepts, $\pmb \kappa$ allows for trait variance and $\pmb G$ is the diffusion matrix which allows modulation of the stochastic part of the model (the Wiener process $\mathbf W$). The latent variables in $\pmb \eta$ are related to manifest measurements by the following measurement equation:
 
 $$
 \pmb y(t_u) = \pmb d + \pmb C\pmb \eta(t_u) + \pmb \varepsilon_{t_u}
@@ -36,7 +36,7 @@ In R, models of the form shown above can, for instance, be fitted with the packa
 
 **regCtsem** extends **ctsemOMX** by allowing for LASSO and adaptive LASSO regularization. The objective function is given by 
 $$f(\pmb\theta) = L(\pmb\theta) + N\sum_{j\in J}\lambda_j|\theta_j - \tau_j|$$
-where $f(\pmb\theta)$ is the regularized objective function, $L(\pmb \theta)$ is the -2 log Likelihood of the model $N$ is the sample size and $\sum_{j\in J}\lambda_j|\theta_j - \tau_j|$ is the penalty term. Here, $J$ is a set of parameters $\theta_{j,j\in J}$ which are to be regularized. This will become more clear in the following examples. In the penalty term $\tau_j$ is the target towards which the parameter $\theta_j$ is regularized. By default this is set to $0$. $\lambda_j$ controls the relative importance of the -2 log Likelihood and the penalty term. For larger $\lambda_j$, parameter $\theta_j$ will be pulled towards $\tau_j$. By default, the same $\lambda$ is used for all regularized parameters. This is shown in the figure below, where the x-Axis shows the $\lambda$ values and the blue lines are two regularized parameters. For larger $\lambda$, these are pulled towards the target $0$.
+where $f(\pmb\theta)$ is the regularized objective function, $L(\pmb \theta)$ is the -2 log Likelihood of the model $N$ is the sample size and $\sum_{j\in J}\lambda_j|\theta_j - \tau_j|$ is the penalty term. Here, $J$ is a set of parameters $\theta_{j,j\in J}$ which are to be regularized. This will become more clear in the following examples. In the penalty term $\tau_j$ is the target towards which the parameter $\theta_j$ is regularized. By default this is set to $0$. $\lambda_j$ controls the relative importance of the -2 log Likelihood and the penalty term. For larger $\lambda_j$, parameter $\theta_j$ will be pulled towards $\tau_j$. By default, the same $\lambda$ is used for all regularized parameters. This is shown in the figure below, where the $x$-axis shows the $\lambda$ values and the blue lines are two regularized parameters. For larger $\lambda$, these are pulled towards the target $0$.
 
 ```{r, echo=FALSE, results='hide', message = FALSE, warning=FALSE}
 set.seed(17046)
@@ -119,7 +119,7 @@ regularizedModel1 <- regCtsem(ctsemObject = AnomAuthfit,
                               regIndicators = c("drift_eta2_eta1", "drift_eta1_eta2"))
 ```
 
-By default **regCtsem** will use 50 different values for $\lambda$. The maximally required $\lambda$ is automatically computed ($\lambda_\max$) and values in between $0$ and $\lambda_\max$ are generated with getCurvedLambda() (see ?getCurvedLambda). More $\lambda$ values can be requested with the lambdasAutoLength argument (e.g., lambdasAutoLength = 100). Additionally, **regCtsem** will default generating more $\lambda$ values close to $0$ and less close to $\lambda_max$ (see ?getCurvedLambda). This can be changed with lambasAutoCurve. Finally, specific $\lambda$ values can be passed to the function as follows:
+By default **regCtsem** will use 50 different values for $\lambda$. The maximally required $\lambda$ is automatically computed ($\lambda_\max$) and values in between $0$ and $\lambda_\max$ are generated with getCurvedLambda() (see ?getCurvedLambda). More $\lambda$ values can be requested with the lambdasAutoLength argument (e.g., lambdasAutoLength = 100). Additionally, **regCtsem** will default to generating more $\lambda$ values close to $0$ and less values close to $\lambda_max$ (see ?getCurvedLambda). This can be changed with the lambdasAutoCurve argument (see ?regCtsem for more details). Finally, specific $\lambda$ values can be passed to the function as follows:
 
 ```{r, results='hide', message = FALSE, warning=FALSE}
 regularizedModel2 <- regCtsem(ctsemObject = AnomAuthfit, 
@@ -130,7 +130,7 @@ regularizedModel2 <- regCtsem(ctsemObject = AnomAuthfit,
 
 This allows for further "zooming in" on specific regions.
 
-The results can be plot with the generic plot function:
+Let's plot with the generic plot function:
 
 ```{r}
 plot(regularizedModel1)
@@ -150,7 +150,7 @@ The best model can be extracted with the summary function:
 summary(regularizedModel1, criterion = "AIC")
 ```
 
-In this case, the unregularized model outperforms the regularized models.
+In this case the unregularized model outperforms the regularized models.
 
 Alternatively, cross-validation can be used. However, to this end the model must be refit requesting cross-validation. Depending on the model and the number of cross-validation sets requested, this can take some time.
 
@@ -163,12 +163,12 @@ regularizedModel <- regCtsem(ctsemObject = AnomAuthfit,
                              k = 3 # k = 3 folds
 )
 ```
-Now the fit for the cross-validation is given in regularizedModel:
+Now the fit for the cross-validation is given in the regularizedModel object:
 
 ```{r}
 regularizedModel$fit[,1:5]
 ```
-Finally, note that **regCtsem** internally translates the models with **RcppArmadillo** to C++ with regCtsem::cpptsemFromCtsem (see ?cpptsemFromCtsem). Currently, some specific model settings from **ctsemOMX** will not be available in **regCtsem**. 
+Finally, note that **regCtsem** internally translates the models with **RcppArmadillo** to C++ with regCtsem::cpptsemFromCtsem (see ?cpptsemFromCtsem). Currently, some specific model settings from **ctsemOMX** will not be available in **regCtsem**. **regCtsem** will throw an error if it encounters such cases.
 
 ## LASSO and adaptive LASSO
 
@@ -222,7 +222,7 @@ print(endFIML - startFIML)
 print(endKalman - startKalman)
 ```
 
-If a model is fitted with Kalman filter in **ctsemOMX** and then passed to **regCtsem**, **regCtsem** will also use the Kalman filter (don't run the following code, it will take a very long time):
+If a model is fitted with the Kalman filter in **ctsemOMX** and then passed to **regCtsem**, **regCtsem** will also use the Kalman filter (don't run the following code, it will take a very long time):
 
 ```{r, eval = FALSE, results='hide', message = FALSE, warning=FALSE}
 regularizedModel <- regCtsem(ctsemObject = AnomAuthfitKalman, 
@@ -283,7 +283,7 @@ plot(regModel)
 
 ## Extracting the Best Parameters and Models
 
-Extracting the best parameters from the regularized model can be achieved with 
+Extracting the best parameters from the regularized model can be done as follows:
 ```{r}
 getFinalParameters(regCtsemObject = regModel, 
                    criterion = "AIC", 
@@ -296,12 +296,14 @@ getFinalParameters(regCtsemObject = regModel,
                    criterion = "AIC", 
                    raw = F) 
 ```
+
 The best model can be returned as follows:
 
 ```{r}
 finalModel <- getFinalModel(regCtsemObject = regModel, 
                             criterion = "AIC")
 ```
+
 While this model is implemented in C++, many of its components are accessible with the $ operator:
 
 ```{r}
@@ -316,7 +318,7 @@ As usual, objects created with **regCtsem** can be saved as follows:
 save(regModel, file = "regModel.RData")
 ```
 
-However, when loading the model in the next session, the underlying C++ model will be lost. This model can restored, however:
+However, when loading the model in the next session, the underlying C++ model will be lost. This model can restored:
 
 ```{r,eval =FALSE}
 load("regModel.RData")
@@ -326,6 +328,54 @@ regModel <- restore(regModel)
 ## Pracitical Considerations
 
 Fitting regularized CTSEM to empirical data can be challenging and requires several decisions for which we want to give some guidelines.
+
+### Chosing parameters to regularize
+
+In general, **regCtsem** can regularize any parameter in the model. If you are unsure which parameters these might be or what they are called in your model, use the following code:
+
+```{r}
+omxGetParameters(fit_myModel$mxobj) # general: fittedCtsemObject$mxobj
+```
+
+This function will show you the names and values of the parameters in the model.
+
+That being said, it is a lot easier to regularize the drift values, the loadings, the manifest or the latent means. All covariance parameters (T0VAR, values in $\pmb G$, and manifest variances) are implemented with the log-Cholesky parameterization (Pinheiro & Bates, 1996) and you might get surprising results when regularizing them. Be sure to familiarize yourself with this implementation first, before attempting to regularize any (co)variance parameter. 
+
+### Regularizing towards specific values
+
+**regCtsem** can regularize parameters towards zero or any other parameter when using GIST as optimizer. To demonstrate this:
+
+```{r, results='hide', message = FALSE, warning=FALSE}
+regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
+targetVector <- c("drift_eta2_eta1" = .5, "drift_eta1_eta2" = .5)
+regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+                               dataset = traindata,
+                               regIndicators = regIndicators,
+                               lambdasAutoLength = 20,
+                               targetVector = targetVector
+)
+```
+Both regularized parameters are now regularized towards .5. #parameters on target refers to the number of parameters which are on their target values (here .5):
+```{r}
+plot(regModel)
+```
+Regularizing parameters towards specific targets can be used to model selected parameters person-specific while regularizing the towards the group value. This feature is still experimental, but can be used as follows:
+
+```{r, results='hide', message = FALSE, warning=FALSE}
+regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
+subjectSpecificParameters <- c("drift_eta2_eta1", "drift_eta1_eta2")
+regModel <- regCtsem(ctsemObject = fit_myModel,
+                     dataset = traindata,
+                     regIndicators = regIndicators,
+                     lambdasAutoLength = 5, # 5 will not be enough, but this takes some time to execute
+                     subjectSpecificParameters = subjectSpecificParameters
+)
+```
+```{r}
+summary(regModel, criterion = "AIC")
+```
+
+The group-indicator in the summary refers to the individuals in the data set. Note that such models will take a relatively long time to run.
 
 ### Chosing between Full Information Maximum Likelihood and the Kalman Filter
 
@@ -404,6 +454,7 @@ Additionally, the $\lambda$ values could be split (e.g., $\{0,.1,.2\}$ and $\{.3
 * Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
 * Friedman, J., Hastie, T., & Tibshirani, R. (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software, 33(1), 1–20. https://doi.org/10.18637/jss.v033.i01
 * Gong, P., Zhang, C., Lu, Z., Huang, J., & Ye, J. (2013). A General Iterative Shrinkage and Thresholding Algorithm for Non-convex Regularized Optimization Problems. Proceedings of the 30th International Conference on Machine Learning, 28(2)(2), 37–45.
+* Pinheiro, J. C., & Bates, D. M. (1996). Unconstrained parametrizations for variance-covariance matrices. Statistics and Computing, 6(3), 289–296. https://doi.org/10.1007/BF00140873
 * Voelkle, M. C., Oud, J. H. L., Davidov, E., & Schmidt, P. (2012). An SEM Approach to Continuous Time Modeling of Panel Data: Relating Authoritarianism and Anomia. Psychological Methods, 17(2), 176–192. https://doi.org/10.1037/a0027543
 * Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421
 * Zou, H. (2006). The Adaptive Lasso and Its Oracle Properties. Journal of the American Statistical Association, 101(476), 1418–1429. https://doi.org/10.1198/016214506000000735
