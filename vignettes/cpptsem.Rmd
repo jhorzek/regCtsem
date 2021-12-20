@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 # c<sub>++</sub>tsem
 
-regCtsem will try to internally translate any ctsem object passed to the main function (regCtsem::regCtsem) to a C++ object. The functions for this C++ object are implemented following the naming scheme c<sub>++</sub>tsem. The sole purpose of this translation is speeding up the computation of the -2 log-Likelihood and an approximation of the gradients for continuous time structural equation models. 
+regCtsem will try to internally translate any ctsem object passed to the main function (regCtsem::regCtsem) to a C++ object. The functions for this C++ object are implemented following the naming scheme c<sub>++</sub>tsem. The sole purpose of this translation is speeding up the computation of the -2 log-Likelihood and an approximation of the gradients for continuous time structural equation models. The implementation closely follows that of ctsemOMX (Driver et al., 2017).
 
 **Known limitations**
 
@@ -584,4 +584,6 @@ Finally, the -2log-Likelihoods of all subsamples are summed up and returned.
 
 For each person, the latent scores and latent state residual covariances are first predicted and the updated. Furthermore the manifest values and manifest residual covariances are predicted from the latent scores. These predictions are then used in the single subject -2 log likelihood function described in the previous equation. For more information on the Kalman filter procedure see Welch, G., & Bishop, G. (2006). An Introduction to the Kalman Filter (Technical Report No. 95–041). https://perso.crans.org/club-krobot/doc/kalman.pdf .
 
+# Bibliography
 
+Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05

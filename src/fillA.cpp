@@ -4,6 +4,7 @@
 
 // Fills the A matrix (directed effects) given the A matrix, the discreteDRIFTUnique (list with discrete drift names, dTs and results),
 // discreteTRAITUnique (list with discrete trait names, dTs and results), LAMBDA (loadings), and AParameterIndicators (tells fillA where to put the discreteDRIFT, discreteTRAIT, and LAMBDA)
+// The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
 
 using namespace Rcpp;
 // [[Rcpp::export]]

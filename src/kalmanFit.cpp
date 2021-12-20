@@ -4,6 +4,8 @@
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
 // Performs the prediciton and updating step for the Kalman Filter
+// The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
+
 using namespace Rcpp;
 // [[Rcpp::export]]
 arma::colvec kalmanFit(bool update,

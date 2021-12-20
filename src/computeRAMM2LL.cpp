@@ -4,6 +4,8 @@
 
 // Computes the discrete time diffusion matrices given the DRIFTHASHInverse, DIFFUSION,
 // DRIFTHASHExponentialUnique (list with expm(drifthash)-names, dTs and results), and discreteDIFFUSIONUnique (list with diffusion-names, dTs and results)
+// The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
+
 using namespace Rcpp;
 // [[Rcpp::export]]
 double computeRAMM2LL(const Rcpp::List& RAMdata, const arma::colvec& expectedMeans, const arma::mat& expectedCovariance){
