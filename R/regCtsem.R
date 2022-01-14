@@ -12,8 +12,8 @@
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
 #' @param lambdasAutoCurve It is often a good idea to have unequally spaced lambda steps (e.g., .01,.02,.05,1,5,20). If lambdasAutoCurve is close to 1 lambda values will be equally spaced, if lambdasAutoCurve is large lambda values will be more concentrated close to 0. See ?getCurvedLambda for more informations.
 #' @param penalty Currently supported are lasso, ridge and adaptiveLasso
-#' @param adaptiveLassoWeights weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.
-#' @param adaptiveLassoPower power for the adaptive lasso weights. The weights will be set to parameterValues^{adaptiveLassoPower}, where parameterValues refers to the unregularized maximum likelihood estimates
+#' @param adaptiveLassoWeights weights for the adaptive lasso. Defaults to 1/(|theta|^adaptiveLassoPower), where theta is the maximum likelihood estimate of the regularized parameters.
+#' @param adaptiveLassoPower power for the adaptive lasso weights. The weights will be set to 1/(|theta|^adaptiveLassoPower).
 #' @param cvSample cross-validation sample. Has to be in wide format and compatible with ctsemOMX
 #' @param autoCV Should automatic cross-validation be used? Possible are "No", "kFold" or "Blocked". kFold splits the dataset in k groups by selecting independent units from the rows. Blocked is a within-unit split, where for each person blocks of observations are deleted. See Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740–756. https://doi.org/10.1037/met0000178 for a more detailed explanation
 #' @param k number of cross-validation folds if autoCV = "kFold" or autoCV = "Blocked"

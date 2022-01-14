@@ -107,7 +107,8 @@ controlRsolnp <- function(package = "Rsolnp",
 
 #' controlGIST
 #'
-#' The following arguments can be used to adjust the GIST optimization
+#' The following arguments can be used to adjust the GIST optimization. See Gong, P., Zhang, C., Lu, Z., Huang, J., & Ye, J. (2013). A General Iterative Shrinkage and Thresholding Algorithm for Non-convex Regularized Optimization Problems. Proceedings of the 30th International Conference on Machine Learning, 28(2)(2), 37–45.
+#' for more details.
 #'
 #' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the matrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param stepSize initial step size of the outer iteration
@@ -165,7 +166,9 @@ controlGIST <- function(forceCpptsem = FALSE, # should the C++ translation be en
 
 #' controlGLMNET
 #'
-#' The following arguments can be used to adjust the GLMNET optimization
+#' The following arguments can be used to adjust the GLMNET optimization. See
+#' Friedman, J., Hastie, T., & Tibshirani, R. (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software, 33(1), 1–20. https://doi.org/10.18637/jss.v033.i01
+#' Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421
 #'
 #' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
