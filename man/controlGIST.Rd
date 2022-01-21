@@ -55,5 +55,6 @@ controlGIST(
 \item{controlApproxOptimizer}{settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox}
 }
 \description{
-The following arguments can be used to adjust the GIST optimization
+The following arguments can be used to adjust the GIST optimization. See Gong, P., Zhang, C., Lu, Z., Huang, J., & Ye, J. (2013). A General Iterative Shrinkage and Thresholding Algorithm for Non-convex Regularized Optimization Problems. Proceedings of the 30th International Conference on Machine Learning, 28(2)(2), 37–45.
+for more details.
 }

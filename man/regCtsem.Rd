@@ -49,9 +49,9 @@ regCtsem(
 
 \item{penalty}{Currently supported are lasso, ridge and adaptiveLasso}
 
-\item{adaptiveLassoWeights}{weights for the adaptive lasso. If auto, defaults to the inverse of unregularized parameter estimates.}
+\item{adaptiveLassoWeights}{weights for the adaptive lasso. Defaults to 1/(|theta|^adaptiveLassoPower), where theta is the maximum likelihood estimate of the regularized parameters.}
 
-\item{adaptiveLassoPower}{power for the adaptive lasso weights. The weights will be set to parameterValues^{adaptiveLassoPower}, where parameterValues refers to the unregularized maximum likelihood estimates}
+\item{adaptiveLassoPower}{power for the adaptive lasso weights. The weights will be set to 1/(|theta|^adaptiveLassoPower).}
 
 \item{cvSample}{cross-validation sample. Has to be in wide format and compatible with ctsemOMX}
 
@@ -135,10 +135,12 @@ myModel <- ctsem::ctModel(Tpoints=10,n.latent=2,n.TDpred=0,
 fit_myModel <- ctsemOMX::ctFit(dat, myModel)
 
 # select DRIFT values for regularization:
-regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
 # Note: If you are unsure what the parameters are called in
-# your model, check: fit_myModel$ctmodelobj$DRIFT for the drift or
-# omxGetParameters(fit_myModel$ctmodelobj) for all parameters
+# your model, check: showParameters(fit_myModel)
+showParameters(fit_myModel)
+
+# regularize the cross-effects:
+regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
 
 # Optimize model using GIST with lasso penalty
 regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,

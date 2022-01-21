@@ -72,10 +72,12 @@
 #' fit_myModel <- ctsemOMX::ctFit(dat, myModel)
 #'
 #' # select DRIFT values for regularization:
-#' regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
 #' # Note: If you are unsure what the parameters are called in
-#' # your model, check: fit_myModel$ctmodelobj$DRIFT for the drift or
-#' # omxGetParameters(fit_myModel$ctmodelobj) for all parameters
+#' # your model, check: showParameters(fit_myModel)
+#' showParameters(fit_myModel)
+#'
+#' # regularize the cross-effects:
+#' regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
 #'
 #' # Optimize model using GIST with lasso penalty
 #' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
@@ -1484,7 +1486,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
     stop("standardizeDrift has to be set to 'No', 'T0VAR' or 'asymptoticDiffusion'")
   }
 
-  if(standardizeDrift == "No"){
+  if(standardizeDrift == "No" && tolower(penalty) != "adaptivelasso" && !is.numeric(adaptiveLassoWeights)){
     warning("Not using any automatic standardization.")
   }
 

@@ -12,6 +12,10 @@ plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xla
   if(is.character(xlab)){skiptXlabComp <- F}else{skiptXlabComp <- T}
   if(is.character(ylab)){skiptYlabComp <- F}else{skiptYlabComp <- T}
 
+  if(what == "drift"){
+    what <- c(regCtsemObject$setup$ctsemObject$mxobj$DRIFT$labels)
+  }
+
   ## Plot specific parameter values
   if(all(what %in% rownames(regCtsemObject$parameters))){
     pars <- regCtsemObject$parameters

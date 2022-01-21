@@ -1493,59 +1493,89 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
     names(free) <- names(startingValues)
   }
 
-  if(nMultistart > 1){
-    startingValuesTable <- matrix(nrow = length(startingValues), ncol = nMultistart)
+  if(nMultistart >= 1){
+    startingValuesTable <- matrix(nrow = length(startingValues), ncol = nMultistart+1)
     rownames(startingValuesTable) <- names(startingValues)
     startingValuesTable[,1] <- startingValues
     parameterTable <- cpptsemObject$parameterTable
-    for(parameter in 1:length(parameterTable$label)){
-      parameterLabel <- parameterTable$label[parameter]
-      parameterValue <- parameterTable$value[parameter]
-      if(!free[parameterLabel]) {
-        startingValuesTable[parameterLabel,2:nMultistart] <- rep(parameterValue, nMultistart-1)
-        next
-      }
-      if(parameterTable$matrix[parameter] == "DRIFT"){
-        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, -.5, length.out = nMultistart-1)
-        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, 0, length.out = nMultistart-1)
-        next
-      }
 
-      if(parameterTable$matrix[parameter] == "DIFFUSIONbase"){
-        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, log(2), length.out = nMultistart-1)
-        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, 0, length.out = nMultistart-1)
-        next
-      }
+    # try generating random starting value sets
+    nfound <- 1
+    for(i in 1:50){
+      currentTry <- startingValues
+      for(parameter in 1:length(parameterTable$label)){
+        parameterLabel <- parameterTable$label[parameter]
+        parameterValue <- parameterTable$value[parameter]
+        if(!free[parameterLabel]) {
+          # don't change fixed parameters
+          startingValuesTable[parameterLabel,2:nMultistart] <- rep(parameterValue, nMultistart-1)
+          next
+        }
+        if(parameterTable$matrix[parameter] == "DRIFT"){
+          # diagonal entries:
+          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,-.9,.4)
+          # off-diagonal entries
+          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,0,.3)
+          next
+        }
 
-      if(parameterTable$matrix[parameter] == "T0VARbase"){
-        if(parameterTable$row[parameter] == parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, log(2), length.out = nMultistart-1)
-        if(parameterTable$row[parameter] != parameterTable$col[parameter]) startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, 0, length.out = nMultistart-1)
-        next
-      }
+        if(parameterTable$matrix[parameter] == "DIFFUSIONbase"){
+          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,log(2),.4)
+          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,0,.3)
+          next
+        }
 
-      if(parameterTable$matrix[parameter] == "T0MEANS"){
-        startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, 0, length.out = nMultistart-1)
-        next
-      }
+        if(parameterTable$matrix[parameter] == "T0VARbase"){
+          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,log(2),.4)
+          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,0,.3)
+          next
+        }
 
-      if(parameterTable$matrix[parameter] == "MANIFESTMEANS"){
-        startingValuesTable[parameterLabel,2:nMultistart] <- seq(parameterValue, 0, length.out = nMultistart-1)
-        next
+        if(parameterTable$matrix[parameter] == "TRAITVARbase"){
+          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,log(2),.4)
+          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,0,.3)
+          next
+        }
+
+        if(parameterTable$matrix[parameter] == "T0MEANS"){
+          currentTry[parameterLabel] <- rnorm(1,0,.5)
+          next
+        }
+
+        if(parameterTable$matrix[parameter] == "MANIFESTMEANS"){
+          currentTry[parameterLabel] <- rnorm(1,0,.5)
+          next
+        }
+        if(parameterTable$matrix[parameter] == "MANIFESTVARbase"){
+          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,log(2),.4)
+          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,0,.3)
+          next
+        }
+
+        currentTry[parameterLabel] <- parameterValue
       }
-      startingValuesTable[parameterLabel,2:nMultistart] <- rep(parameterValue, nMultistart-1)
+      # try fitting
+      tryFit <- try(fitCpptsem(parameterValues = currentTry,
+                               cpptsemObject = cpptsemObject,
+                               objective = objective, free = free, failureReturns = .Machine$double.xmax/2), silent = TRUE)
+      if(any(class(tryFit) == "try-error") || abs(tryFit - .Machine$double.xmax/2) < 1){next}
+
+      nfound <- nfound + 1
+      startingValuesTable[,nfound] <- currentTry
+      if(nfound == nMultistart+1){break}
     }
-
+    startingValuesTable <- startingValuesTable[,!apply(startingValuesTable,2,anyNA)]
     optimizedValuesTable <- startingValuesTable
-    fit <- rep(NA, nMultistart)
-    convergence <- rep(FALSE, nMultistart)
+    fit <- rep(NA, ncol(startingValuesTable))
+    convergence <- rep(FALSE, ncol(startingValuesTable))
     cat("\n")
-    for(it in 1:nMultistart){
+    for(it in 1:ncol(startingValuesTable)){
       if(it == 1){
-        currentItLabel <- paste0("- Trying different starting values [1/",nMultistart, "] ")
+        currentItLabel <- paste0("- Trying different starting values [1/",nMultistart+1, "] ")
         cat(currentItLabel)
       }else{
-        cat(paste0(paste0(rep("\r", nchar(currentItLabel)), collapse = ""), "- Trying different starting values [", it, "/", nMultistart, "] "))
-        currentItLabel <- paste0("- Trying different starting values [", it, "/", nMultistart, "] ")
+        cat(paste0(paste0(rep("\r", nchar(currentItLabel)), collapse = ""), "- Trying different starting values [", it, "/", nMultistart+1, "] "))
+        currentItLabel <- paste0("- Trying different starting values [", it, "/", nMultistart+1, "] ")
       }
 
       cpptsemObject$setParameterValues(startingValuesTable[,it], rownames(startingValuesTable))
