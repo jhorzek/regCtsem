@@ -938,6 +938,10 @@ startFromSparse <- function(ctsemObject,
 
     cpptsemObject$setParameterValues(fullParameters, names(fullParameters))
   }
+  tryFit <- fitCpptsem(parameterValues = cpptsemObject$getParameterValues(),
+                       cpptsemObject = cpptsemObject,
+                       objective = objective,
+                       failureReturns = NA)
   adaptiveLassoWeights <- getAdaptiveLassoWeights(cpptsemObject = cpptsemObject,
                                                   penalty = penalty,
                                                   adaptiveLassoWeights = adaptiveLassoWeights,

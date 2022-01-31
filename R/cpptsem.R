@@ -5,7 +5,11 @@
 
 #' cpptsemFromCtsem
 #'
-#' transforms fitted ctsem model to cpptsem model
+#' transforms fitted ctsem model to cpptsem model. The implementation of cpptsem closely follows that of ctsemOMX (Driver et al., 2017)
+#'
+#' # References
+#'
+#' Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
 #'
 #' @param ctsemModel fittet ctsem object
 #' @param wideData Please provide a data set in wide format compatible to ctsemOMX
@@ -1501,7 +1505,7 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
 
     # try generating random starting value sets
     nfound <- 1
-    for(i in 1:50){
+    for(i in 1:(nMultistart*20)){
       currentTry <- startingValues
       for(parameter in 1:length(parameterTable$label)){
         parameterLabel <- parameterTable$label[parameter]

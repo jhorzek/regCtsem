@@ -1,6 +1,16 @@
 #' regCtsem
 #'
-#' main function: performs regularized ctsem
+#' Regularized Continuous Time Structural Equation Modeling.
+#'
+#' REGularized Continuous Time Structural Equation Models (regCtsem) implements least absolute shrinkage and selection operator (LASSO; Tibshirani, 1996) and adaptive LASSO (Zou, 2006) regularization for models fitted with ctsemOMX (Driver et al., 2017). See vignette("regCtsem", package = "regCtsem") for an introduction and additional examples.
+#'
+#' References:
+#'
+#' * Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
+#'
+#' * Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267–288.
+#'
+#' * Zou, H. (2006). The Adaptive Lasso and Its Oracle Properties. Journal of the American Statistical Association, 101(476), 1418–1429. https://doi.org/10.1198/016214506000000735
 #'
 #' NOTE: Function located in file regCtsem.R
 #'

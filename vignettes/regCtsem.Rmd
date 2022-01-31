@@ -455,6 +455,37 @@ Additionally, the $\lambda$ values could be split (e.g., $\{0,.1,.2\}$ and $\{.3
 Sometimes, a model where all parameters are freely estimated is too flexible and very difficult to optimize. In these cases it can be useful to start with a sparse model; that is, a model where all regularizted parameters are already set to zero. The penalty is then reduced gradually to allow for parameters to diverge from zero. This can be done as follows:
 
 ```{r}
+set.seed(17046)
+
+## Population model:
+
+# set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
+ct_drift <- matrix(c(-.3,.2,0,-.5), ncol = 2)
+
+generatingModel<-ctsem::ctModel(Tpoints=10,n.latent=2,n.TDpred=0,
+                                n.TIpred=0,n.manifest=2,
+                                MANIFESTVAR=diag(0,2),
+                                LAMBDA=diag(1,2),
+                                DRIFT=ct_drift,
+                                DIFFUSION=matrix(c(.5,0,0,.5),2),
+                                CINT=matrix(c(0,0),nrow=2),
+                                T0MEANS=matrix(0,ncol=1,nrow=2),
+                                T0VAR=diag(1,2), type = "omx")
+
+# simulate a training data set
+dat <- ctsem::ctGenerate(generatingModel, n.subjects = 100, wide = TRUE)
+
+## Build the analysis model. Note that drift eta1_eta2 is freely estimated
+# although it is 0 in the population.
+myModel <- ctsem::ctModel(Tpoints=10,n.latent=2,n.TDpred=0,
+                          n.TIpred=0,n.manifest=2,
+                          LAMBDA=diag(1,2),
+                          MANIFESTVAR=diag(0,2),
+                          CINT=matrix(c(0,0),nrow=2),
+                          DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
+                          T0MEANS=matrix(0,ncol=1,nrow=2),
+                          T0VAR="auto", type = "omx")
+
 # fit the model using ctsemOMX, but without optimization:
 fit_myModel <- ctsemOMX::ctFit(dat, 
                                myModel, 
@@ -481,6 +512,7 @@ Note that when combining startFromSparse with automatic standardization, the T0V
 * Friedman, J., Hastie, T., & Tibshirani, R. (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software, 33(1), 1–20. https://doi.org/10.18637/jss.v033.i01
 * Gong, P., Zhang, C., Lu, Z., Huang, J., & Ye, J. (2013). A General Iterative Shrinkage and Thresholding Algorithm for Non-convex Regularized Optimization Problems. Proceedings of the 30th International Conference on Machine Learning, 28(2)(2), 37–45.
 * Pinheiro, J. C., & Bates, D. M. (1996). Unconstrained parametrizations for variance-covariance matrices. Statistics and Computing, 6(3), 289–296. https://doi.org/10.1007/BF00140873
+* Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267–288.
 * Voelkle, M. C., Oud, J. H. L., Davidov, E., & Schmidt, P. (2012). An SEM Approach to Continuous Time Modeling of Panel Data: Relating Authoritarianism and Anomia. Psychological Methods, 17(2), 176–192. https://doi.org/10.1037/a0027543
 * Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421
 * Zou, H. (2006). The Adaptive Lasso and Its Oracle Properties. Journal of the American Statistical Association, 101(476), 1418–1429. https://doi.org/10.1198/016214506000000735
