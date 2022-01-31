@@ -62,7 +62,7 @@ testthat::test_that(desc = "Testing basic features of regCtsem", code = {
                                                 standardizeDrift = "asymptoticDiffusion",
                                                 cvSample = testdata_1))
 
-  expect_equal(sum(round(regModel_BIC_GIST$fit - regModel_BIC_GLMNET$fit,1)),0)
+  expect_equal(sum(round(regModel_BIC_GIST$fit["regM2LL",] - regModel_BIC_GLMNET$fit["regM2LL",],2)),0)
   expect_equal(sum(round(regModel_BIC_GIST$parameterEstimatesRaw - regModel_BIC_GLMNET$parameterEstimatesRaw,1)),0)
   expect_equal(sum(round(regModel_BIC_GIST$parameterEstimatesRaw - regModel_BIC_Approx$parameterEstimatesRaw,1)),0)
   regModel_BIC_checkFI <- checkFI(mxObject = fit_myModel$mxobj, regCtsemObject = regModel_BIC_GIST, cvModel = fit_myModel_fortest$mxobj)
