@@ -255,7 +255,7 @@
 #' }
 #'
 #' @author Jannik Orzek
-#' @import ctsemOMX rlist optimx Rsolnp
+#' @import ctsemOMX optimx Rsolnp
 #' @export
 regCtsem <- function(
   # model
@@ -981,7 +981,7 @@ regCtsem <- function(
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #'
 #' @author Jannik Orzek
-#' @import ctsemOMX rlist
+#' @import ctsemOMX
 #' @export
 exact_regCtsem <- function(  # model
   cpptsemObject,# = NULL,
@@ -1157,7 +1157,7 @@ exact_regCtsem <- function(  # model
     fitAndParameters["cvM2LL",] <- fitCVTable["cvM2LL",]
   }
 
-  returnList <- rlist::list.append(returnList, "fitAndParameters" = fitAndParameters)
+  returnList[["fitAndParameters"]] <- fitAndParameters
   return(returnList)
 }
 
@@ -1281,7 +1281,8 @@ approx_regCtsem <- function(  # model
     fitAndParameters <- rbind(fitCVTable, fitAndParameters)
   }
 
-  return(rlist::list.append(returnList, "fitAndParameters" = fitAndParameters))
+  returnList[["fitAndParameters"]] <- fitAndParameters
+  return(returnList)
 
 }
 
