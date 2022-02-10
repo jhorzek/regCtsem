@@ -187,7 +187,7 @@ regularizedModel <- regCtsem(ctsemObject = AnomAuthfit,
                              standardizeDrift = "asymptoticDiffusion")
 ```
 
-Also, the adaptive LASSO can be thought of as a form of standardization. By default $\lambda_j = \frac{\lambda}{|\hat\theta_j|}$, where $\hat \lambda_j$ is the maximum likelihood estimate for $\lambda_j$.
+Also, the adaptive LASSO can be thought of as a form of standardization. By default $\lambda_j = \frac{\lambda}{|\hat\theta_j|}$, where $\hat\theta_j$ is the maximum likelihood estimate for $\theta_j$.
 
 ```{r, results='hide', message = FALSE, warning=FALSE}
 regularizedModel <- regCtsem(ctsemObject = AnomAuthfit, 
