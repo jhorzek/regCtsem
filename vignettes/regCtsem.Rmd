@@ -450,6 +450,12 @@ regularizedModel <- regCtsem(ctsemObject = AnomAuthfit,
 
 Additionally, the $\lambda$ values could be split (e.g., $\{0,.1,.2\}$ and $\{.3,.4,.5\}$) and different cores could be used to optimize the subsets. Here, we found that this can result in suboptimal solutions for some subsets (e.g., due to local minima) which is why it is currently not implemented in **regCtsem**.
 
+Finally, **regCtsem** makes use of **RcppArmadillo** which allows for parallelization with OMP. Depending on how you installed **RcppArmadillo**, you might be able to take advantage of multiple cores. However, we currently recommend manually setting the number of threads: 
+```{r, eval = FALSE}
+Sys.setenv(OMP_NUM_THREADS="1")
+```
+Depending on the analysis at hand, using multiple cores can add a considerable overhead to the computation and we therefore currently recommend using only a single core.
+
 ### Starting with a Sparse Model
 
 Sometimes, a model where all parameters are freely estimated is too flexible and very difficult to optimize. In these cases it can be useful to start with a sparse model; that is, a model where all regularizted parameters are already set to zero. The penalty is then reduced gradually to allow for parameters to diverge from zero. This can be done as follows:

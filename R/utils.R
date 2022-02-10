@@ -992,3 +992,36 @@ startFromSparse <- function(ctsemObject,
   return(list("maxLambda" = maxLambda, "sparseParameters" = sparseParameters, "fullParameters" = cpptsemObject$getParameterValues()))
 
 }
+
+approximateLOOCV <- function(cpptsemObject, wideData){
+  stop("WORK IN PROGRESS")
+  parameterEstimates <- cpptsemObject$getParameterValues()
+
+  dataset <- subset(wideData, select = !grepl("dT", colnames(wideData)) & !grepl("intervalID", colnames(wideData)) )
+
+  # step one: extract subject specific likelihoods
+  if(class(cpptsemObject) == "Rcpp_cpptsemRAMmodel"){
+    expectedMeans <- cpptsemObject$expectedMeans
+    expectedCovariance <- cpptsemObject$expectedCovariance
+
+    inidividualLikelihoods <- rep(0, nrow(wideData))
+    for(i in 1:nrow(wideData)){
+      missings <- is.na(dataset[i,])
+
+      # check if all missing
+      if(all(missings)) next
+
+      expectedMeans_i <- expectedMeans[!missings]
+      expectedCovariance_i <- expectedCovariance[!missings , !missings]
+      observed_i <- as.matrix(dataset[i,!missings])
+      inidividualLikelihoods[i] <- regCtsem:::computeIndividualM2LL(nObservedVariables = length(observed_i),
+                                                                    rawData = observed_i,
+                                                                    expectedMeans = expectedMeans_i,
+                                                                    expectedCovariance = expectedCovariance_i)
+    }
+  }
+
+  # step 2: compute
+
+
+}
