@@ -993,35 +993,157 @@ startFromSparse <- function(ctsemObject,
 
 }
 
-approximateLOOCV <- function(cpptsemObject, wideData){
-  stop("WORK IN PROGRESS")
-  parameterEstimates <- cpptsemObject$getParameterValues()
+approximateLOOCV <- function(cpptsemObject, wideData, Hessian = NULL, eps = 1e-4){
+  warning("WORK IN PROGRESS")
+  parameterValues <- cpptsemObject$getParameterValues()
 
-  dataset <- subset(wideData, select = !grepl("dT", colnames(wideData)) & !grepl("intervalID", colnames(wideData)) )
+  if(class(cpptsemObject) == "Rcpp_cpptsemRAMmodel") {
+    objective <- "ML"
+  }else if(class(cpptsemObject) == "Rcpp_cpptsemKalmanModel"){
+    objective <- "Kalman"
+  }else{stop("Model of unknown class passed to approximateLOOCV")}
 
-  # step one: extract subject specific likelihoods
-  if(class(cpptsemObject) == "Rcpp_cpptsemRAMmodel"){
-    expectedMeans <- cpptsemObject$expectedMeans
-    expectedCovariance <- cpptsemObject$expectedCovariance
+  # step 1: compute Hessian (if not provided)
+  if(is.null(Hessian)){
+    Hessian <- optimHess(par = parameterValues,
+                         fn = regCtsem::fitCpptsem,
+                         cpptsemObject = cpptsemObject,
+                         objective = objective,
+                         failureReturns = .5*.Machine$double.xmax)
+  }
+  if(any(eigen(Hessian)$values < 0)) stop("Hessian is not positive definite.")
 
-    inidividualLikelihoods <- rep(0, nrow(wideData))
-    for(i in 1:nrow(wideData)){
-      missings <- is.na(dataset[i,])
-
-      # check if all missing
-      if(all(missings)) next
-
-      expectedMeans_i <- expectedMeans[!missings]
-      expectedCovariance_i <- expectedCovariance[!missings , !missings]
-      observed_i <- as.matrix(dataset[i,!missings])
-      inidividualLikelihoods[i] <- regCtsem:::computeIndividualM2LL(nObservedVariables = length(observed_i),
-                                                                    rawData = observed_i,
-                                                                    expectedMeans = expectedMeans_i,
-                                                                    expectedCovariance = expectedCovariance_i)
-    }
+  # step 2: compute scores (individual gradients)
+  if(objective == "ML"){
+    scores <- computeScores.Rcpp_cpptsemRAMmodel(cpptsemObject = cpptsemObject, wideData = wideData, eps = eps)
+  }
+  if(objective == "Kalman"){
+    scores <- computeScores.Rcpp_cpptsemKalmanModel(cpptsemObject = cpptsemObject, wideData = wideData, eps = eps)
   }
 
-  # step 2: compute
+  # approximate parameters for Leave One Out Training sets
+  trainingParameters <- matrix(NA, nrow = length(parameterValues), ncol = nrow(wideData))
+  rownames(trainingParameters) <- names(parameterValues)
+
+  invHessian <- solve(Hessian)
+
+  for(i in 1:nrow(wideData)){
+    trainingParameters[,i] <- parameterValues + (1/(nrow(wideData)-1))*invHessian%*%matrix(scores[names(parameterValues),i], ncol = 1)
+  }
+}
 
 
+individualMinus2LogLikelihoods.Rcpp_cpptsemRAMmodel <- function(cpptsemObject, wideData){
+  dataset <- subset(wideData, select = !grepl("dT", colnames(wideData)) & !grepl("intervalID", colnames(wideData)) )
+
+  expectedMeans <- cpptsemObject$expectedMeans
+  expectedCovariance <- cpptsemObject$expectedCovariance
+
+  inidividualLikelihoods <- rep(0, nrow(wideData))
+  for(i in 1:nrow(wideData)){
+    missings <- is.na(dataset[i,])
+
+    # check if all missing
+    if(all(missings)) next
+
+    expectedMeans_i <- expectedMeans[!missings]
+    expectedCovariance_i <- expectedCovariance[!missings , !missings]
+    observed_i <- as.matrix(dataset[i,!missings])
+    inidividualLikelihoods[i] <- regCtsem:::computeIndividualM2LL(nObservedVariables = length(observed_i),
+                                                                  rawData = observed_i,
+                                                                  expectedMeans = expectedMeans_i,
+                                                                  expectedCovariance = expectedCovariance_i)
+  }
+  return(inidividualLikelihoods)
+}
+
+
+individualMinus2LogLikelihoods.Rcpp_cpptsemKalmanModel <- function(cpptsemObject, wideData){
+  return(cpptsemObject$indM2LL)
+}
+
+computeScores.Rcpp_cpptsemRAMmodel <- function(cpptsemObject, wideData, eps = 1e-4){
+  parameterValues <- cpptsemObject$getParameterValues()
+
+  m2LLs <- matrix(NA, nrow = nrow(wideData), ncol = 2)
+  scores <- matrix(NA, nrow = length(parameterValues), ncol = nrow(wideData))
+  rownames(scores) <- names(parameterValues)
+
+  parameterValues_i <- parameterValues
+
+  for(i in 1:length(parameterValues)){
+
+    # step backward
+    parameterValues_i[i] <- parameterValues_i[i] - eps
+    cpptsemObject$setParameterValues(parameterValues_i, names(parameterValues_i))
+
+    # fit
+    cpptsemObject$computeRAM()
+    cpptsemObject$fitRAM()
+
+    # get individual fits
+    m2LLs[,2] <- individualMinus2LogLikelihoods.Rcpp_cpptsemRAMmodel(cpptsemObject, wideData)
+
+    # step forward
+    parameterValues_i[i] <- parameterValues_i[i] + 2*eps
+    cpptsemObject$setParameterValues(parameterValues_i, names(parameterValues_i))
+
+    # fit
+    cpptsemObject$computeRAM()
+    cpptsemObject$fitRAM()
+
+    # get individual fits
+    m2LLs[,1] <- individualMinus2LogLikelihoods.Rcpp_cpptsemRAMmodel(cpptsemObject, wideData)
+
+    # reset
+    parameterValues_i[i] <- parameterValues_i[i] - eps
+    cpptsemObject$setParameterValues(parameterValues_i, names(parameterValues_i))
+
+    # compute gradients
+    scores[names(parameterValues_i[i]), ] <- (m2LLs[,1] - m2LLs[,2])/2
+  }
+  return(scores)
+}
+
+
+computeScores.Rcpp_cpptsemKalmanModel <- function(cpptsemObject, wideData, eps = 1e-4){
+  parameterValues <- cpptsemObject$getParameterValues()
+
+  m2LLs <- matrix(NA, nrow = nrow(wideData), ncol = 2)
+  scores <- matrix(NA, nrow = length(parameterValues), ncol = nrow(wideData))
+  rownames(scores) <- names(parameterValues)
+
+  parameterValues_i <- parameterValues
+
+  for(i in 1:length(parameterValues)){
+
+    # step backward
+    parameterValues_i[i] <- parameterValues_i[i] - eps
+    cpptsemObject$setParameterValues(parameterValues_i, names(parameterValues_i))
+
+    # fit
+    cpptsemObject$computeAndFitKalman()
+
+    # get individual fits
+    m2LLs[,2] <- individualMinus2LogLikelihoods.Rcpp_cpptsemKalmanModel(cpptsemObject, wideData)
+
+    # step forward
+    parameterValues_i[i] <- parameterValues_i[i] + 2*eps
+    cpptsemObject$setParameterValues(parameterValues_i, names(parameterValues_i))
+
+    # fit
+    cpptsemObject$computeAndFitKalman()
+
+    # get individual fits
+    m2LLs[,1] <- individualMinus2LogLikelihoods.Rcpp_cpptsemKalmanModel(cpptsemObject, wideData)
+
+    # reset
+    parameterValues_i[i] <- parameterValues_i[i] - eps
+    cpptsemObject$setParameterValues(parameterValues_i, names(parameterValues_i))
+
+    # compute gradients
+    scores[names(parameterValues_i[i]), ] <- (m2LLs[,1] - m2LLs[,2])/2
+  }
+
+  return(scores)
 }

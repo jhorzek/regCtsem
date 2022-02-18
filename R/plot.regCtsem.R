@@ -323,7 +323,7 @@ plot.regCtsemMultiSubject <- function(regCtsemObject, what = "drift", groups = N
 
 }
 
-networkPlot(regCtsemObject, lambda, deltaT = NULL, contemporaneous = TRUE, ...){
+networkPlot <- function(regCtsemObject, lambda, deltaT = NULL, contemporaneous = TRUE, ...){
   if(regModel$setup$autoCV != "No"){stop("networkPlot is currently not supported when using cross-validation.")}
   driftLabels <- c(regCtsemObject$setup$ctsemObject$mxobj$DRIFT$labels)
   drifts <- regCtsemObject$parameterEstimatesRaw[driftLabels,]
