@@ -57,7 +57,11 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
                              controlApproxOptimizer,
                              extraTries,# = 3,
                              verbose # = 0
-                             ){
+){
+  warning("Temporary implementation for approximate LOOCV")
+
+  LOOCV <- rep(NA, length(lambdas))
+
   # Setup
   # save current parameters
   parameters <- cpptsemObject$getParameterValues()
@@ -65,9 +69,9 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
   ## compute Hessian
   if(!is.matrix(initialHessianApproximation)){
     initialHessian <- try(optimHess(par = parameters, fn = fitCpptsem,
-                             cpptsemObject = cpptsemObject,
-                             objective = objective,
-                             failureReturns = NA
+                                    cpptsemObject = cpptsemObject,
+                                    objective = objective,
+                                    failureReturns = NA
     ), silent = TRUE)
     if(any(class(Hessian) == "try-error")){
       warning("Could not compute Hessian. Using Identity")
@@ -128,11 +132,11 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
 
     if(approxFirst){
       theta_kp1 <- exact_tryStartingValues(startingValues = startingValues, returnAs = "matrix",
-                                  approxFirst = approxFirst, numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
-                                  lambda = lambda,
-                                  cpptsemObject = cpptsemObject,
-                                  regIndicators = regIndicators, targetVector = targetVector,
-                                  adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters)
+                                           approxFirst = approxFirst, numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
+                                           lambda = lambda,
+                                           cpptsemObject = cpptsemObject,
+                                           regIndicators = regIndicators, targetVector = targetVector,
+                                           adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters)
     }
 
     # outer loop: optimize parameters
@@ -169,53 +173,70 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
     }else{
       theta_kp1 <- resGLMNET$theta_kp1
       # run final model
-        cpptsemObject <- resGLMNET$cpptsemObject
-        if(tolower(objective) == "ml"){
-          out1 <- try(cpptsemObject$computeRAM(), silent = TRUE)
-          out2 <- try(cpptsemObject$fitRAM(), silent = TRUE)
-        }else{
-          out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE)
-          out2 <- NA
-        }
-        if(any(class(out1)== "try-error") | any(class(out2)== "try-error")){
-          warning(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), "did not converge.", sep = ""))
-          # reset theta for next iteration
-          theta_kp1 <- initialParameters
-          # reset Hessian approximation
-          H_kp1 <- initialHessian
-          # reset gradients
-          g_kp1 <- initialGradients
+      cpptsemObject <- resGLMNET$cpptsemObject
+      if(tolower(objective) == "ml"){
+        out1 <- try(cpptsemObject$computeRAM(), silent = TRUE)
+        out2 <- try(cpptsemObject$fitRAM(), silent = TRUE)
+      }else{
+        out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE)
+        out2 <- NA
+      }
+      if(any(class(out1)== "try-error") | any(class(out2)== "try-error")){
+        warning(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), "did not converge.", sep = ""))
+        # reset theta for next iteration
+        theta_kp1 <- initialParameters
+        # reset Hessian approximation
+        H_kp1 <- initialHessian
+        # reset gradients
+        g_kp1 <- initialGradients
 
-          if(retryOnce){
-            retryOnce <- FALSE
-            next
-          }
-          retryOnce <- TRUE
-
-          # save results
-          m2LL <- c(m2LL, NA)
-          regM2LL <- c(regM2LL, NA)
-        }else{
-          theta_kp1 <- resGLMNET$theta_kp1
-          # update Hessian approximation
-          H_kp1 <- resGLMNET$H_kp1
-          # update gradients
-          g_kp1 <- resGLMNET$g_kp1
-          # save fit
-          cM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL, Inf)
-          cRegM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
-                                                                                                          theta = resGLMNET$theta_kp1,
-                                                                                                          regIndicators = regIndicators,
-                                                                                                          adaptiveLassoWeights = adaptiveLassoWeights), Inf)
-          # save results
-          thetas[,iteration] <- resGLMNET$theta_kp1[rownames(thetas),]
-          m2LL[iteration] <- cM2LL
-          regM2LL[iteration] <- cRegM2LL
+        if(retryOnce){
+          retryOnce <- FALSE
+          next
         }
+        retryOnce <- TRUE
+
+        # save results
+        m2LL <- c(m2LL, NA)
+        regM2LL <- c(regM2LL, NA)
+      }else{
+        theta_kp1 <- resGLMNET$theta_kp1
+        # update Hessian approximation
+        H_kp1 <- resGLMNET$H_kp1
+        # update gradients
+        g_kp1 <- resGLMNET$g_kp1
+        # save fit
+        cM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL, Inf)
+        cRegM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
+                                                                                                        theta = resGLMNET$theta_kp1,
+                                                                                                        regIndicators = regIndicators,
+                                                                                                        adaptiveLassoWeights = adaptiveLassoWeights), Inf)
+        # save results
+        thetas[,iteration] <- resGLMNET$theta_kp1[rownames(thetas),]
+        m2LL[iteration] <- cM2LL
+        regM2LL[iteration] <- cRegM2LL
+
+        warning("Temporary implementation for approximate LOOCV")
+
+        data <- dat[, !grepl("dT", colnames(dat))]
+        LOOCVIpc <- ipcGlmnet(parameterValues = thetas[,iteration],
+                              fitfunction = regCtsem::returnIndividualFit,
+                              data = subset(dataset, select = !grepl("dT", colnames(dataset)) & !grepl("intervalID", colnames(dataset))),
+                              regIndicators = regIndicators,
+                              lambda = ifelse(scaleLambdaWithN, lambda/sampleSize, lambda),
+                              hessian = H_kp1,
+                              cpptsemObject = cpptsemObject,
+                              fullData = subset(dataset, select = !grepl("dT", colnames(dataset)) & !grepl("intervalID", colnames(dataset))))
+
+        LOOCV[iteration] <- sum(LOOCVIpc$loocv)
+
+      }
       iteration <- iteration + 1
     }
 
   }
+
+  LOOCVGlobal <<- LOOCV
 
   return(list("lambdas" = lambdas, "thetas" = thetas, "m2LL" = m2LL,"regM2LL" = regM2LL))
 
