@@ -256,7 +256,7 @@ GIST <- function(cpptsemObject,
     invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }else{
-    invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE), type = "message"))
+    invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
     out2 <- NA
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }
@@ -356,7 +356,7 @@ GIST <- function(cpptsemObject,
         invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
         invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
       }else{
-        invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE), type = "message"))
+        invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
         out2 <- NA
       }
       if(any(class(out1) == "try-error")  |
@@ -622,7 +622,7 @@ GISTWithTarget <- function(cpptsemObject,
     invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }else{
-    invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE), type = "message"))
+    invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
     out2 <- NA
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }
@@ -732,7 +732,7 @@ GISTWithTarget <- function(cpptsemObject,
         invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
         invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
       }else{
-        invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE), type = "message"))
+        invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
         out2 <- NA
       }
       if(any(class(out1) == "try-error")  |

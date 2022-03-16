@@ -67,7 +67,7 @@ public:
   void setKalmanMatrices(const Rcpp::List& mKalmanMatrices);
 
   // computation
-  void computeAndFitKalman();
+  void computeAndFitKalman(int individual = 0);
   Rcpp::NumericVector approxKalmanGradients(const double epsilon = .000001);
 
   Rcpp::NumericVector approxKalmanGradient(const double epsilon, const Rcpp::String parName);

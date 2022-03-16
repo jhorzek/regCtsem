@@ -112,7 +112,7 @@ testthat::test_that(desc = "Testing implementation of cpptsem", code = {
 
     ## with cpptsem
     cpptsemmodel3 <- cpptsemFromCtsem(ctsemModel = myModel,wideData = traindata)
-    cpptsemmodel3$computeAndFitKalman()
+    cpptsemmodel3$computeAndFitKalman(0)
 
 
     # check fit and gradients

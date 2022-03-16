@@ -211,8 +211,10 @@ void cpptsemKalmanModel::setDiscreteTimeParameterNames(const Rcpp::List mDiscret
   discreteTimeParameterNames = mDiscreteTimeParameterNames;
 }
 
-void cpptsemKalmanModel::computeAndFitKalman(){
+void cpptsemKalmanModel::computeAndFitKalman(int individual){
   computeWasCalled = true;
+  bool individualFit = individual > 0; // marks if the fit is only required for a single individual
+
   arma::mat DRIFTInverseValues;
   arma::mat DRIFTHASH;
   arma::mat DRIFTHASHInverse;
@@ -236,7 +238,29 @@ void cpptsemKalmanModel::computeAndFitKalman(){
     }
     // set parameters to values of persons with current id
     setKalmanMatrixValues(uniqueIDs[idIndex]);
+    // find rows of persons in current group
     currentPersonRows = arma::find(group == uniqueIDs[idIndex]);
+    if(individualFit){
+      // set all m2LLs of this group to NA
+      for(int i = 0; i < currentPersonRows.n_elem; i++){
+        indM2LL.row(i) = arma::datum::nan;
+      }
+
+      bool found = false;
+      for(int i = 0; i < currentPersonRows.n_elem; i++){
+
+        if(currentPersonRows.at(i) == individual-1) {
+          // replace current rows with individual index
+          currentPersonRows = currentPersonRows.at(i);
+
+          found = true;
+          break;
+        }
+      }
+      // skip this group if the requested individual is not in this group
+      if(!found) continue;
+    }
+
     currentSampleSize = currentPersonRows.n_elem;
     currentDataSet = kalmanData.rows(currentPersonRows);
 
@@ -399,7 +423,7 @@ Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradients(const double epsil
     // forward step
     currentParameterValues(parameter) = currentParameterValues(parameter) + epsilon;
     setParameterValues(currentParameterValues, parameterNames);
-    computeAndFitKalman();
+    computeAndFitKalman(0);
     likelihoods(parameter,0) = m2LL;
 
     // reset parameter
@@ -409,7 +433,7 @@ Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradients(const double epsil
     // backward step
     currentParameterValues(parameter) = currentParameterValues(parameter) - epsilon;
     setParameterValues(currentParameterValues, parameterNames);
-    computeAndFitKalman();
+    computeAndFitKalman(0);
     likelihoods(parameter,1) = m2LL;
 
     // reset parameter
@@ -438,7 +462,7 @@ Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradient(const double epsilo
   // forward step
   currentParameterValues(parName) = currentParameterValues(parName) + epsilon;
   setParameterValues(currentParameterValues, parameterNames);
-  computeAndFitKalman();
+  computeAndFitKalman(0);
   likelihoods(0,0) = m2LL;
 
   // reset parameter
@@ -448,7 +472,7 @@ Rcpp::NumericVector cpptsemKalmanModel::approxKalmanGradient(const double epsilo
   // backward step
   currentParameterValues(parName) = currentParameterValues(parName) - epsilon;
   setParameterValues(currentParameterValues, parameterNames);
-  computeAndFitKalman();
+  computeAndFitKalman(0);
   likelihoods(0,1) = m2LL;
 
   // reset parameter

@@ -58,9 +58,6 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
                              extraTries,# = 3,
                              verbose # = 0
 ){
-  warning("Temporary implementation for approximate LOOCV")
-
-  LOOCV <- rep(NA, length(lambdas))
 
   # Setup
   # save current parameters
@@ -109,6 +106,7 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
   m2LL <- rep(NA, length(lambdas))
   regM2LL <- rep(NA, length(lambdas))
 
+  Hessians <- array(NA, dim = c(length(theta_kp1),length(theta_kp1),length(lambdas)))
 
   # Progress bar
   pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
@@ -178,7 +176,7 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
         out1 <- try(cpptsemObject$computeRAM(), silent = TRUE)
         out2 <- try(cpptsemObject$fitRAM(), silent = TRUE)
       }else{
-        out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE)
+        out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE)
         out2 <- NA
       }
       if(any(class(out1)== "try-error") | any(class(out2)== "try-error")){
@@ -215,20 +213,7 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
         thetas[,iteration] <- resGLMNET$theta_kp1[rownames(thetas),]
         m2LL[iteration] <- cM2LL
         regM2LL[iteration] <- cRegM2LL
-
-        warning("Temporary implementation for approximate LOOCV")
-
-        data <- dat[, !grepl("dT", colnames(dat))]
-        LOOCVIpc <- ipcGlmnet(parameterValues = thetas[,iteration],
-                              fitfunction = regCtsem::returnIndividualFit,
-                              data = subset(dataset, select = !grepl("dT", colnames(dataset)) & !grepl("intervalID", colnames(dataset))),
-                              regIndicators = regIndicators,
-                              lambda = ifelse(scaleLambdaWithN, lambda/sampleSize, lambda),
-                              hessian = H_kp1,
-                              cpptsemObject = cpptsemObject,
-                              fullData = subset(dataset, select = !grepl("dT", colnames(dataset)) & !grepl("intervalID", colnames(dataset))))
-
-        LOOCV[iteration] <- sum(LOOCVIpc$loocv)
+        Hessians[,,iteration] <- H_kp1
 
       }
       iteration <- iteration + 1
@@ -236,9 +221,7 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
 
   }
 
-  LOOCVGlobal <<- LOOCV
-
-  return(list("lambdas" = lambdas, "thetas" = thetas, "m2LL" = m2LL,"regM2LL" = regM2LL))
+  return(list("lambdas" = lambdas, "thetas" = thetas, "m2LL" = m2LL,"regM2LL" = regM2LL, "Hessians" = Hessians))
 
 }
 
@@ -411,7 +394,7 @@ exact_outerGLMNET <- function(cpptsemObject,
       newGradients <- matrix(newGradients, nrow = length(newGradients), ncol = 1)
       rownames(newGradients) <- parameterNames
     }else{
-      cpptsemObject$computeAndFitKalman()
+      cpptsemObject$computeAndFitKalman(0)
 
       # get fit
       newM2LL <- cpptsemObject$m2LL
@@ -697,7 +680,7 @@ exact_GLMNETLineSearch <- function(cpptsemObject,
       invisible(capture.output(out1 <- try(cpptsemObject_i$computeRAM(), silent = TRUE), type = "message"))
       invisible(capture.output(out2 <- try(cpptsemObject_i$fitRAM(), silent = TRUE), type = "message"))
     }else{
-      invisible(capture.output(out1 <- try(cpptsemObject_i$computeAndFitKalman(), silent = TRUE), type = "message"))
+      invisible(capture.output(out1 <- try(cpptsemObject_i$computeAndFitKalman(0), silent = TRUE), type = "message"))
       out2 <- NA
     }
     if(any(class(out1)== "try-error") | any(class(out2)== "try-error") | !is.finite(cpptsemObject_i$m2LL)){

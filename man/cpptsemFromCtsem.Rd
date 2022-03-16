@@ -152,7 +152,7 @@ KalmanScores$xUpdated[2:21,]
 
 ## with cpptsem
 cpptsemmodel3 <- cpptsemFromCtsem(ctsemModel = myModel,wideData = traindata)
-cpptsemmodel3$computeAndFitKalman()
+cpptsemmodel3$computeAndFitKalman(0) # the 0 tells cpptsem that the fit of the full sample should be computed. Passing 1, 2, ... N to the function will compute the fit for a single sample
 cpptsemmodel3$m2LL
 cpptsemmodel3$latentScores[1,]
 cpptsemmodel3$approxKalmanGradients((1.1 * 10^(-16))^(1/3))[names(centralGrandients)]
@@ -208,7 +208,7 @@ m2LLCpptsem <- function(parameters, cpptsemmodel){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
 # when parameter values are impossible
-  invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(),
+  invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(0),
                                          silent = TRUE),
                            type = "message"))
 

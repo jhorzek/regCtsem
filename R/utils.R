@@ -19,7 +19,7 @@ restore <- function(regCtsemObject){
   }
 
   if(regCtsemObject$setup$objective == "Kalman"){
-    regCtsemObject$setup$cpptsemObject$computeAndFitKalman()
+    regCtsemObject$setup$cpptsemObject$computeAndFitKalman(0)
   }
 
   if(regCtsemObject$setup$objective == "ML"){
@@ -560,7 +560,7 @@ checkNonConvexity <- function(model, lowerBound = NULL, upperBound = NULL, nSamp
     pars <- model$getParameterValues()
     getFit <- function(Rcpp_cpptsemKalmanModel, pars){
       Rcpp_cpptsemKalmanModel$setParameterValues(pars, names(pars))
-      invisible(capture.output(o <- try(Rcpp_cpptsemKalmanModel$computeAndFitKalman(), silent = T), type = "message"))
+      invisible(capture.output(o <- try(Rcpp_cpptsemKalmanModel$computeAndFitKalman(0), silent = T), type = "message"))
       if(any(class(o) == "try-error")){return(NA)}
       return(Rcpp_cpptsemKalmanModel$m2LL)
     }
@@ -690,7 +690,7 @@ checkNonConvexity3D <- function(model, parnames, lowerBound1, upperBound1, lower
     pars <- model$getParameterValues()
     getFit <- function(Rcpp_cpptsemKalmanModel, pars){
       Rcpp_cpptsemKalmanModel$setParameterValues(pars, names(pars))
-      invisible(capture.output(o <- try(Rcpp_cpptsemKalmanModel$computeAndFitKalman(), silent = T), type = "message"))
+      invisible(capture.output(o <- try(Rcpp_cpptsemKalmanModel$computeAndFitKalman(0), silent = T), type = "message"))
       if(any(class(o) == "try-error")){return(NA)}
       return(Rcpp_cpptsemKalmanModel$m2LL)
     }
@@ -1122,7 +1122,7 @@ computeScores.Rcpp_cpptsemKalmanModel <- function(cpptsemObject, wideData, eps =
     cpptsemObject$setParameterValues(parameterValues_i, names(parameterValues_i))
 
     # fit
-    cpptsemObject$computeAndFitKalman()
+    cpptsemObject$computeAndFitKalman(0)
 
     # get individual fits
     m2LLs[,2] <- individualMinus2LogLikelihoods.Rcpp_cpptsemKalmanModel(cpptsemObject, wideData)
@@ -1132,7 +1132,7 @@ computeScores.Rcpp_cpptsemKalmanModel <- function(cpptsemObject, wideData, eps =
     cpptsemObject$setParameterValues(parameterValues_i, names(parameterValues_i))
 
     # fit
-    cpptsemObject$computeAndFitKalman()
+    cpptsemObject$computeAndFitKalman(0)
 
     # get individual fits
     m2LLs[,1] <- individualMinus2LogLikelihoods.Rcpp_cpptsemKalmanModel(cpptsemObject, wideData)
