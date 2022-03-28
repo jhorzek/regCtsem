@@ -19,14 +19,14 @@ individualM2LL <- function(regCtsemObject, parameterValues, i){
 
     for(j in 1:length(i)){
       indM2LLs[j] <- individualM2LLML(regCtsemObject$setup$cpptsemObject,
-                                       wideData = regCtsemObject$setup$dataset,
-                                       i = i[j])
+                                      wideData = regCtsemObject$setup$dataset,
+                                      i = i[j])
     }
 
   }else if(regCtsemObject$setup$objective == "Kalman"){
     for(j in 1:length(i)){
       indM2LLs[j] <- individualM2LLKalman(regCtsemObject$setup$cpptsemObject,
-                                           i = i[j])
+                                          i = i[j])
     }
 
   }else{
@@ -109,17 +109,19 @@ individualGradient <- function(regCtsemObject, parameterValues, i, eps = 1e-4){
 }
 
 
-#' ipc
+#' approximateLOOCV
 #'
 #' @param regCtsemObject regularized model
 #' @param breakCondition break condition for the coordinate descent algorithm
 #' @param maxIterations maximal number of iterations for the coordinate descent algorithm
 #' @param gradientStepSize step size used for the gradient approximation
+#' @param approximateHessian should individual Hessians be approximated?
 #' @export
-ipc <- function(regCtsemObject,
-                breakCondition = 1e-6,
-                maxIterations = 100,
-                gradientStepSize = 1e-4){
+approximateLOOCV <- function(regCtsemObject,
+                             breakCondition = 1e-6,
+                             maxIterations = 100,
+                             gradientStepSize = 1e-4,
+                             approximateHessian = FALSE){
   N <- nrow(regCtsemObject$setup$dataset)
   parameterValues <- regCtsemObject$parameterEstimatesRaw
   nParameters <- nrow(parameterValues)
@@ -130,20 +132,29 @@ ipc <- function(regCtsemObject,
 
   ipcs <- array(NA, dim = c(nrow(regCtsemObject$setup$dataset),
                             nParameters,
-                            ncol(parameterValues)
-  ),
-  dimnames = list("x" = paste0("person_", 1:N),
-                  "y" = rownames(parameterValues),
-                  "z" = paste0("lambda_", regCtsemObject$setup$lambdas)
-  )
-
+                            ncol(parameterValues)),
+                dimnames = list("x" = paste0("person_", 1:N),
+                                "y" = rownames(parameterValues),
+                                "z" = paste0("lambda_", regCtsemObject$setup$lambdas))
   )
 
   for(lambda in 1:ncol(parameterValues)){
     currentParameterValues <- parameterValues[,lambda]
     # compute person-specific gradients
     gradients <- individualGradient(regCtsemObject = regCtsemObject, parameterValues = currentParameterValues, i = 1:N, eps = gradientStepSize)
-    hessian <- regCtsemObject$misc$Hessians[,,lambda]
+
+    if(is.null(regCtsemObject$misc$Hessians) || approximateHessian){
+      # we will approximate Hessian-vector products
+      approximateHessian <- TRUE
+      NHessian <- N # sample size for the Hessian
+
+    }else{
+      # we will use the hessian provided by the optimizer
+      hessian <- regCtsemObject$misc$Hessians[,,lambda]
+
+      approximateHessian <- FALSE
+      NHessian <- N # sample size for the Hessian
+    }
 
     # Compute IPCs
 
@@ -158,23 +169,51 @@ ipc <- function(regCtsemObject,
     for(i in 1:N){
       it <- 1
       delta[] <- 0
+      delta_old <- delta
+
+      if(approximateHessian){
+        # approximate hessian%*%e for all possible e;
+        # e doesn't change so it makes sense to pre-compute this
+        HessianTimesE <- matrix(NA, nrow = nParameters, ncol = nParameters) # products with different es in columns
+        rownames(HessianTimesE) <- names(currentParameterValues)
+        for(par in 1:nParameters){
+          e[] <- 0
+          e[par] <- 1
+          HessianTimesE[,par] <- HessianVectorProduct(regCtsemObject,
+                                                      parameterValues = currentParameterValues,
+                                                      b = c(e))[names(currentParameterValues)]
+        }
+
+      }
+
       while(TRUE){
         z[] <- 0
         for(par in sample(1:nParameters, nParameters)){
           e[] <- 0
           e[par] <- 1
 
+          if(approximateHessian){
+            hessianXe <- HessianTimesE[,par]
+            hessianXDelta <- HessianVectorProduct(regCtsemObject,
+                                                  parameterValues = currentParameterValues,
+                                                  b = delta[names(currentParameterValues),])[names(currentParameterValues)]
+          }else{
+            hessianXe <- hessian%*%e
+            hessianXDelta <- hessian%*%delta
+
+          }
+
           if(names(currentParameterValues[par]) %in% regIndicators){
-            testValue <- (t(e)%*%hessian%*%e)*(currentParameterValues[par] + delta[par])
+            testValue <- (t(e)%*%hessianXe)*(currentParameterValues[par] + delta[par])
 
-            if(testValue <= N*t(e)%*%matrix(gradients[i,], ncol = 1) + t(e)%*%hessian%*%delta + N*lambda){
+            if(testValue <= NHessian*t(e)%*%matrix(gradients[i,], ncol = 1) + t(e)%*%hessianXDelta + NHessian*lambda){
 
-              z[par] <- -(N*t(e)%*%matrix(gradients[i,], ncol = 1) + t(e)%*%hessian%*%delta + N*lambda)/(t(e)%*%hessian%*%e)
+              z[par] <- -(NHessian*t(e)%*%matrix(gradients[i,], ncol = 1) + t(e)%*%hessianXDelta + NHessian*lambda)/(t(e)%*%hessianXe)
               delta[par] <- delta[par] + z[par]
 
-            }else if(testValue >= N*t(e)%*%matrix(gradients[i,], ncol = 1) + t(e)%*%hessian%*%delta - N*lambda){
+            }else if(testValue >= NHessian*t(e)%*%matrix(gradients[i,], ncol = 1) + t(e)%*%hessianXDelta - NHessian*lambda){
 
-              z[par] <- -(N*t(e)%*%matrix(gradients[i,], ncol = 1) + t(e)%*%hessian%*%delta - N*lambda)/(t(e)%*%hessian%*%e)
+              z[par] <- -(NHessian*t(e)%*%matrix(gradients[i,], ncol = 1) + t(e)%*%hessianXDelta - NHessian*lambda)/(t(e)%*%hessianXe)
               delta[par] <- delta[par] + z[par]
 
             }else{
@@ -187,23 +226,16 @@ ipc <- function(regCtsemObject,
           }else{
 
             # unregularized parameters
-            z[par] <- -(N*t(e)%*%matrix(gradients[i,], ncol = 1) + t(e)%*%hessian%*%delta)/(t(e)%*%hessian%*%e)
+            z[par] <- -(NHessian*t(e)%*%matrix(gradients[i,], ncol = 1) + t(e)%*%hessianXDelta)/(t(e)%*%hessianXe)
             delta[par] <- delta[par] + z[par]
 
           }
         }# end for parameter
 
         # check inner stopping criterion:
-        hessTimesD <- diag(diag((1/N)*hessian))%*%z^2
+        breakInner <- max(abs(delta_old-delta)/(max(abs(currentParameterValues)))) < .0001
+        delta_old <- delta
 
-        warning("replace break condition for leave one out")
-        breakInner <- max(hessTimesD) < gradientStepSize
-
-        if(is.na(breakInner)){
-
-          stop("The direction z appears to go to infinity.")
-
-        }
         if(breakInner){
 
           break
@@ -235,9 +267,90 @@ ipc <- function(regCtsemObject,
     }
 
   }
+
+  loocvMeans <- apply(LOOM2LL,2,mean)
+
+  finalParameters <- parameterValues[,which(loocvMeans == min(loocvMeans))]
+
   return(list("IPCs" = ipcs,
-              "loocv" = LOOM2LL
-  )
+              "LOOM2LL" = LOOM2LL,
+              "finalParameters" = finalParameters)
   )
 }
+
+#' individualHessianVectorProduct
+#'
+#' Computes H(theta)*b, where H(theta) is the group-Hessian at parameter vector theta and b is a vector which is
+#' multiplied with H(theta). The procedure is based on Equation 1 in Pearlmutter, B. A. (1994). Fast Exact Multiplication by the Hessian.
+#' Neural Computation, 6(1), 147–160. https://doi.org/10.1162/neco.1994.6.1.147
+#' This is the most simple approximation and may be instable,
+#' we should consider implementing the more sophisticated version by Pearlmutter, B. A. (1994).
+#' @param regCtsemObject regularized model
+#' @param parameterValues values for the parameters
+#' @param b the vector b which is multiplied with the Hessian
+#' @param i indicator for person(s)
+#' @param eps value for numerical approximation of gradients
+#' @export
+HessianVectorProduct <- function(regCtsemObject,
+                                           parameterValues,
+                                           b,
+                                           eps = .0001){
+  # Hv is approximated with directional gradients
+
+  # step 1: compute the gradient for a small step back
+  gradient_back <- regCtsem::gradCpptsem(parameterValues = parameterValues - eps*b,
+                                         cpptsemObject = regCtsemObject$setup$cpptsemObject,
+                                         objective = regCtsemObject$setup$objective)
+
+
+  # step 2: compute the gradient for a small step forward
+  gradient_forward <- regCtsem::gradCpptsem(parameterValues = parameterValues + eps*b,
+                                            cpptsemObject = regCtsemObject$setup$cpptsemObject,
+                                            objective = regCtsemObject$setup$objective)
+
+  # step 3: compute difference and scale with 2*eps
+  Hessian_x_b <- (gradient_forward - gradient_back)/(2*eps)
+
+  return(Hessian_x_b)
+}
+
+#' individualHessianVectorProduct
+#'
+#' Computes H(theta)*b, where H(theta) is the individual Hessian at parameter vector theta and b is a vector which is
+#' multiplied with H(theta). The procedure is based on Equation 1 in Pearlmutter, B. A. (1994). Fast Exact Multiplication by the Hessian.
+#' Neural Computation, 6(1), 147–160. https://doi.org/10.1162/neco.1994.6.1.147
+#' This is the most simple approximation and may be instable,
+#' we should consider implementing the more sophisticated version by Pearlmutter, B. A. (1994).
+#' @param regCtsemObject regularized model
+#' @param parameterValues values for the parameters
+#' @param b the vector b which is multiplied with the Hessian
+#' @param i indicator for person(s)
+#' @param eps value for numerical approximation of gradients
+#' @export
+individualHessianVectorProduct <- function(regCtsemObject,
+                                 parameterValues,
+                                 b,
+                                 i,
+                                 eps1 = .0001,
+                                 eps2 = sqrt(.Machine$double.eps)){
+  # Hv is approximated with directional gradients
+
+  # step 1: compute the gradient for a small step back
+  gradient_back <- individualGradient(regCtsemObject = regCtsemObject,
+                                      parameterValues = parameterValues - eps1*b,
+                                      i = i,
+                                      eps = eps2)
+
+  # step 2: compute the gradient for a small step forward
+  gradient_forward <- individualGradient(regCtsemObject = regCtsemObject,
+                                         parameterValues = parameterValues + eps1*b,
+                                         i = i,
+                                         eps = eps2)
+
+  # step 3: compute difference and scale with 2*eps
+  Hessian_x_b <- (gradient_forward - gradient_back)/(2*eps1)
+
+  return(Hessian_x_b)
+}
+
 
