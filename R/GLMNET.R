@@ -114,7 +114,7 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
   # iterate over lambda values
   numLambdas <- length(lambdas)
   iteration <- 1
-  retryOnce <- TRUE # will retry optimizin once with new starting values
+  retryOnce <- TRUE # will retry optimizing once with new starting values
   while(iteration <= numLambdas){
     lambda <- lambdas[iteration]
     # update progress bar
