@@ -8,7 +8,8 @@ approximateLOOCV(
   regCtsemObject,
   breakCondition = 1e-06,
   maxIterations = 100,
-  gradientStepSize = 1e-04
+  gradientStepSize = 1e-04,
+  approximateHessian = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ approximateLOOCV(
 \item{maxIterations}{maximal number of iterations for the coordinate descent algorithm}
 
 \item{gradientStepSize}{step size used for the gradient approximation}
+
+\item{approximateHessian}{should individual Hessians be approximated?}
 }
 \description{
 approximateLOOCV

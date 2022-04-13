@@ -5,25 +5,25 @@
 \title{exact_getBFGS}
 \usage{
 exact_getBFGS(
-  theta_k,
-  g_k,
-  H_k,
-  theta_kp1,
-  g_kp1,
+  oldParameters,
+  oldGradients,
+  oldHessian,
+  newParameters,
+  newGradient,
   cautious = TRUE,
   hessianEps = 0.001
 )
 }
 \arguments{
-\item{theta_k}{Theta at iteration k}
+\item{oldParameters}{Theta at iteration k}
 
-\item{g_k}{Gradients of the likelihood function at iteration k}
+\item{oldGradients}{Gradients of the likelihood function at iteration k}
 
-\item{H_k}{Hessian of the likelihood function at iteration k}
+\item{oldHessian}{Hessian of the likelihood function at iteration k}
 
-\item{theta_kp1}{Theta at iteration k+1}
+\item{newParameters}{Theta at iteration k+1}
 
-\item{g_kp1}{Gradients of the likelihood function at iteration k+1}
+\item{newGradient}{Gradients of the likelihood function at iteration k+1}
 
 \item{cautious}{boolean: should the update be skipped if it would result in a non positive definite Hessian?}
 

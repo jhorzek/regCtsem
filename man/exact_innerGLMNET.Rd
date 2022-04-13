@@ -6,12 +6,12 @@
 \usage{
 exact_innerGLMNET(
   adaptiveLassoWeights,
-  thetaNames,
+  parameterLabels,
   regIndicators,
   lambda,
-  theta_kp1,
-  g_kp1,
-  H_kp1,
+  newParameters,
+  newGradient,
+  HessianNew,
   maxIter_in,
   eps_in
 )
@@ -19,17 +19,17 @@ exact_innerGLMNET(
 \arguments{
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
-\item{thetaNames}{Vector with names of theta-parameters}
+\item{parameterLabels}{Vector with names of theta-parameters}
 
 \item{regIndicators}{Names of regularized parameters}
 
 \item{lambda}{Penalty value}
 
-\item{theta_kp1}{Theta at iteration k+1}
+\item{newParameters}{Theta at iteration k+1}
 
-\item{g_kp1}{Gradients of the likelihood function at iteration k+1}
+\item{newGradient}{Gradients of the likelihood function at iteration k+1}
 
-\item{H_kp1}{Hessian of the likelihood function at iteration k+1}
+\item{HessianNew}{Hessian of the likelihood function at iteration k+1}
 
 \item{maxIter_in}{Maximal number of iterations of the inner optimization algorithm}
 
