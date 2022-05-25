@@ -1597,7 +1597,7 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
     if(all(is.na(fit))){stop("All fit attempts resulted in errors. Check your starting values")}
     # check for different local minima
 
-    differencesBetweenParameters <- apply(optimizedValuesTable[free[rownames(optimizedValuesTable)], convergence], 1, function(x) abs((x-mean(x)) / sd(x)))
+    differencesBetweenParameters <- apply(optimizedValuesTable[free[rownames(optimizedValuesTable)], convergence], 1, function(x) abs((x-mean(x)) / mean(x)))
     if(any(differencesBetweenParameters > 2)){
       optimizedValuesTable <<- optimizedValuesTable
       correspondingFit <<- fit
