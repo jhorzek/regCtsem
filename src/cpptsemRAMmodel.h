@@ -22,6 +22,7 @@ class cpptsemRAMmodel{
   arma::mat expectedCovariance;
   arma::mat expectedMeans;
 
+  Rcpp::StringVector uniqueParameterLabels;
   std::string name;
   Rcpp::List ctMatrixList;
   Rcpp::List discreteDRIFTUnique;

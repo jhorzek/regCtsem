@@ -28,6 +28,9 @@ cpptsemKalmanModel::cpptsemKalmanModel(std::string mName,
   mParameterTableCol = mParameterTableCol-1;
 
   parameterTable = mParameterTable;
+  Rcpp::StringVector parameterLabels = parameterTable["label"];
+  uniqueParameterLabels = unique(parameterLabels);
+  uniqueParameterLabels.sort();
 
   stationaryT0VAR = mStationaryT0VAR;
   stationaryT0MEANS = mStationaryT0MEANS;
@@ -168,9 +171,7 @@ void cpptsemKalmanModel::setKalmanMatrixValues(const int selectedGroup){
 Rcpp::NumericVector cpptsemKalmanModel::getParameterValues() {
 
   Rcpp::StringVector parameterLabels = parameterTable["label"];
-  Rcpp::StringVector uniqueParameterLabels = unique(parameterLabels);
   Rcpp::NumericVector parameterValuesRep = parameterTable["value"]; // values with repeated elements
-
   Rcpp::NumericVector paramterValues (uniqueParameterLabels.length(),-9999.99);
 
   for(int i = 0; i < uniqueParameterLabels.size(); i++){

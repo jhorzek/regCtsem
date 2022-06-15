@@ -20,6 +20,7 @@ public:
   Rcpp::List DRIFTHASHExponentialUnique;
   Rcpp::List discreteDIFFUSIONUnique;
   Rcpp::List discreteCINTUnique;
+  Rcpp::StringVector uniqueParameterLabels;
   Rcpp::DataFrame parameterTable;
   arma::mat DRIFTValues;
   arma::mat DIFFUSIONValues;
