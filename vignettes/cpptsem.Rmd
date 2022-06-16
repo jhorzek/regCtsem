@@ -51,7 +51,7 @@ The general workflow with c<sub>++</sub>tsem when using the reticular action mod
 The general workflow with c<sub>++</sub>tsem when using the Kalman filter is:
 
 1. translate ctsem to c<sub>++</sub>tsem
-2. computeAndFitKalman() computes the predicted and updated latent scores as well as the -2log-Likelihood. The latent scores can be extracted with $latentScores
+2. computeAndFitKalman(0) computes the predicted and updated latent scores as well as the -2log-Likelihood. The number indicates for which person the fit should be calculated: 0 = full sample, 1,..., N for individual 1, ..., N. The latent scores can be extracted with $latentScores
 3. approxKalmanGradients((1.1 * 10\^(-16))\^(1/3)) computes the gradients
 
 This will be explained in more detail below using the RAM model. Otherwise, more details can be found with:
@@ -353,7 +353,7 @@ m2LLCpptsem <- function(parameters, cpptsemmodel){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel 
   # when parameter values are impossible
-  invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(), 
+  invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(0), 
                                          silent = TRUE), 
                            type = "message"))
   

@@ -7,13 +7,13 @@
 exact_armijoLineSearch(
   gradientModel,
   adaptiveLassoWeights,
-  thetaNames,
+  parameterLabels,
   regIndicators,
   lambda,
-  theta_kp1,
-  m2LL_kp1,
-  g_kp1,
-  d,
+  newParameters,
+  m2LLNew,
+  newGradient,
+  direction,
   c1,
   stepSize,
   differenceApprox,
@@ -25,23 +25,23 @@ exact_armijoLineSearch(
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
-\item{thetaNames}{names of the parameter estimates}
+\item{parameterLabels}{names of the parameter estimates}
 
 \item{regIndicators}{vector with names of parameters to regularize}
 
 \item{lambda}{penalty value}
 
-\item{theta_kp1}{parameter values of iteration k plus 1}
+\item{newParameters}{parameter values of iteration k plus 1}
 
-\item{m2LL_kp1}{-2 log likelihood of iteration k plus 1}
+\item{m2LLNew}{-2 log likelihood of iteration k plus 1}
 
-\item{g_kp1}{gradients of iteration k plus 1}
+\item{newGradient}{gradients of iteration k plus 1}
 
-\item{d}{vector with updates to parameter estimates}
+\item{direction}{vector with updates to parameter estimates}
 
 \item{c1}{tuning parameter for Armijo condition}
 
-\item{stepSize}{Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)}
+\item{stepSize}{Initial stepsize of the outer iteration (theta_{k+1} = oldParameters + Stepsize \* Stepdirection)}
 
 \item{differenceApprox}{which approximation for the gradients should be used? Recommended is central}
 

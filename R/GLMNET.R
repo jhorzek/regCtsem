@@ -13,7 +13,7 @@
 #' @param lambdas Vector with lambda values that should be tried
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param sparseParameters labeled vector with parameter estimates of the most sparse model.
-#' @param stepSize Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize * Stepdirection)
+#' @param stepSize Initial stepSize of the outer iteration (theta_{k+1} = oldParameters + stepSize * Stepdirection)
 #' @param lineSearch String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.
 #' @param c1 c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"
 #' @param c2 c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
@@ -34,7 +34,12 @@
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #' @export
-exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, lambdas, adaptiveLassoWeights,
+exact_bfgsGLMNET <- function(cpptsemObject,
+                             dataset,
+                             objective,
+                             regIndicators,
+                             lambdas,
+                             adaptiveLassoWeights,
                              # additional settings
                              sparseParameters,# = NULL,
                              stepSize,# = 1,
@@ -57,7 +62,8 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
                              controlApproxOptimizer,
                              extraTries,# = 3,
                              verbose # = 0
-                             ){
+){
+
   # Setup
   # save current parameters
   parameters <- cpptsemObject$getParameterValues()
@@ -65,9 +71,9 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
   ## compute Hessian
   if(!is.matrix(initialHessianApproximation)){
     initialHessian <- try(optimHess(par = parameters, fn = fitCpptsem,
-                             cpptsemObject = cpptsemObject,
-                             objective = objective,
-                             failureReturns = NA
+                                    cpptsemObject = cpptsemObject,
+                                    objective = objective,
+                                    failureReturns = NA
     ), silent = TRUE)
     if(any(class(Hessian) == "try-error")){
       warning("Could not compute Hessian. Using Identity")
@@ -78,33 +84,34 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
   }
 
   # get parameter values
-  theta_kp1 <- as.matrix(cpptsemObject$getParameterValues())
-  thetaNames <- names(cpptsemObject$getParameterValues())
-  initialParameters <- theta_kp1
+  newParameters <- as.matrix(cpptsemObject$getParameterValues())
+  parameterLabels <- names(cpptsemObject$getParameterValues())
+  initialParameters <- newParameters
 
   # get initial gradients
-  g_kp1 <- regCtsem::exact_getCppGradients(cpptsemObject, objective = objective)
-  initialGradients <- g_kp1
+  newGradient <- regCtsem::exact_getCppGradients(cpptsemObject, objective = objective)
+  initialGradients <- newGradient
 
   # get initial Hessian
-  H_kp1 <- initialHessian
-  eigenDecomp <- eigen(H_kp1)
+  HessianNew <- initialHessian
+  eigenDecomp <- eigen(HessianNew)
   if(any(eigenDecomp$values < 0)){
     warning("Initial Hessian is not positive definite. Flipping Eigen values to obtain a positive definite initial Hessian.")
     D <- abs(diag(eigenDecomp$values))
     L <- eigenDecomp$vectors
-    H_kp1 <- L%*%D%*%solve(L)
+    HessianNew <- L%*%D%*%solve(L)
   }
 
   # define return values
   thetas <- matrix(NA,
-                   nrow = length(theta_kp1),
+                   nrow = length(newParameters),
                    ncol = length(lambdas),
-                   dimnames = list(thetaNames,
+                   dimnames = list(parameterLabels,
                                    lambdas))
   m2LL <- rep(NA, length(lambdas))
   regM2LL <- rep(NA, length(lambdas))
 
+  Hessians <- array(NA, dim = c(length(newParameters),length(newParameters),length(lambdas)))
 
   # Progress bar
   pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
@@ -112,7 +119,7 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
   # iterate over lambda values
   numLambdas <- length(lambdas)
   iteration <- 1
-  retryOnce <- TRUE # will retry optimizin once with new starting values
+  retryOnce <- TRUE # will retry optimizing once with new starting values
   while(iteration <= numLambdas){
     lambda <- lambdas[iteration]
     # update progress bar
@@ -121,30 +128,51 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*sampleSize
 
     # should the results first be approximated?
-    startingValues <- as.vector(theta_kp1)
-    names(startingValues) <- rownames(theta_kp1)
+    startingValues <- as.vector(newParameters)
+    names(startingValues) <- rownames(newParameters)
     targetVector <- rep(0, length(regIndicators))
     names(targetVector) <- regIndicators
 
     if(approxFirst){
-      theta_kp1 <- exact_tryStartingValues(startingValues = startingValues, returnAs = "matrix",
-                                  approxFirst = approxFirst, numStart = numStart, controlApproxOptimizer = controlApproxOptimizer,
-                                  lambda = lambda,
-                                  cpptsemObject = cpptsemObject,
-                                  regIndicators = regIndicators, targetVector = targetVector,
-                                  adaptiveLassoWeights = adaptiveLassoWeights, objective = objective, sparseParameters = sparseParameters)
+      newParameters <- exact_tryStartingValues(startingValues = startingValues,
+                                               returnAs = "matrix",
+                                               approxFirst = approxFirst,
+                                               numStart = numStart,
+                                               controlApproxOptimizer = controlApproxOptimizer,
+                                               lambda = lambda,
+                                               cpptsemObject = cpptsemObject,
+                                               regIndicators = regIndicators,
+                                               targetVector = targetVector,
+                                               adaptiveLassoWeights = adaptiveLassoWeights,
+                                               objective = objective,
+                                               sparseParameters = sparseParameters)
     }
 
     # outer loop: optimize parameters
-    resGLMNET <- try(regCtsem::exact_outerGLMNET(cpptsemObject = cpptsemObject, objective = objective,
-                                                 adaptiveLassoWeights = adaptiveLassoWeights, sampleSize = sampleSize,
-                                                 parameterNames = thetaNames,
-                                                 initialParameters = theta_kp1, initialGradients = g_kp1, initialHessian = H_kp1,
-                                                 lambda = lambda, regIndicators = regIndicators,
-                                                 stepSize = stepSize, lineSearch = lineSearch, c1 = c1, c2 = c2, sig = sig, gam = gam,
+    resGLMNET <- try(regCtsem::exact_outerGLMNET(cpptsemObject = cpptsemObject,
+                                                 objective = objective,
+                                                 adaptiveLassoWeights = adaptiveLassoWeights,
+                                                 sampleSize = sampleSize,
+                                                 parameterLabels = parameterLabels,
+                                                 initialParameters = newParameters,
+                                                 initialGradients = newGradient,
+                                                 initialHessian = HessianNew,
+                                                 lambda = lambda,
+                                                 regIndicators = regIndicators,
+                                                 stepSize = stepSize,
+                                                 lineSearch = lineSearch,
+                                                 c1 = c1,
+                                                 c2 = c2,
+                                                 sig = sig,
+                                                 gam = gam,
                                                  maxIter_out = maxIter_out,
-                                                 maxIter_in = maxIter_in, maxIter_line = maxIter_line, eps_out = eps_out,
-                                                 eps_in = eps_in, eps_WW = eps_WW, scaleLambdaWithN = scaleLambdaWithN, verbose = verbose))
+                                                 maxIter_in = maxIter_in,
+                                                 maxIter_line = maxIter_line,
+                                                 eps_out = eps_out,
+                                                 eps_in = eps_in,
+                                                 eps_WW = eps_WW,
+                                                 scaleLambdaWithN = scaleLambdaWithN,
+                                                 verbose = verbose))
 
 
     if(any(class(resGLMNET) == "try-error")){
@@ -156,68 +184,70 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
         warning(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), " did not converge.", sep = ""))
       }
       # reset theta for next iteration
-      theta_kp1 <- initialParameters
+      newParameters <- initialParameters
       # reset Hessian approximation
-      H_kp1 <- initialHessian
+      HessianNew <- initialHessian
       # reset gradients
-      g_kp1 <- initialGradients
+      newGradient <- initialGradients
       if(retryOnce){
         retryOnce <- FALSE
         next
       }
       retryOnce <- TRUE
     }else{
-      theta_kp1 <- resGLMNET$theta_kp1
+      newParameters <- resGLMNET$newParameters
       # run final model
-        cpptsemObject <- resGLMNET$cpptsemObject
-        if(tolower(objective) == "ml"){
-          out1 <- try(cpptsemObject$computeRAM(), silent = TRUE)
-          out2 <- try(cpptsemObject$fitRAM(), silent = TRUE)
-        }else{
-          out1 <- try(cpptsemObject$computeAndFitKalman(), silent = TRUE)
-          out2 <- NA
-        }
-        if(any(class(out1)== "try-error") | any(class(out2)== "try-error")){
-          warning(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), "did not converge.", sep = ""))
-          # reset theta for next iteration
-          theta_kp1 <- initialParameters
-          # reset Hessian approximation
-          H_kp1 <- initialHessian
-          # reset gradients
-          g_kp1 <- initialGradients
+      cpptsemObject <- resGLMNET$cpptsemObject
+      if(tolower(objective) == "ml"){
+        out1 <- try(cpptsemObject$computeRAM(), silent = TRUE)
+        out2 <- try(cpptsemObject$fitRAM(), silent = TRUE)
+      }else{
+        out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE)
+        out2 <- NA
+      }
+      if(any(class(out1)== "try-error") | any(class(out2)== "try-error")){
+        warning(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), "did not converge.", sep = ""))
+        # reset theta for next iteration
+        newParameters <- initialParameters
+        # reset Hessian approximation
+        HessianNew <- initialHessian
+        # reset gradients
+        newGradient <- initialGradients
 
-          if(retryOnce){
-            retryOnce <- FALSE
-            next
-          }
-          retryOnce <- TRUE
-
-          # save results
-          m2LL <- c(m2LL, NA)
-          regM2LL <- c(regM2LL, NA)
-        }else{
-          theta_kp1 <- resGLMNET$theta_kp1
-          # update Hessian approximation
-          H_kp1 <- resGLMNET$H_kp1
-          # update gradients
-          g_kp1 <- resGLMNET$g_kp1
-          # save fit
-          cM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL, Inf)
-          cRegM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
-                                                                                                          theta = resGLMNET$theta_kp1,
-                                                                                                          regIndicators = regIndicators,
-                                                                                                          adaptiveLassoWeights = adaptiveLassoWeights), Inf)
-          # save results
-          thetas[,iteration] <- resGLMNET$theta_kp1[rownames(thetas),]
-          m2LL[iteration] <- cM2LL
-          regM2LL[iteration] <- cRegM2LL
+        if(retryOnce){
+          retryOnce <- FALSE
+          next
         }
+        retryOnce <- TRUE
+
+        # save results
+        m2LL <- c(m2LL, NA)
+        regM2LL <- c(regM2LL, NA)
+      }else{
+        newParameters <- resGLMNET$newParameters
+        # update Hessian approximation
+        HessianNew <- resGLMNET$HessianNew
+        # update gradients
+        newGradient <- resGLMNET$newGradient
+        # save fit
+        cM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL, Inf)
+        cRegM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
+                                                                                                        theta = resGLMNET$newParameters,
+                                                                                                        regIndicators = regIndicators,
+                                                                                                        adaptiveLassoWeights = adaptiveLassoWeights), Inf)
+        # save results
+        thetas[,iteration] <- resGLMNET$newParameters[rownames(thetas),]
+        m2LL[iteration] <- cM2LL
+        regM2LL[iteration] <- cRegM2LL
+        Hessians[,,iteration] <- HessianNew
+
+      }
       iteration <- iteration + 1
     }
 
   }
 
-  return(list("lambdas" = lambdas, "thetas" = thetas, "m2LL" = m2LL,"regM2LL" = regM2LL))
+  return(list("lambdas" = lambdas, "thetas" = thetas, "m2LL" = m2LL,"regM2LL" = regM2LL, "Hessians" = Hessians))
 
 }
 
@@ -232,13 +262,13 @@ exact_bfgsGLMNET <- function(cpptsemObject, dataset, objective, regIndicators, l
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param sampleSize sample size
-#' @param parameterNames Vector with names of theta-parameters
+#' @param parameterLabels Vector with names of theta-parameters
 #' @param initialParameters initial parameter estimates
 #' @param initialGradients initial gradients of the likelihood function
 #' @param initialHessian initial Hessian of the likelihood function
 #' @param lambda Penalty value
 #' @param regIndicators Names of regularized parameters
-#' @param stepSize initial Stepsize of the outer iteration (theta_{k+1} = theta_k + stepSize \* Stepdirection) in case of lineSearch
+#' @param stepSize initial Stepsize of the outer iteration (theta_{k+1} = oldParameters + stepSize \* Stepdirection) in case of lineSearch
 #' @param lineSearch String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.
 #' @param c1 c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"
 #' @param c2 c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
@@ -258,7 +288,7 @@ exact_outerGLMNET <- function(cpptsemObject,
                               objective,
                               adaptiveLassoWeights,
                               sampleSize,
-                              parameterNames,
+                              parameterLabels,
                               initialParameters,
                               initialGradients,
                               initialHessian,
@@ -289,7 +319,7 @@ exact_outerGLMNET <- function(cpptsemObject,
     convergencePlotValues <- matrix(NA, nrow = 1, ncol = maxIter_out, dimnames = list("f(theta)", 1:maxIter_out))
   }
   if(verbose == 2){
-    convergencePlotValues <- matrix(NA, nrow = length(initialParameters), ncol = maxIter_out, dimnames = list(parameterNames, 1:maxIter_out))
+    convergencePlotValues <- matrix(NA, nrow = length(initialParameters), ncol = maxIter_out, dimnames = list(parameterLabels, 1:maxIter_out))
   }
 
   newParameters <- initialParameters
@@ -315,7 +345,7 @@ exact_outerGLMNET <- function(cpptsemObject,
     if(iter_out > 1){
       # requires a direction vector d; therefore, we cannot evaluate the
       # convergence in the first iteration
-      convergenceCriterion <- try(max(diag(diag(oldHessian))%*%d^2) < eps_out, silent = TRUE)
+      convergenceCriterion <- try(max(diag(diag(oldHessian))%*%direction^2) < eps_out, silent = TRUE)
       if(any(class(convergenceCriterion) == "try-error") || is.na(convergenceCriterion)){
         converged <- FALSE
         # save last working parameters
@@ -332,48 +362,48 @@ exact_outerGLMNET <- function(cpptsemObject,
 
 
     ## inner loop: optimize directions
-    d <- regCtsem::exact_innerGLMNET(
+    direction <- regCtsem::exact_innerGLMNET(
       adaptiveLassoWeights = adaptiveLassoWeights,
-      thetaNames = parameterNames,
+      parameterLabels = parameterLabels,
       regIndicators = regIndicators,
       lambda = lambda,
-      theta_kp1 = oldParameters,
-      g_kp1 = oldGradients,
-      H_kp1 = oldHessian,
+      newParameters = oldParameters,
+      newGradient = oldGradients,
+      HessianNew = oldHessian,
       maxIter_in = maxIter_in,
       eps_in = eps_in
     )
 
 
     # perform Line Search
-    if(tolower(lineSearch) == "wolfe"){
-
-      stepSize_k <- regCtsem::exact_weakWolfeLineSearch(cpptsemObject = cpptsemObject, objective = objective,
-                                                        adaptiveLassoWeights = adaptiveLassoWeights, thetaNames = parameterNames,
-                                                        regIndicators = regIndicators, lambda = lambda,
-                                                        theta_kp1 = oldParameters, m2LL_kp1 = oldM2LL, g_kp1 = oldGradients,
-                                                        d = d,
-                                                        stepSize= stepSize, c1 = c1, c2 = c2, maxIter_line = maxIter_line,
-                                                        eps_WW = eps_WW, verbose = verbose)
-    }else if(tolower(lineSearch) == "glmnet") {
+    if(tolower(lineSearch) == "glmnet") {
       if(stepSize > 1 | stepSize < 0){
         warning("Stepsize not allowed. Setting to .9.")
         stepSize = .9
       }
-      stepSize_k <- regCtsem::exact_GLMNETLineSearch(cpptsemObject = cpptsemObject, objective = objective,
-                                                     adaptiveLassoWeights = adaptiveLassoWeights, thetaNames = parameterNames,
-                                                     regIndicators = regIndicators, lambda = lambda,
-                                                     theta_kp1 = oldParameters, m2LL_kp1 = oldM2LL, g_kp1 = oldGradients, H_k = oldHessian,
-                                                     d = d,
-                                                     stepSize= stepSize, sig = sig, gam = gam, maxIter_line = maxIter_line)
+      stepSize_k <- regCtsem::exact_GLMNETLineSearch(cpptsemObject = cpptsemObject,
+                                                     objective = objective,
+                                                     adaptiveLassoWeights = adaptiveLassoWeights,
+                                                     parameterLabels = parameterLabels,
+                                                     regIndicators = regIndicators,
+                                                     lambda = lambda,
+                                                     newParameters = oldParameters,
+                                                     m2LLNew = oldM2LL,
+                                                     newGradient = oldGradients,
+                                                     oldHessian = oldHessian,
+                                                     direction = direction,
+                                                     stepSize= stepSize,
+                                                     sig = sig,
+                                                     gam = gam,
+                                                     maxIter_line = maxIter_line)
     }else{
       stepSize_k <- stepSize
     }
 
-    newParameters <- oldParameters+stepSize_k*d
+    newParameters <- oldParameters+stepSize_k*direction
 
     # update model: set parameter values and compute
-    cpptsemObject$setParameterValues(newParameters, parameterNames)
+    cpptsemObject$setParameterValues(newParameters, parameterLabels)
     if(tolower(objective) == "ml"){
       cpptsemObject$computeRAM()
       cpptsemObject$fitRAM()
@@ -386,11 +416,11 @@ exact_outerGLMNET <- function(cpptsemObject,
                                                     adaptiveLassoWeights = adaptiveLassoWeights)
 
       # extract gradients:
-      invisible(capture.output(newGradients <- try(exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective))[parameterNames]))
+      invisible(capture.output(newGradients <- try(exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective))[parameterLabels]))
       newGradients <- matrix(newGradients, nrow = length(newGradients), ncol = 1)
-      rownames(newGradients) <- parameterNames
+      rownames(newGradients) <- parameterLabels
     }else{
-      cpptsemObject$computeAndFitKalman()
+      cpptsemObject$computeAndFitKalman(0)
 
       # get fit
       newM2LL <- cpptsemObject$m2LL
@@ -400,9 +430,9 @@ exact_outerGLMNET <- function(cpptsemObject,
                                                     adaptiveLassoWeights = adaptiveLassoWeights)
 
       # extract gradients:
-      invisible(capture.output(newGradients <- try(exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective))[parameterNames]))
+      invisible(capture.output(newGradients <- try(exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective))[parameterLabels]))
       newGradients <- matrix(newGradients, nrow = length(newGradients), ncol = 1)
-      rownames(newGradients) <- parameterNames
+      rownames(newGradients) <- parameterLabels
     }
 
     if(newRegM2LL - oldRegM2LL > 10){
@@ -413,17 +443,17 @@ exact_outerGLMNET <- function(cpptsemObject,
     }
 
     # Approximate Hessian using bfgs
-    newHessian <- regCtsem::exact_getBFGS(theta_k = oldParameters, g_k = oldGradients, H_k = oldHessian, theta_kp1 = newParameters, g_kp1 = newGradients)
+    newHessian <- regCtsem::exact_getBFGS(oldParameters = oldParameters, oldGradients = oldGradients, oldHessian = oldHessian, newParameters = newParameters, newGradient = newGradients)
 
     if(verbose == 1){
       convergencePlotValues[,iter_out] <- newRegM2LL
       plot(x=1:maxIter_out, y = convergencePlotValues, xlab = "iteration", ylab = "f(theta)", type = "l", main = "Convergence Plot")
 
       cat(paste0("\r",
-                 "## [", sprintf("%*d", 3, iter_out),
+                 "## [", sprintf("%*direction", 3, iter_out),
                  "] m2LL: ", sprintf('%.3f',newM2LL),
                  " | regM2LL:  ", sprintf('%.3f',newRegM2LL),
-                 " | zeroed: ", sprintf("%*d", 3, sum(newParameters[regIndicators,] == 0)),
+                 " | zeroed: ", sprintf("%*direction", 3, sum(newParameters[regIndicators,] == 0)),
                  " ##"
       )
       )
@@ -440,7 +470,7 @@ exact_outerGLMNET <- function(cpptsemObject,
   if(iter_out == maxIter_out){
     warning(paste("For lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), "the maximum number of iterations was reached. Try with a higher maxIter_out or with smaller lambda-steps."))
   }
-  return(list("cpptsemObject" = cpptsemObject, "theta_kp1" = newParameters, "g_kp1" = newGradients, "H_kp1" = newHessian, "convergence" = converged))
+  return(list("cpptsemObject" = cpptsemObject, "newParameters" = newParameters, "newGradient" = newGradients, "HessianNew" = newHessian, "convergence" = converged))
 }
 
 
@@ -451,20 +481,20 @@ exact_outerGLMNET <- function(cpptsemObject,
 #' NOTE: Function located in file GLMNET.R
 #'
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
-#' @param thetaNames Vector with names of theta-parameters
+#' @param parameterLabels Vector with names of theta-parameters
 #' @param regIndicators Names of regularized parameters
 #' @param lambda Penalty value
-#' @param theta_kp1 Theta at iteration k+1
-#' @param g_kp1 Gradients of the likelihood function at iteration k+1
-#' @param H_kp1 Hessian of the likelihood function at iteration k+1
+#' @param newParameters Theta at iteration k+1
+#' @param newGradient Gradients of the likelihood function at iteration k+1
+#' @param HessianNew Hessian of the likelihood function at iteration k+1
 #' @param maxIter_in Maximal number of iterations of the inner optimization algorithm
 #' @param eps_in Stopping criterion for the inner iterations
 #' @export
-exact_innerGLMNET <- function(adaptiveLassoWeights, thetaNames, regIndicators, lambda, theta_kp1, g_kp1, H_kp1, maxIter_in, eps_in){
+exact_innerGLMNET <- function(adaptiveLassoWeights, parameterLabels, regIndicators, lambda, newParameters, newGradient, HessianNew, maxIter_in, eps_in){
   ## inner loop: optimize directions
 
-  d <- matrix(0,nrow = length(thetaNames), ncol = 1) # initialize step vector (direction d)
-  rownames(d) = thetaNames
+  direction <- matrix(0,nrow = length(parameterLabels), ncol = 1) # initialize step vector (direction)
+  rownames(direction) = parameterLabels
 
   iter_in <- 0
 
@@ -472,50 +502,50 @@ exact_innerGLMNET <- function(adaptiveLassoWeights, thetaNames, regIndicators, l
     iter_in <- iter_in+1
 
     # initialize direction z
-    z <- matrix(0,nrow = length(thetaNames), ncol = 1)
+    z <- matrix(0,nrow = length(parameterLabels), ncol = 1)
 
     # random order of updates
-    d_order <- sample(1:length(d),length(d))
+    d_order <- sample(1:length(direction),length(direction))
 
     # iterate over parameters
     for(d_i in d_order){
 
       # compute derivative elements:
-      dp_k <- g_kp1[d_i]+(H_kp1%*%d)[d_i]
-      d2p_k <- H_kp1[d_i,d_i]
+      dp_k <- newGradient[d_i]+(HessianNew%*%direction)[d_i]
+      d2p_k <- HessianNew[d_i,d_i]
 
       # if the parameter is regularized:
-      if(names(d[d_i,]) %in% regIndicators){
-        theta_i <- theta_kp1[d_i]
+      if(names(direction[d_i,]) %in% regIndicators){
+        theta_i <- newParameters[d_i]
         adaptiveWeight <- ifelse(is.null(adaptiveLassoWeights), 1, adaptiveLassoWeights[d_i])
 
-        # adjust d for regularized parameters
-        if((dp_k-lambda*adaptiveWeight)>=(d2p_k*(theta_i+d[d_i]))){
+        # adjust direction for regularized parameters
+        if((dp_k-lambda*adaptiveWeight)>=(d2p_k*(theta_i+direction[d_i]))){
           # condition 1
           z_j <- -(dp_k-lambda*adaptiveWeight)/(d2p_k)
           z[d_i] <- z_j
-          d[d_i] <- d[d_i] + z_j
-        }else if((dp_k+lambda*adaptiveWeight)<=(d2p_k*(theta_i+d[d_i]))){
+          direction[d_i] <- direction[d_i] + z_j
+        }else if((dp_k+lambda*adaptiveWeight)<=(d2p_k*(theta_i+direction[d_i]))){
           # condition 2
           z_j <- -(dp_k+lambda*adaptiveWeight)/(d2p_k)
           z[d_i] <- z_j
-          d[d_i] <- d[d_i] + z_j
+          direction[d_i] <- direction[d_i] + z_j
         }else{
           # condition 3
-          z_j <- -(theta_i+d[d_i])
+          z_j <- -(theta_i+direction[d_i])
           z[d_i] <- z_j
-          d[d_i] <- d[d_i]+z_j
+          direction[d_i] <- direction[d_i]+z_j
         }
       }else{
         # if not regularized: coordinate descent with newton direction
         z_j <- -dp_k/d2p_k
         z[d_i] <- z_j
-        d[d_i] <- d[d_i]+z_j
+        direction[d_i] <- direction[d_i]+z_j
       }
     }
 
     # check inner stopping criterion:
-    HessTimesD <- diag(diag(H_kp1))%*%z^2
+    HessTimesD <- diag(diag(HessianNew))%*%z^2
 
     breakInnner <- max(HessTimesD)<eps_in
     if(is.na(breakInnner)){
@@ -527,7 +557,7 @@ exact_innerGLMNET <- function(adaptiveLassoWeights, thetaNames, regIndicators, l
   }
 
   # return step direction
-  return(d)
+  return(direction)
 }
 
 
@@ -542,34 +572,41 @@ exact_innerGLMNET <- function(adaptiveLassoWeights, thetaNames, regIndicators, l
 #'
 #' @param gradientModel mxObject for computing the derivarive of the likelihood with respect to the parameter estimates
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
-#' @param thetaNames names of the parameter estimates
+#' @param parameterLabels names of the parameter estimates
 #' @param regIndicators vector with names of parameters to regularize
 #' @param lambda penalty value
-#' @param theta_kp1 parameter values of iteration k plus 1
-#' @param m2LL_kp1 -2 log likelihood of iteration k plus 1
-#' @param g_kp1 gradients of iteration k plus 1
-#' @param d vector with updates to parameter estimates
+#' @param newParameters parameter values of iteration k plus 1
+#' @param m2LLNew -2 log likelihood of iteration k plus 1
+#' @param newGradient gradients of iteration k plus 1
+#' @param direction vector with updates to parameter estimates
 #' @param c1 tuning parameter for Armijo condition
-#' @param stepSize Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)
+#' @param stepSize Initial stepsize of the outer iteration (theta_{k+1} = oldParameters + Stepsize \* Stepdirection)
 #' @param differenceApprox which approximation for the gradients should be used? Recommended is central
 #' @param maxIter_line maximal number of iterations for line search
 #'
 #' @export
 exact_armijoLineSearch <- function(gradientModel,
                                    adaptiveLassoWeights,
-                                   thetaNames,
+                                   parameterLabels,
                                    regIndicators,
                                    lambda,
-                                   theta_kp1, m2LL_kp1, g_kp1, d, c1, stepSize, differenceApprox, maxIter_line){
+                                   newParameters,
+                                   m2LLNew,
+                                   newGradient,
+                                   direction,
+                                   c1,
+                                   stepSize,
+                                   differenceApprox,
+                                   maxIter_line){
   stop("lineSearch = 'armijo' is deprecated. Use lineSearch = 'GLMNET'.")
   if(!is.null(adaptiveLassoWeights)){stop("not implemented for adaptive lasso")}
   # Adapted from Huang lslx
 
   # get penalized M2LL for step size 0:
-  h_0 <- m2LL_kp1 + lambda*sum(abs((theta_kp1)[regIndicators,]))
+  h_0 <- m2LLNew + lambda*sum(abs((newParameters)[regIndicators,]))
 
   # get (sub-)gradients for step size 0:
-  g_0 <- regCtsem::exact_getSubgradients(theta = theta_kp1, jacobian = g_kp1, regIndicators = regIndicators, lambda = lambda)
+  g_0 <- regCtsem::exact_getSubgradients(theta = newParameters, jacobian = newGradient, regIndicators = regIndicators, lambda = lambda)
 
   # Inexact Line Search
   i <- 0
@@ -580,23 +617,23 @@ exact_armijoLineSearch <- function(gradientModel,
       return(stepSize)
     }
     # new theta
-    theta_kp1_td <- theta_kp1+stepSize*d
-    # get L(x+stepSize*d) and L'(x+stepSize*d)
-    gradientModel <- OpenMx::omxSetParameters(model = gradientModel, labels = thetaNames, values = theta_kp1_td)
+    parametersNew_td <- newParameters+stepSize*direction
+    # get L(x+stepSize*direction) and L'(x+stepSize*direction)
+    gradientModel <- OpenMx::omxSetParameters(model = gradientModel, labels = parameterLabels, values = parametersNew_td)
     gradientModel <- OpenMx::mxRun(gradientModel, silent = TRUE)
     m2LL_kp1_td <- gradientModel$fitfunction$result[[1]]
     g_kp1_td <- gradientModel$compute$steps[[1]]$output[["gradient"]]
     g_kp1_td <- g_kp1_td[,differenceApprox] # use specified gradient approximation
     g_kp1_td <- matrix(g_kp1_td, nrow = length(g_kp1_td), ncol = 1)
-    rownames(g_kp1_td) <- thetaNames
+    rownames(g_kp1_td) <- parameterLabels
 
     # compute h(stepSize) = L(x+td) + p(x+td) - L(x) - p(x), where p(x) is the penalty function
-    h_t <- m2LL_kp1_td + lambda*sum(abs((theta_kp1_td)[regIndicators,]))
+    h_t <- m2LL_kp1_td + lambda*sum(abs((parametersNew_td)[regIndicators,]))
     # compute h'(stepSize)
-    g_t <- regCtsem::exact_getSubgradients(theta = theta_kp1_td, jacobian = g_kp1_td, regIndicators = regIndicators, lambda = lambda)
+    g_t <- regCtsem::exact_getSubgradients(theta = parametersNew_td, jacobian = g_kp1_td, regIndicators = regIndicators, lambda = lambda)
 
     # Check Armijo
-    if(h_t-h_0 <= c1*stepSize*(t(g_kp1)%*%d+lambda*sum(abs((theta_kp1_td)[regIndicators,]))-lambda*sum(abs((theta_kp1)[regIndicators,])))){
+    if(h_t-h_0 <= c1*stepSize*(t(newGradient)%*%direction+lambda*sum(abs((parametersNew_td)[regIndicators,]))-lambda*sum(abs((newParameters)[regIndicators,])))){
       return(stepSize)
     }else{
       stepSize <- stepSize^2
@@ -614,15 +651,15 @@ exact_armijoLineSearch <- function(gradientModel,
 #' @param cpptsemObject cpptsem object which specifies how the gradients of the likelihood-function are computed
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
-#' @param thetaNames names of the parameter estimates
+#' @param parameterLabels names of the parameter estimates
 #' @param regIndicators vector with names of parameters to regularize
 #' @param lambda penalty value
-#' @param theta_kp1 parameter values of iteration k plus 1
-#' @param m2LL_kp1 -2 log likelihood of iteration k plus 1
-#' @param g_kp1 gradients of iteration k plus 1
-#' @param H_k Hessian approximation
-#' @param d vector with updates to parameter estimates
-#' @param stepSize Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)
+#' @param newParameters parameter values of iteration k plus 1
+#' @param m2LLNew -2 log likelihood of iteration k plus 1
+#' @param newGradient gradients of iteration k plus 1
+#' @param oldHessian Hessian approximation
+#' @param direction vector with updates to parameter estimates
+#' @param stepSize Initial stepsize of the outer iteration (theta_{k+1} = oldParameters + Stepsize \* Stepdirection)
 #' @param sig only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.
 #' @param gam Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
 #' @param maxIter_line maximal number of iterations for line search
@@ -630,14 +667,14 @@ exact_armijoLineSearch <- function(gradientModel,
 exact_GLMNETLineSearch <- function(cpptsemObject,
                                    objective,
                                    adaptiveLassoWeights,
-                                   thetaNames,
+                                   parameterLabels,
                                    regIndicators,
                                    lambda,
-                                   theta_kp1,
-                                   m2LL_kp1,
-                                   g_kp1,
-                                   H_k,
-                                   d,
+                                   newParameters,
+                                   m2LLNew,
+                                   newGradient,
+                                   oldHessian,
+                                   direction,
                                    stepSize,
                                    sig,
                                    gam,
@@ -649,15 +686,15 @@ exact_GLMNETLineSearch <- function(cpptsemObject,
   if(!is.null(adaptiveLassoWeights)){
     adaptiveLassoWeightsMatrix <- diag(adaptiveLassoWeights)
   }else{
-    adaptiveLassoWeightsMatrix <- diag(length(thetaNames))
+    adaptiveLassoWeightsMatrix <- diag(length(parameterLabels))
   }
-  rownames(adaptiveLassoWeightsMatrix) <- thetaNames
-  colnames(adaptiveLassoWeightsMatrix) <- thetaNames
+  rownames(adaptiveLassoWeightsMatrix) <- parameterLabels
+  colnames(adaptiveLassoWeightsMatrix) <- parameterLabels
 
   # get penalized M2LL for step size 0:
 
-  f_0 <- m2LL_kp1 + lambda*sum(abs((adaptiveLassoWeightsMatrix%*%theta_kp1)[regIndicators,]))
-  pen_0 <- lambda*sum(abs((adaptiveLassoWeightsMatrix%*%theta_kp1)[regIndicators,]))
+  f_0 <- m2LLNew + lambda*sum(abs((adaptiveLassoWeightsMatrix%*%newParameters)[regIndicators,]))
+  pen_0 <- lambda*sum(abs((adaptiveLassoWeightsMatrix%*%newParameters)[regIndicators,]))
 
   i <- 0
 
@@ -668,15 +705,15 @@ exact_GLMNETLineSearch <- function(cpptsemObject,
   }
   while(TRUE){
     stepSize <- stepSizeInit^i
-    theta_kp1_td <- theta_kp1+stepSize*d
+    parametersNew_td <- newParameters+stepSize*direction
 
     # compute new fitfunction value
-    cpptsemObject_i$setParameterValues(theta_kp1_td, thetaNames)
+    cpptsemObject_i$setParameterValues(parametersNew_td, parameterLabels)
     if(tolower(objective) == "ml"){
       invisible(capture.output(out1 <- try(cpptsemObject_i$computeRAM(), silent = TRUE), type = "message"))
       invisible(capture.output(out2 <- try(cpptsemObject_i$fitRAM(), silent = TRUE), type = "message"))
     }else{
-      invisible(capture.output(out1 <- try(cpptsemObject_i$computeAndFitKalman(), silent = TRUE), type = "message"))
+      invisible(capture.output(out1 <- try(cpptsemObject_i$computeAndFitKalman(0), silent = TRUE), type = "message"))
       out2 <- NA
     }
     if(any(class(out1)== "try-error") | any(class(out2)== "try-error") | !is.finite(cpptsemObject_i$m2LL)){
@@ -695,11 +732,11 @@ exact_GLMNETLineSearch <- function(cpptsemObject,
     m2LL_kp1_td <- cpptsemObject_i$m2LL
 
     # compute h(stepSize) = L(x+td) + p(x+td) - L(x) - p(x), where p(x) is the penalty function
-    f_new <- m2LL_kp1_td +  lambda*sum(abs((adaptiveLassoWeightsMatrix%*%theta_kp1_td)[regIndicators,]))
-    p_new <- lambda*sum(abs((adaptiveLassoWeightsMatrix%*%theta_kp1_td)[regIndicators,]))
+    f_new <- m2LL_kp1_td +  lambda*sum(abs((adaptiveLassoWeightsMatrix%*%parametersNew_td)[regIndicators,]))
+    p_new <- lambda*sum(abs((adaptiveLassoWeightsMatrix%*%parametersNew_td)[regIndicators,]))
 
     # test line search criterion
-    lineCriterion <- f_new - f_0 <= sig*stepSize*(t(g_kp1)%*%d + gam*t(d)%*%H_k%*%d + p_new - pen_0)
+    lineCriterion <- f_new - f_0 <= sig*stepSize*(t(newGradient)%*%direction + gam*t(direction)%*%oldHessian%*%direction + p_new - pen_0)
     if(lineCriterion){
       break
     }
@@ -714,176 +751,6 @@ exact_GLMNETLineSearch <- function(cpptsemObject,
 
 
 
-#' exact_weakWolfeLineSearch
-#'
-#'
-#' NOTE: Function located in file GLMNET.R
-#'
-#' @param cpptsemObject Object of type cpptsem
-#' @param objective Kalman or ML
-#' @param adaptiveLassoWeights weights for the adaptive lasso.
-#' @param thetaNames names of the parameter estimates
-#' @param regIndicators vector with names of parameters to regularize
-#' @param lambda penalty value
-#' @param theta_kp1 parameter values of iteration k plus 1
-#' @param m2LL_kp1 -2 log likelihood of iteration k plus 1
-#' @param g_kp1 gradients of iteration k plus 1
-#' @param d vector with updates to parameter estimates
-#' @param c1 tuning parameter for Armijo condition
-#' @param c2 c2 constant for lineSearch. This constant controls the Curvature condition
-#' @param stepSize Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)
-#' @param maxIter_line maximal number of iterations for line search
-#' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
-#' @param eps_WW additional parameter to shorten the search if the upper and lower bound are already very close to each other
-#' @export
-exact_weakWolfeLineSearch <- function(cpptsemObject,
-                                      objective,
-                                      adaptiveLassoWeights,
-                                      thetaNames,
-                                      regIndicators,
-                                      lambda,
-                                      theta_kp1,
-                                      m2LL_kp1,
-                                      g_kp1,
-                                      d,
-                                      c1,
-                                      c2,
-                                      stepSize,
-                                      maxIter_line,
-                                      verbose,
-                                      eps_WW){
-  # Adapted from HANSO (see LEWIS, D.S. &  OVERTONNON, M. L., (2013). SMOOTH OPTIMIZATION VIA BFGS)
-
-  # deep clone of cpptsemObject
-  cpptsemObject_i <- rlang::duplicate(cpptsemObject, shallow = FALSE)
-
-  if(!is.null(adaptiveLassoWeights)){
-    adaptiveLassoWeightsMatrix <- diag(adaptiveLassoWeights)
-  }else{
-    adaptiveLassoWeightsMatrix <- diag(length(thetaNames))
-  }
-  rownames(adaptiveLassoWeightsMatrix) <- thetaNames
-  colnames(adaptiveLassoWeightsMatrix) <- thetaNames
-
-  stepSize_L <- 0 # lower bound
-  stepSize_U <- Inf # upper bound
-
-  # get penalized M2LL for step size 0:
-
-  h_0 <- m2LL_kp1 + lambda*sum(abs((adaptiveLassoWeightsMatrix%*%theta_kp1)[regIndicators,]))
-
-  # get (sub-)gradients for step size 0:
-  g_0 <- regCtsem::exact_getSubgradients(theta = as.matrix(theta_kp1),
-                                         jacobian = as.matrix(g_kp1),
-                                         regIndicators = regIndicators,
-                                         lambda = lambda,
-                                         adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
-
-  # Inexact Line Search
-  i <- 0
-
-  while(i<maxIter_line){
-    i <- i+1 # update iterations
-
-    if(verbose==2){
-      cat(paste0("\r",
-                 "## Linesearch: [Lower step size: ", sprintf('%.3f', stepSize_L, 3),
-                 ", current step size: ", sprintf('%.3f', stepSize, 3),
-                 ", upper step size: ", sprintf('%.3f', stepSize_U, 3),
-                 "] ##"
-      )
-      )
-      flush.console()
-    }
-
-    if(stepSize_U-stepSize_L < eps_WW){
-      # The following part is adapted from https://github.com/ceres-solver/ceres-solver/blob/master/internal/ceres/line_search.cc
-      # and is a workaround for when the line search algorithm does not find
-      # an exact point that satisfies both Wolfe conditions and results in an upper and lower bound which are
-      # approximately identical. In this case, the iterations are stopped and the current lower bound is returned
-      if(verbose>1){
-        warning("Could not find an exact point satisfying both Wolfe conditions.")
-      }
-      # an additional problem when the hessian is not well approximated is that the search direction might be wrong.
-      # this would result in an increasing Likelihood which is indicated by a lower bound of 0.
-      if(stepSize_L == 0){warning("Searchdirection might be problematic. Line search returned step size 0.")}
-      return(stepSize_L)
-    }
-
-    # new theta
-    theta_kp1_td <- rlang::duplicate(theta_kp1)+stepSize*d
-    # get L(x+stepSize*d) and L'(x+stepSize*d)
-    cpptsemObject_i$setParameterValues(theta_kp1_td, thetaNames)
-    if(tolower(objective) == "ml"){
-      invisible(capture.output(out1 <- try(cpptsemObject_i$computeRAM(), silent = TRUE), type = "message"))
-      invisible(capture.output(out2 <- try(cpptsemObject_i$fitRAM(), silent = TRUE), type = "message"))
-    }else{
-      invisible(capture.output(out1 <- try(cpptsemObject_i$computeAndFitKalman(), silent = TRUE), type = "message"))
-      out2 <- NA
-    }
-    if(any(class(out1)== "try-error") | any(class(out2)== "try-error") | !is.finite(cpptsemObject_i$m2LL)){
-      # if the starting values are not feasible
-      stepSize <- .5*stepSize
-      next
-    }
-
-    if(any(class(cpptsemObject_i)=="try-error")){
-      # if the starting values are far off, the gradients can be very large and testing for the initial
-      # step size might result in infeasible parameter values. In this case: try smaller step size
-      stepSize <- .5*stepSize
-      next
-    }
-
-    m2LL_kp1_td <- cpptsemObject_i$m2LL
-    invisible(capture.output(g_kp1_td <- try(exact_getCppGradients(cpptsemObject = cpptsemObject_i, objective = objective))))
-
-    if(any(class(g_kp1_td)=="try-error")){
-      # sometimes the stepsize of 1 results in NA; in this case: use smaller step size. Also, remove unfeasible starting values
-      stepSize <- .9*stepSize
-      next
-    }
-    g_kp1_td <- matrix(g_kp1_td, nrow = length(g_kp1_td), ncol = 1)
-    rownames(g_kp1_td) <- thetaNames
-
-    if(any(is.na(g_kp1_td))){
-      # sometimes the stepsize of 1 results in NA; in this case: use smaller step size. Also, remove unfeasible starting values
-      stepSize <- .9*stepSize
-      next
-    }
-
-    # compute h(stepSize) = L(x+td) + p(x+td) - L(x) - p(x), where p(x) is the penalty function
-    h_t <- m2LL_kp1_td +  lambda*sum(abs((adaptiveLassoWeightsMatrix%*%theta_kp1_td)[regIndicators,]))
-    # compute h'(stepSize)
-    g_t <- regCtsem::exact_getSubgradients(theta = theta_kp1_td,
-                                           jacobian = g_kp1_td,
-                                           regIndicators = regIndicators,
-                                           lambda = lambda,
-                                           adaptiveLassoWeightsMatrix = adaptiveLassoWeightsMatrix)
-
-    # Check Armijo and Curvature Condition
-    Armijo <- h_t <= h_0 + c1*stepSize*t(d)%*%g_0 # for first wolfe condition (Armijo condition)
-    Curvature <- t(g_t)%*%d >= c2*t(d)%*%g_0 # for second wolfe condition (curvature condition)
-
-    if (!Armijo){
-      # if the first condition is not satisfied at stepSize (i.e., stepSize is not resulting in a sufficient decrease of the function), set the upper limit to stepSize
-      stepSize_U <- stepSize
-    }else if(!Curvature){
-      # if stepSize results in a sufficient decrease, but the second wolfe condition is not satisfied at stepSize (i.e. the step size is too small), set the lower limit to stepSize
-      stepSize_L <- stepSize
-    }else{
-      # if both conditions are satisfied: end line search
-      return(stepSize)
-    }
-    if(stepSize_U < Inf){
-      # if the upper limit stepSize_U has been updated, set stepSize to the mean of the interval (lower, upper)
-      stepSize <- (stepSize_L+stepSize_U)/2
-    }else{
-      # if the upper limit has not been updated, set t to 2 times the lower limit
-      stepSize <- 2*stepSize_L
-    }
-  }
-  return(stepSize)
-}
 
 
 #' exact_getBFGS
@@ -892,49 +759,49 @@ exact_weakWolfeLineSearch <- function(cpptsemObject,
 #'
 #' NOTE: Function located in file GLMNET.R
 #'
-#' @param theta_k Theta at iteration k
-#' @param g_k Gradients of the likelihood function at iteration k
-#' @param H_k Hessian of the likelihood function at iteration k
-#' @param theta_kp1 Theta at iteration k+1
-#' @param g_kp1 Gradients of the likelihood function at iteration k+1
+#' @param oldParameters Theta at iteration k
+#' @param oldGradients Gradients of the likelihood function at iteration k
+#' @param oldHessian Hessian of the likelihood function at iteration k
+#' @param newParameters Theta at iteration k+1
+#' @param newGradient Gradients of the likelihood function at iteration k+1
 #' @param cautious boolean: should the update be skipped if it would result in a non positive definite Hessian?
 #' @param hessianEps controls when the update of the Hessian approximation is skipped
 #' @export
-exact_getBFGS <- function(theta_k, g_k, H_k, theta_kp1, g_kp1, cautious = TRUE, hessianEps = .001){
+exact_getBFGS <- function(oldParameters, oldGradients, oldHessian, newParameters, newGradient, cautious = TRUE, hessianEps = .001){
 
-  y <- g_kp1-g_k
-  d <- theta_kp1-theta_k
+  y <- newGradient-oldGradients
+  d <- newParameters-oldParameters
 
   # test if positive definiteness is ensured
   skipUpdate <- try((t(y)%*%d < hessianEps) && cautious, silent = TRUE)
   if(any(class(skipUpdate) == "try-error") || skipUpdate || is.na(skipUpdate)){
     # Hessian might become non-positive definite. Return without update
-    return(H_k)
+    return(oldHessian)
   }
   if(t(y)%*%d < 0){
     warning("Hessian update possibly non-positive definite.")
   }
 
-  H_kp1 <- H_k - (H_k%*%d%*%t(d)%*%H_k)/as.numeric(t(d)%*%H_k%*%d) + (y%*%t(y))/as.numeric(t(y)%*%d)
+  HessianNew <- oldHessian - (oldHessian%*%d%*%t(d)%*%oldHessian)/as.numeric(t(d)%*%oldHessian%*%d) + (y%*%t(y))/as.numeric(t(y)%*%d)
 
-  if(anyNA(H_kp1)){
+  if(anyNA(HessianNew)){
     warning("Invalid Hessian. Returning previous Hessian")
-    return(H_k)
+    return(oldHessian)
   }
-  HessianEigen <- eigen(H_kp1)
+  HessianEigen <- eigen(HessianNew)
   iscomplex <- any(!Im(HessianEigen$values) == 0)
   if(iscomplex){
     eigenVectors <- Re(HessianEigen$vectors)
     eigenValues <- Re(HessianEigen$values)
-    H_kp1 <- eigenVectors%*%diag(eigenValues)%*%t(eigenVectors)
+    HessianNew <- eigenVectors%*%diag(eigenValues)%*%t(eigenVectors)
   }
   if(any(HessianEigen$values < 0)){
-    while(any(eigen(H_kp1)$values < 0)){
-      H_kp1 <- H_kp1 + .01*diag(nrow(H_kp1))
+    while(any(eigen(HessianNew)$values < 0)){
+      HessianNew <- HessianNew + .01*diag(nrow(HessianNew))
     }
   }
 
-  return(H_kp1)
+  return(HessianNew)
 
 }
 

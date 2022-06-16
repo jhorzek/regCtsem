@@ -9,7 +9,7 @@ exact_outerGLMNET(
   objective,
   adaptiveLassoWeights,
   sampleSize,
-  parameterNames,
+  parameterLabels,
   initialParameters,
   initialGradients,
   initialHessian,
@@ -40,7 +40,7 @@ exact_outerGLMNET(
 
 \item{sampleSize}{sample size}
 
-\item{parameterNames}{Vector with names of theta-parameters}
+\item{parameterLabels}{Vector with names of theta-parameters}
 
 \item{initialParameters}{initial parameter estimates}
 
@@ -52,7 +52,7 @@ exact_outerGLMNET(
 
 \item{regIndicators}{Names of regularized parameters}
 
-\item{stepSize}{initial Stepsize of the outer iteration (theta_{k+1} = theta_k + stepSize \* Stepdirection) in case of lineSearch}
+\item{stepSize}{initial Stepsize of the outer iteration (theta_{k+1} = oldParameters + stepSize \* Stepdirection) in case of lineSearch}
 
 \item{lineSearch}{String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.}
 

@@ -462,7 +462,7 @@ regCtsem <- function(
       stop("Setting up the cpptsem model failed.")
     }else{
       # test fit
-      cpptsemObject$computeAndFitKalman()
+      cpptsemObject$computeAndFitKalman(0)
       m2LLcpp <- cpptsemObject$m2LL
       testM2LL <- round(ctsemObject$mxobj$fitfunction$result[[1]] - m2LLcpp,3) == 0
       if (!testM2LL & !argsIn$forceCpptsem){
@@ -492,7 +492,7 @@ regCtsem <- function(
 
     # compute unregularized fit
     cpptsemObject$setParameterValues(CpptsemFit$pars, names(CpptsemFit$pars))
-    cpptsemObject$computeAndFitKalman()
+    cpptsemObject$computeAndFitKalman(0)
 
     ## add person-specific parameter estimates to the regularized parameters if requested
     subjectSpecificParameterLabels <- c()
@@ -1037,6 +1037,7 @@ exact_regCtsem <- function(  # model
   exactArgsIn <- as.list(environment())
 
   returnList <- list("setup" = exactArgsIn)
+  returnList$misc <- NULL
 
   parameterLabels <- names(cpptsemObject$getParameterValues())
 
@@ -1128,6 +1129,7 @@ exact_regCtsem <- function(  # model
     fitAndParameters[parameterLabels,] <- regModel$thetas
     fitAndParameters["m2LL",] <- regModel$m2LL
     fitAndParameters["regM2LL",] <- regModel$regM2LL
+    if(!is.null(regModel$Hessians)) returnList$misc$Hessians <- regModel$Hessians
   }
 
   # save fit indices
@@ -1645,7 +1647,7 @@ getFinalModel <- function(regCtsemObject, criterion){
     regCtsemObject$setup$cpptsemObject$computeRAM()
     regCtsemObject$setup$cpptsemObject$fitRAM()
   }else{
-    regCtsemObject$setup$cpptsemObject$computeAndFitKalman()
+    regCtsemObject$setup$cpptsemObject$computeAndFitKalman(0)
   }
 
   return(regCtsemObject$setup$cpptsemObject)

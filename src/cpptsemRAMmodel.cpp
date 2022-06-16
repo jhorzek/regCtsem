@@ -30,6 +30,9 @@ cpptsemRAMmodel::cpptsemRAMmodel(std::string mName,
   mParameterTableCol = mParameterTableCol-1;
 
   parameterTable = mParameterTable;
+  Rcpp::StringVector parameterLabels = parameterTable["label"];
+  uniqueParameterLabels = unique(parameterLabels);
+  uniqueParameterLabels.sort();
 
   stationaryT0VAR = mStationaryT0VAR;
   stationaryT0MEANS = mStationaryT0MEANS;
@@ -101,7 +104,6 @@ void cpptsemRAMmodel::setParameterValues(const Rcpp::NumericVector& mParameters,
 Rcpp::NumericVector cpptsemRAMmodel::getParameterValues() {
 
   Rcpp::StringVector parameterLabels = parameterTable["label"];
-  Rcpp::StringVector uniqueParameterLabels = unique(parameterLabels);
   Rcpp::NumericVector parameterValuesRep = parameterTable["value"]; // values with repeated elements
 
   Rcpp::NumericVector paramterValues (uniqueParameterLabels.length(),-9999.99);

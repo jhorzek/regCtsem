@@ -49,7 +49,7 @@ exact_bfgsGLMNET(
 
 \item{sparseParameters}{labeled vector with parameter estimates of the most sparse model.}
 
-\item{stepSize}{Initial stepSize of the outer iteration (theta_{k+1} = theta_k + stepSize * Stepdirection)}
+\item{stepSize}{Initial stepSize of the outer iteration (theta_{k+1} = oldParameters + stepSize * Stepdirection)}
 
 \item{lineSearch}{String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!.}
 

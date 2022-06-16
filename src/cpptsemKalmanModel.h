@@ -20,6 +20,7 @@ public:
   Rcpp::List DRIFTHASHExponentialUnique;
   Rcpp::List discreteDIFFUSIONUnique;
   Rcpp::List discreteCINTUnique;
+  Rcpp::StringVector uniqueParameterLabels;
   Rcpp::DataFrame parameterTable;
   arma::mat DRIFTValues;
   arma::mat DIFFUSIONValues;
@@ -67,7 +68,7 @@ public:
   void setKalmanMatrices(const Rcpp::List& mKalmanMatrices);
 
   // computation
-  void computeAndFitKalman();
+  void computeAndFitKalman(int individual = 0);
   Rcpp::NumericVector approxKalmanGradients(const double epsilon = .000001);
 
   Rcpp::NumericVector approxKalmanGradient(const double epsilon, const Rcpp::String parName);

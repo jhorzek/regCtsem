@@ -136,7 +136,7 @@
 #'
 #' ## with cpptsem
 #' cpptsemmodel3 <- cpptsemFromCtsem(ctsemModel = myModel,wideData = traindata)
-#' cpptsemmodel3$computeAndFitKalman()
+#' cpptsemmodel3$computeAndFitKalman(0) # the 0 tells cpptsem that the fit of the full sample should be computed. Passing 1, 2, ... N to the function will compute the fit for a single sample
 #' cpptsemmodel3$m2LL
 #' cpptsemmodel3$latentScores[1,]
 #' cpptsemmodel3$approxKalmanGradients((1.1 * 10^(-16))^(1/3))[names(centralGrandients)]
@@ -193,7 +193,7 @@
 #'   cpptsemmodel$setParameterValues(parameters, names(parameters))
 #'   # catching all errors from cpptsemmodel
 #' # when parameter values are impossible
-#'   invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(),
+#'   invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(0),
 #'                                          silent = TRUE),
 #'                            type = "message"))
 #'
@@ -1422,7 +1422,7 @@ fitCpptsem <- function(parameterValues, cpptsemObject, objective, free = labeled
   if(tolower(objective) == "kalman"){
     # catching all errors from cpptsemObject
     # when parameter values are impossible
-    invisible(capture.output(FIT <- try(cpptsemObject$computeAndFitKalman(),
+    invisible(capture.output(FIT <- try(cpptsemObject$computeAndFitKalman(0),
                                         silent = TRUE),
                              type = "message"))
     if(class(FIT) == "try-error"){
@@ -1597,7 +1597,7 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
     if(all(is.na(fit))){stop("All fit attempts resulted in errors. Check your starting values")}
     # check for different local minima
 
-    differencesBetweenParameters <- apply(optimizedValuesTable[free[rownames(optimizedValuesTable)], convergence], 1, function(x) abs((x-mean(x)) / sd(x)))
+    differencesBetweenParameters <- apply(optimizedValuesTable[free[rownames(optimizedValuesTable)], convergence], 1, function(x) abs((x-mean(x)) / mean(x)))
     if(any(differencesBetweenParameters > 2)){
       optimizedValuesTable <<- optimizedValuesTable
       correspondingFit <<- fit
@@ -1749,7 +1749,7 @@ approx_KalmanM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
-  invisible(capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(),
+  invisible(capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(0),
                                       silent = TRUE),
                            type = "message"))
   if(class(FIT) == "try-error"){
@@ -1782,7 +1782,7 @@ approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoW
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
-  invisible(capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(),
+  invisible(capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(0),
                                       silent = TRUE),
                            type = "message"))
   if(class(FIT) == "try-error"){
@@ -1815,7 +1815,7 @@ ridgeKalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWei
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
-  invisible(capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(),
+  invisible(capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(0),
                                       silent = TRUE),
                            type = "message"))
   if(class(FIT) == "try-error"){
@@ -1985,7 +1985,7 @@ approx_cpptsemRsolnp <- function(cpptsemmodel,
     cpptsemmodel$computeRAM()
     cpptsemmodel$fitRAM()
   }else{
-    cpptsemmodel$computeAndFitKalman()
+    cpptsemmodel$computeAndFitKalman(0)
   }
 
   if(testGradients){
@@ -2162,7 +2162,7 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
     cpptsemmodel$computeRAM()
     cpptsemmodel$fitRAM()
   }else{
-    cpptsemmodel$computeAndFitKalman()
+    cpptsemmodel$computeAndFitKalman(0)
   }
 
   if(testGradients){

@@ -19,7 +19,7 @@ restore <- function(regCtsemObject){
   }
 
   if(regCtsemObject$setup$objective == "Kalman"){
-    regCtsemObject$setup$cpptsemObject$computeAndFitKalman()
+    regCtsemObject$setup$cpptsemObject$computeAndFitKalman(0)
   }
 
   if(regCtsemObject$setup$objective == "ML"){
@@ -560,7 +560,7 @@ checkNonConvexity <- function(model, lowerBound = NULL, upperBound = NULL, nSamp
     pars <- model$getParameterValues()
     getFit <- function(Rcpp_cpptsemKalmanModel, pars){
       Rcpp_cpptsemKalmanModel$setParameterValues(pars, names(pars))
-      invisible(capture.output(o <- try(Rcpp_cpptsemKalmanModel$computeAndFitKalman(), silent = T), type = "message"))
+      invisible(capture.output(o <- try(Rcpp_cpptsemKalmanModel$computeAndFitKalman(0), silent = T), type = "message"))
       if(any(class(o) == "try-error")){return(NA)}
       return(Rcpp_cpptsemKalmanModel$m2LL)
     }
@@ -690,7 +690,7 @@ checkNonConvexity3D <- function(model, parnames, lowerBound1, upperBound1, lower
     pars <- model$getParameterValues()
     getFit <- function(Rcpp_cpptsemKalmanModel, pars){
       Rcpp_cpptsemKalmanModel$setParameterValues(pars, names(pars))
-      invisible(capture.output(o <- try(Rcpp_cpptsemKalmanModel$computeAndFitKalman(), silent = T), type = "message"))
+      invisible(capture.output(o <- try(Rcpp_cpptsemKalmanModel$computeAndFitKalman(0), silent = T), type = "message"))
       if(any(class(o) == "try-error")){return(NA)}
       return(Rcpp_cpptsemKalmanModel$m2LL)
     }
@@ -993,35 +993,3 @@ startFromSparse <- function(ctsemObject,
 
 }
 
-approximateLOOCV <- function(cpptsemObject, wideData){
-  stop("WORK IN PROGRESS")
-  parameterEstimates <- cpptsemObject$getParameterValues()
-
-  dataset <- subset(wideData, select = !grepl("dT", colnames(wideData)) & !grepl("intervalID", colnames(wideData)) )
-
-  # step one: extract subject specific likelihoods
-  if(class(cpptsemObject) == "Rcpp_cpptsemRAMmodel"){
-    expectedMeans <- cpptsemObject$expectedMeans
-    expectedCovariance <- cpptsemObject$expectedCovariance
-
-    inidividualLikelihoods <- rep(0, nrow(wideData))
-    for(i in 1:nrow(wideData)){
-      missings <- is.na(dataset[i,])
-
-      # check if all missing
-      if(all(missings)) next
-
-      expectedMeans_i <- expectedMeans[!missings]
-      expectedCovariance_i <- expectedCovariance[!missings , !missings]
-      observed_i <- as.matrix(dataset[i,!missings])
-      inidividualLikelihoods[i] <- regCtsem:::computeIndividualM2LL(nObservedVariables = length(observed_i),
-                                                                    rawData = observed_i,
-                                                                    expectedMeans = expectedMeans_i,
-                                                                    expectedCovariance = expectedCovariance_i)
-    }
-  }
-
-  # step 2: compute
-
-
-}

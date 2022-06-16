@@ -8,14 +8,14 @@ exact_GLMNETLineSearch(
   cpptsemObject,
   objective,
   adaptiveLassoWeights,
-  thetaNames,
+  parameterLabels,
   regIndicators,
   lambda,
-  theta_kp1,
-  m2LL_kp1,
-  g_kp1,
-  H_k,
-  d,
+  newParameters,
+  m2LLNew,
+  newGradient,
+  oldHessian,
+  direction,
   stepSize,
   sig,
   gam,
@@ -29,23 +29,23 @@ exact_GLMNETLineSearch(
 
 \item{adaptiveLassoWeights}{weights for the adaptive lasso.}
 
-\item{thetaNames}{names of the parameter estimates}
+\item{parameterLabels}{names of the parameter estimates}
 
 \item{regIndicators}{vector with names of parameters to regularize}
 
 \item{lambda}{penalty value}
 
-\item{theta_kp1}{parameter values of iteration k plus 1}
+\item{newParameters}{parameter values of iteration k plus 1}
 
-\item{m2LL_kp1}{-2 log likelihood of iteration k plus 1}
+\item{m2LLNew}{-2 log likelihood of iteration k plus 1}
 
-\item{g_kp1}{gradients of iteration k plus 1}
+\item{newGradient}{gradients of iteration k plus 1}
 
-\item{H_k}{Hessian approximation}
+\item{oldHessian}{Hessian approximation}
 
-\item{d}{vector with updates to parameter estimates}
+\item{direction}{vector with updates to parameter estimates}
 
-\item{stepSize}{Initial stepsize of the outer iteration (theta_{k+1} = theta_k + Stepsize \* Stepdirection)}
+\item{stepSize}{Initial stepsize of the outer iteration (theta_{k+1} = oldParameters + Stepsize \* Stepdirection)}
 
 \item{sig}{only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.}
 
