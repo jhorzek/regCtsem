@@ -570,7 +570,7 @@ If there is only a single person in the subsample, the -2 log likelihood for thi
 $$-2\ln\mathcal{L}(\mathbf{x}_i) = k_i\ln(2\pi)+\ln(|\boldsymbol\Sigma_i|)+(\mathbf{x}_i-\boldsymbol\mu_i)^T\boldsymbol\Sigma^{-1}_i(\mathbf{x}_i-\boldsymbol\mu_i)$$
 where $i$ refers to the person, $k_i$ is the number of non-missing observations for this person, $\boldsymbol \Sigma_i$ is the filtered expected covariance matrix (all rows and columns for which no data is available from person i are removed) and $\mu_i$ is the filtered expected means vector (similar to filtered covariance).
 
-If there are multiple persons in the subset, the simplified likelihood function will be used:
+If there are multiple persons in the subset, the simplified likelihood function will be used. This is a trick which is used in OpenMx extensively to speed up the full information maximum likelihood estimation considerably:
 
 $$\begin{aligned}
 -2\ln\mathcal{L}(\mathbf D_g) = N_gk_g\ln(2\pi)+N_g\ln(|\boldsymbol\Sigma_g|)+ N_g\text{tr}(\mathbf S_g\boldsymbol\Sigma^{-1}_g)+ N_g(\bar{\mathbf x}-\boldsymbol\mu)^T\boldsymbol\Sigma^{-1}_g(\bar{\mathbf x}_g-\boldsymbol\mu_g)
@@ -582,8 +582,9 @@ Finally, the -2log-Likelihoods of all subsamples are summed up and returned.
 
 ### Step 5-3: computeAndFitKalman
 
-For each person, the latent scores and latent state residual covariances are first predicted and the updated. Furthermore the manifest values and manifest residual covariances are predicted from the latent scores. These predictions are then used in the single subject -2 log likelihood function described in the previous equation. For more information on the Kalman filter procedure see Welch, G., & Bishop, G. (2006). An Introduction to the Kalman Filter (Technical Report No. 95–041). https://perso.crans.org/club-krobot/doc/kalman.pdf .
+For each person, the latent scores and latent state residual covariances are first predicted and the updated. Furthermore, the manifest values and manifest residual covariances are predicted from the latent scores. These predictions are then used in the single subject -2 log likelihood function described in the previous equation. For more information on the Kalman filter procedure see Welch, G., & Bishop, G. (2006). An Introduction to the Kalman Filter (Technical Report No. 95–041). https://perso.crans.org/club-krobot/doc/kalman.pdf .
 
 # Bibliography
 
-Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
+* Boker, S. M., Neale, M. C., Maes, H. H., Wilde, M. J., Spiegel, M., Brick, T. R., Estabrook, R., Bates, T. C., & Mehta, P. (2022). OpenMx: Extended Structural Equation Modelling (2.20.0) [Computer software]. https://cran.r-project.org/web/packages/OpenMx/OpenMx.pdf
+* Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
