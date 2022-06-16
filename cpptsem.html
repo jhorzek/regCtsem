@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>cpptsem</title>
+
+<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">cpptsem</h1>
+
+
+
+<div id="ctsem" class="section level1">
+<h1>c<sub>++</sub>tsem</h1>
+<p>regCtsem will try to internally translate any ctsem object passed to the main function (regCtsem::regCtsem) to a C++ object. The functions for this C++ object are implemented following the naming scheme c<sub>++</sub>tsem. The sole purpose of this translation is speeding up the computation of the -2 log-Likelihood and an approximation of the gradients for continuous time structural equation models. The implementation closely follows that of ctsemOMX (Driver et al., 2017).</p>
+<p><strong>Known limitations</strong></p>
+<ul>
+<li>Time dependent predictors are not yet supported in c<sub>++</sub>tsem.</li>
+</ul>
+<div id="demonstration-of-main-functions" class="section level2">
+<h2>Demonstration of main functions</h2>
+<p>To demonstrate the application of c<sub>++</sub>tsem, the example from ctsem will be used.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ctsemOMX)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(regCtsem)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># set up model with ctsem</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;AnomAuth&quot;</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>AnomAuthmodel <span class="ot">&lt;-</span> <span class="fu">ctModel</span>(<span class="at">LAMBDA =</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="at">nrow =</span> <span class="dv">2</span>, <span class="at">ncol =</span> <span class="dv">2</span>),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Tpoints =</span> <span class="dv">5</span>, <span class="at">n.latent =</span> <span class="dv">2</span>, <span class="at">n.manifest =</span> <span class="dv">2</span>, </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                         <span class="at">MANIFESTVAR=</span><span class="fu">diag</span>(<span class="dv">0</span>, <span class="dv">2</span>), <span class="at">TRAITVAR =</span> <span class="st">&quot;auto&quot;</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># the optimizer will not used here because the gradients would otherwise </span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># be very close to zero and the similarity between the OpenMx based </span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># gradients and the cpptsem based gradients would be harder to see:</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>AnomAuthfit <span class="ot">&lt;-</span> <span class="fu">ctFit</span>(AnomAuth, AnomAuthmodel, <span class="at">useOptimizer =</span> F) </span></code></pre></div>
+<p>The general workflow with c<sub>++</sub>tsem when using the reticular action model (RAM) is:</p>
+<ol style="list-style-type: decimal">
+<li>translate ctsem to c<sub>++</sub>tsem</li>
+<li>computeRAM() computes the A, S, and M matrices as well as the expected means and covariances</li>
+<li>fitRAM() computes the -2log-likelihood</li>
+<li>approxRAMGradients((1.1 * 10^(-16))^(1/3)) computes the gradients</li>
+</ol>
+<p>The general workflow with c<sub>++</sub>tsem when using the Kalman filter is:</p>
+<ol style="list-style-type: decimal">
+<li>translate ctsem to c<sub>++</sub>tsem</li>
+<li>computeAndFitKalman() computes the predicted and updated latent scores as well as the -2log-Likelihood. The latent scores can be extracted with $latentScores</li>
+<li>approxKalmanGradients((1.1 * 10^(-16))^(1/3)) computes the gradients</li>
+</ol>
+<p>This will be explained in more detail below using the RAM model. Otherwise, more details can be found with:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>?cpptsemFromCtsem</span></code></pre></div>
+<div id="translate-ctsem-object-to-ctsem" class="section level3">
+<h3>Translate ctsem object to c<sub>++</sub>tsem</h3>
+<p>The function cpptsemFromCtsem translates a fitted ctsem object (e.g., AnomAuthfit in the example above) in a new object of class Rcpp_cpptsemmodel:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>cpptsemmodel <span class="ot">&lt;-</span> regCtsem<span class="sc">::</span><span class="fu">cpptsemFromCtsem</span>(AnomAuthfit, <span class="at">wideData =</span> AnomAuth)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Translating model to C++. Found the following elements: T0MEANS, T0VARbase, DRIFT, DIFFUSIONbase, TRAITVARbase, T0TRAITEFFECT, CINT, MANIFESTMEANS, LAMBDA, MANIFESTVARbase.</span></span></code></pre></div>
+</div>
+<div id="compute-the-ram-matrices" class="section level3">
+<h3>Compute the RAM matrices</h3>
+<p>Once the cpptsem object was created, the RAM matrices with discrete time parameters can be obtained using the computeRAM() function. This will compute the A matrix (directed effects), the S matrix (residual covariances), and the M vector (means) as well as the expected means and expected covariances.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>cpptsemmodel<span class="sc">$</span><span class="fu">computeRAM</span>()</span></code></pre></div>
+<p>The elements can be accessed with the $ operator:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>cpptsemmodel<span class="sc">$</span>A</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>cpptsemmodel<span class="sc">$</span>S</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>cpptsemmodel<span class="sc">$</span>M</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>cpptsemmodel<span class="sc">$</span>F</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>cpptsemmodel<span class="sc">$</span>expectedMeans</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>cpptsemmodel<span class="sc">$</span>expectedCovariance</span></code></pre></div>
+</div>
+<div id="compute-the--2-log-likelihood" class="section level3">
+<h3>Compute the -2 log likelihood</h3>
+<p>The function fitRAM() computes the -2 log likelihood based on the data and the expected means and covariances.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cpptsemmodel<span class="sc">$</span><span class="fu">fitRAM</span>()</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>cpptsemmodel<span class="sc">$</span>m2LL</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 85142.48</span></span></code></pre></div>
+<p>We can now compare this to the results from ctsem:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>AnomAuthfit<span class="sc">$</span>mxobj<span class="sc">$</span>fitfunction<span class="sc">$</span>result[[<span class="dv">1</span>]]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 85142.48</span></span></code></pre></div>
+</div>
+<div id="finite-difference-derivative-approximation-of-the-gradients" class="section level3">
+<h3>Finite difference derivative approximation of the gradients</h3>
+<p>The derivative of the likelihood with respect to the parameters is computed based on finite differencing. The procedure is as follows:</p>
+<p>For each parameter (1.1) take a minimal step forward (parameter + epsilon), (1.2) compute the -2 log likelihood, (2.1) take a minimal step backward (parameter - epsilon), (2.2) compute the -2 log likelihood, (3) compute the difference in the likelihoods and divide by 2*epsilon.</p>
+<p>This so-called central differencing is performed by the approxRAMGradients function:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>cpptsemGradients <span class="ot">&lt;-</span> cpptsemmodel<span class="sc">$</span><span class="fu">approxRAMGradients</span>((<span class="fl">1.1</span> <span class="sc">*</span> <span class="dv">10</span><span class="sc">^</span>(<span class="sc">-</span><span class="dv">16</span>))<span class="sc">^</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>)) </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># epsilon = (1.1 * 10^(-16))^(1/3) sets the precision of the numerical approximation. </span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Smaller numbers result in higher precision, but might also result in </span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># errors due to the numerical precision of the computer. The value used here is recommended</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># in Nocedal, J., &amp; Wright, S. J. (2006). Numerical optimization (2nd ed). Springer. See p. 197.</span></span></code></pre></div>
+<p>Again, the results can be compared to the values from OpenMx:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>gradientModel <span class="ot">&lt;-</span> OpenMx<span class="sc">::</span><span class="fu">mxRun</span>(OpenMx<span class="sc">::</span><span class="fu">mxModel</span>(AnomAuthfit<span class="sc">$</span>mxobj,</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                                               OpenMx<span class="sc">::</span><span class="fu">mxComputeSequence</span>(<span class="at">steps=</span><span class="fu">list</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                                                 OpenMx<span class="sc">::</span><span class="fu">mxComputeNumericDeriv</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">checkGradient =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">hessian =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                                               )))</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>ctsemGradients <span class="ot">&lt;-</span> gradientModel<span class="sc">$</span>compute<span class="sc">$</span>steps[[<span class="dv">1</span>]]<span class="sc">$</span>output[[<span class="st">&quot;gradient&quot;</span>]][,<span class="st">&quot;central&quot;</span>]</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(ctsemGradients) <span class="ot">&lt;-</span> <span class="fu">rownames</span>(gradientModel<span class="sc">$</span>compute<span class="sc">$</span>steps[[<span class="dv">1</span>]]<span class="sc">$</span>output[[<span class="st">&quot;gradient&quot;</span>]])</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>cpptsemGradients[<span class="fu">names</span>(ctsemGradients)]</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           T0m_eta1           T0m_eta2         drift_eta1    drift_eta2_eta1 </span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         -24.414524          -8.232253        3767.048738        -362.677271 </span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    drift_eta1_eta2         drift_eta2          diff_eta1     diff_eta2_eta1 </span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        -285.279418        4818.266453        6911.618776         -11.429804 </span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          diff_eta2         T0var_eta1    T0var_eta2_eta1         T0var_eta2 </span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        8428.967865        4968.464280          -1.995295        4991.075922 </span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;              mm_Y1              mm_Y2      traitvar_eta1 traitvar_eta2_eta1 </span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         -60.774756         -36.045442         596.208618          12.616442 </span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      traitvar_eta2 </span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         637.944658</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>ctsemGradients</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           T0m_eta1           T0m_eta2         drift_eta1    drift_eta2_eta1 </span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         -24.414527          -8.232252        3767.048715        -362.677295 </span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    drift_eta1_eta2         drift_eta2          diff_eta1     diff_eta2_eta1 </span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        -285.279439        4818.266433        6911.618775         -11.429807 </span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          diff_eta2         T0var_eta1    T0var_eta2_eta1         T0var_eta2 </span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        8428.967867        4968.464280          -1.995296        4991.075922 </span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;              mm_Y1              mm_Y2      traitvar_eta1 traitvar_eta2_eta1 </span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         -60.774755         -36.045445         596.208618          12.616443 </span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      traitvar_eta2 </span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         637.944659</span></span></code></pre></div>
+</div>
+<div id="changing-parameter-values" class="section level3">
+<h3>Changing parameter values</h3>
+<p>Finally, setParameterValues() can be used to change the parameter values of a cpptsem model.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># to have a second set of parameter values the ctsem model is fitted again.</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># However, this time the optimizer is used:</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>AnomAuthfit2 <span class="ot">&lt;-</span> <span class="fu">ctFit</span>(AnomAuth, AnomAuthmodel, <span class="at">useOptimizer =</span> T) </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># extract parameters:</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>newParameters <span class="ot">&lt;-</span> OpenMx<span class="sc">::</span><span class="fu">omxGetParameters</span>(AnomAuthfit2<span class="sc">$</span>mxobj)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>cpptsemmodel<span class="sc">$</span><span class="fu">setParameterValues</span>(newParameters, <span class="fu">names</span>(newParameters))</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>cpptsemmodel<span class="sc">$</span><span class="fu">getParameterValues</span>()[<span class="fu">names</span>(newParameters)]</span></code></pre></div>
+</div>
+</div>
+<div id="application-example-1-time-differences-in-gradient-computation" class="section level2">
+<h2>Application Example 1: Time differences in gradient computation</h2>
+<p>The main motivation for c<sub>++</sub>tsem was to have a faster way to compute the gradients of a ctsem. This is only necessary in very specific situations, however we found that when working with the mxObject from ctsem computing just the gradients can be quite slow. The reason for this might be that the model has to be set up every time we computed the gradients. It is possible that there is a faster way to compute the gradients with ctsem / OpenMx, but we couldn’t find it. In the following a short demonstration of the time differences between my approach with ctsem / OpenMx and the computation with c<sub>++</sub>tsem is demonstrated:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ctsemOMX)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(regCtsem)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">64356</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="do">## define the population model:</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># set the drift matrix</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>ct_drift <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="sc">-</span>.<span class="dv">3</span>,.<span class="dv">2</span>,<span class="dv">0</span>,<span class="sc">-</span>.<span class="dv">5</span>), <span class="at">ncol =</span> <span class="dv">2</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>generatingModel<span class="ot">&lt;-</span>ctsem<span class="sc">::</span><span class="fu">ctModel</span>(<span class="at">Tpoints=</span><span class="dv">10</span>,<span class="at">n.latent=</span><span class="dv">2</span>,<span class="at">n.TDpred=</span><span class="dv">0</span>,<span class="at">n.TIpred=</span><span class="dv">0</span>,<span class="at">n.manifest=</span><span class="dv">2</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>                                <span class="at">MANIFESTVAR=</span><span class="fu">diag</span>(<span class="dv">0</span>,<span class="dv">2</span>),</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>                                <span class="at">LAMBDA=</span><span class="fu">diag</span>(<span class="dv">1</span>,<span class="dv">2</span>),</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>                                <span class="at">DRIFT=</span>ct_drift,</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>                                <span class="at">DIFFUSION=</span><span class="fu">matrix</span>(<span class="fu">c</span>(.<span class="dv">5</span>,<span class="dv">0</span>,<span class="dv">0</span>,.<span class="dv">5</span>),<span class="dv">2</span>),</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>                                <span class="at">CINT=</span><span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>),<span class="at">nrow=</span><span class="dv">2</span>),</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>                                <span class="at">T0MEANS=</span><span class="fu">matrix</span>(<span class="dv">0</span>,<span class="at">ncol=</span><span class="dv">1</span>,<span class="at">nrow=</span><span class="dv">2</span>),</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>                                <span class="at">T0VAR=</span><span class="fu">diag</span>(<span class="dv">1</span>,<span class="dv">2</span>), <span class="at">type =</span> <span class="st">&quot;omx&quot;</span>)</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="co"># simulate a training data set</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> ctsem<span class="sc">::</span><span class="fu">ctGenerate</span>(generatingModel,<span class="at">n.subjects =</span> <span class="dv">100</span>, <span class="at">wide =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="do">## Build the analysis model. </span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>myModel <span class="ot">&lt;-</span> ctsem<span class="sc">::</span><span class="fu">ctModel</span>(<span class="at">Tpoints=</span><span class="dv">10</span>,<span class="at">n.latent=</span><span class="dv">2</span>,<span class="at">n.TDpred=</span><span class="dv">0</span>,<span class="at">n.TIpred=</span><span class="dv">0</span>,<span class="at">n.manifest=</span><span class="dv">2</span>,</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>                          <span class="at">LAMBDA=</span><span class="fu">diag</span>(<span class="dv">1</span>,<span class="dv">2</span>),</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>                          <span class="at">MANIFESTVAR=</span><span class="fu">diag</span>(<span class="dv">0</span>,<span class="dv">2</span>),</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>                          <span class="at">CINT=</span><span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>),<span class="at">nrow=</span><span class="dv">2</span>),</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>                          <span class="at">DIFFUSION=</span><span class="fu">matrix</span>(<span class="fu">c</span>(<span class="st">&#39;eta1_eta1&#39;</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="st">&#39;eta2_eta2&#39;</span>),<span class="dv">2</span>),</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>                          <span class="at">T0MEANS=</span><span class="fu">matrix</span>(<span class="dv">0</span>,<span class="at">ncol=</span><span class="dv">1</span>,<span class="at">nrow=</span><span class="dv">2</span>),</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>                          <span class="at">T0VAR=</span><span class="st">&quot;auto&quot;</span>, <span class="at">type =</span> <span class="st">&quot;omx&quot;</span>)</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a><span class="co"># fit the model using ctsemOMX:</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>fit_myModel <span class="ot">&lt;-</span> ctsemOMX<span class="sc">::</span><span class="fu">ctFit</span>(dat, myModel)</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>repetitions <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a><span class="co"># set up the gradient model for ctsem / OpenMx</span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>gradientModel <span class="ot">&lt;-</span> OpenMx<span class="sc">::</span><span class="fu">mxModel</span>(fit_myModel<span class="sc">$</span>mxobj,</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>                                 OpenMx<span class="sc">::</span><span class="fu">mxComputeSequence</span>(<span class="at">steps=</span><span class="fu">list</span>(</span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>                                   OpenMx<span class="sc">::</span><span class="fu">mxComputeNumericDeriv</span>(</span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">checkGradient =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">hessian =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>                                 ))</span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a><span class="co"># set up the model for cpptsem</span></span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a>cpptsemGradientDemonstation <span class="ot">&lt;-</span> regCtsem<span class="sc">::</span><span class="fu">cpptsemFromCtsem</span>(fit_myModel, <span class="at">wideData =</span> dat)</span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a>cpptsemGradientDemonstation<span class="sc">$</span><span class="fu">computeRAM</span>()</span>
+<span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a>cpptsemGradientDemonstation<span class="sc">$</span><span class="fu">fitRAM</span>()</span>
+<span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a>OpenMxStart <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>repetitions){</span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a>  gradientModel <span class="ot">&lt;-</span> <span class="fu">mxRun</span>(gradientModel, <span class="at">silent =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a>OpenMxEnd <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a>CpptsemStart <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb12-58"><a href="#cb12-58" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>repetitions){</span>
+<span id="cb12-59"><a href="#cb12-59" aria-hidden="true" tabindex="-1"></a>  cpptsemGradients <span class="ot">&lt;-</span> cpptsemGradientDemonstation<span class="sc">$</span><span class="fu">approxRAMGradients</span>((<span class="fl">1.1</span> <span class="sc">*</span> <span class="dv">10</span><span class="sc">^</span>(<span class="sc">-</span><span class="dv">16</span>))<span class="sc">^</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>)) </span>
+<span id="cb12-60"><a href="#cb12-60" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-61"><a href="#cb12-61" aria-hidden="true" tabindex="-1"></a>CpptsemEnd <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span></code></pre></div>
+<p>For 100 repetitive computations of the gradients, ctsem / OpenMx took 17.374258518219 seconds, while c<sub>++</sub>tsem took 0.397642850875854 seconds. Importantly this does <strong>not</strong> mean that c<sub>++</sub>tsem is always faster! It is only faster in this very specific application. The differences also tend to become smaller with more missings in the data set. However c<sub>++</sub>tsem still tends to outperform the ctsem / OpenMx approach by a factor of around 10.</p>
+</div>
+<div id="application-example-2-general-purpose-optimizer-with-ram" class="section level2">
+<h2>Application Example 2: General purpose optimizer with RAM</h2>
+<p>c<sub>++</sub>tsem can be used in general purpose optimizers such as solnp or optim. In the following the use with optim is demonstrated:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ctsemOMX)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(regCtsem)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># set up model with ctsem</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;AnomAuth&quot;</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>AAmodel <span class="ot">&lt;-</span> <span class="fu">ctModel</span>(<span class="at">LAMBDA =</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="at">nrow =</span> <span class="dv">2</span>, <span class="at">ncol =</span> <span class="dv">2</span>),</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                   <span class="at">Tpoints =</span> <span class="dv">5</span>, <span class="at">n.latent =</span> <span class="dv">2</span>, <span class="at">n.manifest =</span> <span class="dv">2</span>, </span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>                   <span class="at">MANIFESTVAR=</span><span class="fu">diag</span>(<span class="dv">0</span>, <span class="dv">2</span>), <span class="at">TRAITVAR =</span> <span class="st">&quot;auto&quot;</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># generate ctsem object, but don&#39;t optimize:</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>AANotOptimized <span class="ot">&lt;-</span> <span class="fu">ctFit</span>(AnomAuth, AAmodel, <span class="at">useOptimizer =</span> F) </span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="co"># for later comparison: optimized ctsem object:</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>AACtsemFit <span class="ot">&lt;-</span> <span class="fu">ctFit</span>(AnomAuth, AAmodel, <span class="at">useOptimizer =</span> T) </span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co"># translate to cpptsem:</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>AACpptsem <span class="ot">&lt;-</span> regCtsem<span class="sc">::</span><span class="fu">cpptsemFromCtsem</span>(AANotOptimized, <span class="at">wideData =</span> AnomAuth)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>startingValues <span class="ot">&lt;-</span> <span class="fu">omxGetParameters</span>(AANotOptimized<span class="sc">$</span>mxobj)</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>m2LLCpptsem <span class="ot">&lt;-</span> <span class="cf">function</span>(parameters, cpptsemmodel){</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  cpptsemmodel<span class="sc">$</span><span class="fu">setParameterValues</span>(parameters, <span class="fu">names</span>(parameters))</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># catching all errors from cpptsemmodel </span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># when parameter values are impossible</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">invisible</span>(<span class="fu">capture.output</span>(RAM <span class="ot">&lt;-</span> <span class="fu">try</span>(cpptsemmodel<span class="sc">$</span><span class="fu">computeRAM</span>(), </span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">silent =</span> <span class="cn">TRUE</span>), </span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>                           <span class="at">type =</span> <span class="st">&quot;message&quot;</span>))</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">invisible</span>(<span class="fu">capture.output</span>(FIT <span class="ot">&lt;-</span> <span class="fu">try</span>(cpptsemmodel<span class="sc">$</span><span class="fu">fitRAM</span>(),</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">silent =</span> <span class="cn">TRUE</span>), </span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>                           <span class="at">type =</span> <span class="st">&quot;message&quot;</span>))</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">class</span>(RAM) <span class="sc">==</span> <span class="st">&quot;try-error&quot;</span> <span class="sc">|</span> <span class="fu">class</span>(FIT) <span class="sc">==</span> <span class="st">&quot;try-error&quot;</span>){</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="cn">NA</span>)</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(cpptsemmodel<span class="sc">$</span>m2LL)</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>gradCpptsem <span class="ot">&lt;-</span> <span class="cf">function</span>(parameters, cpptsemmodel){</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">invisible</span>(<span class="fu">capture.output</span>(grad <span class="ot">&lt;-</span> <span class="fu">try</span>(cpptsemmodel<span class="sc">$</span><span class="fu">approxRAMGradients</span>((<span class="fl">1.1</span> <span class="sc">*</span> <span class="dv">10</span><span class="sc">^</span>(<span class="sc">-</span><span class="dv">16</span>))<span class="sc">^</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>)), </span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">silent =</span> <span class="cn">TRUE</span>), </span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>                           <span class="at">type =</span> <span class="st">&quot;message&quot;</span>))</span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">class</span>(grad) <span class="sc">==</span> <span class="st">&quot;try-error&quot;</span>){</span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="cn">NA</span>)</span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(grad[<span class="fu">names</span>(parameters)])</span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a><span class="co"># compute </span></span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>AACpptsemFit <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">par =</span> startingValues, </span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>                      <span class="at">fn =</span> m2LLCpptsem, </span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>                      <span class="at">gr =</span> gradCpptsem,  </span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>                      AACpptsem, </span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>                      <span class="at">method =</span> <span class="st">&quot;BFGS&quot;</span>)</span></code></pre></div>
+<p>Comparison of parameter estimates:</p>
+<p><strong>ctsem</strong></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">omxGetParameters</span>(AACtsemFit<span class="sc">$</span>mxobj)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           T0m_eta1           T0m_eta2         drift_eta1    drift_eta2_eta1 </span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       -0.187016954       -0.028472448       -2.480228865        0.045944318 </span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    drift_eta1_eta2         drift_eta2          diff_eta1     diff_eta2_eta1 </span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        0.272356174       -0.224282818        0.071472736        0.007714258 </span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          diff_eta2         T0var_eta1    T0var_eta2_eta1         T0var_eta2 </span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       -0.880949144       -0.669434040        0.049743273       -0.859045048 </span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;              mm_Y1              mm_Y2      traitvar_eta1 traitvar_eta2_eta1 </span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        2.690368114        2.871194481       -0.468550052        0.355051374 </span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      traitvar_eta2 </span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       -0.947172540</span></span></code></pre></div>
+<p><strong>c<sub>++</sub>tsem</strong></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>AACpptsemFit<span class="sc">$</span>par</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           T0m_eta1           T0m_eta2         drift_eta1    drift_eta2_eta1 </span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       -0.187020075       -0.028470716       -2.480092840        0.045816506 </span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    drift_eta1_eta2         drift_eta2          diff_eta1     diff_eta2_eta1 </span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        0.272171555       -0.224273921        0.071449199        0.007749291 </span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          diff_eta2         T0var_eta1    T0var_eta2_eta1         T0var_eta2 </span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       -0.880945210       -0.669443117        0.049734062       -0.859050459 </span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;              mm_Y1              mm_Y2      traitvar_eta1 traitvar_eta2_eta1 </span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        2.690371563        2.871191764       -0.468545389        0.355060176 </span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      traitvar_eta2 </span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       -0.947137897</span></span></code></pre></div>
+<p>Comparison of fit:</p>
+<p><strong>ctsem</strong></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ctsem:</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>AACtsemFit<span class="sc">$</span>mxobj<span class="sc">$</span>fitfunction<span class="sc">$</span>result[[<span class="dv">1</span>]]</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 22898.53</span></span></code></pre></div>
+<p><strong>c<sub>++</sub>tsem</strong></p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>AACpptsemFit<span class="sc">$</span>value</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 22898.53</span></span></code></pre></div>
+<p><strong>A quick note on optimization</strong>: SEMs are quite difficult to optimize because the objective function is not convex. In my (very limited) experience with c<sub>++</sub>tsem and optim, I have observed that sometimes the optim approach outperforms ctsem and sometimes it’s the other way around. This seems to come down to whichever of the two optimizers ends up in a bad spot due to local minima.</p>
+</div>
+<div id="application-example-3-general-purpose-optimizer-with-kalman-filter" class="section level2">
+<h2>Application Example 3: General purpose optimizer with Kalman filter</h2>
+<p>Similar to example 2, c<sub>++</sub>tsem can be used in general purpose optimizers such as solnp or optim when using the Kalman filter. In the following the use with solnp is demonstrated:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(regCtsem)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ctsemOMX)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">175446</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="do">## define the population model:</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>ct_drift <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="sc">-</span>.<span class="dv">3</span>,.<span class="dv">2</span>,<span class="dv">0</span>,<span class="sc">-</span>.<span class="dv">5</span>), <span class="at">ncol =</span> <span class="dv">2</span>)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>generatingModel<span class="ot">&lt;-</span>ctsem<span class="sc">::</span><span class="fu">ctModel</span>(<span class="at">Tpoints=</span><span class="dv">20</span>,<span class="at">n.latent=</span><span class="dv">2</span>,<span class="at">n.TDpred=</span><span class="dv">0</span>,<span class="at">n.TIpred=</span><span class="dv">0</span>,<span class="at">n.manifest=</span><span class="dv">2</span>,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>                                <span class="at">MANIFESTVAR=</span><span class="fu">diag</span>(<span class="dv">0</span>,<span class="dv">2</span>),</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>                                <span class="at">LAMBDA=</span><span class="fu">diag</span>(<span class="dv">1</span>,<span class="dv">2</span>),</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>                                <span class="at">DRIFT=</span>ct_drift,</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>                                <span class="at">DIFFUSION=</span><span class="fu">matrix</span>(<span class="fu">c</span>(.<span class="dv">5</span>,<span class="dv">0</span>,<span class="dv">0</span>,.<span class="dv">5</span>),<span class="dv">2</span>),</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>                                <span class="at">CINT=</span><span class="fu">matrix</span>(<span class="dv">0</span>,<span class="at">nrow =</span> <span class="dv">2</span>, <span class="at">ncol =</span> <span class="dv">1</span>),</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>                                <span class="at">T0MEANS=</span><span class="fu">matrix</span>(<span class="dv">0</span>,<span class="at">ncol=</span><span class="dv">1</span>,<span class="at">nrow=</span><span class="dv">2</span>),</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>                                <span class="at">T0VAR=</span><span class="fu">diag</span>(<span class="dv">1</span>,<span class="dv">2</span>), <span class="at">type =</span> <span class="st">&quot;omx&quot;</span>)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="co"># simulate a training data and testing data set</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>traindata <span class="ot">&lt;-</span> ctsem<span class="sc">::</span><span class="fu">ctGenerate</span>(generatingModel,<span class="at">n.subjects =</span> <span class="dv">50</span>, <span class="at">wide =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="do">## Build the analysis model. Note that drift eta1_eta2 is freely estimated</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="co"># although it is 0 in the population.</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>kalmanModel <span class="ot">&lt;-</span> ctsem<span class="sc">::</span><span class="fu">ctModel</span>(<span class="at">Tpoints=</span><span class="dv">20</span>,<span class="at">n.latent=</span><span class="dv">2</span>,<span class="at">n.TDpred=</span><span class="dv">0</span>,<span class="at">n.TIpred=</span><span class="dv">0</span>,<span class="at">n.manifest=</span><span class="dv">2</span>,</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>                              <span class="at">LAMBDA=</span><span class="fu">diag</span>(<span class="dv">1</span>,<span class="dv">2</span>),</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>                              <span class="at">MANIFESTVAR=</span><span class="fu">diag</span>(<span class="dv">0</span>,<span class="dv">2</span>),</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>                              <span class="at">CINT=</span><span class="fu">matrix</span>(<span class="dv">0</span>,<span class="at">nrow =</span> <span class="dv">2</span>, <span class="at">ncol =</span> <span class="dv">1</span>),</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>                              <span class="at">DIFFUSION=</span><span class="fu">matrix</span>(<span class="fu">c</span>(<span class="st">&#39;eta1_eta1&#39;</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="st">&#39;eta2_eta2&#39;</span>),<span class="dv">2</span>),</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>                              <span class="at">T0MEANS=</span><span class="fu">matrix</span>(<span class="dv">0</span>,<span class="at">ncol=</span><span class="dv">1</span>,<span class="at">nrow=</span><span class="dv">2</span>),</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>                              <span class="at">T0VAR=</span><span class="st">&quot;auto&quot;</span>, <span class="at">type =</span> <span class="st">&quot;omx&quot;</span>)</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>kalmanModelNotOptimized <span class="ot">&lt;-</span> <span class="fu">ctFit</span>(kalmanModel, <span class="at">dat =</span> traindata, </span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">objective =</span> <span class="st">&quot;Kalman&quot;</span>, <span class="at">useOptimizer =</span> F)</span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a><span class="co"># fitted model for later comparison:</span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>kalmanModelOptimized <span class="ot">&lt;-</span> <span class="fu">ctFit</span>(kalmanModel, <span class="at">dat =</span> traindata, </span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>                              <span class="at">objective =</span> <span class="st">&quot;Kalman&quot;</span>, <span class="at">useOptimizer =</span> T)</span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a><span class="do">## with cpptsem</span></span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>kalmanCpptsemmodel <span class="ot">&lt;-</span> regCtsem<span class="sc">::</span><span class="fu">cpptsemFromCtsem</span>(<span class="at">ctsemModel =</span> kalmanModelNotOptimized,</span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>                                                 <span class="at">wideData =</span> traindata)</span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>startingValues <span class="ot">&lt;-</span> <span class="fu">omxGetParameters</span>(kalmanModelNotOptimized<span class="sc">$</span>mxobj)</span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>m2LLCpptsem <span class="ot">&lt;-</span> <span class="cf">function</span>(parameters, cpptsemmodel){</span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>  cpptsemmodel<span class="sc">$</span><span class="fu">setParameterValues</span>(parameters, <span class="fu">names</span>(parameters))</span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>  <span class="co"># catching all errors from cpptsemmodel </span></span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>  <span class="co"># when parameter values are impossible</span></span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">invisible</span>(<span class="fu">capture.output</span>(KALMAN <span class="ot">&lt;-</span> <span class="fu">try</span>(cpptsemmodel<span class="sc">$</span><span class="fu">computeAndFitKalman</span>(), </span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a>                                         <span class="at">silent =</span> <span class="cn">TRUE</span>), </span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a>                           <span class="at">type =</span> <span class="st">&quot;message&quot;</span>))</span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">class</span>(KALMAN) <span class="sc">==</span> <span class="st">&quot;try-error&quot;</span> <span class="sc">|</span> <span class="fu">is.na</span>(cpptsemmodel<span class="sc">$</span>m2LL)){</span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="dv">99999999</span>)</span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(cpptsemmodel<span class="sc">$</span>m2LL)</span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a><span class="co"># compute </span></span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>kalmanCpptsemFit <span class="ot">&lt;-</span> Rsolnp<span class="sc">::</span><span class="fu">solnp</span>(<span class="at">pars =</span> startingValues, </span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">fun =</span> m2LLCpptsem, </span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">eqfun =</span> <span class="cn">NULL</span>, <span class="at">eqB =</span> <span class="cn">NULL</span>, <span class="at">ineqfun =</span> <span class="cn">NULL</span>, <span class="at">ineqLB =</span> <span class="cn">NULL</span>, </span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">ineqUB =</span> <span class="cn">NULL</span>, <span class="at">LB =</span> <span class="cn">NULL</span>, <span class="at">UB =</span> <span class="cn">NULL</span>, <span class="at">control =</span> <span class="fu">list</span>(<span class="at">trace =</span> <span class="dv">0</span>),</span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a>                                  kalmanCpptsemmodel)</span></code></pre></div>
+<p>Comparison of parameter estimates:</p>
+<p><strong>ctsem</strong></p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">omxGetParameters</span>(kalmanModelOptimized<span class="sc">$</span>mxobj)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      drift_eta1 drift_eta2_eta1 drift_eta1_eta2      drift_eta2       eta1_eta1 </span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     -0.28179208      0.18633329      0.01358409     -0.47165191     -0.65454890 </span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       eta2_eta2      T0var_eta1 T0var_eta2_eta1      T0var_eta2           mm_Y1 </span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     -0.70071097     -0.15530516      0.07399647     -0.09844145      0.06861355 </span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           mm_Y2 </span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      0.04118954</span></span></code></pre></div>
+<p><strong>c<sub>++</sub>tsem</strong></p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>kalmanCpptsemFit<span class="sc">$</span>pars</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      drift_eta1 drift_eta2_eta1 drift_eta1_eta2      drift_eta2       eta1_eta1 </span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     -0.28179123      0.18633835      0.01358269     -0.47165845     -0.65454792 </span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       eta2_eta2      T0var_eta1 T0var_eta2_eta1      T0var_eta2           mm_Y1 </span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     -0.70070623     -0.15534835      0.07395048     -0.09844026      0.06861417 </span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           mm_Y2 </span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      0.04118889</span></span></code></pre></div>
+<p>Comparison of fit:</p>
+<p><strong>ctsem</strong></p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ctsem:</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>kalmanModelOptimized<span class="sc">$</span>mxobj<span class="sc">$</span>fitfunction<span class="sc">$</span>result[[<span class="dv">1</span>]]</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2410.442</span></span></code></pre></div>
+<p><strong>c<sub>++</sub>tsem</strong></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>kalmanCpptsemFit<span class="sc">$</span>values</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 12108.198  2410.442  2410.442</span></span></code></pre></div>
+<p>When comparing the speed of optimizing the model using OpenMx and c<sub>++</sub>tsem using solnp, the Kalman filter implementation in c<sub>++</sub>tsem appears to be slightly faster:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(<span class="fu">replicate</span>(<span class="dv">10</span>, Rsolnp<span class="sc">::</span><span class="fu">solnp</span>(<span class="at">pars =</span> startingValues, </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">fun =</span> m2LLCpptsem, </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">eqfun =</span> <span class="cn">NULL</span>, <span class="at">eqB =</span> <span class="cn">NULL</span>, </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">ineqfun =</span> <span class="cn">NULL</span>, <span class="at">ineqLB =</span> <span class="cn">NULL</span>, </span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">ineqUB =</span> <span class="cn">NULL</span>, <span class="at">LB =</span> <span class="cn">NULL</span>, </span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">UB =</span> <span class="cn">NULL</span>, <span class="at">control =</span> <span class="fu">list</span>(<span class="at">trace =</span> <span class="dv">0</span>),</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>                                        kalmanCpptsemmodel)))</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    user  system elapsed </span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  14.257  32.618   4.271</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(<span class="fu">replicate</span>(<span class="dv">10</span>, <span class="fu">mxRun</span>(kalmanModelNotOptimized<span class="sc">$</span>mxobj, </span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>                                <span class="at">silent =</span> <span class="cn">TRUE</span>)))</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    user  system elapsed </span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  32.712   2.346  16.852</span></span></code></pre></div>
+</div>
+<div id="advanced-how-it-works" class="section level2">
+<h2>Advanced: How it works</h2>
+<div id="translation-from-ctsem" class="section level3">
+<h3>Translation from ctsem</h3>
+<p>The cpptsemFromCtsem function automatically translates a fitted ctsem model to c<sub>++</sub>tsem. In the following, the steps for doing so are discussed in more detail.</p>
+<div id="step-1-extract-data" class="section level4">
+<h4>Step 1: Extract data</h4>
+<div id="ram" class="section level5">
+<h5>RAM:</h5>
+<p>First, the constructDataset function will separate observations from discrete time intervals. It will also identify unique missingness patterns. In the next step, prepareRAMData will group individuals with identical missingness patterns in subsamples. These subsamples will later be used by fitRAM() to speed up the likelihood computation.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>dataInformation <span class="ot">&lt;-</span> regCtsem<span class="sc">::</span><span class="fu">constructDataset</span>(<span class="at">wideData =</span> AnomAuthfit<span class="sc">$</span>mxobj<span class="sc">$</span>data<span class="sc">$</span>observed)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>dataForRAM <span class="ot">&lt;-</span> regCtsem<span class="sc">::</span><span class="fu">prepareRAMData</span>(<span class="at">dataset =</span> dataInformation<span class="sc">$</span>dataset,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">individualMissingPatternID =</span> dataInformation<span class="sc">$</span>individualMissingPatternID,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">uniqueMissingPatterns =</span> dataInformation<span class="sc">$</span>uniqueMissingPatterns)</span></code></pre></div>
+</div>
+<div id="kalman" class="section level5">
+<h5>Kalman:</h5>
+<p>For the Kalman filter, the functions are constructDataset and prepareKalmanData. In contrast to prepareRAMData, prepareKalmanData will not identify unique missingness patterns, as this will not speed up the computation.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>dataInformation <span class="ot">&lt;-</span> regCtsem<span class="sc">::</span><span class="fu">constructDataset</span>(<span class="at">wideData =</span> wideData)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>dataForKalman <span class="ot">&lt;-</span> regCtsem<span class="sc">::</span><span class="fu">prepareKalmanData</span>(<span class="at">dataset =</span> dataInformation<span class="sc">$</span>dataset,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">nlatent =</span> nlatent, <span class="at">nmanifest =</span> nmanifest,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">dtIndicators =</span> dataInformation<span class="sc">$</span>dtIndicators,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">Tpoints =</span> Tpoints)</span></code></pre></div>
+</div>
+<div id="limitations" class="section level5">
+<h5>Limitations</h5>
+<p>In ctsem datasets it is possible to have different time intervals within a single column:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;Oscillating&quot;</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(Oscillating[,<span class="fu">grepl</span>(<span class="st">&quot;dT&quot;</span>, <span class="fu">colnames</span>(Oscillating))])</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    dT1  dT2  dT3  dT4  dT5  dT6  dT7  dT8  dT9 dT10</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 0.55 0.32 0.36 0.34 0.40 0.32 0.30 0.29 0.34 0.32</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 0.56 0.42 0.34 0.38 0.43 0.47 0.44 0.52 0.42 0.38</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 0.46 0.50 0.37 0.34 0.46 0.34 0.50 0.36 0.34 0.46</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 0.50 0.35 0.29 0.42 0.44 0.57 0.43 0.38 0.57 0.42</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 0.37 0.40 0.33 0.39 0.36 0.35 0.20 0.44 0.50 0.45</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 0.46 0.35 0.35 0.43 0.44 0.49 0.44 0.37 0.51 0.36</span></span></code></pre></div>
+<p>At the moment, c<sub>++</sub>tsem only supports this data format when using the Kalman filter. In RAM models time intervals in the data set have to be the same for all individuals. However, individually varying time intervals of observations are allwed by means of missingness. For instance, in the AnomAuth data set individual 6 has missings between observations to account for individually differing time intervals:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(AnomAuth)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Y1_T0 Y2_T0 Y1_T1 Y2_T1 Y1_T2 Y2_T2 Y1_T3 Y2_T3 Y1_T4 Y2_T4 dT1 dT2 dT3 dT4</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1  2.67  3.50  3.33   3.5    NA    NA    NA    NA    NA    NA   1   1   2   2</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2  3.33  3.25    NA    NA    NA    NA    NA    NA    NA    NA   1   1   2   2</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3  3.33  2.75  3.33   3.0  3.33   2.5  2.33     3  2.33     3   1   1   2   2</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4  3.33  3.25    NA    NA    NA    NA    NA    NA    NA    NA   1   1   2   2</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5  4.00  4.00    NA    NA    NA    NA    NA    NA    NA    NA   1   1   2   2</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6  3.67  4.00    NA    NA    NA    NA  4.00     4  4.00     4   1   1   2   2</span></span></code></pre></div>
+</div>
+</div>
+</div>
+<div id="step-2-extract-continuous-time-matrices" class="section level3">
+<h3>Step 2: Extract continuous time matrices</h3>
+<p>The function extractCtsemMatrices searches for the typical matrices of a ctsem. These are (see ctsem for more details):</p>
+<p>For the latent part:</p>
+<ul>
+<li>T0MEANS</li>
+<li>T0VARbase</li>
+<li>DRIFT</li>
+<li>DIFFUSIONbase</li>
+<li>TRAITVARbase</li>
+<li>T0TRAITEFFECT</li>
+<li>CINT</li>
+</ul>
+<p>For the manifest part:</p>
+<ul>
+<li>MANIFESTMEANS</li>
+<li>LAMBDA</li>
+<li>MANIFESTVARbase</li>
+</ul>
+<p>Note that time dependent predictors are currently not supported. For each of these matrices, c<sub>++</sub>tsem saves the values and the parameter names. For example:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>ctMatrices <span class="ot">&lt;-</span> regCtsem<span class="sc">::</span><span class="fu">extractCtsemMatrices</span>(AnomAuthfit<span class="sc">$</span>mxobj, </span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>                                             AnomAuthfit<span class="sc">$</span>ctmodelobj<span class="sc">$</span>n.latent,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>                                             AnomAuthfit<span class="sc">$</span>ctmodelobj<span class="sc">$</span>n.manifest)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Translating model to C++. Found the following elements: T0MEANS, T0VARbase, DRIFT, DIFFUSIONbase, TRAITVARbase, T0TRAITEFFECT, CINT, MANIFESTMEANS, LAMBDA, MANIFESTVARbase.</span></span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>ctMatrices<span class="sc">$</span>DRIFT</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $values</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       [,1]  [,2]</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] -0.45 -0.05</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] -0.05 -0.45</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $names</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1]              [,2]             </span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] &quot;drift_eta1&quot;      &quot;drift_eta1_eta2&quot;</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] &quot;drift_eta2_eta1&quot; &quot;drift_eta2&quot;</span></span></code></pre></div>
+</div>
+<div id="step-3-extract-parameter-table" class="section level3">
+<h3>Step 3: Extract parameter table</h3>
+<p>The most important part of c<sub>++</sub>tsem is the option to change the parameter values. To this end, c<sub>++</sub>tsem uses the parameter table which can be extracted from the mxobj of a ctsem:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>OpenMx<span class="sc">::</span><span class="fu">omxLocateParameters</span>(AnomAuthfit<span class="sc">$</span>mxobj)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                 label model        matrix row col     value lbound ubound</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1           diff_eta1 ctsem DIFFUSIONbase   1   1  2.302584     NA     NA</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2           diff_eta2 ctsem DIFFUSIONbase   2   2  2.302584     NA     NA</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3      diff_eta2_eta1 ctsem DIFFUSIONbase   2   1  0.100000     NA     NA</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4          drift_eta1 ctsem         DRIFT   1   1 -0.450000     NA     NA</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5     drift_eta1_eta2 ctsem         DRIFT   1   2 -0.050000     NA     NA</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6          drift_eta2 ctsem         DRIFT   2   2 -0.450000     NA     NA</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7     drift_eta2_eta1 ctsem         DRIFT   2   1 -0.050000     NA     NA</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8               mm_Y1 ctsem MANIFESTMEANS   1   1  1.112000     NA     NA</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9               mm_Y2 ctsem MANIFESTMEANS   2   1  1.990000     NA     NA</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10           T0m_eta1 ctsem       T0MEANS   1   1  0.839000     NA     NA</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11           T0m_eta2 ctsem       T0MEANS   2   1  0.634000     NA     NA</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12         T0var_eta1 ctsem     T0VARbase   1   1  2.302585     NA     NA</span></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 13         T0var_eta2 ctsem     T0VARbase   2   2  2.302585     NA     NA</span></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 14    T0var_eta2_eta1 ctsem     T0VARbase   2   1  0.100000     NA     NA</span></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 15      traitvar_eta1 ctsem  TRAITVARbase   1   1  1.098612     NA     NA</span></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 16      traitvar_eta2 ctsem  TRAITVARbase   2   2  1.098612     NA     NA</span></span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 17 traitvar_eta2_eta1 ctsem  TRAITVARbase   2   1  0.100000     NA     NA</span></span></code></pre></div>
+<p>Note that the <strong>matrix</strong> column in this table tells us in which of the ctMatrices a parameter value belongs including a specification of the row and column in this matrix. Similar to OpenMx, c<sub>++</sub>tsem uses this information to change the parameter values. As demonstrated above, this can be done with the setParameterValues() function.</p>
+<div id="limiation" class="section level4">
+<h4>Limiation</h4>
+<p>Lower and upper bounds for parameters are currently not supported!</p>
+</div>
+</div>
+<div id="step-4-1-prepare-ram-matrices" class="section level3">
+<h3>Step 4-1: Prepare RAM matrices</h3>
+<p>Now that the parameter values and their location in ctMatrices are known, the next step is to relate the continuous time parameters to the data using structural equation models. The following matrices are required:</p>
+<ul>
+<li>the <strong>A</strong> matrix holds the directed effects between manifest and latent variables</li>
+<li>the <strong>S</strong> matrix holds (residual) covariances between manifest and latent variables</li>
+<li>the <strong>M</strong> vector holds the intercepts</li>
+<li>the <strong>F</strong> matrix separates manifest and latent variables</li>
+</ul>
+<p>These matrices are generated with the prepareAMatrix, prepareSMatrix, and prepareMMatrix functions. The F matrix is directly exported from ctsem. In the following, the prepareAMatrix function will be used as an example; prepareSMatrix, prepareMMatrix work similarly.</p>
+<p>The prepareAMatrix function returns a list with 4-5 objects (depending on the model). In our AnomAuthfit example, these are:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>mxObject  <span class="ot">&lt;-</span> AnomAuthfit<span class="sc">$</span>mxobj</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>dataInformation <span class="ot">&lt;-</span> <span class="fu">constructDataset</span>(<span class="at">wideData =</span> mxObject<span class="sc">$</span>data<span class="sc">$</span>observed)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>Amatrix <span class="ot">&lt;-</span> regCtsem<span class="sc">::</span><span class="fu">prepareAMatrix</span>(<span class="at">mxObject =</span> mxObject, </span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">ctMatrices =</span> ctMatrices, </span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">nlatent =</span> AnomAuthfit<span class="sc">$</span>ctmodelobj<span class="sc">$</span>n.latent, </span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">nmanifest =</span> AnomAuthfit<span class="sc">$</span>ctmodelobj<span class="sc">$</span>n.manifest,</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">Tpoints =</span> AnomAuthfit<span class="sc">$</span>ctmodelobj<span class="sc">$</span>Tpoints, </span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">dT =</span> dataInformation<span class="sc">$</span>dT)</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Amatrix)</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;discreteDRIFTUnique&quot;     &quot;discreteTRAITUnique&quot;    </span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3] &quot;AParameterIndicators&quot;    &quot;cppAParameterIndicators&quot;</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [5] &quot;AInitializer&quot;</span></span></code></pre></div>
+<p><strong>cppAParameterIndicators</strong> is a data frame similar to the parameter table explained before. However, there is one important distinction: The cppAParameterIndicators matrix shows how to put the <em>discrete time parameters</em> in the A matrix:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>Amatrix<span class="sc">$</span>cppAParameterIndicators</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;              label row_start row_end col_start col_end</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1  discreteDRIFT_1         2       3         0       1</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2  discreteDRIFT_1         4       5         2       3</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3  discreteDRIFT_2         6       7         4       5</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4  discreteDRIFT_2         8       9         6       7</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5  discreteTRAIT_1         2       3        10      11</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6  discreteTRAIT_1         4       5        10      11</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7  discreteTRAIT_2         6       7        10      11</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8  discreteTRAIT_2         8       9        10      11</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9           LAMBDA        12      13         0       1</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10          LAMBDA        14      15         2       3</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11          LAMBDA        16      17         4       5</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12          LAMBDA        18      19         6       7</span></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 13          LAMBDA        20      21         8       9</span></span></code></pre></div>
+<p>The labels column shows the names of the discrete time matrices. For instance, discreteDRIFT_1 refers to the discrete time drift values for the unique time interval 1. That is, when extracting the data from ctsem, c<sub>++</sub>tsem automtically locates repeated time intervals and computes the corresponding discrete time parameters just once. The rest of the columns indicate the location of discreteDRIFT_1 in the A matrix. <strong>Important</strong>: Subsetting matrices in C++ is slightly different from R. In R mymatrix[1,1] accesses the element in row 1, column 1 of mymatrix. However, in C++ counting starts with 0. Therefore mymatrix[0,0] accesses the element in row 1, column 1 of mymatrix. This is why prepareAMatrix returns an AParameterIndicators and a cppAParameterIndicators object.</p>
+<p><strong>discreteDRIFTUnique</strong> is a list which is best explained by first looking at it:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>Amatrix<span class="sc">$</span>discreteDRIFTUnique</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $labels</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;discreteDRIFT_1&quot; &quot;discreteDRIFT_2&quot;</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $dT</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1 2</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $discreteDRIFT_1</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2]</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]    0    0</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]    0    0</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $discreteDRIFT_2</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2]</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]    0    0</span></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]    0    0</span></span></code></pre></div>
+<p>The labels correspond to the unique discrete drift labels in the cppAParameterIndicators data frame shown before. dT refers to the discrete time interval of the discrete drift. Finally, there is a matrix for each of the unique discrete drifts where the results will be stored.</p>
+<p><strong>discreteTRAITUnique</strong> works similarly to discreteDRIFTUnique. The cppAParameterIndicators data frame also indicates the position of LAMBDA in the A matrix. As LAMBDA can be directly exported from the ctMatrices object and requires no prior computaion, there is no discreteLAMBDAUnique object.</p>
+<p>Finally, <strong>AInitializer</strong> is a matrix of the same size as the A matrix. Here c<sub>++</sub>tsem simply uses the A matrix from the mxObject as a starting point.</p>
+</div>
+<div id="step-4-2-prepare-kalman-matrices" class="section level3">
+<h3>Step 4-2: Prepare Kalman matrices</h3>
+<p>In the first step, the discrete time elements (e.g., discreteDRIFTUnique) are generated using the prepareDiscreteElements function. In contrast to the RAM specification, there is no need for an A, S, M or F matrix. The discrete time elements work as described in the previus section. The function prepareDiscreteElementNames simlply generates for each discrete time element a string vector with as many elements as there are time intervals indicating which of the unique discrete time parameters to use (e.g. dT = c(1, 2, 1, 1) results in discreteDRIFT_1, discreteDRIFT_2, discreteDRIFT_1, discreteDRIFT_1).</p>
+<p>Finally, prepareKalmanMatrices initializes a matrix for the latent scores and for the predicted manifest values.</p>
+</div>
+<div id="step-5-1-computeram" class="section level3">
+<h3>Step 5-1: computeRAM</h3>
+<p>When calling computeRAM(), c<sub>++</sub>tsem will:</p>
+<ol style="list-style-type: decimal">
+<li>extract the continuous time matrices from ctMatrices</li>
+<li>compute all discrete time parameters (e.g., discreteDRIFTUnique)</li>
+<li>fill the A, S, and M matrix with the discrete time parameters as well as LAMBDA, T0MEANS, … using the cppAParameterIndicators, cppMParameterIndicators, cppSParameterIndicators</li>
+<li>compute the expected means and covariancs</li>
+</ol>
+</div>
+<div id="step-5-2-fitram" class="section level3">
+<h3>Step 5-2: fitRAM</h3>
+<p><strong>NOTE</strong>: Github does not support mathematical equations. To properly format the equations, compy them in an RMarkdown file or in LaTeX.</p>
+<p>When calling fitRAM(), c<sub>++</sub>tsem will compute the -2 log likelihood. To this end it will iterate through the subsamples with identical missingness patterns which were identified by prepareRAMData() (see above).</p>
+<p>If there is only a single person in the subsample, the -2 log likelihood for this sample is given by:</p>
+<p><span class="math display">\[-2\ln\mathcal{L}(\mathbf{x}_i) = k_i\ln(2\pi)+\ln(|\boldsymbol\Sigma_i|)+(\mathbf{x}_i-\boldsymbol\mu_i)^T\boldsymbol\Sigma^{-1}_i(\mathbf{x}_i-\boldsymbol\mu_i)\]</span> where <span class="math inline">\(i\)</span> refers to the person, <span class="math inline">\(k_i\)</span> is the number of non-missing observations for this person, <span class="math inline">\(\boldsymbol \Sigma_i\)</span> is the filtered expected covariance matrix (all rows and columns for which no data is available from person i are removed) and <span class="math inline">\(\mu_i\)</span> is the filtered expected means vector (similar to filtered covariance).</p>
+<p>If there are multiple persons in the subset, the simplified likelihood function will be used:</p>
+<p><span class="math display">\[\begin{aligned}
+-2\ln\mathcal{L}(\mathbf D_g) = N_gk_g\ln(2\pi)+N_g\ln(|\boldsymbol\Sigma_g|)+ N_g\text{tr}(\mathbf S_g\boldsymbol\Sigma^{-1}_g)+ N_g(\bar{\mathbf x}-\boldsymbol\mu)^T\boldsymbol\Sigma^{-1}_g(\bar{\mathbf x}_g-\boldsymbol\mu_g)
+\end{aligned}\]</span></p>
+<p>where <span class="math inline">\(g\)</span> stands for the subset <span class="math inline">\(g\)</span>, <span class="math inline">\(N_g\)</span> is the sample size of said subset, <span class="math inline">\(k_g\)</span> the number of non-missing observations for a person in subset <span class="math inline">\(g\)</span>, <span class="math inline">\(\boldsymbol \Sigma_g\)</span> denotes the filtered expected covariance matrix and <span class="math inline">\(\mu_g\)</span> the filtered expected means vector. Finally, <span class="math inline">\(\mathbf S_g = \frac{1}{N_g}\sum_{i \in g}(\mathbf{x}_i-\bar{\mathbf x}_g)(\mathbf{x_i}-\bar{\mathbf x}_g)^T\)</span> and <span class="math inline">\(\bar{\mathbf x}_g\)</span> is the empirical mean vector of subsample g.</p>
+<p>Finally, the -2log-Likelihoods of all subsamples are summed up and returned.</p>
+</div>
+<div id="step-5-3-computeandfitkalman" class="section level3">
+<h3>Step 5-3: computeAndFitKalman</h3>
+<p>For each person, the latent scores and latent state residual covariances are first predicted and the updated. Furthermore the manifest values and manifest residual covariances are predicted from the latent scores. These predictions are then used in the single subject -2 log likelihood function described in the previous equation. For more information on the Kalman filter procedure see Welch, G., &amp; Bishop, G. (2006). An Introduction to the Kalman Filter (Technical Report No. 95–041). <a href="https://perso.crans.org/club-krobot/doc/kalman.pdf" class="uri">https://perso.crans.org/club-krobot/doc/kalman.pdf</a> .</p>
+</div>
+</div>
+</div>
+<div id="bibliography" class="section level1">
+<h1>Bibliography</h1>
+<p>Driver, C. C., Oud, J. H. L., &amp; Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. <a href="https://doi.org/10.18637/jss.v077.i05" class="uri">https://doi.org/10.18637/jss.v077.i05</a></p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
