@@ -39,6 +39,32 @@ testthat::test_that(desc = "Testing basic features of regCtsem", code = {
   # select DRIFT values:
   regIndicators <- fit_myModel$mxobj$DRIFT$labels[!diag(T,2)]
 
+  # test optimizers without penalty:
+
+  regModel <- try(regCtsem::regCtsem(ctsemObject = fit_myModel_fortest,
+                                              dataset = traindata,
+                                              optimizer = "GIST",
+                                              regIndicators = regIndicators,
+                                              lambdas = 0,
+                                              standardizeDrift = "No",
+                                              cvSample = testdata_1,
+                                     control = controlGIST(numStart = 0,
+                                                           forceCpptsem = TRUE,
+                                                           approxFirst = FALSE)))
+  testthat::expect_equal(round(regModel$fit["m2LL",] - fit_myModel$mxobj$fitfunction$result[[1]],4)[[1]], 0)
+
+  regModel <- try(regCtsem::regCtsem(ctsemObject = fit_myModel_fortest,
+                                     dataset = traindata,
+                                     optimizer = "GLMNET",
+                                     regIndicators = regIndicators,
+                                     lambdas = 0,
+                                     standardizeDrift = "No",
+                                     cvSample = testdata_1,
+                                     control = controlGLMNET(numStart = 0,
+                                                           forceCpptsem = TRUE,
+                                                           approxFirst = FALSE)))
+  testthat::expect_equal(round(regModel$fit["m2LL",] - fit_myModel$mxobj$fitfunction$result[[1]],4)[[1]], 0)
+
   message("Testing GIST, GLMNET and approximate optimization with manual cross-validation.")
   regModel_BIC_GIST <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
                                               dataset = traindata,
