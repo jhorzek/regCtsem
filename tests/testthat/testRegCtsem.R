@@ -109,11 +109,21 @@ testthat::test_that(desc = "Testing basic features of regCtsem", code = {
   testthat::expect_equal(sum(round(regModel_BIC_GIST$parameterEstimatesRaw - regModel_BIC_Approx$parameterEstimatesRaw,2)),0)
   regModel_BIC_checkFI <- checkFI(mxObject = fit_myModel$mxobj,
                                   regCtsemObject = regModel_BIC_GIST,
-                                  cvModel = fit_myModel_fortest$mxobj)
+                                  cvModel = fit_myModel_fortest$mxobj,
+                                  threshold = 1e-4,
+                                  testIC = TRUE)
+  testthat::expect_equal(regModel_BIC_checkFI, TRUE)
+  regModel_BIC_checkFI <- checkFI(mxObject = fit_myModel$mxobj,
+                                  regCtsemObject = regModel_BIC_GLMNET,
+                                  cvModel = fit_myModel_fortest$mxobj,
+                                  threshold = 1e-4,
+                                  testIC = TRUE)
   testthat::expect_equal(regModel_BIC_checkFI, TRUE)
   regModel_BIC_checkFI <- checkFI(mxObject = fit_myModel$mxobj,
                                   regCtsemObject = regModel_BIC_Approx,
-                                  cvModel = fit_myModel_fortest$mxobj)
+                                  cvModel = fit_myModel_fortest$mxobj,
+                                  threshold = 1e-4,
+                                  testIC = FALSE)
   testthat::expect_equal(regModel_BIC_checkFI, TRUE)
 
 
@@ -126,7 +136,8 @@ testthat::test_that(desc = "Testing basic features of regCtsem", code = {
                                              autoCV = "kFold",
                                              k = 3,
                                              standardizeDrift = "asymptoticDiffusion"))
-  regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj, regCtsemObject = regModel_CV_GIST)
+  regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
+                                                regCtsemObject = regModel_CV_GIST)
   testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
 
   regModel_CV_GLMNET <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
@@ -137,7 +148,8 @@ testthat::test_that(desc = "Testing basic features of regCtsem", code = {
                                              autoCV = "kFold",
                                              k = 3,
                                              standardizeDrift = "asymptoticDiffusion"))
-  regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj, regCtsemObject = regModel_CV_GLMNET)
+  regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
+                                                regCtsemObject = regModel_CV_GLMNET)
   testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
 
   regModel_CV_Approx <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
@@ -148,7 +160,8 @@ testthat::test_that(desc = "Testing basic features of regCtsem", code = {
                                                autoCV = "kFold",
                                                k = 3,
                                                standardizeDrift = "asymptoticDiffusion"))
-  regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj, regCtsemObject = regModel_CV_Approx)
+  regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
+                                                regCtsemObject = regModel_CV_Approx)
   testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
 
 })

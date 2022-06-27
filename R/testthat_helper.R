@@ -40,7 +40,11 @@ checkAutoKFold <- function(ctInit, regCtsemObject){
 #' @param regCtsemObject object from regCtsem
 #' @param cvModel optional cross-validation model
 #' @export
-checkFI <- function(mxObject, regCtsemObject, cvModel = NULL){
+checkFI <- function(mxObject,
+                    regCtsemObject,
+                    cvModel = NULL,
+                    threshold,
+                    testIC){
   works <- FALSE
   ## get parameter labels
   parameterLabels <- names(OpenMx::omxGetParameters(mxObject))
@@ -65,16 +69,16 @@ checkFI <- function(mxObject, regCtsemObject, cvModel = NULL){
     AICmx <- AIC(currentModel)
     BICmx <- BIC(currentModel)
 
-    if(abs(fit["m2LL",i] - m2LL)>.00001){
+    if(abs(fit["m2LL",i] - m2LL)>threshold){
       warning(paste0("Wrong m2LL for lambda = ", colnames(fit)[i]))
       return(works)
     }
-    if(abs(fit["AIC",i] - AICmx)>.00001){
-      warning(paste0("Wrong m2LL for lambda = ", colnames(fit)[i]))
+    if(testIC && abs(fit["AIC",i] - AICmx)>threshold){
+      warning(paste0("Wrong AIC for lambda = ", colnames(fit)[i]))
       return(works)
     }
-    if(abs(fit["BIC",i] - BICmx)>.00001){
-      warning(paste0("Wrong m2LL for lambda = ", colnames(fit)[i]))
+    if(testIC && abs(fit["BIC",i] - BICmx)>threshold){
+      warning(paste0("Wrong BIC for lambda = ", colnames(fit)[i]))
       return(works)
     }
 
@@ -87,7 +91,7 @@ checkFI <- function(mxObject, regCtsemObject, cvModel = NULL){
 
       cvModel <- OpenMx::mxRun(cvModel, useOptimizer = F, silent = T)
       cvM2LL <- cvModel$fitfunction$result[[1]]
-      if(abs(fit["cvM2LL",i] - cvM2LL)>.01){
+      if(abs(fit["cvM2LL",i] - cvM2LL)>threshold){
         warning("Wrong cvM2LL")
         return(works)
       }
