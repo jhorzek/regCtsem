@@ -137,7 +137,9 @@ testthat::test_that(desc = "Testing basic features of regCtsem", code = {
                                              k = 3,
                                              standardizeDrift = "asymptoticDiffusion"))
   regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
-                                                regCtsemObject = regModel_CV_GIST)
+                                                regCtsemObject = regModel_CV_GIST,
+                                                threshold = 1e-4,
+                                                testIC = TRUE)
   testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
 
   regModel_CV_GLMNET <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
@@ -149,7 +151,9 @@ testthat::test_that(desc = "Testing basic features of regCtsem", code = {
                                              k = 3,
                                              standardizeDrift = "asymptoticDiffusion"))
   regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
-                                                regCtsemObject = regModel_CV_GLMNET)
+                                                regCtsemObject = regModel_CV_GLMNET,
+                                                threshold = 1e-4,
+                                                testIC = TRUE)
   testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
 
   regModel_CV_Approx <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
@@ -161,7 +165,9 @@ testthat::test_that(desc = "Testing basic features of regCtsem", code = {
                                                k = 3,
                                                standardizeDrift = "asymptoticDiffusion"))
   regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
-                                                regCtsemObject = regModel_CV_Approx)
+                                                regCtsemObject = regModel_CV_Approx,
+                                                threshold = 1e-4,
+                                                testIC = FALSE)
   testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
 
 })

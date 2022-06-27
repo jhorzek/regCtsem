@@ -4,7 +4,9 @@
 #' @param ctInit init object from ctsem
 #' @param regCtsemObject object from regCtsem
 #' @export
-checkAutoKFold <- function(ctInit, regCtsemObject){
+checkAutoKFold <- function(ctInit, regCtsemObject,
+                           threshold,
+                           testIC){
   if(regCtsemObject$setup$autoCV != "kFold") stop("Only valid for kFold cross-validation")
 
   nModels <- regCtsemObject$setup$k
@@ -24,9 +26,18 @@ checkAutoKFold <- function(ctInit, regCtsemObject){
 
     trainModel <- ctFit(dat = fullData[trainSamples,], ctmodelobj = ctInit, useOptimizer = FALSE, objective = ifelse(regCtsemObject$setup$objective == "ML", "mxRAM", "Kalman"))
 
-    cvModel <- ctFit(dat = fullData[testSamples,], ctmodelobj = ctInit, useOptimizer = FALSE, objective = ifelse(regCtsemObject$setup$objective == "ML", "mxRAM", "Kalman"))
+    cvModel <- ctFit(dat = fullData[testSamples,],
+                     ctmodelobj = ctInit,
+                     useOptimizer = FALSE,
+                     objective = ifelse(regCtsemObject$setup$objective == "ML",
+                                        "mxRAM",
+                                        "Kalman"))
 
-    works <- checkFI(mxObject = trainModel$mxobj, regCtsemObject = regCtsemObject$subModels[[model]], cvModel = cvModel$mxobj)
+    works <- checkFI(mxObject = trainModel$mxobj,
+                     regCtsemObject = regCtsemObject$subModels[[model]],
+                     cvModel = cvModel$mxobj,
+                     threshold,
+                     testIC)
   }
 
   print("Automatic Cross-Validation Works")

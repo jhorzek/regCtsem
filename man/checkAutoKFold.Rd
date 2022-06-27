@@ -4,7 +4,7 @@
 \alias{checkAutoKFold}
 \title{checkAutoKFold}
 \usage{
-checkAutoKFold(ctInit, regCtsemObject)
+checkAutoKFold(ctInit, regCtsemObject, threshold, testIC)
 }
 \arguments{
 \item{ctInit}{init object from ctsem}

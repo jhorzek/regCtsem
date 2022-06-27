@@ -4,7 +4,7 @@
 \alias{checkFI}
 \title{checkFI}
 \usage{
-checkFI(mxObject, regCtsemObject, cvModel = NULL)
+checkFI(mxObject, regCtsemObject, cvModel = NULL, threshold, testIC)
 }
 \arguments{
 \item{mxObject}{object from openmx}
