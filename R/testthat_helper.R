@@ -50,16 +50,40 @@ checkFI <- function(mxObject, regCtsemObject, cvModel = NULL){
 
   # iterate over lambdas
   for(i in 1:ncol(fit)){
-    currentModel <- OpenMx::omxSetParameters(mxObject, labels = parameterLabels, values = parameters[,i])
-    currentModel <- OpenMx::mxRun(currentModel, useOptimizer = F, silent = T)
+    free <- rep(TRUE, length(parameterLabels))
+    names(free) <- parameterLabels
+    free[parameterLabels[parameters[parameterLabels,i] == 0]] <- FALSE
+    currentModel <- OpenMx::omxSetParameters(mxObject,
+                                             labels = parameterLabels,
+                                             values = parameters[,i],
+                                             free = free
+                                             )
+    currentModel <- OpenMx::mxRun(currentModel,
+                                  useOptimizer = F,
+                                  silent = T)
     m2LL <- currentModel$fitfunction$result[[1]]
-    if(abs(fit["m2LL",i] - m2LL)>.01){
+    AICmx <- AIC(currentModel)
+    BICmx <- BIC(currentModel)
+
+    if(abs(fit["m2LL",i] - m2LL)>.00001){
       warning(paste0("Wrong m2LL for lambda = ", colnames(fit)[i]))
       return(works)
     }
+    if(abs(fit["AIC",i] - AICmx)>.00001){
+      warning(paste0("Wrong m2LL for lambda = ", colnames(fit)[i]))
+      return(works)
+    }
+    if(abs(fit["BIC",i] - BICmx)>.00001){
+      warning(paste0("Wrong m2LL for lambda = ", colnames(fit)[i]))
+      return(works)
+    }
+
     if(!is.null(cvModel)){
 
-      cvModel <- OpenMx::omxSetParameters(cvModel, labels = parameterLabels, values = parameters[,i])
+      cvModel <- OpenMx::omxSetParameters(cvModel,
+                                          labels = parameterLabels,
+                                          values = parameters[,i]
+                                          )
 
       cvModel <- OpenMx::mxRun(cvModel, useOptimizer = F, silent = T)
       cvM2LL <- cvModel$fitfunction$result[[1]]
