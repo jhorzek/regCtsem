@@ -3,8 +3,11 @@
 #' used in testthat to check the automatic k-fold cross-validation feature of regCtsem
 #' @param ctInit init object from ctsem
 #' @param regCtsemObject object from regCtsem
-#' @export
-checkAutoKFold <- function(ctInit, regCtsemObject,
+#' @param threshold how close to zero should differences be to be treated as zero?
+#' @param testIC should information criteria be tested?
+#' @keywords internal
+checkAutoKFold <- function(ctInit,
+                           regCtsemObject,
                            threshold,
                            testIC){
   if(regCtsemObject$setup$autoCV != "kFold") stop("Only valid for kFold cross-validation")
@@ -50,7 +53,9 @@ checkAutoKFold <- function(ctInit, regCtsemObject,
 #' @param mxObject object from openmx
 #' @param regCtsemObject object from regCtsem
 #' @param cvModel optional cross-validation model
-#' @export
+#' @param threshold how close to zero should differences be to be treated as zero?
+#' @param testIC should information criteria be tested?
+#' @keywords internal
 checkFI <- function(mxObject,
                     regCtsemObject,
                     cvModel = NULL,

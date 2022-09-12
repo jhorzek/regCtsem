@@ -58,7 +58,7 @@ individualM2LLML <- function(cpptsemObject, wideData, i){
   expectedMeans_i <- expectedMeans[!missings]
   expectedCovariance_i <- expectedCovariance[!missings , !missings]
   observed_i <- as.matrix(dataset[i,!missings])
-  inidividualm2LL <- regCtsem:::computeIndividualM2LL(nObservedVariables = length(observed_i),
+  inidividualm2LL <- computeIndividualM2LL(nObservedVariables = length(observed_i),
                                                       rawData = observed_i,
                                                       expectedMeans = expectedMeans[!missings],
                                                       expectedCovariance = expectedCovariance[!missings , !missings])

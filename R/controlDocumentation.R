@@ -34,6 +34,7 @@ controlApprox <- function(forceCpptsem = FALSE, # should the C++ translation be 
 #' @param lower lower bounds for paramters
 #' @param upper upper bounds for parameters
 #' @param method see ?optimx
+#' @param hessian should the final hessian be computed?
 #' @param itnmax maximal number of iterations
 #' @param control control passed to optimx
 #' @export
@@ -170,7 +171,6 @@ controlGIST <- function(forceCpptsem = FALSE, # should the C++ translation be en
 #' Friedman, J., Hastie, T., & Tibshirani, R. (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software, 33(1), 1–20. https://doi.org/10.18637/jss.v033.i01
 #' Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421
 #'
-#' @param epsilon epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx
 #' @param tryCpptsem should regCtsem try to translate the model to cpptsem? This can speed up the computation considerably but might fail for some models
 #' @param forceCpptsem should cpptsem be enforced even if results differ from ctsem? Sometimes differences between cpptsem and ctsem can result from problems with numerical precision which will lead to the m,atrix exponential of RcppArmadillo differing from the OpenMx matrix exponential. If you want to ensure the faster optimization, set to TRUE. See vignette("MatrixExponential", package = "regCtsem") for more details
 #' @param stepSize initial step size of the outer iteration

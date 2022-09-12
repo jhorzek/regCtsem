@@ -1,9 +1,7 @@
 ### Check cpptsem Implementation ###
-
-library(regCtsem)
-
 testthat::test_that(desc = "Testing implementation of cpptsem", code = {
   skip_on_cran()
+  library(regCtsem)
   for(addCINT in c(TRUE,FALSE)){
     if(addCINT){
       CINT = matrix(c("cint1", "cint2"), nrow = 2, ncol = 1)
@@ -121,6 +119,7 @@ testthat::test_that(desc = "Testing implementation of cpptsem", code = {
     expect_equal(sum(round(KalmanScores$xUpdated[2:21,] - matrix(cpptsemmodel3$latentScores[1,], ncol = 2, byrow = TRUE),2)), 0)
 
   }
+
 })
 
 

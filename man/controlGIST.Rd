@@ -19,8 +19,8 @@ controlGIST(
   approxFirst = TRUE,
   numStart = 0,
   nMultistart = 5,
-  controlApproxOptimizer = controlRsolnp(nudgeVariancesLambda = 0.2,
-    nudgeVariancesTarget = log(0.4), control = list(outer.iter = 50, trace = 0))
+  controlApproxOptimizer = controlRsolnp(nudgeVariancesLambda = 0.2, nudgeVariancesTarget
+    = log(0.4), control = list(outer.iter = 50, trace = 0))
 )
 }
 \arguments{

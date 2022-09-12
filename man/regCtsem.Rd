@@ -153,7 +153,7 @@ showParameters(fit_myModel)
 regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
 
 # Optimize model using GIST with lasso penalty
-regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+regModel <- regCtsem(ctsemObject = fit_myModel,
                                dataset = dat,
                                regIndicators = regIndicators,
                                lambdas = "auto",
@@ -176,7 +176,7 @@ plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 # regModel$setup$cpptsemObject$DRIFTValues
 
 # Optimize model using GLMNET with lasso penalty
-regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+regModel <- regCtsem(ctsemObject = fit_myModel,
                                dataset = dat,
                                regIndicators = regIndicators,
                                lambdas = "auto",
@@ -189,7 +189,7 @@ plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 plot(regModel, what = "drift_eta1_eta2")
 
 # The same regularization can be performed with the approximate optimization:
-regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+regModelApprox <- regCtsem(ctsemObject = fit_myModel,
                                      dataset = dat,
                                      regIndicators = regIndicators,
                                      lambdas = "auto",
@@ -247,7 +247,7 @@ regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
 # omxGetParameters(fit_myModel$ctmodelobj) for all parameters
 
 ## Optimization with GIST:
-regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+regModel <- regCtsem(ctsemObject = fit_myModel,
                                dataset = traindata,
                                regIndicators = regIndicators,
                                lambdas = "auto",

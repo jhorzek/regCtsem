@@ -7,7 +7,10 @@ armaExpmat <- function(m) {
 
 #' Computes the computeDRIFTHASH given the drift. DRIFTHASH = DRIFT otimes I + I otimes DRIFT.
 #'
-#' @export
+#' @param DRIFTValues matrix with drift values
+#' @returns matrix with drift hash
+#'
+#' @internal
 computeDRIFTHASH <- function(DRIFTValues) {
     .Call('_regCtsem_computeDRIFTHASH', PACKAGE = 'regCtsem', DRIFTValues)
 }

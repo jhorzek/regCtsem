@@ -6,6 +6,13 @@
 \usage{
 computeDRIFTHASH(DRIFTValues)
 }
+\arguments{
+\item{DRIFTValues}{matrix with drift values}
+}
+\value{
+matrix with drift hash
+}
 \description{
 Computes the computeDRIFTHASH given the drift. DRIFTHASH = DRIFT otimes I + I otimes DRIFT.
 }
+\keyword{internal}

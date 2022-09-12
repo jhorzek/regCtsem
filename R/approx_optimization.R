@@ -77,9 +77,9 @@ approx_iterateOverLambdas <- function(  # model
       if(controlApproxOptimizer$package == "optimx"){
       optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
                                             regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                    regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                    regCtsem::approx_KalmanRegM2LLCpptsem),
-                                            gradCpptsem = regCtsem::approx_gradCpptsem,
+                                                                    approx_RAMRegM2LLCpptsem,
+                                                                    approx_KalmanRegM2LLCpptsem),
+                                            gradCpptsem = approx_gradCpptsem,
                                             startingValues = startingValues,
                                             adaptiveLassoWeights = adaptiveLassoWeights,
                                             N = ifelse(scaleLambdaWithN, sampleSize, 1), lambda = lambdas[iteration],
@@ -93,9 +93,9 @@ approx_iterateOverLambdas <- function(  # model
       }else if(tolower(controlApproxOptimizer$package) == "rsolnp"){
         optimized <- try(approx_cpptsemRsolnp(cpptsemmodel = cpptsemObject,
                                               regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                      regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                      regCtsem::approx_KalmanRegM2LLCpptsem),
-                                              gradCpptsem = regCtsem::approx_gradCpptsem,
+                                                                      approx_RAMRegM2LLCpptsem,
+                                                                      approx_KalmanRegM2LLCpptsem),
+                                              gradCpptsem = approx_gradCpptsem,
                                               startingValues = startingValues,
                                               adaptiveLassoWeights = adaptiveLassoWeights,
                                               N = ifelse(scaleLambdaWithN, sampleSize, 1), lambda = lambdas[iteration],
@@ -113,9 +113,9 @@ approx_iterateOverLambdas <- function(  # model
       if(controlApproxOptimizer$package == "optimx"){
       optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
                                             regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                    regCtsem::ridgeRAMRegM2LLCpptsem,
-                                                                    regCtsem::ridgeKalmanRegM2LLCpptsem),
-                                            gradCpptsem = regCtsem::approx_gradCpptsem,
+                                                                    ridgeRAMRegM2LLCpptsem,
+                                                                    ridgeKalmanRegM2LLCpptsem),
+                                            gradCpptsem = approx_gradCpptsem,
                                             startingValues = startingValues,
                                             adaptiveLassoWeights = adaptiveLassoWeights,
                                             N = ifelse(scaleLambdaWithN, sampleSize, 1), lambda = lambdas[iteration],
@@ -129,9 +129,9 @@ approx_iterateOverLambdas <- function(  # model
       }else if(tolower(controlApproxOptimizer$package) == "rsolnp"){
         optimized <- try(approx_cpptsemRsolnp(cpptsemmodel = cpptsemObject,
                                               regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                      regCtsem::ridgeRAMRegM2LLCpptsem,
-                                                                      regCtsem::ridgeKalmanRegM2LLCpptsem),
-                                              gradCpptsem = regCtsem::approx_gradCpptsem,
+                                                                      ridgeRAMRegM2LLCpptsem,
+                                                                      ridgeKalmanRegM2LLCpptsem),
+                                              gradCpptsem = approx_gradCpptsem,
                                               startingValues = startingValues,
                                               adaptiveLassoWeights = adaptiveLassoWeights,
                                               N = ifelse(scaleLambdaWithN, sampleSize, 1), lambda = lambdas[iteration],
@@ -160,7 +160,7 @@ approx_iterateOverLambdas <- function(  # model
 
     # extract parameter estimates
     fitAndParameters[parameterLabels, as.character(lambdas[iteration])] <- optimized$parameters[parameterLabels]
-    fits <- regCtsem::approx_getFitIndices(m2LL = optimized$m2LL,
+    fits <- approx_getFitIndices(m2LL = optimized$m2LL,
                                            regM2LL = optimized$regM2LL,
                                            lambda = lambdas[iteration],
                                            parameterValues = optimized$parameters,

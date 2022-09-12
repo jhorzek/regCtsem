@@ -28,7 +28,7 @@ exact_getCVFit <- function(objective, cvSampleCpptsemObject, parameterLabels,
     }
 
     # set parameters to iteration parameters
-    cvModelFit <- try(regCtsem::fitCpptsem(parameterValues = parameterValuesTable[parameterLabels,lambda], cpptsemObject = cvSampleCpptsemObject, objective = objective, failureReturns = NA))
+    cvModelFit <- try(fitCpptsem(parameterValues = parameterValuesTable[parameterLabels,lambda], cpptsemObject = cvSampleCpptsemObject, objective = objective, failureReturns = NA))
 
     if(!any(class(cvModelFit) == "try-error")){
       fitTable["cvM2LL",lambda] <- cvModelFit
@@ -451,9 +451,9 @@ tryApproxFirst <- function(startingValues, returnAs,
     if(controlApproxOptimizer$package == "optimx"){
       optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
                                             regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                    regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                    regCtsem::approx_KalmanRegM2LLCpptsem),
-                                            gradCpptsem = regCtsem::approx_gradCpptsem,
+                                                                    approx_RAMRegM2LLCpptsem,
+                                                                    approx_KalmanRegM2LLCpptsem),
+                                            gradCpptsem = approx_gradCpptsem,
                                             startingValues = startingValues,
                                             adaptiveLassoWeights = adaptiveLassoWeights_nudged,
                                             N = 1, # lambda is already adjusted
@@ -467,9 +467,9 @@ tryApproxFirst <- function(startingValues, returnAs,
     }else if(tolower(controlApproxOptimizer$package) == "rsolnp"){
       optimized <- try(approx_cpptsemRsolnp(cpptsemmodel = cpptsemObject,
                                             regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                    regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                    regCtsem::approx_KalmanRegM2LLCpptsem),
-                                            gradCpptsem = regCtsem::approx_gradCpptsem,
+                                                                    approx_RAMRegM2LLCpptsem,
+                                                                    approx_KalmanRegM2LLCpptsem),
+                                            gradCpptsem = approx_gradCpptsem,
                                             startingValues = startingValues,
                                             adaptiveLassoWeights = adaptiveLassoWeights_nudged,
                                             N = 1, # lambda is already adjusted

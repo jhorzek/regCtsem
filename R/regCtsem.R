@@ -90,7 +90,7 @@
 #' regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
 #'
 #' # Optimize model using GIST with lasso penalty
-#' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+#' regModel <- regCtsem(ctsemObject = fit_myModel,
 #'                                dataset = dat,
 #'                                regIndicators = regIndicators,
 #'                                lambdas = "auto",
@@ -113,7 +113,7 @@
 #' # regModel$setup$cpptsemObject$DRIFTValues
 #'
 #' # Optimize model using GLMNET with lasso penalty
-#' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+#' regModel <- regCtsem(ctsemObject = fit_myModel,
 #'                                dataset = dat,
 #'                                regIndicators = regIndicators,
 #'                                lambdas = "auto",
@@ -126,7 +126,7 @@
 #' plot(regModel, what = "drift_eta1_eta2")
 #'
 #' # The same regularization can be performed with the approximate optimization:
-#' regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+#' regModelApprox <- regCtsem(ctsemObject = fit_myModel,
 #'                                      dataset = dat,
 #'                                      regIndicators = regIndicators,
 #'                                      lambdas = "auto",
@@ -184,7 +184,7 @@
 #' # omxGetParameters(fit_myModel$ctmodelobj) for all parameters
 #'
 #' ## Optimization with GIST:
-#' regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+#' regModel <- regCtsem(ctsemObject = fit_myModel,
 #'                                dataset = traindata,
 #'                                regIndicators = regIndicators,
 #'                                lambdas = "auto",
@@ -416,12 +416,12 @@ regCtsem <- function(
   # translate model to C++
   if(tolower(argsIn$objective)  == "ml"){
 
-    cpptsemObject <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
+    cpptsemObject <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
     argsIn$cpptsemObject <- cpptsemObject
 
     # if there is a cvSample: generate model for cvSample as well
     if(!is.null(cvSample)){
-      cvSampleCpptsemObject <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvSample, silent = TRUE))
+      cvSampleCpptsemObject <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvSample, silent = TRUE))
       argsIn$cvSampleCpptsemObject <- cvSampleCpptsemObject
       if(any(class(cvSampleCpptsemObject) == "try-error")){
         stop("Setting up the CV sample model failed.")
@@ -443,14 +443,14 @@ regCtsem <- function(
     }
   }else if (tolower(argsIn$objective)  == "kalman"){
     if(!is.null(subjectSpecificParameters)){
-      cpptsemObject <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset, group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters))
+      cpptsemObject <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset, group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters))
     }else{
-      cpptsemObject <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
+      cpptsemObject <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = dataset))
       argsIn$cpptsemObject <- cpptsemObject
     }
     # if there is a cvSample: generate model for cvSample as well
     if(!is.null(cvSample)){
-      cvSampleCpptsemObject <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvSample, silent = TRUE))
+      cvSampleCpptsemObject <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvSample, silent = TRUE))
       argsIn$cvSampleCpptsemObject <- cvSampleCpptsemObject
       if(any(class(cvSampleCpptsemObject) == "try-error")){
         stop("Setting up the CV sample model failed.")
@@ -525,7 +525,7 @@ regCtsem <- function(
   #### Exact Optimization ####
   #### without automatic cross-validation ####
   if(autoCV == "No" && argsIn$optimization == "exact"){
-    regCtsemObject <- regCtsem::exact_regCtsem(cpptsemObject = cpptsemObject,
+    regCtsemObject <- exact_regCtsem(cpptsemObject = cpptsemObject,
                                                dataset = argsIn$dataset,
                                                regIndicators = argsIn$regIndicators,
                                                targetVector = argsIn$targetVector,
@@ -592,7 +592,7 @@ regCtsem <- function(
   #### with automatic cross-validation ####
   # generate splits
   if((autoCV == "kFold" || autoCV == "Blocked") && argsIn$optimization == "exact"){
-    cvFoldsAndModels <- regCtsem::createCVFoldsAndModels(dataset = argsIn$dataset,
+    cvFoldsAndModels <- createCVFoldsAndModels(dataset = argsIn$dataset,
                                                          Tpoints = argsIn$Tpoints,
                                                          manifestNames = ctsemObject$ctmodelobj$manifestNames,
                                                          k = argsIn$k, autoCV,
@@ -617,10 +617,10 @@ regCtsem <- function(
     for(i in 1:argsIn$k){
 
       if(!is.null(subjectSpecificParameters)){
-        cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
+        cvFoldsAndModels$trainModels[[i]] <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
         cvFoldsAndModels$trainModels[[i]]$setParameterValues(cpptsemObject$getParameterValues(), names(cpptsemObject$getParameterValues()))
       }else{
-        cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
+        cvFoldsAndModels$trainModels[[i]] <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
       }
 
       # optimize
@@ -634,9 +634,9 @@ regCtsem <- function(
       }
 
       if(!is.null(subjectSpecificParameters)){
-        cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
+        cvFoldsAndModels$testModels[[i]] <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
       }else{
-        cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
+        cvFoldsAndModels$testModels[[i]] <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
       }
 
 
@@ -652,7 +652,7 @@ regCtsem <- function(
       # compute lambda_max
       if(!is.numeric(lambdas) && lambdas == "auto"){
         cat(paste0("Fold ", i, ": "))
-        maxLambda <- regCtsem::getMaxLambda(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
+        maxLambda <- getMaxLambda(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
                                             objective = argsIn$objective,
                                             regIndicators = argsIn$regIndicators,
                                             targetVector = argsIn$targetVector,
@@ -683,7 +683,7 @@ regCtsem <- function(
 
     for(i in 1:argsIn$k){
       message(paste0("\n Fitting CV Model ", i, " of ", argsIn$k, "."))
-      regCtsemObject <- regCtsem::exact_regCtsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
+      regCtsemObject <- exact_regCtsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
                                                  dataset = cvFoldsAndModels$trainSets[[i]],
                                                  regIndicators = argsIn$regIndicators,
                                                  targetVector = argsIn$targetVector,
@@ -751,7 +751,7 @@ regCtsem <- function(
 
   #### without cross-validation ####
   if(autoCV == "No" && tolower(optimization) == "approx"){
-    regCtsemObject <- regCtsem::approx_regCtsem(cpptsemObject = cpptsemObject,
+    regCtsemObject <- approx_regCtsem(cpptsemObject = cpptsemObject,
                                                 dataset = argsIn$dataset,
                                                 # penalty settings
                                                 regIndicators = argsIn$regIndicators,
@@ -800,7 +800,7 @@ regCtsem <- function(
   #### with automatic cross-validation ####
   # generate splits
   if((autoCV == "kFold" || autoCV == "Blocked") && tolower(optimization) == "approx"){
-    cvFoldsAndModels <- regCtsem::createCVFoldsAndModels(dataset = argsIn$dataset,
+    cvFoldsAndModels <- createCVFoldsAndModels(dataset = argsIn$dataset,
                                                          Tpoints = argsIn$Tpoints,
                                                          manifestNames = ctsemObject$ctmodelobj$manifestNames,
                                                          k = argsIn$k,
@@ -825,10 +825,10 @@ regCtsem <- function(
 
     for(i in 1:argsIn$k){
       if(!is.null(subjectSpecificParameters)){
-        cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
+        cvFoldsAndModels$trainModels[[i]] <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
         cvFoldsAndModels$trainModels[[i]]$setParameterValues(cpptsemObject$getParameterValues(), names(cpptsemObject$getParameterValues()))
       }else{
-        cvFoldsAndModels$trainModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
+        cvFoldsAndModels$trainModels[[i]] <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$trainSets[[i]], silent = TRUE))
       }
 
       # optimize
@@ -842,9 +842,9 @@ regCtsem <- function(
       }
 
       if(!is.null(subjectSpecificParameters)){
-        cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
+        cvFoldsAndModels$testModels[[i]] <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], group = 1:nrow(dataset), groupSpecificParameters = subjectSpecificParameters, silent = TRUE))
       }else{
-        cvFoldsAndModels$testModels[[i]] <- try(regCtsem::cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
+        cvFoldsAndModels$testModels[[i]] <- try(cpptsemFromCtsem(ctsemModel = ctsemObject, wideData = cvFoldsAndModels$testSets[[i]], silent = TRUE))
       }
 
       # set adaptive lasso weights based on training-sample
@@ -858,7 +858,7 @@ regCtsem <- function(
 
       # compute lambda_max
       if(!is.numeric(lambdas) && lambdas == "auto"){
-        maxLambda <- regCtsem::getMaxLambda(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
+        maxLambda <- getMaxLambda(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
                                             objective = argsIn$objective,
                                             regIndicators = argsIn$regIndicators,
                                             targetVector = argsIn$targetVector,
@@ -889,7 +889,7 @@ regCtsem <- function(
 
     for(i in 1:argsIn$k){
       message(paste0("\n Fitting CV Model ", i, " of ", argsIn$k, "."))
-      regCtsemObject <- regCtsem::approx_regCtsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
+      regCtsemObject <- approx_regCtsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]],
                                                   dataset = cvFoldsAndModels$trainSets[[i]],
                                                   # penalty settings
                                                   regIndicators = argsIn$regIndicators,
@@ -1090,7 +1090,7 @@ exact_regCtsem <- function(  # model
 
   # start fitting models
   if(tolower(optimizer) == "glmnet"){
-    regModel <- try(regCtsem::exact_bfgsGLMNET(cpptsemObject = cpptsemObject, dataset = dataset, objective = objective,
+    regModel <- try(exact_bfgsGLMNET(cpptsemObject = cpptsemObject, dataset = dataset, objective = objective,
                                                regIndicators = regIndicators, lambdas = lambdas,
                                                adaptiveLassoWeights = adaptiveLassoWeights,
                                                # additional settings
@@ -1107,7 +1107,7 @@ exact_regCtsem <- function(  # model
                                                verbose = verbose))
   }
   if(tolower(optimizer) == "gist"){
-    regModel <- try(regCtsem::exact_GIST(cpptsemObject = cpptsemObject, dataset = dataset, objective = objective,
+    regModel <- try(exact_GIST(cpptsemObject = cpptsemObject, dataset = dataset, objective = objective,
                                          regIndicators = regIndicators, targetVector = targetVector,
                                          lambdas = lambdas, adaptiveLassoWeights = adaptiveLassoWeights,
                                          # additional settings
@@ -1135,11 +1135,11 @@ exact_regCtsem <- function(  # model
   # save fit indices
   if(returnFitIndices & !(any(class(regModel) == "try-error"))){
     if(is.null(targetVector) || all(targetVector == 0)){
-      fitIndicesTable <- regCtsem::exact_getFitIndices(parameterLabels = parameterLabels,
+      fitIndicesTable <- exact_getFitIndices(parameterLabels = parameterLabels,
                                                        fitAndParameters = fitAndParameters, lambdas = lambdas,
                                                        sampleSize = ifelse(BICWithNAndT,Tpoints*sampleSize, sampleSize))
     }else{
-      fitIndicesTable <- regCtsem::exact_getFitIndicesWithTarget(parameterLabels = parameterLabels, regIndicators = regIndicators,
+      fitIndicesTable <- exact_getFitIndicesWithTarget(parameterLabels = parameterLabels, regIndicators = regIndicators,
                                                                  fitAndParameters = fitAndParameters, targetVector = targetVector,
                                                                  lambdas = lambdas,
                                                                  sampleSize = ifelse(BICWithNAndT,Tpoints*sampleSize, sampleSize))
@@ -1152,7 +1152,7 @@ exact_regCtsem <- function(  # model
   # cross-validation
   if(!is.null(cvSampleCpptsemObject)){
 
-    fitCVTable <- regCtsem::exact_getCVFit(objective = objective, cvSampleCpptsemObject = cvSampleCpptsemObject, parameterLabels = parameterLabels,
+    fitCVTable <- exact_getCVFit(objective = objective, cvSampleCpptsemObject = cvSampleCpptsemObject, parameterLabels = parameterLabels,
                                            parameterValuesTable = as.matrix(fitAndParameters[parameterLabels,], ncol = length(lambdas)),
                                            lambdas = lambdas)
 
@@ -1261,7 +1261,7 @@ approx_regCtsem <- function(  # model
 
 
   # start fitting models
-  fitAndParameters <- try(regCtsem::approx_iterateOverLambdas(cpptsemObject = cpptsemObject, dataset = dataset, sampleSize = sampleSize,
+  fitAndParameters <- try(approx_iterateOverLambdas(cpptsemObject = cpptsemObject, dataset = dataset, sampleSize = sampleSize,
                                                               # penalty settings
                                                               regIndicators = regIndicators, lambdas = lambdas,
                                                               penalty = penalty, adaptiveLassoWeights = adaptiveLassoWeights,
@@ -1276,7 +1276,7 @@ approx_regCtsem <- function(  # model
   # cross-validation
   if(!is.null(cvSampleCpptsemObject)){
 
-    fitCVTable <- regCtsem::exact_getCVFit(objective = objective, cvSampleCpptsemObject = cvSampleCpptsemObject, parameterLabels = parameterLabels,
+    fitCVTable <- exact_getCVFit(objective = objective, cvSampleCpptsemObject = cvSampleCpptsemObject, parameterLabels = parameterLabels,
                                            parameterValuesTable = as.matrix(fitAndParameters[parameterLabels,], ncol = length(lambdas)),
                                            lambdas = lambdas)
 
@@ -1309,7 +1309,7 @@ createCVFoldsAndModels <- function(dataset, Tpoints, manifestNames, k, autoCV, i
   fullData <- dataset
 
   if(autoCV == "kFold"){
-    cvFolds <- regCtsem::createFolds(nrow(fullData), k = k)
+    cvFolds <- createFolds(nrow(fullData), k = k)
 
     testSets <- vector("list", length = k)
     names(testSets) <- names(cvFolds)
@@ -1413,72 +1413,74 @@ createFolds <- function(sampleSize, k){
 
 #### Helper Functions ####
 
-#' checkSetup
-#'
-#' internal checks
-#'
-#' NOTE: Function located in file regCtsem.R
-#'
-#' @param argsIn list with arguments
-#' @author Jannik Orzek
-#' @export
-checkSetup <- function(argsIn){
-  warning("NOT YET ADJUSTED FOR NEW IMPLEMENTATION")
-  if(is.null(argsIn$ctsemObject) & is.null(argsIn$mxObject)){
-    stop("Both ctsemObject and mxObect are missing. You need to provide at least one")
-  }
-  if(!any(class(argsIn$ctsemObject) == "ctsemFit")){
-    stop("ctsemObject has to be of class ctsemFit")
-  }
-
-  #if(!is.null(argsIn$mxObject) & any(class(argsIn$mxObject)=="MxModel")){
-  #  # check if ctsemObject is estimated with Kalman
-  #  if(any(class(argsIn$mxObject$expectation) == "MxExpectationStateSpace") &  !any(class(argsIn$ctsemObject)=="ctsemInit")){
-  #    stop("It seems like the provided mxObject was fitted with Kalman filter. To use the Kalman filter, provide the object of type ctsemInit from ctModel instead of the fitted model. Set the objective = 'Kalman' and provide a dataset")
-  #  }
-  #}
-
-  if(!(argsIn$optimization == "exact" || argsIn$optimization == "approx")){
-    stop(paste("Optimization was set to", optimization, "however only exact or approx are supported."))
-  }
-  if(argsIn$optimization == "approx" && argsIn$extraTries == 1){
-    warning(paste("Approximate optimization often requires multiple tries to find the optimal solution. Use extraTries to automatically try different statring values (e.g., extraTries = 5)."))
-  }
-  if(argsIn$cores > 1 && argsIn$verbose>0){
-    stop("verbose > 0 only possible for single core execution. Set cores = 1 or verbose = 0.")
-  }
-
-  if(argsIn$optimization == "exact" && argsIn$optimizer == "GLMNET" && tolower(argsIn$lineSearch) == "armijo"){
-    stop("lineSearch = 'armijo' is deprecated. Use lineSearch = 'Wolfe'.")
-  }
-
-  if(tolower(argsIn$objective) == "kalman"){
-    if(is.null(argsIn$ctsemObject)){stop("Kalman filter requires a ctsemObject. Set up the model in ctsemOMX first")}
-    #if(!any(class(argsIn$ctsemObject) == "ctsemInit")){stop("ctsemObject has to be of class ctsemInit. You can get the ctsemInit object from ctModel.")}
-    if(is.null(argsIn$dataset)){stop("No dataset was provided")}
-  }
-
-  if(tolower(argsIn$penalty) == "ridge"){
-    if(argsIn$standardizeDrift){
-      stop("Automatic drift standardization not supported for ridge regularization")
-    }
-    if(argsIn$optimization == "exact"){
-      stop("Use optimization = approx for ridge regularization. This is confusing, but approx is the right optimization for ridge regularized SEM. The approx and exact differentiation is only relevant for lasso and adaptivelasso.")
-    }
-  }
-
-  if(tolower(argsIn$penalty) == "adaptivelasso"){
-    if(is.null(argsIn$adaptiveLassoWeights)){
-      stop("Adaptive Lasso requires the adaptiveLassoWeights to be specified. auto uses the inverse of the absolute values of unregularized parameter estimates. This is only recommended with standardizeDrift = FALSE")
-    }
-    if(argsIn$standardizeDrift){
-      stop("Combination of automatic standardization and adaptive lasso is not implemented. Standardization is a special variant of the adaptive lasso. Use penalty = 'lasso' or standardizeDrift = FALSE.")
-    }
-  }
-  #if(any(argsIn$lambdas == "auto") & (tolower(argsIn$penalty) == "adaptivelasso" | argsIn$standardizeDrift)){
-  #  stop("lambdas = 'auto' currently not supported for adative lasso or automatic standardization of drift parameters.")
-  #}
-}
+#
+#
+## checkSetup
+##
+## internal checks
+##
+## NOTE: Function located in file regCtsem.R
+##
+## @param argsIn list with arguments
+## @author Jannik Orzek
+## @export
+# checkSetup <- function(argsIn){
+#   warning("NOT YET ADJUSTED FOR NEW IMPLEMENTATION")
+#   if(is.null(argsIn$ctsemObject) & is.null(argsIn$mxObject)){
+#     stop("Both ctsemObject and mxObect are missing. You need to provide at least one")
+#   }
+#   if(!any(class(argsIn$ctsemObject) == "ctsemFit")){
+#     stop("ctsemObject has to be of class ctsemFit")
+#   }
+#
+#   #if(!is.null(argsIn$mxObject) & any(class(argsIn$mxObject)=="MxModel")){
+#   #  # check if ctsemObject is estimated with Kalman
+#   #  if(any(class(argsIn$mxObject$expectation) == "MxExpectationStateSpace") &  !any(class(argsIn$ctsemObject)=="ctsemInit")){
+#   #    stop("It seems like the provided mxObject was fitted with Kalman filter. To use the Kalman filter, provide the object of type ctsemInit from ctModel instead of the fitted model. Set the objective = 'Kalman' and provide a dataset")
+#   #  }
+#   #}
+#
+#   if(!(argsIn$optimization == "exact" || argsIn$optimization == "approx")){
+#     stop(paste("Optimization was set to", optimization, "however only exact or approx are supported."))
+#   }
+#   if(argsIn$optimization == "approx" && argsIn$extraTries == 1){
+#     warning(paste("Approximate optimization often requires multiple tries to find the optimal solution. Use extraTries to automatically try different statring values (e.g., extraTries = 5)."))
+#   }
+#   if(argsIn$cores > 1 && argsIn$verbose>0){
+#     stop("verbose > 0 only possible for single core execution. Set cores = 1 or verbose = 0.")
+#   }
+#
+#   if(argsIn$optimization == "exact" && argsIn$optimizer == "GLMNET" && tolower(argsIn$lineSearch) == "armijo"){
+#     stop("lineSearch = 'armijo' is deprecated. Use lineSearch = 'Wolfe'.")
+#   }
+#
+#   if(tolower(argsIn$objective) == "kalman"){
+#     if(is.null(argsIn$ctsemObject)){stop("Kalman filter requires a ctsemObject. Set up the model in ctsemOMX first")}
+#     #if(!any(class(argsIn$ctsemObject) == "ctsemInit")){stop("ctsemObject has to be of class ctsemInit. You can get the ctsemInit object from ctModel.")}
+#     if(is.null(argsIn$dataset)){stop("No dataset was provided")}
+#   }
+#
+#   if(tolower(argsIn$penalty) == "ridge"){
+#     if(argsIn$standardizeDrift){
+#       stop("Automatic drift standardization not supported for ridge regularization")
+#     }
+#     if(argsIn$optimization == "exact"){
+#       stop("Use optimization = approx for ridge regularization. This is confusing, but approx is the right optimization for ridge regularized SEM. The approx and exact differentiation is only relevant for lasso and adaptivelasso.")
+#     }
+#   }
+#
+#   if(tolower(argsIn$penalty) == "adaptivelasso"){
+#     if(is.null(argsIn$adaptiveLassoWeights)){
+#       stop("Adaptive Lasso requires the adaptiveLassoWeights to be specified. auto uses the inverse of the absolute values of unregularized parameter estimates. This is only recommended with standardizeDrift = FALSE")
+#     }
+#     if(argsIn$standardizeDrift){
+#       stop("Combination of automatic standardization and adaptive lasso is not implemented. Standardization is a special variant of the adaptive lasso. Use penalty = 'lasso' or standardizeDrift = FALSE.")
+#     }
+#   }
+#   #if(any(argsIn$lambdas == "auto") & (tolower(argsIn$penalty) == "adaptivelasso" | argsIn$standardizeDrift)){
+#   #  stop("lambdas = 'auto' currently not supported for adative lasso or automatic standardization of drift parameters.")
+#   #}
+# }
 
 
 #' getAdaptiveLassoWeights
@@ -1547,7 +1549,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
       driftLabels[is.na(driftLabels)] <- autoDriftLabels[is.na(driftLabels)]
     }
 
-    flatStandardizers <- regCtsem::getFlatStdizer(VARIs = VARIs, driftLabels = driftLabels)
+    flatStandardizers <- getFlatStdizer(VARIs = VARIs, driftLabels = driftLabels)
     flatStandardizers <- flatStandardizers[rownames(flatStandardizers) %in% thetaNames,]
 
     for(thetaName in names(flatStandardizers)){
@@ -1791,7 +1793,7 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
     # step 2: compute gradients with regularized parameters set to target and unregularized parameters set to nonZeroParam estimates
     param[namesNonZeroParam] <- nonZeroParam
     cpptsemObject$setParameterValues(param, names(param))
-    grad <- regCtsem::exact_getCppGradients(cpptsemObject, objective = objective)
+    grad <- exact_getCppGradients(cpptsemObject, objective = objective)
 
     if(any(class(grad) == "try-error") || anyNA(grad)){
       if(it ==  0){

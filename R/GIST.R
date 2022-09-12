@@ -111,7 +111,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
     }
     # use Gist
     if(is.null(targetVector) || all(targetVector == 0)){
-      resGIST <- try(regCtsem::GIST(cpptsemObject = cpptsemObject,
+      resGIST <- try(GIST(cpptsemObject = cpptsemObject,
                                     startingValues = startingValues,
                                     objective = objective,
                                     lambda = lambda,
@@ -130,7 +130,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
                                     verbose = verbose,
                                     silent = FALSE))
     }else{
-      resGIST <- try(regCtsem::GISTWithTarget(cpptsemObject = cpptsemObject, startingValues = startingValues,
+      resGIST <- try(GISTWithTarget(cpptsemObject = cpptsemObject, startingValues = startingValues,
                                               objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
                                               regularizedParameters = regIndicators, targetVector = targetVector,
                                               eta = eta, sig = sig, initialStepsize = initialStepsize, stepsizeMin = stepsizeMin, stepsizeMax = stepsizeMax,
@@ -164,12 +164,12 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
         # save fit
         cM2LL <- ifelse(resGIST$convergence, resGIST$model$m2LL, Inf)
         if(is.null(targetVector)){
-          cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
+          cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  exact_getPenaltyValue(lambda = lambda,
                                                                                            theta = newValues,
                                                                                            regIndicators = regIndicators,
                                                                                            adaptiveLassoWeights = adaptiveLassoWeights), Inf)
         }else{
-          cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getPenaltyValueWithTarget(lambda = lambda,
+          cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  exact_getPenaltyValueWithTarget(lambda = lambda,
                                                                                                      theta = newValues,
                                                                                                      regIndicators = regIndicators,
                                                                                                      targetVector = targetVector,
@@ -274,7 +274,7 @@ GIST <- function(cpptsemObject,
   gradients_k <- out3
   m2LL_k <- cpptsemObject$m2LL
 
-  regM2LL_k <- m2LL_k + regCtsem::exact_getPenaltyValue(lambda = lambda,
+  regM2LL_k <- m2LL_k + exact_getPenaltyValue(lambda = lambda,
                                                         theta = parameters_k,
                                                         regIndicators = regularizedParameters,
                                                         adaptiveLassoWeights = adaptiveLassoWeights)
@@ -385,7 +385,7 @@ GIST <- function(cpptsemObject,
         # skip rest
         next
       }
-      regM2LL_kp1 <- m2LL_kp1 + regCtsem::exact_getPenaltyValue(lambda = lambda,
+      regM2LL_kp1 <- m2LL_kp1 + exact_getPenaltyValue(lambda = lambda,
                                                                 theta = parameters_kp1,
                                                                 regIndicators = regularizedParameters,
                                                                 adaptiveLassoWeights = adaptiveLassoWeights)
@@ -640,7 +640,7 @@ GISTWithTarget <- function(cpptsemObject,
   gradients_k <- out3
   m2LL_k <- cpptsemObject$m2LL
 
-  regM2LL_k <- m2LL_k + regCtsem::exact_getPenaltyValueWithTarget(lambda = lambda,
+  regM2LL_k <- m2LL_k + exact_getPenaltyValueWithTarget(lambda = lambda,
                                                                   theta = parameters_k,
                                                                   regIndicators = regularizedParameters,
                                                                   targetVector = targetVector,
@@ -762,7 +762,7 @@ GISTWithTarget <- function(cpptsemObject,
         next
       }
 
-      regM2LL_kp1 <- m2LL_kp1 + regCtsem::exact_getPenaltyValueWithTarget(lambda = lambda,
+      regM2LL_kp1 <- m2LL_kp1 + exact_getPenaltyValueWithTarget(lambda = lambda,
                                                                           theta = parameters_kp1,
                                                                           regIndicators = regularizedParameters,
                                                                           targetVector = targetVector,

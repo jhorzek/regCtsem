@@ -89,7 +89,7 @@ exact_bfgsGLMNET <- function(cpptsemObject,
   initialParameters <- newParameters
 
   # get initial gradients
-  newGradient <- regCtsem::exact_getCppGradients(cpptsemObject, objective = objective)
+  newGradient <- exact_getCppGradients(cpptsemObject, objective = objective)
   initialGradients <- newGradient
 
   # get initial Hessian
@@ -149,7 +149,7 @@ exact_bfgsGLMNET <- function(cpptsemObject,
     }
 
     # outer loop: optimize parameters
-    resGLMNET <- try(regCtsem::exact_outerGLMNET(cpptsemObject = cpptsemObject,
+    resGLMNET <- try(exact_outerGLMNET(cpptsemObject = cpptsemObject,
                                                  objective = objective,
                                                  adaptiveLassoWeights = adaptiveLassoWeights,
                                                  sampleSize = sampleSize,
@@ -231,7 +231,7 @@ exact_bfgsGLMNET <- function(cpptsemObject,
         newGradient <- resGLMNET$newGradient
         # save fit
         cM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL, Inf)
-        cRegM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
+        cRegM2LL <- ifelse(resGLMNET$convergence, cpptsemObject$m2LL +  exact_getPenaltyValue(lambda = lambda,
                                                                                                         theta = resGLMNET$newParameters,
                                                                                                         regIndicators = regIndicators,
                                                                                                         adaptiveLassoWeights = adaptiveLassoWeights), Inf)
@@ -362,7 +362,7 @@ exact_outerGLMNET <- function(cpptsemObject,
 
 
     ## inner loop: optimize directions
-    direction <- regCtsem::exact_innerGLMNET(
+    direction <- exact_innerGLMNET(
       adaptiveLassoWeights = adaptiveLassoWeights,
       parameterLabels = parameterLabels,
       regIndicators = regIndicators,
@@ -381,7 +381,7 @@ exact_outerGLMNET <- function(cpptsemObject,
         warning("Stepsize not allowed. Setting to .9.")
         stepSize = .9
       }
-      stepSize_k <- regCtsem::exact_GLMNETLineSearch(cpptsemObject = cpptsemObject,
+      stepSize_k <- exact_GLMNETLineSearch(cpptsemObject = cpptsemObject,
                                                      objective = objective,
                                                      adaptiveLassoWeights = adaptiveLassoWeights,
                                                      parameterLabels = parameterLabels,
@@ -443,7 +443,7 @@ exact_outerGLMNET <- function(cpptsemObject,
     }
 
     # Approximate Hessian using bfgs
-    newHessian <- regCtsem::exact_getBFGS(oldParameters = oldParameters, oldGradients = oldGradients, oldHessian = oldHessian, newParameters = newParameters, newGradient = newGradients)
+    newHessian <- exact_getBFGS(oldParameters = oldParameters, oldGradients = oldGradients, oldHessian = oldHessian, newParameters = newParameters, newGradient = newGradients)
 
     if(verbose == 1){
       convergencePlotValues[,iter_out] <- newRegM2LL
@@ -606,7 +606,7 @@ exact_armijoLineSearch <- function(gradientModel,
   h_0 <- m2LLNew + lambda*sum(abs((newParameters)[regIndicators,]))
 
   # get (sub-)gradients for step size 0:
-  g_0 <- regCtsem::exact_getSubgradients(theta = newParameters, jacobian = newGradient, regIndicators = regIndicators, lambda = lambda)
+  g_0 <- exact_getSubgradients(theta = newParameters, jacobian = newGradient, regIndicators = regIndicators, lambda = lambda)
 
   # Inexact Line Search
   i <- 0
@@ -630,7 +630,7 @@ exact_armijoLineSearch <- function(gradientModel,
     # compute h(stepSize) = L(x+td) + p(x+td) - L(x) - p(x), where p(x) is the penalty function
     h_t <- m2LL_kp1_td + lambda*sum(abs((parametersNew_td)[regIndicators,]))
     # compute h'(stepSize)
-    g_t <- regCtsem::exact_getSubgradients(theta = parametersNew_td, jacobian = g_kp1_td, regIndicators = regIndicators, lambda = lambda)
+    g_t <- exact_getSubgradients(theta = parametersNew_td, jacobian = g_kp1_td, regIndicators = regIndicators, lambda = lambda)
 
     # Check Armijo
     if(h_t-h_0 <= c1*stepSize*(t(newGradient)%*%direction+lambda*sum(abs((parametersNew_td)[regIndicators,]))-lambda*sum(abs((newParameters)[regIndicators,])))){
