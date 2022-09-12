@@ -29,3 +29,4 @@ generates plot of drift values
 \details{
 NOTE: Function located in file regCtsem.R
 }
+\keyword{internal}

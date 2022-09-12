@@ -140,3 +140,4 @@ NOTE: Function located in file regCtsem.R
 \author{
 Jannik Orzek
 }
+\keyword{internal}

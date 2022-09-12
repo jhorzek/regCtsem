@@ -18,3 +18,4 @@ extractCtsemMatrices(mxObject, nlatent, nmanifest, silent = FALSE)
 \description{
 Extract DRIFT, DIFFUSION, etc from an mxObject
 }
+\keyword{internal}

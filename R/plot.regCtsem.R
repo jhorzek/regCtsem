@@ -7,7 +7,7 @@
 #' @param ylab label for y axis
 #' @param ... additional parameters for plot or matplot (e.g., lty, col, ...)
 #' @author Jannik Orzek
-#' @export
+#' @keywords internal
 plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xlab = "auto", ylab = "auto",...){
   if(is.character(xlab)){skiptXlabComp <- F}else{skiptXlabComp <- T}
   if(is.character(ylab)){skiptYlabComp <- F}else{skiptYlabComp <- T}
@@ -145,7 +145,7 @@ plot.regCtsem <- function(regCtsemObject, what = "drift", criterion = "BIC", xla
 #' @param ylab label for y axis
 #' @param ... additional parameters for plot or matplot (e.g., lty, col, ...)
 #' @author Jannik Orzek
-#' @export
+#' @keywords internal
 plot.regCtsemCV <- function(regCtsemObject, xlab = "auto", ylab = "auto",...){
   if(is.character(xlab)){skiptXlabComp <- F}else{skiptXlabComp <- T}
   if(is.character(ylab)){skiptYlabComp <- F}else{skiptYlabComp <- T}
@@ -172,7 +172,7 @@ plot.regCtsemCV <- function(regCtsemObject, xlab = "auto", ylab = "auto",...){
 #' @param ylab label for y axis
 #' @param ... additional parameters for plot or matplot (e.g., lty, col, ...)
 #' @author Jannik Orzek
-#' @export
+#' @keywords internal
 plot.regCtsemMultiSubject <- function(regCtsemObject, what = "drift", groups = NULL, criterion = "BIC", xlab = "auto", ylab = "auto",...){
   if(is.character(xlab)){skiptXlabComp <- F}else{skiptXlabComp <- T}
   if(is.character(ylab)){skiptYlabComp <- F}else{skiptYlabComp <- T}
@@ -321,66 +321,4 @@ plot.regCtsemMultiSubject <- function(regCtsemObject, what = "drift", groups = N
 
   stop("Select what = 'drift', 'parameters', or 'fit' to generate a plot.")
 
-}
-
-networkPlot <- function(regCtsemObject, lambda, deltaT = NULL, contemporaneous = TRUE, ...){
-  if(regModel$setup$autoCV != "No"){stop("networkPlot is currently not supported when using cross-validation.")}
-  driftLabels <- c(regCtsemObject$setup$ctsemObject$mxobj$DRIFT$labels)
-  drifts <- regCtsemObject$parameterEstimatesRaw[driftLabels,]
-
-  lambdas <- regCtsemObject$setup$lambdas
-  select <- which(abs(lambdas - lambda) == min(abs(lambdas - lambda)))
-  drifts <- drifts[,select]
-
-  makeEdges <- function(mat){
-    from <- 1:ncol(mat)
-    to <- 1:nrow(mat)
-    weights <- as.vector(mat)
-    edges <- matrix(nrow = length(weights), ncol = 3)
-    colnames(edges) <- c("from", "to", "weight")
-    edges[,"weight"] <- weights
-    edges[,"from"] <- rep(from, each = length(to))
-    edges[,"to"] <- rep(to, length(from))
-    return(edges)
-  }
-
-
-  if(is.null(deltaT)){
-    edges <- makeEdges(drifts,
-              nrow = sqrt(length(drifts)),
-              ncol = sqrt(length(drifts)))
-
-    edgeColor <- ifelse(edges[,"weight"]>0, "#008080", "#800000")
-    par(mar = c(50,50,50,50))
-    qgraph(edges,
-           maximum = .5*max(drifts),
-           fade=FALSE,
-           layout="circular",
-           labels=latentNames,
-           vsize = 12,
-           lty=ifelse(edges[,"weight"]>0,1,5),
-           edge.labels=T,
-           font = 2,
-           curveAll = TRUE,
-           loopRotation = (0:(sqrt(length(drifts))+1))*(2*pi/length(drifts)),
-           mar = c(6,6,6,6),
-           edge.color=edgeColor)
-
-  }
-  #
-  # # Discrete time parameters:
-  # H <- matrix(NA, nrow = nrow(A)*ncol(A), ncol = length(deltaTs))
-  # for(i in 1:length(deltaTs)){
-  #   H[,i] <- c(expm::expm(A*deltaTs[i]))
-  # }
-  # HLabels <- matrix(c(expression("h"[11]), expression("h"[12]),expression("h"[13]),
-  #                     expression("h"[21]), expression("h"[22]), expression("h"[23]),
-  #                     expression("h"[31]), expression("h"[32]), expression("h"[33])),3,3,T)
-  #
-  #
-  # discreteDiffusion <- function(A, G, deltaT){
-  #   AHash <- kronecker(A, diag(nrow(A))) + kronecker(diag(nrow(A)), A)
-  #   return(solve(AHash) %*%(expm::expm(AHash*deltaT) - diag(nrow(AHash)))%*%c(G%*%t(G)))
-  #
-  # }
 }

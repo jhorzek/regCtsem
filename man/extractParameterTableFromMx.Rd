@@ -13,3 +13,4 @@ extractParameterTableFromMx(mxObject)
 wrapper for the omxLocateParameters function from OpenMx
 returns a data frame with parameter labels, location and values
 }
+\keyword{internal}

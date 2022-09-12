@@ -10,8 +10,6 @@
 
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-using namespace Rcpp;
-
 // Constructor:
 
 cpptsemRAMmodel::cpptsemRAMmodel(std::string mName,

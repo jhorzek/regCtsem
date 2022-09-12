@@ -29,7 +29,7 @@
 #'
 #' @author Jannik Orzek
 #' @import ctsemOMX
-#' @export
+#' @keywords internal
 approx_iterateOverLambdas <- function(  # model
   cpptsemObject,# = NULL,
   dataset,# = NULL,
@@ -202,7 +202,7 @@ approx_iterateOverLambdas <- function(  # model
 #' @param zeroThresh threshold below which parameters will be evaluated as == 0 in lasso regularization if optimization = approx
 #' @param sampleSize sample size
 #' @author Jannik Orzek
-#' @export
+#' @keywords internal
 approx_getFitIndices <- function(m2LL,
                                  regM2LL,
                                  lambda,

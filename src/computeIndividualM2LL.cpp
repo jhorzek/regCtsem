@@ -2,8 +2,14 @@
 #include "computeRAMM2LL.h"
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-// Computes the -2log likelihood in a RAM model for a  single person given the number of non-missing variables (nObservedVariables), x (rawData), filtered expectedMeans, and filtered expectedCovariance.
-using namespace Rcpp;
+//' computeIndividualM2LL
+//'
+//' Computes the -2log likelihood in a RAM model for a  single person given the number of non-missing variables (nObservedVariables), x (rawData), filtered expectedMeans, and filtered expectedCovariance.
+//' @param nObservedVariables number of non-missing variables
+//' @param rawData x
+//' @param expectedMeans filtered expectedMeans
+//' @param expectedCovariance filtered expectedCovariance
+//' @keywords internal
 // [[Rcpp::export]]
 double computeIndividualM2LL(const int nObservedVariables, const arma::colvec& rawData, const arma::colvec& expectedMeans, const arma::mat& expectedCovariance){
   double m2LL;

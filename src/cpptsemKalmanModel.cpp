@@ -9,8 +9,6 @@
 
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-using namespace Rcpp;
-
 // Constructor
 cpptsemKalmanModel::cpptsemKalmanModel(std::string mName,
                                        Rcpp::List mCtMatrixList,

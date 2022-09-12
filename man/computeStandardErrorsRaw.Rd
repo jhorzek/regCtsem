@@ -17,3 +17,4 @@ computes standard errors of the raw parameters for a cpptsem object
 \author{
 Jannik H. Orzek
 }
+\keyword{internal}

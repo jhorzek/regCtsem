@@ -16,3 +16,4 @@ prepareDiscreteElementNames(ctMatrices, Tpoints, dT)
 \description{
 prepare the names of the discrete parameters (e.g. discrete time drift)
 }
+\keyword{internal}

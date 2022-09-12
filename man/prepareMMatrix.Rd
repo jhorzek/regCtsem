@@ -32,3 +32,4 @@ prepareMMatrix(
 \description{
 prepare matrix with means for RAM model
 }
+\keyword{internal}

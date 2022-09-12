@@ -44,3 +44,4 @@ approximates the regularized likelihood function using cpptsem and Full Informat
 \author{
 Jannik Orzek
 }
+\keyword{internal}

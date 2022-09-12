@@ -88,3 +88,4 @@ GIST minimizes a function of form f(theta) = l(theta) + g(theta), where l is the
 
 NOTE: Function located in file GIST.R
 }
+\keyword{internal}

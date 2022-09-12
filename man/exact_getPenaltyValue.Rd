@@ -21,3 +21,4 @@ computes sum(lambda*abs(regularized Values))
 \details{
 NOTE: Function located in file exact_optimization.R
 }
+\keyword{internal}

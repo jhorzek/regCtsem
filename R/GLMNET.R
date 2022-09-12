@@ -33,7 +33,7 @@
 #' @param controlApproxOptimizer settings passed to optimx or Rsolnp
 #' @param extraTries number of extra tries in mxTryHard for warm start
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
-#' @export
+#' @keywords internal
 exact_bfgsGLMNET <- function(cpptsemObject,
                              dataset,
                              objective,
@@ -283,7 +283,7 @@ exact_bfgsGLMNET <- function(cpptsemObject,
 #' @param scaleLambdaWithN Boolean: Should the penalty value be scaled with the sample size? True is recommended, as the likelihood is also sample size dependent
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress
 #' @import OpenMx
-#' @export
+#' @keywords internal
 exact_outerGLMNET <- function(cpptsemObject,
                               objective,
                               adaptiveLassoWeights,
@@ -489,7 +489,7 @@ exact_outerGLMNET <- function(cpptsemObject,
 #' @param HessianNew Hessian of the likelihood function at iteration k+1
 #' @param maxIter_in Maximal number of iterations of the inner optimization algorithm
 #' @param eps_in Stopping criterion for the inner iterations
-#' @export
+#' @keywords internal
 exact_innerGLMNET <- function(adaptiveLassoWeights, parameterLabels, regIndicators, lambda, newParameters, newGradient, HessianNew, maxIter_in, eps_in){
   ## inner loop: optimize directions
 
@@ -583,8 +583,7 @@ exact_innerGLMNET <- function(adaptiveLassoWeights, parameterLabels, regIndicato
 #' @param stepSize Initial stepsize of the outer iteration (theta_{k+1} = oldParameters + Stepsize \* Stepdirection)
 #' @param differenceApprox which approximation for the gradients should be used? Recommended is central
 #' @param maxIter_line maximal number of iterations for line search
-#'
-#' @export
+#' @keywords internal
 exact_armijoLineSearch <- function(gradientModel,
                                    adaptiveLassoWeights,
                                    parameterLabels,
@@ -663,7 +662,7 @@ exact_armijoLineSearch <- function(gradientModel,
 #' @param sig only relevant when lineSearch = 'GLMNET'. Controls the sigma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421.
 #' @param gam Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
 #' @param maxIter_line maximal number of iterations for line search
-#' @export
+#' @keywords internal
 exact_GLMNETLineSearch <- function(cpptsemObject,
                                    objective,
                                    adaptiveLassoWeights,
@@ -766,7 +765,7 @@ exact_GLMNETLineSearch <- function(cpptsemObject,
 #' @param newGradient Gradients of the likelihood function at iteration k+1
 #' @param cautious boolean: should the update be skipped if it would result in a non positive definite Hessian?
 #' @param hessianEps controls when the update of the Hessian approximation is skipped
-#' @export
+#' @keywords internal
 exact_getBFGS <- function(oldParameters, oldGradients, oldHessian, newParameters, newGradient, cautious = TRUE, hessianEps = .001){
 
   y <- newGradient-oldGradients

@@ -16,3 +16,4 @@ prepareFMatrix(nlatent, nmanifest, Tpoints)
 \description{
 prepare filter matrix for RAM model
 }
+\keyword{internal}

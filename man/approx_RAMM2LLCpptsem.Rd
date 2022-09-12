@@ -19,3 +19,4 @@ computes fit for RAM model
 \author{
 Jannik Orzek
 }
+\keyword{internal}

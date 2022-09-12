@@ -35,7 +35,7 @@
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
 #' @param controlApproxOptimizer settings passed to optimx or Rsolnp
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)
-#' @export
+#' @keywords internal
 exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetVector, lambdas, adaptiveLassoWeights,
                        # additional settings
                        sparseParameters,# = NULL,
@@ -219,7 +219,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
 #' @param break_outer Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)
 #' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
 #' @param silent suppress all warning messages
-#' @export
+#' @keywords internal
 GIST <- function(cpptsemObject,
                  startingValues,
                  objective,
@@ -584,7 +584,7 @@ GIST <- function(cpptsemObject,
 #' @param break_outer Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)
 #' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
 #' @param silent suppress all warning messages
-#' @export
+#' @keywords internal
 GISTWithTarget <- function(cpptsemObject,
                            startingValues,
                            objective,

@@ -982,7 +982,7 @@ regCtsem <- function(
 #'
 #' @author Jannik Orzek
 #' @import ctsemOMX
-#' @export
+#' @keywords internal
 exact_regCtsem <- function(  # model
   cpptsemObject,# = NULL,
   dataset,# = NULL,
@@ -1193,7 +1193,7 @@ exact_regCtsem <- function(  # model
 #'
 #' @author Jannik Orzek
 #' @import ctsemOMX
-#' @export
+#' @keywords internal
 approx_regCtsem <- function(  # model
   cpptsemObject,# = NULL,
   dataset,# = NULL,
@@ -1304,7 +1304,7 @@ approx_regCtsem <- function(  # model
 #' @param autoCV Form of cross-validation: "kFold" or "Blocked"
 #' @param initialPars are any of the initial parameters (T0MEANS or T0VAR) estimated? If so, 10 percent of the initial observations will not be used in cross-validation when autoCV = "Blocked". Otherwise the initial parameters will be very poorly estimated
 #' @author Jannik Orzek
-#' @export
+#' @keywords internal
 createCVFoldsAndModels <- function(dataset, Tpoints, manifestNames, k, autoCV, initialPars){
   fullData <- dataset
 
@@ -1401,7 +1401,7 @@ createCVFoldsAndModels <- function(dataset, Tpoints, manifestNames, k, autoCV, i
 #' @param sampleSize sample size
 #' @param k number of cross-validation folds (k-fold cross-validation)
 #' @author Jannik Orzek
-#' @export
+#' @keywords internal
 createFolds <- function(sampleSize, k){
   # shuffle
   Folds <- sample(1:sampleSize, sampleSize)
@@ -1412,76 +1412,6 @@ createFolds <- function(sampleSize, k){
 }
 
 #### Helper Functions ####
-
-#
-#
-## checkSetup
-##
-## internal checks
-##
-## NOTE: Function located in file regCtsem.R
-##
-## @param argsIn list with arguments
-## @author Jannik Orzek
-## @export
-# checkSetup <- function(argsIn){
-#   warning("NOT YET ADJUSTED FOR NEW IMPLEMENTATION")
-#   if(is.null(argsIn$ctsemObject) & is.null(argsIn$mxObject)){
-#     stop("Both ctsemObject and mxObect are missing. You need to provide at least one")
-#   }
-#   if(!any(class(argsIn$ctsemObject) == "ctsemFit")){
-#     stop("ctsemObject has to be of class ctsemFit")
-#   }
-#
-#   #if(!is.null(argsIn$mxObject) & any(class(argsIn$mxObject)=="MxModel")){
-#   #  # check if ctsemObject is estimated with Kalman
-#   #  if(any(class(argsIn$mxObject$expectation) == "MxExpectationStateSpace") &  !any(class(argsIn$ctsemObject)=="ctsemInit")){
-#   #    stop("It seems like the provided mxObject was fitted with Kalman filter. To use the Kalman filter, provide the object of type ctsemInit from ctModel instead of the fitted model. Set the objective = 'Kalman' and provide a dataset")
-#   #  }
-#   #}
-#
-#   if(!(argsIn$optimization == "exact" || argsIn$optimization == "approx")){
-#     stop(paste("Optimization was set to", optimization, "however only exact or approx are supported."))
-#   }
-#   if(argsIn$optimization == "approx" && argsIn$extraTries == 1){
-#     warning(paste("Approximate optimization often requires multiple tries to find the optimal solution. Use extraTries to automatically try different statring values (e.g., extraTries = 5)."))
-#   }
-#   if(argsIn$cores > 1 && argsIn$verbose>0){
-#     stop("verbose > 0 only possible for single core execution. Set cores = 1 or verbose = 0.")
-#   }
-#
-#   if(argsIn$optimization == "exact" && argsIn$optimizer == "GLMNET" && tolower(argsIn$lineSearch) == "armijo"){
-#     stop("lineSearch = 'armijo' is deprecated. Use lineSearch = 'Wolfe'.")
-#   }
-#
-#   if(tolower(argsIn$objective) == "kalman"){
-#     if(is.null(argsIn$ctsemObject)){stop("Kalman filter requires a ctsemObject. Set up the model in ctsemOMX first")}
-#     #if(!any(class(argsIn$ctsemObject) == "ctsemInit")){stop("ctsemObject has to be of class ctsemInit. You can get the ctsemInit object from ctModel.")}
-#     if(is.null(argsIn$dataset)){stop("No dataset was provided")}
-#   }
-#
-#   if(tolower(argsIn$penalty) == "ridge"){
-#     if(argsIn$standardizeDrift){
-#       stop("Automatic drift standardization not supported for ridge regularization")
-#     }
-#     if(argsIn$optimization == "exact"){
-#       stop("Use optimization = approx for ridge regularization. This is confusing, but approx is the right optimization for ridge regularized SEM. The approx and exact differentiation is only relevant for lasso and adaptivelasso.")
-#     }
-#   }
-#
-#   if(tolower(argsIn$penalty) == "adaptivelasso"){
-#     if(is.null(argsIn$adaptiveLassoWeights)){
-#       stop("Adaptive Lasso requires the adaptiveLassoWeights to be specified. auto uses the inverse of the absolute values of unregularized parameter estimates. This is only recommended with standardizeDrift = FALSE")
-#     }
-#     if(argsIn$standardizeDrift){
-#       stop("Combination of automatic standardization and adaptive lasso is not implemented. Standardization is a special variant of the adaptive lasso. Use penalty = 'lasso' or standardizeDrift = FALSE.")
-#     }
-#   }
-#   #if(any(argsIn$lambdas == "auto") & (tolower(argsIn$penalty) == "adaptivelasso" | argsIn$standardizeDrift)){
-#   #  stop("lambdas = 'auto' currently not supported for adative lasso or automatic standardization of drift parameters.")
-#   #}
-# }
-
 
 #' getAdaptiveLassoWeights
 #'
@@ -1495,7 +1425,7 @@ createFolds <- function(sampleSize, k){
 #' @param adaptiveLassoPower power of the adaptive lasso weights
 #' @param standardizeDrift Should Drift parameters be standardized automatically? Set to 'No' for no standardization, 'T0VAR' for standardization using the T0VAR or 'asymptoticDiffusion' for standardization using the asymptotic diffusion
 #' @author Jannik Orzek
-#' @export
+#' @keywords internal
 getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights, adaptiveLassoPower, standardizeDrift){
   if(!(standardizeDrift == "No" || standardizeDrift == "T0VAR" || standardizeDrift == "asymptoticDiffusion" )){
     stop("standardizeDrift has to be set to 'No', 'T0VAR' or 'asymptoticDiffusion'")
@@ -1664,7 +1594,7 @@ getFinalModel <- function(regCtsemObject, criterion){
 #'
 #' @param VARIs matrix with variances for standardization values
 #' @param driftLabels vector with drift names
-#' @export
+#' @keywords internal
 getFlatStdizer <- function(VARIs, driftLabels){
   stdizer <- matrix(1, nrow = nrow(VARIs), ncol = ncol(VARIs))
   stdizer <- stdizer%*%diag(sqrt(diag(VARIs))) # times predictor sd
@@ -1691,7 +1621,7 @@ getFlatStdizer <- function(VARIs, driftLabels){
 #' @param nMultistart number of multi-start iterations
 #' @author Jannik Orzek
 #' @import OpenMx
-#' @export
+#' @keywords internal
 getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, adaptiveLassoWeights, nMultistart){
   # This function is adapted from Murphy (2012) Machine learning: a probabilistic perspective. See p. 434 for more details.
   cat("Computing lambda_max ... ")
@@ -1849,7 +1779,7 @@ getCurvedLambda <- function(maxLambda, lambdasAutoCurve, lambdasAutoLength){
 #' NOTE: Function located in file regCtsem.R
 #'
 #' @param mxObject mxObject
-#' @export
+#' @keywords internal
 getT0VAR <- function(mxObject){
 
   # case 1: T0VAR not stationary
@@ -1873,7 +1803,7 @@ getT0VAR <- function(mxObject){
 #' @param varianceBaseValues values of varianceBase
 #' @import OpenMx
 #' @author Jannik Orzek
-#' @export
+#' @keywords internal
 getVarianceFromVarianceBase2 <- function(varianceBaseValues){
   varianceCholValues <- OpenMx::vec2diag(exp(OpenMx::diag2vec(varianceBaseValues))) +
     varianceBaseValues - OpenMx::vec2diag(OpenMx::diag2vec(varianceBaseValues))
@@ -1985,7 +1915,7 @@ getParameterEstimates <- function(regCtsemObject, parameterEstimatesRaw){
 #' @param parameterTable parameterTable
 #' @param nVariables number of variables in the matrix
 #' @param variableNames names of the variables
-#' @export
+#' @keywords internal
 getVariances <- function(parameterEstimatesRaw, matName, baseMatName, parameterTable, nVariables, variableNames){
   baseMat <- diag(-999, nrow = nVariables, ncol = nVariables)
   VARLabels <- matrix(paste0(matName,"_", variableNames,seq_len(nVariables),
@@ -2013,7 +1943,7 @@ getVariances <- function(parameterEstimatesRaw, matName, baseMatName, parameterT
 #' @param regCtsemObject Object from exact_regCtsem or approx_regCtsem
 #' @import OpenMx
 #' @author Jannik Orzek
-#' @export
+#' @keywords internal
 separateFitAndParameters <- function(regCtsemObject){
   # get parameter labels:
 
@@ -2048,7 +1978,7 @@ separateFitAndParameters <- function(regCtsemObject){
 #' @param xlab label for x-axis. auto will set to drift
 #' @param skiptYlabComp boolean: is ylab a string
 #' @param skiptXlabComp boolean: is xlab a string
-#' @export
+#' @keywords internal
 generateDRIFTPlot <- function(model, ylab = "auto", xlab = "auto", skiptYlabComp, skiptXlabComp){
   drifts <- model$parameters[grepl("drift", rownames(model$parameters)),]
   regIndicators <- model$setup$regIndicators

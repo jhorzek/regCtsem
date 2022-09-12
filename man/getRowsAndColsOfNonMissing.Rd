@@ -12,3 +12,4 @@ getRowsAndColsOfNonMissing(uniqueMissingPattern)
 \description{
 Build indicators for missingness patterns
 }
+\keyword{internal}

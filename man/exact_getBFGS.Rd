@@ -35,3 +35,4 @@ computes the BFGS Hessian approximation
 \details{
 NOTE: Function located in file GLMNET.R
 }
+\keyword{internal}

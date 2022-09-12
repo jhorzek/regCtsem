@@ -21,3 +21,4 @@ plot.regCtsemCV
 \author{
 Jannik Orzek
 }
+\keyword{internal}

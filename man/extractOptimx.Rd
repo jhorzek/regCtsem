@@ -14,3 +14,4 @@ extractOptimx(parameterLabels, opt)
 \description{
 sets the model parameters to the best values obtained from optimx
 }
+\keyword{internal}

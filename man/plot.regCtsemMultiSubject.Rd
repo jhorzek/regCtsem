@@ -35,3 +35,4 @@ plot.regCtsemMultiSubject
 \author{
 Jannik Orzek
 }
+\keyword{internal}

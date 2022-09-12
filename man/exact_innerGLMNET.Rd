@@ -41,3 +41,4 @@ performs the inner optimization routine of GLMNET. exact_innerGLMNET returns a d
 \details{
 NOTE: Function located in file GLMNET.R
 }
+\keyword{internal}

@@ -17,3 +17,4 @@ returns the standardizer for the standardized drift parameters. Computes SD_pred
 \details{
 NOTE: Function located in file regCtsem.R
 }
+\keyword{internal}

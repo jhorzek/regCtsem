@@ -2,11 +2,20 @@
 #include "fillRAMMatrices.h"
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-// Fills the S matrix (covariances) given the S matrix, the discreteDIFFUSIONUnique (list with discrete diffusion names, dTs and results),
-// MANIFESTVAR (manifest variance), and cppSParameterIndicators (tells fillS where to put the discreteDIFFUSIONUnique and MANIFESTVAR)
-// The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
-
-using namespace Rcpp;
+//' fillS
+//'
+//' Fills the S matrix (covariances) given the S matrix, the discreteDIFFUSIONUnique (list with discrete diffusion names, dTs and results),
+//' MANIFESTVAR (manifest variance), and cppSParameterIndicators (tells fillS where to put the discreteDIFFUSIONUnique and MANIFESTVAR)
+//' The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
+//' @param S matrix with undirected effects
+//' @param T0VAR matrix with initial covariances
+//' @param TRAITVAR trait variance
+//' @param hasDiscreteTRAITUnique boolean
+//' @param hasDiscreteDIFFUSIONUnique boolean
+//' @param discreteDIFFUSIONUnique list with discrete diffusion names, dTs and results
+//' @param MANIFESTVAR manifest variance
+//' @param SParameterIndicators tells fillS where to put the discreteDIFFUSIONUnique and MANIFESTVAR
+//'
 // [[Rcpp::export]]
 
 arma::mat  fillS(arma::mat S,

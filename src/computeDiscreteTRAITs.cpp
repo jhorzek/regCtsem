@@ -2,9 +2,14 @@
 #include "computeDiscreteParameters.h"
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-// Computes the discrete time trait matrices given the discreteDRIFTUnique (list with discrete drift names, dTs and results) and discreteTRAITUnique (list with discrete trait names, dTs and results)
-// The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
-using namespace Rcpp;
+//' computeDiscreteTRAITs
+//'
+//' Computes the discrete time trait matrices given the discreteDRIFTUnique (list with discrete drift names, dTs and results) and discreteTRAITUnique (list with discrete trait names, dTs and results)
+//' The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
+//' @param discreteDRIFTUnique list with discrete drift names, dTs and results
+//' @param discreteTRAITUnique list with discrete trait names, dTs and results
+//' @returns list with discrete traits
+//' @keywords internal
 // [[Rcpp::export]]
 Rcpp::List computeDiscreteTRAITs(const Rcpp::List& discreteDRIFTUnique, Rcpp::List discreteTRAITUnique) {
 

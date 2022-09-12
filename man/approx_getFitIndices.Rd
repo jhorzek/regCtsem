@@ -44,3 +44,4 @@ NOTE: Function located in file approx_optimization.R
 \author{
 Jannik Orzek
 }
+\keyword{internal}
