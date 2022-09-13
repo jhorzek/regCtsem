@@ -77,13 +77,18 @@ checkFI <- function(mxObject,
                                              labels = parameterLabels,
                                              values = parameters[,i],
                                              free = free
-                                             )
+    )
     currentModel <- OpenMx::mxRun(currentModel,
                                   useOptimizer = F,
                                   silent = T)
     m2LL <- currentModel$fitfunction$result[[1]]
     AICmx <- stats::AIC(currentModel)
-    BICmx <- stats::BIC(currentModel)
+
+    if(!is(object = currentModel$expectation, class2 = "MxExpectationStateSpace")){
+      BICmx <- stats::BIC(currentModel)
+    }else{
+      BICmx <- currentModel$fitfunction$result[[1]] + log(length(unique(currentModel$data$observed[,"id"]))) * length(omxGetParameters(currentModel))
+    }
 
     if(abs(fit["m2LL",i] - m2LL)>threshold){
       warning(paste0("Wrong m2LL for lambda = ", colnames(fit)[i]))
@@ -103,7 +108,7 @@ checkFI <- function(mxObject,
       cvModel <- OpenMx::omxSetParameters(cvModel,
                                           labels = parameterLabels,
                                           values = parameters[,i]
-                                          )
+      )
 
       cvModel <- OpenMx::mxRun(cvModel, useOptimizer = F, silent = T)
       cvM2LL <- cvModel$fitfunction$result[[1]]
