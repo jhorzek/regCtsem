@@ -243,7 +243,7 @@ startFromSparse <- function(ctsemObject,
         return(diff%*%matrix(grad, ncol = 1) + .5*diff%*%hess%*%t(diff))
       }
       param <- sparseParameters
-      approximatedFull <- optim(par = param,
+      approximatedFull <- stats::optim(par = param,
                                 fn = fn,
                                 sparseParameters = param,
                                 grad = grad,

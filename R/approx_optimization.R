@@ -67,7 +67,7 @@ approx_iterateOverLambdas <- function(  # model
   rownames(fitAndParameters) <- c(fitLabels, parameterLabels)
   colnames(fitAndParameters) <- lambdas
 
-  pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
+  pbar <- utils::txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
 
   for(iteration in 1:length(lambdas)){
 
@@ -176,7 +176,7 @@ approx_iterateOverLambdas <- function(  # model
     fitAndParameters[fitLabels,as.character(lambdas[iteration])] <- fits[fitLabels,]
 
     # set progress bar for
-    setTxtProgressBar(pbar,iteration)
+    utils::setTxtProgressBar(pbar,iteration)
   }
   return(fitAndParameters)
 

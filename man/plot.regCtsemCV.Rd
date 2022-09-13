@@ -4,16 +4,18 @@
 \alias{plot.regCtsemCV}
 \title{plot.regCtsemCV}
 \usage{
-\method{plot}{regCtsemCV}(regCtsemObject, xlab = "auto", ylab = "auto", ...)
+\method{plot}{regCtsemCV}(x, y = NULL, ..., xlab = "auto", ylab = "auto")
 }
 \arguments{
-\item{regCtsemObject}{fitted regCtsem object}
+\item{x}{fitted regCtsem object}
+
+\item{y}{NULL}
+
+\item{...}{additional parameters for plot or matplot (e.g., lty, col, ...)}
 
 \item{xlab}{label for x axis}
 
 \item{ylab}{label for y axis}
-
-\item{...}{additional parameters for plot or matplot (e.g., lty, col, ...)}
 }
 \description{
 plot.regCtsemCV
@@ -21,4 +23,3 @@ plot.regCtsemCV
 \author{
 Jannik Orzek
 }
-\keyword{internal}

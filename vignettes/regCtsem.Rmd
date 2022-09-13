@@ -38,7 +38,7 @@ In R, models of the form shown above can, for instance, be fitted with the packa
 $$f(\pmb\theta) = L(\pmb\theta) + N\sum_{j\in J}\lambda_j|\theta_j - \tau_j|$$
 where $f(\pmb\theta)$ is the regularized objective function, $L(\pmb \theta)$ is the -2 log Likelihood of the model $N$ is the sample size and $\sum_{j\in J}\lambda_j|\theta_j - \tau_j|$ is the penalty term. Here, $J$ is a set of parameter indices and $\theta_{j,j\in J}$ are the parameters which are to be regularized. This will become more clear in the following examples. In the penalty term $\tau_j$ is the target towards which the parameter $\theta_j$ is regularized. By default this is set to $0$. $\lambda_j$ controls the relative importance of the -2 log Likelihood and the penalty term. For larger $\lambda_j$ parameter $\theta_j$ will be pulled towards $\tau_j$. By default the same $\lambda$ is used for all regularized parameters. This is shown in the figure below, where the $x$-axis shows the $\lambda$ values and the blue lines are two regularized parameters. For larger $\lambda$ these are pulled towards the target $0$.
 
-```{r, echo=FALSE, results='hide', message = FALSE, warning=FALSE}
+```{r, include=FALSE}
 set.seed(17046)
 
 library(regCtsem)

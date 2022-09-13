@@ -193,7 +193,7 @@
 #'   cpptsemmodel$setParameterValues(parameters, names(parameters))
 #'   # catching all errors from cpptsemmodel
 #' # when parameter values are impossible
-#'   invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(0),
+#'   invisible(utils::capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(0),
 #'                                          silent = TRUE),
 #'                            type = "message"))
 #'
@@ -310,7 +310,7 @@ cpptsemFromCtsem <- function(ctsemModel, wideData, removeD = TRUE, group = NULL,
     FMatrix <- mxObject$F$values
 
     # create cpptsem model
-    cpptsem <- new(cpptsemRAMmodel, ctsemModel$mxobj$name, ctMatrices, parameterTable, stationaryT0VAR, stationaryT0MEANS)
+    cpptsem <- methods::new(cpptsemRAMmodel, ctsemModel$mxobj$name, ctMatrices, parameterTable, stationaryT0VAR, stationaryT0MEANS)
 
     if(!is.null(AMatrix$discreteDRIFTUnique)){
       cpptsem$setDiscreteDRIFTUnique(AMatrix$discreteDRIFTUnique)
@@ -348,7 +348,7 @@ cpptsemFromCtsem <- function(ctsemModel, wideData, removeD = TRUE, group = NULL,
                                             Tpoints = Tpoints, sampleSize = nrow(wideData))
 
     # create cpptsem model
-    cpptsem <- new(cpptsemKalmanModel, ctsemModel$mxobj$name, ctMatrices, parameterTable, stationaryT0VAR, stationaryT0MEANS)
+    cpptsem <- methods::new(cpptsemKalmanModel, ctsemModel$mxobj$name, ctMatrices, parameterTable, stationaryT0VAR, stationaryT0MEANS)
 
     if(!is.null(discreteTimeParameterConstructor$discreteDRIFTUnique)){
       cpptsem$setDiscreteDRIFTUnique(discreteTimeParameterConstructor$discreteDRIFTUnique)
@@ -478,7 +478,7 @@ prepareRAMData <- function(dataset, individualMissingPatternID, uniqueMissingPat
 
     if(datasetRAM[[patternName]] [["sampleSize"]] > 1){
       datasetRAM[[patternName]] [["observedMeans"]] <- matrix(apply(datasetRAM[[patternName]] [["rawData"]], 2, mean), ncol = 1)
-      datasetRAM[[patternName]] [["observedCov"]] <- ((datasetRAM[[patternName]] [["sampleSize"]]-1)/(datasetRAM[[patternName]] [["sampleSize"]]))*cov(datasetRAM[[patternName]] [["rawData"]])
+      datasetRAM[[patternName]] [["observedCov"]] <- ((datasetRAM[[patternName]] [["sampleSize"]]-1)/(datasetRAM[[patternName]] [["sampleSize"]]))*stats::cov(datasetRAM[[patternName]] [["rawData"]])
     }else{
       datasetRAM[[patternName]] [["rawData"]] <- t(datasetRAM[[patternName]] [["rawData"]])
       datasetRAM[[patternName]] [["observedMeans"]] <- matrix(-999999.9, nrow = datasetRAM[[patternName]] [["nObservedVariables"]], ncol = 1)
@@ -1404,10 +1404,10 @@ fitCpptsem <- function(parameterValues, cpptsemObject, objective, free = labeled
   if(tolower(objective) == "ml"){
     # catching all errors from cpptsemObject
     # when parameter values are impossible
-    invisible(capture.output(RAM <- try(cpptsemObject$computeRAM(),
+    invisible(utils::capture.output(RAM <- try(cpptsemObject$computeRAM(),
                                         silent = TRUE),
                              type = "message"))
-    invisible(capture.output(FIT <- try(cpptsemObject$fitRAM(),
+    invisible(utils::capture.output(FIT <- try(cpptsemObject$fitRAM(),
                                         silent = TRUE),
                              type = "message"))
     if(class(RAM) == "try-error" | class(FIT) == "try-error"){
@@ -1422,7 +1422,7 @@ fitCpptsem <- function(parameterValues, cpptsemObject, objective, free = labeled
   if(tolower(objective) == "kalman"){
     # catching all errors from cpptsemObject
     # when parameter values are impossible
-    invisible(capture.output(FIT <- try(cpptsemObject$computeAndFitKalman(0),
+    invisible(utils::capture.output(FIT <- try(cpptsemObject$computeAndFitKalman(0),
                                         silent = TRUE),
                              type = "message"))
     if(class(FIT) == "try-error"){
@@ -1461,9 +1461,9 @@ gradCpptsem <- function(parameterValues, cpptsemObject, objective, free = labele
   precisions <- rev(seq(defaultPrecision, defaultPrecision2, length.out = 5))
   for(precision in precisions){
     if(tolower(objective) == "ml"){
-      invisible(capture.output(gradients <- try(cpptsemObject$approxRAMGradients(precision), silent = T), type = "message"))
+      invisible(utils::capture.output(gradients <- try(cpptsemObject$approxRAMGradients(precision), silent = T), type = "message"))
     }else{
-      invisible(capture.output(gradients <- try(cpptsemObject$approxKalmanGradients(precision), silent = T), type = "message"))
+      invisible(utils::capture.output(gradients <- try(cpptsemObject$approxKalmanGradients(precision), silent = T), type = "message"))
     }
     if(!(any(class(gradients) == "try-error")) &
        !anyNA(gradients)){
@@ -1517,42 +1517,42 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
         }
         if(parameterTable$matrix[parameter] == "DRIFT"){
           # diagonal entries:
-          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,-.9,.4)
+          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- stats::rnorm(1,-.9,.4)
           # off-diagonal entries
-          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,0,.3)
+          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- stats::rnorm(1,0,.3)
           next
         }
 
         if(parameterTable$matrix[parameter] == "DIFFUSIONbase"){
-          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,log(2),.4)
-          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,0,.3)
+          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- stats::rnorm(1,log(2),.4)
+          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- stats::rnorm(1,0,.3)
           next
         }
 
         if(parameterTable$matrix[parameter] == "T0VARbase"){
-          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,log(2),.4)
-          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,0,.3)
+          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- stats::rnorm(1,log(2),.4)
+          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- stats::rnorm(1,0,.3)
           next
         }
 
         if(parameterTable$matrix[parameter] == "TRAITVARbase"){
-          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,log(2),.4)
-          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,0,.3)
+          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- stats::rnorm(1,log(2),.4)
+          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- stats::rnorm(1,0,.3)
           next
         }
 
         if(parameterTable$matrix[parameter] == "T0MEANS"){
-          currentTry[parameterLabel] <- rnorm(1,0,.5)
+          currentTry[parameterLabel] <- stats::rnorm(1,0,.5)
           next
         }
 
         if(parameterTable$matrix[parameter] == "MANIFESTMEANS"){
-          currentTry[parameterLabel] <- rnorm(1,0,.5)
+          currentTry[parameterLabel] <- stats::rnorm(1,0,.5)
           next
         }
         if(parameterTable$matrix[parameter] == "MANIFESTVARbase"){
-          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,log(2),.4)
-          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- rnorm(1,0,.3)
+          if(parameterTable$row[parameter] == parameterTable$col[parameter]) currentTry[parameterLabel] <- stats::rnorm(1,log(2),.4)
+          if(parameterTable$row[parameter] != parameterTable$col[parameter]) currentTry[parameterLabel] <- stats::rnorm(1,0,.3)
           next
         }
 
@@ -1610,7 +1610,7 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
 
   failureReturns <- .Machine$double.xmax/2
 
-  invisible(capture.output(CpptsemFit <- try(Rsolnp::solnp(par = startingValues[free],
+  invisible(utils::capture.output(CpptsemFit <- try(Rsolnp::solnp(par = startingValues[free],
                                                            fun = fitCpptsem,
                                                            #gr = gradCpptsem,
                                                            ...,
@@ -1648,10 +1648,10 @@ approx_RAMM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
 
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
-  invisible(capture.output(RAM <- try(cpptsemmodel$computeRAM(),
+  invisible(utils::capture.output(RAM <- try(cpptsemmodel$computeRAM(),
                                       silent = TRUE),
                            type = "message"))
-  invisible(capture.output(FIT <- try(cpptsemmodel$fitRAM(),
+  invisible(utils::capture.output(FIT <- try(cpptsemmodel$fitRAM(),
                                       silent = TRUE),
                            type = "message"))
   if(class(RAM) == "try-error" | class(FIT) == "try-error"){
@@ -1684,10 +1684,10 @@ approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeig
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
-  invisible(capture.output(RAM <- try(cpptsemmodel$computeRAM(),
+  invisible(utils::capture.output(RAM <- try(cpptsemmodel$computeRAM(),
                                       silent = TRUE),
                            type = "message"))
-  invisible(capture.output(FIT <- try(cpptsemmodel$fitRAM(),
+  invisible(utils::capture.output(FIT <- try(cpptsemmodel$fitRAM(),
                                       silent = TRUE),
                            type = "message"))
   if(class(RAM) == "try-error" | class(FIT) == "try-error"){
@@ -1720,10 +1720,10 @@ ridgeRAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeight
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
-  invisible(capture.output(RAM <- try(cpptsemmodel$computeRAM(),
+  invisible(utils::capture.output(RAM <- try(cpptsemmodel$computeRAM(),
                                       silent = TRUE),
                            type = "message"))
-  invisible(capture.output(FIT <- try(cpptsemmodel$fitRAM(),
+  invisible(utils::capture.output(FIT <- try(cpptsemmodel$fitRAM(),
                                       silent = TRUE),
                            type = "message"))
   if(class(RAM) == "try-error" | class(FIT) == "try-error"){
@@ -1749,7 +1749,7 @@ approx_KalmanM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
-  invisible(capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(0),
+  invisible(utils::capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(0),
                                       silent = TRUE),
                            type = "message"))
   if(class(FIT) == "try-error"){
@@ -1782,7 +1782,7 @@ approx_KalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoW
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
-  invisible(capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(0),
+  invisible(utils::capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(0),
                                       silent = TRUE),
                            type = "message"))
   if(class(FIT) == "try-error"){
@@ -1815,7 +1815,7 @@ ridgeKalmanRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWei
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
   # when parameter values are impossible
-  invisible(capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(0),
+  invisible(utils::capture.output(FIT <- try(cpptsemmodel$computeAndFitKalman(0),
                                       silent = TRUE),
                            type = "message"))
   if(class(FIT) == "try-error"){
@@ -1843,9 +1843,9 @@ exact_getCppGradients <- function(cpptsemObject, objective){
   precisions <- rev(seq(defaultPrecision, defaultPrecision2, length.out = 5))
   for(precision in precisions){
     if(tolower(objective) == "ml"){
-      invisible(capture.output(gradients <- try(cpptsemObject$approxRAMGradients(precision), silent = T), type = "message"))
+      invisible(utils::capture.output(gradients <- try(cpptsemObject$approxRAMGradients(precision), silent = T), type = "message"))
     }else{
-      invisible(capture.output(gradients <- try(cpptsemObject$approxKalmanGradients(precision), silent = T), type = "message"))
+      invisible(utils::capture.output(gradients <- try(cpptsemObject$approxKalmanGradients(precision), silent = T), type = "message"))
     }
     if(!(any(class(gradients) == "try-error")) &
        !anyNA(gradients)){
@@ -1872,7 +1872,7 @@ exact_getCppGradients <- function(cpptsemObject, objective){
 #' @author Jannik Orzek
 #' @keywords internal
 approx_gradCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector, epsilon, objective, failureReturns){
-  invisible(capture.output(grad <- try(exact_getCppGradients(cpptsemObject = cpptsemmodel, objective = objective),
+  invisible(utils::capture.output(grad <- try(exact_getCppGradients(cpptsemObject = cpptsemmodel, objective = objective),
                                        silent = TRUE),
                            type = "message"))
   if(class(grad) == "try-error" || anyNA(grad)){
@@ -1967,7 +1967,7 @@ approx_cpptsemRsolnp <- function(cpptsemmodel,
     "control" = list("trace" = 0)
   }
 
-  invisible(capture.output(CpptsemFit <- try(Rsolnp::solnp(par = startingValues,
+  invisible(utils::capture.output(CpptsemFit <- try(Rsolnp::solnp(par = startingValues,
                                                            fun = regM2LLCpptsem,
                                                            #gr = gradCpptsem,
                                                            eqfun = eqfun, eqB = eqB, ineqfun = ineqfun, ineqLB = ineqLB,
@@ -2038,7 +2038,7 @@ approx_cpptsemOptim <- function(cpptsemmodel,
                                 objective,
                                 failureReturns = NA,
                                 testGradients){
-  CpptsemFit <- optim(par = startingValues,
+  CpptsemFit <- stats::optim(par = startingValues,
                       fn = regM2LLCpptsem,
                       gr = gradCpptsem,
                       cpptsemmodel, adaptiveLassoWeights, N, lambda, regIndicators, targetVector,
@@ -2142,7 +2142,7 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
                      "maxit" = itnmax)
   }
 
-  invisible(capture.output(CpptsemFit <- try(optimx::optimx(par = startingValues,
+  invisible(utils::capture.output(CpptsemFit <- try(optimx::optimx(par = startingValues,
                                                             fn = regM2LLCpptsem,
                                                             #gr = gradCpptsem,
                                                             cpptsemmodel = cpptsemmodel, adaptiveLassoWeights = adaptiveLassoWeights,
@@ -2213,7 +2213,7 @@ computeStandardErrorsRaw <- function(cpptsemObject, objective){
                        nrow(cpptsemObject$kalmanData)
   )
   parameterValues <- cpptsemObject$getParameterValues()
-  Hessian <- optimHess(par = parameterValues,
+  Hessian <- stats::optimHess(par = parameterValues,
                        fn = fitCpptsem,
                        cpptsemObject = cpptsemObject,
                        objective = objective,

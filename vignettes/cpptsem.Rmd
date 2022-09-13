@@ -247,10 +247,10 @@ m2LLCpptsem <- function(parameters, cpptsemmodel){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel 
   # when parameter values are impossible
-  invisible(capture.output(RAM <- try(cpptsemmodel$computeRAM(), 
+  invisible(utils::capture.output(RAM <- try(cpptsemmodel$computeRAM(), 
                                       silent = TRUE), 
                            type = "message"))
-  invisible(capture.output(FIT <- try(cpptsemmodel$fitRAM(),
+  invisible(utils::capture.output(FIT <- try(cpptsemmodel$fitRAM(),
                                       silent = TRUE), 
                            type = "message"))
   
@@ -261,7 +261,7 @@ m2LLCpptsem <- function(parameters, cpptsemmodel){
 }
 
 gradCpptsem <- function(parameters, cpptsemmodel){
-  invisible(capture.output(grad <- try(cpptsemmodel$approxRAMGradients((1.1 * 10^(-16))^(1/3)), 
+  invisible(utils::capture.output(grad <- try(cpptsemmodel$approxRAMGradients((1.1 * 10^(-16))^(1/3)), 
                                        silent = TRUE), 
                            type = "message"))
   if(class(grad) == "try-error"){
@@ -271,7 +271,7 @@ gradCpptsem <- function(parameters, cpptsemmodel){
 }
 
 # compute 
-AACpptsemFit <- optim(par = startingValues, 
+AACpptsemFit <- stats::optim(par = startingValues, 
                       fn = m2LLCpptsem, 
                       gr = gradCpptsem,  
                       AACpptsem, 
@@ -353,7 +353,7 @@ m2LLCpptsem <- function(parameters, cpptsemmodel){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel 
   # when parameter values are impossible
-  invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(0), 
+  invisible(utils::capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(0), 
                                          silent = TRUE), 
                            type = "message"))
   

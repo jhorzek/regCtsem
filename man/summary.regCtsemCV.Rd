@@ -4,10 +4,12 @@
 \alias{summary.regCtsemCV}
 \title{summary.regCtsemCV}
 \usage{
-\method{summary}{regCtsemCV}(regCtsemObject)
+\method{summary}{regCtsemCV}(object, ...)
 }
 \arguments{
-\item{regCtsemObject}{Object of type regCtsemCV}
+\item{object}{Object of type regCtsemCV}
+
+\item{...}{NULL}
 }
 \description{
 summary.regCtsemCV

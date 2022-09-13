@@ -271,7 +271,7 @@ exact_tryStartingValues <- function(startingValues,
     if(numStart > 0){
       warning("Can not try different starting values because sparseParameters is empty.")
     }
-    invisible(capture.output(newStartingValues <- tryApproxFirst(startingValues = startingValues,
+    invisible(utils::capture.output(newStartingValues <- tryApproxFirst(startingValues = startingValues,
                                                                  returnAs = returnAs,
                                                                  approxFirst = approxFirst,
                                                                  numStart = numStart,
@@ -304,7 +304,7 @@ exact_tryStartingValues <- function(startingValues,
     parameterValues_i <- weight*startingValues[parameterNames]+(1-weight)*sparseParameters[parameterNames]
     startValuesTable[parameterNames,i] <- parameterValues_i[parameterNames]
     # set parameters
-    invisible(capture.output(optimized <- try(tryApproxFirst(startingValues = parameterValues_i,
+    invisible(utils::capture.output(optimized <- try(tryApproxFirst(startingValues = parameterValues_i,
                                                              returnAs = "full",
                                                              approxFirst = approxFirst,
                                                              numStart = numStart,

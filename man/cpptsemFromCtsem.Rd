@@ -208,7 +208,7 @@ m2LLCpptsem <- function(parameters, cpptsemmodel){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel
 # when parameter values are impossible
-  invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(0),
+  invisible(utils::capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(0),
                                          silent = TRUE),
                            type = "message"))
 

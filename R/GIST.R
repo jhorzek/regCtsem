@@ -80,17 +80,17 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
   regM2LL <- rep(NA, length(lambdas))
 
   # Progress bar
-  pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
+  pbar <- utils::txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
 
   # iterate over lambda values
   numLambdas <- length(lambdas)
   iteration <- 1
-  retryOnce <- TRUE # will retry optimizing once with new starting values
+  retryOnce <- TRUE # will retry optimizing once with methods::new starting values
   while(iteration <= numLambdas){
     lambda <- lambdas[iteration]
 
     # update progress bar
-    setTxtProgressBar(pbar, iteration)
+    utils::setTxtProgressBar(pbar, iteration)
 
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*samplesize
 
@@ -252,11 +252,11 @@ GIST <- function(cpptsemObject,
   # set parameters
   cpptsemObject$setParameterValues(startingValues, names(startingValues))
   if(tolower(objective) == "ml"){
-    invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
-    invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
+    invisible(utils::capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+    invisible(utils::capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }else{
-    invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
+    invisible(utils::capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
     out2 <- NA
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }
@@ -300,7 +300,7 @@ GIST <- function(cpptsemObject,
       # sometimes this step size is extremely large and the algorithm converges very slowly
       # we found that in these cases it can help to reset the stepsize
       # this will be done randomly here:
-      if(runif(1,0,1) > .9){
+      if(stats::runif(1,0,1) > .9){
         stepsize <- initialStepsize
       }
 
@@ -353,10 +353,10 @@ GIST <- function(cpptsemObject,
       cpptsemObject$setParameterValues(parameters_kp1, names(parameters_kp1))
       # compute likelihood
       if(tolower(objective) == "ml"){
-        invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
-        invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
+        invisible(utils::capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+        invisible(utils::capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
       }else{
-        invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
+        invisible(utils::capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
         out2 <- NA
       }
       if(any(class(out1) == "try-error")  |
@@ -483,7 +483,7 @@ GIST <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
     }else if(break_crit == "parameterChange"){
@@ -504,7 +504,7 @@ GIST <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
     }else if(break_crit == "fitChange"){
@@ -525,7 +525,7 @@ GIST <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
 
@@ -618,11 +618,11 @@ GISTWithTarget <- function(cpptsemObject,
   # set parameters
   cpptsemObject$setParameterValues(startingValues, names(startingValues))
   if(tolower(objective) == "ml"){
-    invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
-    invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
+    invisible(utils::capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+    invisible(utils::capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }else{
-    invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
+    invisible(utils::capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
     out2 <- NA
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }
@@ -667,7 +667,7 @@ GISTWithTarget <- function(cpptsemObject,
       # sometimes this step size is extremely large and the algorithm converges very slowly
       # we found that in these cases it can help to reset the stepsize
       # this will be done randomly here:
-      if(runif(1,0,1) > .9){
+      if(stats::runif(1,0,1) > .9){
         stepsize <- initialStepsize
       }
 
@@ -729,10 +729,10 @@ GISTWithTarget <- function(cpptsemObject,
       cpptsemObject$setParameterValues(parameters_kp1, names(parameters_kp1))
       # compute likelihood
       if(tolower(objective) == "ml"){
-        invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
-        invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
+        invisible(utils::capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+        invisible(utils::capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
       }else{
-        invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
+        invisible(utils::capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
         out2 <- NA
       }
       if(any(class(out1) == "try-error")  |
@@ -861,7 +861,7 @@ GISTWithTarget <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
     }else if(break_crit == "parameterChange"){
@@ -882,7 +882,7 @@ GISTWithTarget <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
     }else if(break_crit == "fitChange"){
@@ -903,7 +903,7 @@ GISTWithTarget <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
 

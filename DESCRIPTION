@@ -8,8 +8,8 @@ Description: Implements lasso, adaptive lasso, and ridge regularization for cont
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Depends: ctsemOMX
-Imports: Rcpp (>= 1.0.5), OpenMx, optimx, Rsolnp, numDeriv, rlang, methods, stats, utils, graphics, methods
+Depends: ctsemOMX, ctsem
+Imports: Rcpp (>= 1.0.5), OpenMx, optimx, Rsolnp, numDeriv, rlang, methods, stats, utils, graphics
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.2.1
 Suggests: 

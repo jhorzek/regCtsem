@@ -70,7 +70,7 @@ exact_bfgsGLMNET <- function(cpptsemObject,
 
   ## compute Hessian
   if(!is.matrix(initialHessianApproximation)){
-    initialHessian <- try(optimHess(par = parameters, fn = fitCpptsem,
+    initialHessian <- try(stats::optimHess(par = parameters, fn = fitCpptsem,
                                     cpptsemObject = cpptsemObject,
                                     objective = objective,
                                     failureReturns = NA
@@ -114,7 +114,7 @@ exact_bfgsGLMNET <- function(cpptsemObject,
   Hessians <- array(NA, dim = c(length(newParameters),length(newParameters),length(lambdas)))
 
   # Progress bar
-  pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
+  pbar <- utils::txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
 
   # iterate over lambda values
   numLambdas <- length(lambdas)
@@ -123,7 +123,7 @@ exact_bfgsGLMNET <- function(cpptsemObject,
   while(iteration <= numLambdas){
     lambda <- lambdas[iteration]
     # update progress bar
-    setTxtProgressBar(pbar, iteration)
+    utils::setTxtProgressBar(pbar, iteration)
 
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*sampleSize
 
@@ -416,7 +416,7 @@ exact_outerGLMNET <- function(cpptsemObject,
                                                     adaptiveLassoWeights = adaptiveLassoWeights)
 
       # extract gradients:
-      invisible(capture.output(newGradients <- try(exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective))[parameterLabels]))
+      invisible(utils::capture.output(newGradients <- try(exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective))[parameterLabels]))
       newGradients <- matrix(newGradients, nrow = length(newGradients), ncol = 1)
       rownames(newGradients) <- parameterLabels
     }else{
@@ -430,7 +430,7 @@ exact_outerGLMNET <- function(cpptsemObject,
                                                     adaptiveLassoWeights = adaptiveLassoWeights)
 
       # extract gradients:
-      invisible(capture.output(newGradients <- try(exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective))[parameterLabels]))
+      invisible(utils::capture.output(newGradients <- try(exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective))[parameterLabels]))
       newGradients <- matrix(newGradients, nrow = length(newGradients), ncol = 1)
       rownames(newGradients) <- parameterLabels
     }
@@ -457,12 +457,12 @@ exact_outerGLMNET <- function(cpptsemObject,
                  " ##"
       )
       )
-      flush.console()
+      utils::flush.console()
     }
 
     if(verbose == 2){
       convergencePlotValues[,iter_out] <- newParameters
-      matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+      graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
     }
 
   }
@@ -709,10 +709,10 @@ exact_GLMNETLineSearch <- function(cpptsemObject,
     # compute new fitfunction value
     cpptsemObject_i$setParameterValues(parametersNew_td, parameterLabels)
     if(tolower(objective) == "ml"){
-      invisible(capture.output(out1 <- try(cpptsemObject_i$computeRAM(), silent = TRUE), type = "message"))
-      invisible(capture.output(out2 <- try(cpptsemObject_i$fitRAM(), silent = TRUE), type = "message"))
+      invisible(utils::capture.output(out1 <- try(cpptsemObject_i$computeRAM(), silent = TRUE), type = "message"))
+      invisible(utils::capture.output(out2 <- try(cpptsemObject_i$fitRAM(), silent = TRUE), type = "message"))
     }else{
-      invisible(capture.output(out1 <- try(cpptsemObject_i$computeAndFitKalman(0), silent = TRUE), type = "message"))
+      invisible(utils::capture.output(out1 <- try(cpptsemObject_i$computeAndFitKalman(0), silent = TRUE), type = "message"))
       out2 <- NA
     }
     if(any(class(out1)== "try-error") | any(class(out2)== "try-error") | !is.finite(cpptsemObject_i$m2LL)){

@@ -82,8 +82,8 @@ checkFI <- function(mxObject,
                                   useOptimizer = F,
                                   silent = T)
     m2LL <- currentModel$fitfunction$result[[1]]
-    AICmx <- AIC(currentModel)
-    BICmx <- BIC(currentModel)
+    AICmx <- stats::AIC(currentModel)
+    BICmx <- stats::BIC(currentModel)
 
     if(abs(fit["m2LL",i] - m2LL)>threshold){
       warning(paste0("Wrong m2LL for lambda = ", colnames(fit)[i]))

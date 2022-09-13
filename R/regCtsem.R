@@ -6,11 +6,11 @@
 #'
 #' References:
 #'
-#' * Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
+#' * Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1-36. https://doi.org/10.18637/jss.v077.i05
 #'
-#' * Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267–288.
+#' * Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267-288.
 #'
-#' * Zou, H. (2006). The Adaptive Lasso and Its Oracle Properties. Journal of the American Statistical Association, 101(476), 1418–1429. https://doi.org/10.1198/016214506000000735
+#' * Zou, H. (2006). The Adaptive Lasso and Its Oracle Properties. Journal of the American Statistical Association, 101(476), 1418-1429. https://doi.org/10.1198/016214506000000735
 #'
 #' NOTE: Function located in file regCtsem.R
 #'
@@ -25,7 +25,7 @@
 #' @param adaptiveLassoWeights weights for the adaptive lasso. Defaults to 1/(|theta|^adaptiveLassoPower), where theta is the maximum likelihood estimate of the regularized parameters.
 #' @param adaptiveLassoPower power for the adaptive lasso weights. The weights will be set to 1/(|theta|^adaptiveLassoPower).
 #' @param cvSample cross-validation sample. Has to be in wide format and compatible with ctsemOMX
-#' @param autoCV Should automatic cross-validation be used? Possible are "No", "kFold" or "Blocked". kFold splits the dataset in k groups by selecting independent units from the rows. Blocked is a within-unit split, where for each person blocks of observations are deleted. See Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740–756. https://doi.org/10.1037/met0000178 for a more detailed explanation
+#' @param autoCV Should automatic cross-validation be used? Possible are "No", "kFold" or "Blocked". kFold splits the dataset in k groups by selecting independent units from the rows. Blocked is a within-unit split, where for each person blocks of observations are deleted. See Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740-756. https://doi.org/10.1037/met0000178 for a more detailed explanation
 #' @param k number of cross-validation folds if autoCV = "kFold" or autoCV = "Blocked"
 #' @param sparseParameters labeled vector with parameter estimates of the most sparse model. If regValues = "auto" the sparse parameters will be computed automatically.
 #' @param subjectSpecificParameters EXPERIMENTAL! A vector of parameter labels for parameters which should be estimated person-specific. If these parameter labels are also passed to regIndicators, all person-specific parameters will be regularized towards a group-parameter. This is a 2-step-procedure: In step 1 all parameters are constrained to equality between individuals to estimate the group parameters. In step 2 the parameters are estimated person-specific, but regularized towards the group parameter from step 1.
@@ -215,7 +215,7 @@
 #' # common group parameter
 #' for(i in 1:10){
 #'   while(TRUE){
-#'     DRIFT <- ct_drift + matrix(c(0,rnorm(1,0,.5),0,0),2,2,TRUE)
+#'     DRIFT <- ct_drift + matrix(c(0,stats::rnorm(1,0,.5),0,0),2,2,TRUE)
 #'     if(!any(Re(eigen(DRIFT)$values) > 0)){break}
 #'   }
 #'   indpars <- c(indpars, DRIFT[1,2])
@@ -474,7 +474,7 @@ regCtsem <- function(
   }
 
   if(any(c("DIFFUSIONbase", "T0VARbase", "MANIFESTVARbase") %in% unique(cpptsemObject$parameterTable$matrix[cpptsemObject$parameterTable$label %in% regIndicators]))){
-    warning("You seem to be regularizing covariance parameters. Please not that regCtsem uses the log-Cholesky implementation to estimate covariance matrices. See Pinheiro, J. C., & Bates, D. M. (1996). Unconstrained parametrizations for variance-covariance matrices. Statistics and Computing, 6(3), 289–296. https://doi.org/10.1007/BF00140873. Check that the regularization actually does what it should!")
+    warning("You seem to be regularizing covariance parameters. Please not that regCtsem uses the log-Cholesky implementation to estimate covariance matrices. See Pinheiro, J. C., & Bates, D. M. (1996). Unconstrained parametrizations for variance-covariance matrices. Statistics and Computing, 6(3), 289-296. https://doi.org/10.1007/BF00140873. Check that the regularization actually does what it should!")
   }
 
   ## Additional settings for person specific parameter estimates
@@ -624,7 +624,7 @@ regCtsem <- function(
       }
 
       # optimize
-      invisible(capture.output(fitTrain <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], nMultistart = argsIn$nMultistart),
+      invisible(utils::capture.output(fitTrain <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], nMultistart = argsIn$nMultistart),
                                                silent = TRUE), type = c("output", "message")))
 
       if(!any(class(fitTrain) == "try-error")){
@@ -832,7 +832,7 @@ regCtsem <- function(
       }
 
       # optimize
-      invisible(capture.output(fitTrain <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], nMultistart = argsIn$nMultistart),
+      invisible(utils::capture.output(fitTrain <- try(optimizeCpptsem(cpptsemObject = cvFoldsAndModels$trainModels[[i]], nMultistart = argsIn$nMultistart),
                                                silent = TRUE), type = c("output", "message")))
 
       if(!any(class(fitTrain) == "try-error")){
@@ -955,11 +955,11 @@ regCtsem <- function(
 #' @param objective which objective should be used? Possible are "ML" (Maximum Likelihood) or "Kalman" (Kalman Filter)
 #' @param sparseParameters labeled vector with parameter estimates of the most sparse model. Required for approxFirst = 3. If regValues = "auto" the sparse parameters will be computed automatically.
 #' @param stepSize GLMNET & GIST: initial step size of the outer iteration
-#' @param lineSearch GLMNET: String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!
+#' @param lineSearch GLMNET: String indicating which linesearch should be used. Defaults to the one described in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999-2030. https://doi.org/10.1145/2020408.2020421. Alternatively (not recommended) Wolfe conditions (lineSearch = "Wolfe") can be used in the outer iteration. Setting to "none" is also not recommended!
 #' @param c1 GLMNET: c1 constant for lineSearch. This constant controls the Armijo condition in lineSearch if lineSearch = "Wolfe"
 #' @param c2 GLMNET: c2 constant for lineSearch. This constant controls the Curvature condition in lineSearch if lineSearch = "Wolfe"
 #' @param sig GLMNET & GIST: GLMNET: only relevant when lineSearch = 'GLMNET' | GIST: sigma value in Gong et al. (2013). Sigma controls the inner stopping criterion and must be in (0,1). Generally, a larger sigma enforce a steeper decrease in the regularized likelihood while a smaller sigma will result in faster acceptance of the inner iteration.
-#' @param gam GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999–2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
+#' @param gam GLMNET when lineSearch = 'GLMNET'. Controls the gamma parameter in Yuan, G.-X., Ho, C.-H., & Lin, C.-J. (2012). An improved GLMNET for l1-regularized logistic regression. The Journal of Machine Learning Research, 13, 1999-2030. https://doi.org/10.1145/2020408.2020421. Defaults to 0.
 #' @param initialHessianApproximation GLMNET: Which initial hessian approximation should be used? Possible are: 'identity' for an identity matrix and 'OpenMx' (here the hessian approxmiation from the mxObject is used). If the Hessian from 'OpenMx' is not positive definite, the negative Eigenvalues will be 'flipped' to positive Eigenvalues. "estimate" will estimate the Hessian using optimHess. All of these approaches work most of the time, but not always. Alternatively, a matrix can be provided which will be used as initial Hessian
 #' @param maxIter_out GLMNET & GIST: Maximal number of outer iterations
 #' @param maxIter_in GLMNET & GIST: Maximal number of inner iterations
@@ -1343,13 +1343,13 @@ createCVFoldsAndModels <- function(dataset, Tpoints, manifestNames, k, autoCV, i
   }
 
   if(autoCV == "Blocked"){
-    warning("Blocked CV naively builds blocks of the data of each individual and does not account for dependencies which still exist in the training and test set (see Bergmeir, C., & Benítez, J. M. (2012). On the use of cross-validation for time series predictor evaluation. Information Sciences, 191, 192–213. https://doi.org/10.1016/j.ins.2011.12.028 and Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740–756. https://doi.org/10.1037/met0000178). Also, different time intervals are not accounted for. More sophisticated forms of cross-validation currently have to be implemented manually.")
+    warning("Blocked CV naively builds blocks of the data of each individual and does not account for dependencies which still exist in the training and test set (see Bergmeir, C., & Benitez, J. M. (2012). On the use of cross-validation for time series predictor evaluation. Information Sciences, 191, 192-213. https://doi.org/10.1016/j.ins.2011.12.028 and Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740-756. https://doi.org/10.1037/met0000178). Also, different time intervals are not accounted for. More sophisticated forms of cross-validation currently have to be implemented manually.")
     if(initialPars){
       # If initial parameters are estimated we will force the first few observations to always be used in the training
       # set. This is to ensure that the estimates for the initial parameters are somewhat more reliable.
       Folds <- (max(1, Tpoints %/% 10)):(Tpoints-1)
       #ignore <- paste0(paste0(manifestNames, "_T"), rep(0:(max(1, Tpoints %/% 10)-1), each = length(manifestNames)))
-      warning(paste0("Bergmeir & Benítez, (2012) do not recommend the use of cross-validation with non-stationary time series! However, your model seems to not assume stationarity. Keep this in mind when interpreting the results. max(1, Tpoints %/% 10) = ", max(1, Tpoints %/% 10), " of the initial observations will not be used in blocked CV. Otherwise the initial parameters will be very poorly estimated."))
+      warning(paste0("Bergmeir & Benitez, (2012) do not recommend the use of cross-validation with non-stationary time series! However, your model seems to not assume stationarity. Keep this in mind when interpreting the results. max(1, Tpoints %/% 10) = ", max(1, Tpoints %/% 10), " of the initial observations will not be used in blocked CV. Otherwise the initial parameters will be very poorly estimated."))
     }else{
       #ignore  <- c()
       # If stationarity is assumed, all time points are used in the cross-validation. No special treatment
@@ -1989,23 +1989,23 @@ generateDRIFTPlot <- function(model, ylab = "auto", xlab = "auto", skiptYlabComp
 
   color <- ifelse(rownames(drifts) %in% regIndicators, yes = "white", "black")
 
-  par(mar=c(4, 3, 5, 2), xpd=TRUE)
+  graphics::par(mar=c(4, 3, 5, 2), xpd=TRUE)
 
-  matplot(x = lambdas[!colsWithNA], t(drifts[!colsWithNA]), lty = 2,
+  graphics::matplot(x = lambdas[!colsWithNA], t(drifts[!colsWithNA]), lty = 2,
           lwd = 2, type = "l",
           col = color, xlab = ifelse(skiptXlabComp, xlab,
                                      ifelse(xlab == "auto",expression(lambda),ylab)),
           ylab = ifelse(skiptYlabComp, ylab,
                         ifelse(ylab == "auto","drift",ylab)))
-  matplot(x = lambdas[!colsWithNA], t(drifts_regularized[!colsWithNA]), lty = 1, lwd = 2, type = "l", col = "#2166AC", add = TRUE)
+  graphics::matplot(x = lambdas[!colsWithNA], t(drifts_regularized[!colsWithNA]), lty = 1, lwd = 2, type = "l", col = "#2166AC", add = TRUE)
   tickat <- seq(1, length(lambdas[!colsWithNA]), length.out = 10)
-  axis(3, at = lambdas[tickat],
+  graphics::axis(3, at = lambdas[tickat],
        labels=apply(drifts == 0,2,sum)[tickat],
        outer = FALSE,
        line=1,col="black",col.ticks="black",col.axis="black")
-  mtext("# zeroed parameters",3,line=3,at=mean(lambdas),col="black", cex = 1)
+  graphics::mtext("# zeroed parameters",3,line=3,at=mean(lambdas),col="black", cex = 1)
 
-  par(mar=c(5, 4, 4, 2) + 0.1, xpd=TRUE)
+  graphics::par(mar=c(5, 4, 4, 2) + 0.1, xpd=TRUE)
 }
 
 

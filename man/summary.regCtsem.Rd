@@ -4,10 +4,12 @@
 \alias{summary.regCtsem}
 \title{summary.regCtsem}
 \usage{
-\method{summary}{regCtsem}(regCtsemObject, criterion = NULL)
+\method{summary}{regCtsem}(object, ..., criterion = NULL)
 }
 \arguments{
-\item{regCtsemObject}{Object of type regCtsem}
+\item{object}{Object of type regCtsem}
+
+\item{...}{NULL}
 
 \item{criterion}{select a criterion. Possible are AIC, BIC, cvM2LL}
 }
