@@ -22,3 +22,4 @@ prepareDiscreteElements(mxObject, ctMatrices, nlatent, nmanifest, Tpoints, dT)
 \description{
 prepare matrices for discrete time elements
 }
+\keyword{internal}

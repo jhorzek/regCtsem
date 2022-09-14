@@ -4,13 +4,18 @@
 \alias{checkAutoKFold}
 \title{checkAutoKFold}
 \usage{
-checkAutoKFold(ctInit, regCtsemObject)
+checkAutoKFold(ctInit, regCtsemObject, threshold, testIC)
 }
 \arguments{
 \item{ctInit}{init object from ctsem}
 
 \item{regCtsemObject}{object from regCtsem}
+
+\item{threshold}{how close to zero should differences be to be treated as zero?}
+
+\item{testIC}{should information criteria be tested?}
 }
 \description{
 used in testthat to check the automatic k-fold cross-validation feature of regCtsem
 }
+\keyword{internal}

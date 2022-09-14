@@ -29,3 +29,4 @@ Computes the subgradients of a lasso penalized likelihood f(theta) = L(theta)+la
 \details{
 NOTE: Function located in file exact_optimization.R
 }
+\keyword{internal}

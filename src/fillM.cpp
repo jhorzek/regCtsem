@@ -2,13 +2,20 @@
 #include "fillRAMMatrices.h"
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-// Fills the M vector (intercepts) given the M vector, the MANIFESTMEANS,
-// discreteCINTUnique (list with discrete continuous time intercepts, dTs and results), and cppMParameterIndicators (tells fillM where to put the MANIFESTMEANS and discreteCINT)
-// The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
 
-using namespace Rcpp;
+//' fillM
+//'
+//' Fills the M vector (intercepts) given the M vector, the MANIFESTMEANS,
+//' discreteCINTUnique (list with discrete continuous time intercepts, dTs and results), and cppMParameterIndicators (tells fillM where to put the MANIFESTMEANS and discreteCINT)
+//' The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
+//' @param M vector with means
+//' @param T0MEANS vector with initial means
+//' @param MANIFESTMEANS manifest means
+//' @param hasDiscreteCINTUnique boolean
+//' @param discreteCINTUnique list with discrete continuous time intercepts, dTs and results
+//' @param cppMParameterIndicators tells fillM where to put the MANIFESTMEANS and discreteCINT
+//' @keywords internal
 // [[Rcpp::export]]
-
 arma::colvec fillM(arma::colvec M,
                    const arma::colvec& T0MEANS,
                    const arma::colvec& MANIFESTMEANS,

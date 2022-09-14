@@ -23,3 +23,4 @@ computes standard errors for the transformed parameters of a cpptsem object
 \author{
 Jannik H. Orzek
 }
+\keyword{internal}

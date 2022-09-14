@@ -16,3 +16,4 @@ prepareRAMData(dataset, individualMissingPatternID, uniqueMissingPatterns)
 \description{
 prepare data for RAM model
 }
+\keyword{internal}

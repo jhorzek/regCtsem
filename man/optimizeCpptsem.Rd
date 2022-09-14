@@ -18,3 +18,4 @@ optimizeCpptsem(cpptsemObject, free = "all", nMultistart = 0, ...)
 \description{
 generic optimization with Rslonp
 }
+\keyword{internal}

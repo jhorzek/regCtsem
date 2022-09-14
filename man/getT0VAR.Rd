@@ -15,3 +15,4 @@ extracts the T0VAR from an mxObject
 \details{
 NOTE: Function located in file regCtsem.R
 }
+\keyword{internal}

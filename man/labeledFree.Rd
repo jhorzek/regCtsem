@@ -12,3 +12,4 @@ labeledFree(x)
 \description{
 small helper function. Returns vector with TRUE of length x with same labels as x
 }
+\keyword{internal}

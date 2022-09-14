@@ -1,8 +1,11 @@
 #include <RcppArmadillo.h>
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-// Computes the matrix exponential using RcppArmadillo
-using namespace Rcpp;
+//' armaExpmat
+//'
+//' Computes the matrix exponential using RcppArmadillo
+//' @param m symmetric matrix for which the matrix exponential should be computed
+//' @returns matrix
 // [[Rcpp::export]]
 arma::mat armaExpmat(const arma::mat& m){
   return(arma::expmat(m));

@@ -3,10 +3,29 @@
 #include "computeRAMM2LL.h"
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-// Performs the prediciton and updating step for the Kalman Filter
-// The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
-
-using namespace Rcpp;
+//' kalmanFit
+//'
+//' Performs the prediction and updating step for the Kalman Filter
+//' The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
+//' @param update boolean
+//' @param sampleSize number of persons
+//' @param Tpoints number of time points
+//' @param nlatent number of latent variables
+//' @param nmanifest number of manifest variables
+//' @param kalmanData data for Kalman filter
+//' @param latentScores matrix with latent scores
+//' @param predictedManifestValues matrix with manifest predictions
+//' @param discreteTimeParameterNames names of discrete time paramters
+//' @param T0MEANSValues vector with initial means
+//' @param T0VARValues matrix with initial variances
+//' @param discreteDRIFTUnique list with discrete drift values
+//' @param discreteCINTUnique list with discrete continuous time intercepts
+//' @param discreteTRAITUnique list with discrete traits
+//' @param discreteDIFFUSIONUnique list with discrete diffusions
+//' @param LAMBDAValues matrix with loadings
+//' @param MANIFESTMEANSValues manifest means
+//' @param MANIFESTVARValues manifest variance
+//' @keywords internal
 // [[Rcpp::export]]
 arma::colvec kalmanFit(bool update,
                        const int sampleSize,

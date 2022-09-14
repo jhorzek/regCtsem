@@ -14,3 +14,4 @@ exact_getCppGradients(cpptsemObject, objective)
 \description{
 exact_getCppGradients will try to compute gradients with decreasing precision starting from the default in OpenMx. Sometimes the gradients will result in NA for a very specific setting of the precisions. Then it can help to slightly alter the precision
 }
+\keyword{internal}

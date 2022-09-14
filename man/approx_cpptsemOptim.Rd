@@ -56,3 +56,4 @@ creates an approximate solution to regularized ctsem using optim with BFGS
 \author{
 Jannik Orzek
 }
+\keyword{internal}

@@ -26,3 +26,4 @@ gradCpptsem(
 \description{
 gradCpptsem will try to compute gradients with decreasing precision starting from the default in OpenMx. Allows for setting some parameters to fixed (difference to exact_getCppGradients)
 }
+\keyword{internal}

@@ -32,3 +32,4 @@ computes the variances for varianceBase matrices
 \details{
 NOTE: Function located in file regCtsem.R
 }
+\keyword{internal}

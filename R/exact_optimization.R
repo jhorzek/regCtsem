@@ -15,7 +15,7 @@
 #' @param cvSample cross-validation sample. Has to be of type mxData
 #' @author Jannik Orzek
 #' @import ctsemOMX
-#' @export
+#' @keywords internal
 exact_getCVFit <- function(objective, cvSampleCpptsemObject, parameterLabels,
                            parameterValuesTable, lambdas,
                            cvSample){
@@ -28,7 +28,7 @@ exact_getCVFit <- function(objective, cvSampleCpptsemObject, parameterLabels,
     }
 
     # set parameters to iteration parameters
-    cvModelFit <- try(regCtsem::fitCpptsem(parameterValues = parameterValuesTable[parameterLabels,lambda], cpptsemObject = cvSampleCpptsemObject, objective = objective, failureReturns = NA))
+    cvModelFit <- try(fitCpptsem(parameterValues = parameterValuesTable[parameterLabels,lambda], cpptsemObject = cvSampleCpptsemObject, objective = objective, failureReturns = NA))
 
     if(!any(class(cvModelFit) == "try-error")){
       fitTable["cvM2LL",lambda] <- cvModelFit
@@ -51,7 +51,7 @@ exact_getCVFit <- function(objective, cvSampleCpptsemObject, parameterLabels,
 #' @param sampleSize sample size
 #' @author Jannik Orzek
 #' @import ctsemOMX
-#' @export
+#' @keywords internal
 exact_getFitIndices <- function(parameterLabels, fitAndParameters, lambdas, sampleSize){
   fits <- c("AIC", "BIC", "estimatedParameters")
   fitTable <- matrix(NA, nrow = length(fits), ncol = length(lambdas), dimnames = list(fits, lambdas))
@@ -89,7 +89,7 @@ exact_getFitIndices <- function(parameterLabels, fitAndParameters, lambdas, samp
 #' @param sampleSize sample size
 #' @author Jannik Orzek
 #' @import ctsemOMX
-#' @export
+#' @keywords internal
 exact_getFitIndicesWithTarget <- function(parameterLabels, regIndicators, fitAndParameters, targetVector, lambdas, sampleSize){
   fits <- c("AIC", "BIC", "estimatedParameters")
   fitTable <- matrix(NA, nrow = length(fits), ncol = length(lambdas), dimnames = list(fits, lambdas))
@@ -125,7 +125,7 @@ exact_getFitIndicesWithTarget <- function(parameterLabels, regIndicators, fitAnd
 #' @param theta parameter values
 #' @param regIndicators Names of regularized parameters
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
-#' @export
+#' @keywords internal
 exact_getPenaltyValue <- function(lambda, theta, regIndicators, adaptiveLassoWeights){
 
   regVal <- 0
@@ -165,7 +165,7 @@ exact_getPenaltyValue <- function(lambda, theta, regIndicators, adaptiveLassoWei
 #' @param regIndicators Names of regularized parameters
 #' @param adaptiveLassoWeights weights for the adaptive lasso.
 #' @param targetVector named vector with values towards which the parameters are regularized
-#' @export
+#' @keywords internal
 exact_getPenaltyValueWithTarget <- function(lambda, theta, regIndicators, targetVector, adaptiveLassoWeights){
 
   regVal <- 0
@@ -206,7 +206,7 @@ exact_getPenaltyValueWithTarget <- function(lambda, theta, regIndicators, target
 #' @param regIndicators names of regularized parameters
 #' @param lambda lambda value
 #' @param adaptiveLassoWeightsMatrix matrix with adaptive lasso weights
-#' @export
+#' @keywords internal
 exact_getSubgradients <- function(theta, jacobian, regIndicators, lambda, adaptiveLassoWeightsMatrix){
 
   # first part: derivative of Likelihood
@@ -234,62 +234,6 @@ exact_getSubgradients <- function(theta, jacobian, regIndicators, lambda, adapti
   return(subgradient)
 }
 
-
-# #' exact_getT0VAR
-# #'
-# #' computes the updated T0VAR given the old parameter values in an mxObject and the updates to the parameters in a vector d
-# #'
-# #' NOTE: Function located in file exact_optimization.R
-# #'
-# #' @param mxObject mxObject with old parameter values
-# #' @param d vector with updates to parameter values
-# #' @param stationarity set to TRUE, if stationaritiy is assumed for the T0VAR
-# #' @export
-# exact_getT0VAR <- function(mxObject, d){
-#   stationarity <- !("T0VAR" %in% names(mxObject$algebras))
-#   if(stationarity){
-#     stop("Not yet implemented for stationarity = 'T0VAR'. Changes in derivative necessary")
-#
-#     T0Varmodel <- mxModel(
-#       # with free parameters
-#       mxObject$DRIFT,
-#       mxObject$DIFFUSIONbase,
-#
-#       # algebras
-#       mxObject$T0VAR,
-#       mxObject$asymDIFFUSIONalg,
-#       mxObject$DRIFTHATCH,
-#       mxObject$DIFFUSION,
-#       mxObject$DIFFUSIONchol,
-#       mxObject$II)
-#
-#     # set Parameters
-#     d_subset <- names(OpenMx::omxGetParameters(T0Varmodel))
-#     T0Varmodel_new <- OpenMx::omxSetParameters(T0Varmodel, labels = d_subset, values = OpenMx::omxGetParameters(T0Varmodel)+d[d_subset,])
-#
-#     T0Varmodel_new.fit <- OpenMx::mxRun(T0Varmodel_new, silent = TRUE)
-#
-#     return(T0Varmodel_new.fit$T0VAR$values)
-#   }else{
-#     if(!any(mxObject$T0VARbase$free)){
-#       return(mxObject$T0VAR$result)
-#     }
-#     d_subset <- unique(OpenMx::cvectorize(mxObject$T0VARbase$labels[!is.na(mxObject$T0VARbase$labels)])) # rownames(d)[grepl("T0var", rownames(d))]
-#     T0VARbaseVal <- mxObject$T0VARbase$values
-#     T0VARbaseLab <- mxObject$T0VARbase$labels
-#     for(d_sub in d_subset){
-#       T0VARbaseVal[T0VARbaseLab == d_sub & !is.na(T0VARbaseLab)] <- T0VARbaseVal[T0VARbaseLab == d_sub & !is.na(T0VARbaseLab)] + d[d_sub,]
-#     }
-#     T0VARchol <- OpenMx::vec2diag(exp(OpenMx::diag2vec(T0VARbaseVal))) + T0VARbaseVal - OpenMx::vec2diag(OpenMx::diag2vec(T0VARbaseVal))
-#     T0VAR <- T0VARchol %*% t(T0VARchol)
-#
-#     return(T0VAR)
-#
-#   }
-#
-# }
-
-
 #' exact_tryStartingValues
 #'
 #' tries different starting values to find a good starting point for exact optimization
@@ -310,7 +254,7 @@ exact_getSubgradients <- function(theta, jacobian, regIndicators, lambda, adapti
 #' @param sparseParameters labeled vector with parameter estimates of the most sparse model.
 #' @author Jannik Orzek
 #' @import ctsemOMX
-#' @export
+#' @keywords internal
 exact_tryStartingValues <- function(startingValues,
                                     returnAs,
                                     approxFirst,
@@ -327,7 +271,7 @@ exact_tryStartingValues <- function(startingValues,
     if(numStart > 0){
       warning("Can not try different starting values because sparseParameters is empty.")
     }
-    invisible(capture.output(newStartingValues <- tryApproxFirst(startingValues = startingValues,
+    invisible(utils::capture.output(newStartingValues <- tryApproxFirst(startingValues = startingValues,
                                                                  returnAs = returnAs,
                                                                  approxFirst = approxFirst,
                                                                  numStart = numStart,
@@ -360,7 +304,7 @@ exact_tryStartingValues <- function(startingValues,
     parameterValues_i <- weight*startingValues[parameterNames]+(1-weight)*sparseParameters[parameterNames]
     startValuesTable[parameterNames,i] <- parameterValues_i[parameterNames]
     # set parameters
-    invisible(capture.output(optimized <- try(tryApproxFirst(startingValues = parameterValues_i,
+    invisible(utils::capture.output(optimized <- try(tryApproxFirst(startingValues = parameterValues_i,
                                                              returnAs = "full",
                                                              approxFirst = approxFirst,
                                                              numStart = numStart,
@@ -408,7 +352,7 @@ exact_tryStartingValues <- function(startingValues,
 #' @param sparseParameters labeled vector with parameter estimates of the most sparse model.
 #' @author Jannik Orzek
 #' @import ctsemOMX
-#' @export
+#' @keywords internal
 tryApproxFirst <- function(startingValues, returnAs,
                            approxFirst,
                            numStart,
@@ -451,9 +395,9 @@ tryApproxFirst <- function(startingValues, returnAs,
     if(controlApproxOptimizer$package == "optimx"){
       optimized <- try(approx_cpptsemOptimx(cpptsemmodel = cpptsemObject,
                                             regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                    regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                    regCtsem::approx_KalmanRegM2LLCpptsem),
-                                            gradCpptsem = regCtsem::approx_gradCpptsem,
+                                                                    approx_RAMRegM2LLCpptsem,
+                                                                    approx_KalmanRegM2LLCpptsem),
+                                            gradCpptsem = approx_gradCpptsem,
                                             startingValues = startingValues,
                                             adaptiveLassoWeights = adaptiveLassoWeights_nudged,
                                             N = 1, # lambda is already adjusted
@@ -467,9 +411,9 @@ tryApproxFirst <- function(startingValues, returnAs,
     }else if(tolower(controlApproxOptimizer$package) == "rsolnp"){
       optimized <- try(approx_cpptsemRsolnp(cpptsemmodel = cpptsemObject,
                                             regM2LLCpptsem = ifelse(tolower(objective) == "ml",
-                                                                    regCtsem::approx_RAMRegM2LLCpptsem,
-                                                                    regCtsem::approx_KalmanRegM2LLCpptsem),
-                                            gradCpptsem = regCtsem::approx_gradCpptsem,
+                                                                    approx_RAMRegM2LLCpptsem,
+                                                                    approx_KalmanRegM2LLCpptsem),
+                                            gradCpptsem = approx_gradCpptsem,
                                             startingValues = startingValues,
                                             adaptiveLassoWeights = adaptiveLassoWeights_nudged,
                                             N = 1, # lambda is already adjusted

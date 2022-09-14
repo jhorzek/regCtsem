@@ -12,3 +12,4 @@ constructDatasetKalman(wideData)
 \description{
 Separates data and time intervals. Computes the number of unique time intervals and the unqiue missingness patterns
 }
+\keyword{internal}

@@ -35,7 +35,7 @@
 #' @param numStart Used if approxFirst = 3. regCtsem will try numStart+2 starting values (+2 because it will always try the current best and the parameters provided in sparseParameters)
 #' @param controlApproxOptimizer settings passed to optimx or Rsolnp
 #' @param verbose 0 (default), 1 for convergence plot, 2 for parameter convergence plot and line search progress. Set verbose = -1 to use a C++ implementation of GIST (not much faster which is why the easier to handle R implementation is the default)
-#' @export
+#' @keywords internal
 exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetVector, lambdas, adaptiveLassoWeights,
                        # additional settings
                        sparseParameters,# = NULL,
@@ -80,17 +80,17 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
   regM2LL <- rep(NA, length(lambdas))
 
   # Progress bar
-  pbar <- txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
+  pbar <- utils::txtProgressBar(min = 0, max = length(lambdas), initial = 0, style = 3)
 
   # iterate over lambda values
   numLambdas <- length(lambdas)
   iteration <- 1
-  retryOnce <- TRUE # will retry optimizing once with new starting values
+  retryOnce <- TRUE # will retry optimizing once with methods::new starting values
   while(iteration <= numLambdas){
     lambda <- lambdas[iteration]
 
     # update progress bar
-    setTxtProgressBar(pbar, iteration)
+    utils::setTxtProgressBar(pbar, iteration)
 
     lambda = ifelse(scaleLambdaWithN, lambda*sampleSize, lambda) # set lambda*samplesize
 
@@ -111,7 +111,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
     }
     # use Gist
     if(is.null(targetVector) || all(targetVector == 0)){
-      resGIST <- try(regCtsem::GIST(cpptsemObject = cpptsemObject,
+      resGIST <- try(GIST(cpptsemObject = cpptsemObject,
                                     startingValues = startingValues,
                                     objective = objective,
                                     lambda = lambda,
@@ -130,7 +130,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
                                     verbose = verbose,
                                     silent = FALSE))
     }else{
-      resGIST <- try(regCtsem::GISTWithTarget(cpptsemObject = cpptsemObject, startingValues = startingValues,
+      resGIST <- try(GISTWithTarget(cpptsemObject = cpptsemObject, startingValues = startingValues,
                                               objective = objective, lambda = lambda, adaptiveLassoWeights = adaptiveLassoWeights,
                                               regularizedParameters = regIndicators, targetVector = targetVector,
                                               eta = eta, sig = sig, initialStepsize = initialStepsize, stepsizeMin = stepsizeMin, stepsizeMax = stepsizeMax,
@@ -164,12 +164,12 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
         # save fit
         cM2LL <- ifelse(resGIST$convergence, resGIST$model$m2LL, Inf)
         if(is.null(targetVector)){
-          cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getPenaltyValue(lambda = lambda,
+          cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  exact_getPenaltyValue(lambda = lambda,
                                                                                            theta = newValues,
                                                                                            regIndicators = regIndicators,
                                                                                            adaptiveLassoWeights = adaptiveLassoWeights), Inf)
         }else{
-          cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  regCtsem::exact_getPenaltyValueWithTarget(lambda = lambda,
+          cRegM2LL <- ifelse(resGIST$convergence, cM2LL +  exact_getPenaltyValueWithTarget(lambda = lambda,
                                                                                                      theta = newValues,
                                                                                                      regIndicators = regIndicators,
                                                                                                      targetVector = targetVector,
@@ -219,7 +219,7 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
 #' @param break_outer Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)
 #' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
 #' @param silent suppress all warning messages
-#' @export
+#' @keywords internal
 GIST <- function(cpptsemObject,
                  startingValues,
                  objective,
@@ -252,11 +252,11 @@ GIST <- function(cpptsemObject,
   # set parameters
   cpptsemObject$setParameterValues(startingValues, names(startingValues))
   if(tolower(objective) == "ml"){
-    invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
-    invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
+    invisible(utils::capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+    invisible(utils::capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }else{
-    invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
+    invisible(utils::capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
     out2 <- NA
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }
@@ -274,7 +274,7 @@ GIST <- function(cpptsemObject,
   gradients_k <- out3
   m2LL_k <- cpptsemObject$m2LL
 
-  regM2LL_k <- m2LL_k + regCtsem::exact_getPenaltyValue(lambda = lambda,
+  regM2LL_k <- m2LL_k + exact_getPenaltyValue(lambda = lambda,
                                                         theta = parameters_k,
                                                         regIndicators = regularizedParameters,
                                                         adaptiveLassoWeights = adaptiveLassoWeights)
@@ -300,7 +300,7 @@ GIST <- function(cpptsemObject,
       # sometimes this step size is extremely large and the algorithm converges very slowly
       # we found that in these cases it can help to reset the stepsize
       # this will be done randomly here:
-      if(runif(1,0,1) > .9){
+      if(stats::runif(1,0,1) > .9){
         stepsize <- initialStepsize
       }
 
@@ -353,10 +353,10 @@ GIST <- function(cpptsemObject,
       cpptsemObject$setParameterValues(parameters_kp1, names(parameters_kp1))
       # compute likelihood
       if(tolower(objective) == "ml"){
-        invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
-        invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
+        invisible(utils::capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+        invisible(utils::capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
       }else{
-        invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
+        invisible(utils::capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
         out2 <- NA
       }
       if(any(class(out1) == "try-error")  |
@@ -385,7 +385,7 @@ GIST <- function(cpptsemObject,
         # skip rest
         next
       }
-      regM2LL_kp1 <- m2LL_kp1 + regCtsem::exact_getPenaltyValue(lambda = lambda,
+      regM2LL_kp1 <- m2LL_kp1 + exact_getPenaltyValue(lambda = lambda,
                                                                 theta = parameters_kp1,
                                                                 regIndicators = regularizedParameters,
                                                                 adaptiveLassoWeights = adaptiveLassoWeights)
@@ -483,7 +483,7 @@ GIST <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
     }else if(break_crit == "parameterChange"){
@@ -504,7 +504,7 @@ GIST <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
     }else if(break_crit == "fitChange"){
@@ -525,7 +525,7 @@ GIST <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
 
@@ -584,7 +584,7 @@ GIST <- function(cpptsemObject,
 #' @param break_outer Stopping criterion for outer iterations. It has to be a named value. By default (name: gradient), a relative first-order condition is checked, where the maximum absolute value of the gradients is compared to break_outer (see https://de.mathworks.com/help/optim/ug/first-order-optimality-measure.html). Alternatively, an absolute tolerance can be passed to the function (e.g., break_outer = c("gradient" = .0001)). Instead of relative gradients, the change in parameters can used as breaking criterion. To this end, use c("parameterChange" = .00001)
 #' @param verbose set to 1 to print additional information and plot the convergence and 2 for further details.
 #' @param silent suppress all warning messages
-#' @export
+#' @keywords internal
 GISTWithTarget <- function(cpptsemObject,
                            startingValues,
                            objective,
@@ -618,11 +618,11 @@ GISTWithTarget <- function(cpptsemObject,
   # set parameters
   cpptsemObject$setParameterValues(startingValues, names(startingValues))
   if(tolower(objective) == "ml"){
-    invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
-    invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
+    invisible(utils::capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+    invisible(utils::capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }else{
-    invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
+    invisible(utils::capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
     out2 <- NA
     out3 <- exact_getCppGradients(cpptsemObject = cpptsemObject, objective = objective)
   }
@@ -640,7 +640,7 @@ GISTWithTarget <- function(cpptsemObject,
   gradients_k <- out3
   m2LL_k <- cpptsemObject$m2LL
 
-  regM2LL_k <- m2LL_k + regCtsem::exact_getPenaltyValueWithTarget(lambda = lambda,
+  regM2LL_k <- m2LL_k + exact_getPenaltyValueWithTarget(lambda = lambda,
                                                                   theta = parameters_k,
                                                                   regIndicators = regularizedParameters,
                                                                   targetVector = targetVector,
@@ -667,7 +667,7 @@ GISTWithTarget <- function(cpptsemObject,
       # sometimes this step size is extremely large and the algorithm converges very slowly
       # we found that in these cases it can help to reset the stepsize
       # this will be done randomly here:
-      if(runif(1,0,1) > .9){
+      if(stats::runif(1,0,1) > .9){
         stepsize <- initialStepsize
       }
 
@@ -729,10 +729,10 @@ GISTWithTarget <- function(cpptsemObject,
       cpptsemObject$setParameterValues(parameters_kp1, names(parameters_kp1))
       # compute likelihood
       if(tolower(objective) == "ml"){
-        invisible(capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
-        invisible(capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
+        invisible(utils::capture.output(out1 <- try(cpptsemObject$computeRAM(), silent = T), type = "message"))
+        invisible(utils::capture.output(out2 <- try(cpptsemObject$fitRAM(), silent = T), type = "message"))
       }else{
-        invisible(capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
+        invisible(utils::capture.output(out1 <- try(cpptsemObject$computeAndFitKalman(0), silent = TRUE), type = "message"))
         out2 <- NA
       }
       if(any(class(out1) == "try-error")  |
@@ -762,7 +762,7 @@ GISTWithTarget <- function(cpptsemObject,
         next
       }
 
-      regM2LL_kp1 <- m2LL_kp1 + regCtsem::exact_getPenaltyValueWithTarget(lambda = lambda,
+      regM2LL_kp1 <- m2LL_kp1 + exact_getPenaltyValueWithTarget(lambda = lambda,
                                                                           theta = parameters_kp1,
                                                                           regIndicators = regularizedParameters,
                                                                           targetVector = targetVector,
@@ -861,7 +861,7 @@ GISTWithTarget <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
     }else if(break_crit == "parameterChange"){
@@ -882,7 +882,7 @@ GISTWithTarget <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
     }else if(break_crit == "fitChange"){
@@ -903,7 +903,7 @@ GISTWithTarget <- function(cpptsemObject,
 
       if(verbose == 2){
         convergencePlotValues[,k_out] <- parameters_k
-        matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
+        graphics::matplot(x=1:maxIter_out, y = t(convergencePlotValues), xlab = "iteration", ylab = "value", type = "l", main = "Convergence Plot")
       }
 
 

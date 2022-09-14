@@ -24,7 +24,7 @@ Example:
 library(regCtsem)
 set.seed(53455)
 
-randMat <- matrix(rnorm(n = 64, 
+randMat <- matrix(stats::rnorm(n = 64, 
                         mean = 0, 
                         sd = 10), 
                   nrow = 8, ncol = 8)

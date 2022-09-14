@@ -5,16 +5,21 @@
 \title{plot.regCtsem}
 \usage{
 \method{plot}{regCtsem}(
-  regCtsemObject,
+  x,
+  y = NULL,
+  ...,
   what = "drift",
   criterion = "BIC",
   xlab = "auto",
-  ylab = "auto",
-  ...
+  ylab = "auto"
 )
 }
 \arguments{
-\item{regCtsemObject}{fitted regCtsem object}
+\item{x}{fitted regCtsem object}
+
+\item{y}{NULL}
+
+\item{...}{additional parameters for plot or matplot (e.g., lty, col, ...)}
 
 \item{what}{what should be plotted? Possbile are: 'drift', 'parameters', 'fit' or labels of specific parameters}
 
@@ -23,8 +28,6 @@
 \item{xlab}{label for x axis}
 
 \item{ylab}{label for y axis}
-
-\item{...}{additional parameters for plot or matplot (e.g., lty, col, ...)}
 }
 \description{
 plot.regCtsem

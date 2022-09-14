@@ -18,3 +18,4 @@ prepareKalmanMatrices(nlatent, nmanifest, Tpoints, sampleSize)
 \description{
 prepare matrices for Kalman model
 }
+\keyword{internal}

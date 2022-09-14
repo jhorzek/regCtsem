@@ -41,7 +41,7 @@ startFromSparse(
 
 \item{targetVector}{named vector with values towards which the parameters are regularized (Standard is regularization towards zero)}
 
-\item{lambdasAutoLength}{if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.}
+\item{lambdasAutoLength}{lambdasAutoLength will determine the number of lambdas tested.}
 
 \item{lambdasAutoCurve}{It is often a good idea to have unequally spaced lambda steps (e.g., .01,.02,.05,1,5,20). If lambdasAutoCurve is close to 1 lambda values will be equally spaced, if lambdasAutoCurve is large lambda values will be more concentrated close to 0. See ?getCurvedLambda for more informations.}
 
@@ -82,19 +82,12 @@ startFromSparse(
 \item{fitFull}{boolean: Only used for adaptiveLASSO weights. Should the full model (model without regularization) be fitted (TRUE) or only approximated (FALSE). Approximation might work sometimes, but not always.}
 
 \item{optimizeRegCtsem}{if set to false, the function will only return the lambda_max, a vector with sparse parameter values and a vector for the full, unregularized model parameters}
-
-\item{lambdas}{vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values}
-
-\item{sparseParameters}{labeled vector with parameter estimates of the most sparse model. If regValues = "auto" the sparse parameters will be computed automatically.}
 }
 \description{
 alpha status function. Start regularized model from a setting where all parameters are already at their target values
 }
 \details{
 NOTE: Function located in file utils.R
-}
-\examples{
-
 }
 \author{
 Jannik Orzek

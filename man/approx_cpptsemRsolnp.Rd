@@ -56,3 +56,4 @@ creates an approximate solution to regularized ctsem using Rsolnp::solnp
 \author{
 Jannik Orzek
 }
+\keyword{internal}

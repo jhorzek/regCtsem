@@ -53,3 +53,4 @@ performs Armijo line search
 \details{
 NOTE: Function located in file GLMNET.R
 }
+\keyword{internal}

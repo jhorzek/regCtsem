@@ -23,8 +23,8 @@ controlGLMNET(
   approxFirst = TRUE,
   numStart = 0,
   nMultistart = 5,
-  controlApproxOptimizer = controlRsolnp(nudgeVariancesLambda = 0.2,
-    nudgeVariancesTarget = log(0.4), control = list(outer.iter = 50, trace = 0))
+  controlApproxOptimizer = controlRsolnp(nudgeVariancesLambda = 0.2, nudgeVariancesTarget
+    = log(0.4), control = list(outer.iter = 50, trace = 0))
 )
 }
 \arguments{
@@ -65,8 +65,6 @@ controlGLMNET(
 \item{nMultistart}{controls how many different starting values are tried when estimating lambda_max´}
 
 \item{controlApproxOptimizer}{settings passed to the optimizer in approximate optimization. Currently, Rsolnp and optimx are supported. See ?controlOptimx and ?controlSolnp for details on the lists passed to controlApprox}
-
-\item{epsilon}{epsilon is used to transform the non-differentiable lasso penalty to a differentiable one if optimization = approx}
 }
 \description{
 The following arguments can be used to adjust the GLMNET optimization. See

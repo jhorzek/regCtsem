@@ -86,3 +86,4 @@ Performs the outer iterations of GLMNET
 \details{
 NOTE: Function located in file GLMNET.R
 }
+\keyword{internal}

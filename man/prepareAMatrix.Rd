@@ -22,3 +22,4 @@ prepareAMatrix(mxObject, ctMatrices, nlatent, nmanifest, Tpoints, dT)
 \description{
 prepare matrix with directed effects for RAM model
 }
+\keyword{internal}

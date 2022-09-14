@@ -9,8 +9,6 @@
 
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-using namespace Rcpp;
-
 // Constructor
 cpptsemKalmanModel::cpptsemKalmanModel(std::string mName,
                                        Rcpp::List mCtMatrixList,
@@ -91,6 +89,7 @@ void cpptsemKalmanModel::setParameterValues(const Rcpp::NumericVector& mParamete
   Rcpp::NumericVector col =  parameterTable["col"];
   Rcpp::NumericVector groupID =  parameterTable["groupID"];
   Rcpp::NumericVector uniqueIDs = unique(groupID);
+  uniqueIDs.sort();
   Rcpp::LogicalVector changed = parameterTable["changed"];
 
   for(int group = 0; group < uniqueIDs.length(); group++){
@@ -228,6 +227,7 @@ void cpptsemKalmanModel::computeAndFitKalman(int individual){
   Rcpp::LogicalVector currentParameters, currentChange;
   Rcpp::NumericVector groupID =  parameterTable["groupID"];
   Rcpp::NumericVector uniqueIDs = unique(groupID);
+  uniqueIDs.sort();
 
   for(int idIndex = 0; idIndex < uniqueIDs.length(); idIndex++){
     // check if the parameters of the current id-group changed. If not, we can reuse the previous -2log Likelihood

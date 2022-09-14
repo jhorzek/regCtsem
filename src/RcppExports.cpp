@@ -335,17 +335,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// getMatrixExponential
-arma::mat getMatrixExponential(const arma::mat& mat);
-RcppExport SEXP _regCtsem_getMatrixExponential(SEXP matSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type mat(matSEXP);
-    rcpp_result_gen = Rcpp::wrap(getMatrixExponential(mat));
-    return rcpp_result_gen;
-END_RCPP
-}
 // getVarianceFromVarianceBase
 arma::mat getVarianceFromVarianceBase(const arma::mat& varianceBaseValues);
 RcppExport SEXP _regCtsem_getVarianceFromVarianceBase(SEXP varianceBaseValuesSEXP) {
@@ -415,7 +404,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_regCtsem_fillA", (DL_FUNC) &_regCtsem_fillA, 7},
     {"_regCtsem_fillM", (DL_FUNC) &_regCtsem_fillM, 6},
     {"_regCtsem_fillS", (DL_FUNC) &_regCtsem_fillS, 8},
-    {"_regCtsem_getMatrixExponential", (DL_FUNC) &_regCtsem_getMatrixExponential, 1},
     {"_regCtsem_getVarianceFromVarianceBase", (DL_FUNC) &_regCtsem_getVarianceFromVarianceBase, 1},
     {"_regCtsem_kalmanFit", (DL_FUNC) &_regCtsem_kalmanFit, 18},
     {"_rcpp_module_boot_cpptsemKalmanModel_cpp", (DL_FUNC) &_rcpp_module_boot_cpptsemKalmanModel_cpp, 0},

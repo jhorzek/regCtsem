@@ -1,7 +1,4 @@
-### Check cpptsem Implementation ###
-
-testthat::test_that(desc = "Testing standardization", code = {
-  skip_on_cran()
+test_that(desc = "Testing standardization", code = {
   set.seed(17046)
 
   library(regCtsem)
@@ -96,6 +93,16 @@ testthat::test_that(desc = "Testing standardization", code = {
   }
   testthat::expect_equal(all(abs(matrix(weightedDrifts,2,2) - solve(R)%*%DRIFT%*%R) < 1e-8), TRUE)
 
+
+  ## test adaptive lasso -> should be inverse of absolute parameter estimates
+  regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+                                 dataset = dat,
+                                 regIndicators = regIndicators,
+                                 penalty = "adaptiveLasso",
+                                 lambdas = "auto",
+                                 lambdasAutoLength = 20)
+  testthat::expect_equal(all(abs(regModel$setup$adaptiveLassoWeights -
+                                   (abs(omxGetParameters(fit_myModel$mxobj)[names(regModel$setup$adaptiveLassoWeights)]))^(-1)) < 1e-8), TRUE)
 }
 )
 

@@ -26,3 +26,4 @@ fitCpptsem(
 \description{
 fits a cpptsem. Returns -2 log Likelihood
 }
+\keyword{internal}

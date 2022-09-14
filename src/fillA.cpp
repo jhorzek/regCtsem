@@ -2,11 +2,19 @@
 #include "fillRAMMatrices.h"
 // [[Rcpp :: depends ( RcppArmadillo )]]
 
-// Fills the A matrix (directed effects) given the A matrix, the discreteDRIFTUnique (list with discrete drift names, dTs and results),
-// discreteTRAITUnique (list with discrete trait names, dTs and results), LAMBDA (loadings), and AParameterIndicators (tells fillA where to put the discreteDRIFT, discreteTRAIT, and LAMBDA)
-// The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
-
-using namespace Rcpp;
+//' fillA
+//'
+//' Fills the A matrix (directed effects) given the A matrix, the discreteDRIFTUnique (list with discrete drift names, dTs and results),
+//' discreteTRAITUnique (list with discrete trait names, dTs and results), LAMBDA (loadings), and AParameterIndicators (tells fillA where to put the discreteDRIFT, discreteTRAIT, and LAMBDA)
+//' The implementation closely follows that of Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
+//' @param A matrix with directed effects
+//' @param hasDiscreteDRIFTUnique boolean
+//' @param discreteDRIFTUnique list with discrete drift names, dTs and results
+//' @param hasDiscreteTRAITUnique boolean
+//' @param discreteTRAITUnique list with discrete trait names, dTs and results
+//' @param LAMBDA loadings
+//' @param AParameterIndicators tells fillA where to put the discreteDRIFT, discreteTRAIT, and LAMBDA
+//' @keywords internal
 // [[Rcpp::export]]
 
 arma::mat fillA(arma::mat A,

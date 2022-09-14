@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 # c<sub>++</sub>tsem
 
-regCtsem will try to internally translate any ctsem object passed to the main function (regCtsem::regCtsem) to a C++ object. The functions for this C++ object are implemented following the naming scheme c<sub>++</sub>tsem. The sole purpose of this translation is speeding up the computation of the -2 log-Likelihood and an approximation of the gradients for continuous time structural equation models. The implementation closely follows that of ctsemOMX (Driver et al., 2017).
+regCtsem will try to internally translate any ctsem object passed to the main function (regCtsem:::regCtsem) to a C++ object. The functions for this C++ object are implemented following the naming scheme c<sub>++</sub>tsem. The sole purpose of this translation is speeding up the computation of the -2 log-Likelihood and an approximation of the gradients for continuous time structural equation models. The implementation closely follows that of ctsemOMX (Driver et al., 2017).
 
 **Known limitations**
 
@@ -66,7 +66,7 @@ This will be explained in more detail below using the RAM model. Otherwise, more
 The function cpptsemFromCtsem translates a fitted ctsem object (e.g., AnomAuthfit in the example above) in a new object of class Rcpp_cpptsemmodel:
 
 ```{r}
-cpptsemmodel <- regCtsem::cpptsemFromCtsem(AnomAuthfit, wideData = AnomAuth)
+cpptsemmodel <- regCtsem:::cpptsemFromCtsem(AnomAuthfit, wideData = AnomAuth)
 ```
 
 ### Compute the RAM matrices
@@ -201,7 +201,7 @@ gradientModel <- OpenMx::mxModel(fit_myModel$mxobj,
                                  ))
 
 # set up the model for cpptsem
-cpptsemGradientDemonstation <- regCtsem::cpptsemFromCtsem(fit_myModel, wideData = dat)
+cpptsemGradientDemonstation <- regCtsem:::cpptsemFromCtsem(fit_myModel, wideData = dat)
 cpptsemGradientDemonstation$computeRAM()
 cpptsemGradientDemonstation$fitRAM()
 
@@ -239,7 +239,7 @@ AANotOptimized <- ctFit(AnomAuth, AAmodel, useOptimizer = F)
 AACtsemFit <- ctFit(AnomAuth, AAmodel, useOptimizer = T) 
 
 # translate to cpptsem:
-AACpptsem <- regCtsem::cpptsemFromCtsem(AANotOptimized, wideData = AnomAuth)
+AACpptsem <- regCtsem:::cpptsemFromCtsem(AANotOptimized, wideData = AnomAuth)
 
 startingValues <- omxGetParameters(AANotOptimized$mxobj)
 
@@ -247,10 +247,10 @@ m2LLCpptsem <- function(parameters, cpptsemmodel){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel 
   # when parameter values are impossible
-  invisible(capture.output(RAM <- try(cpptsemmodel$computeRAM(), 
+  invisible(utils::capture.output(RAM <- try(cpptsemmodel$computeRAM(), 
                                       silent = TRUE), 
                            type = "message"))
-  invisible(capture.output(FIT <- try(cpptsemmodel$fitRAM(),
+  invisible(utils::capture.output(FIT <- try(cpptsemmodel$fitRAM(),
                                       silent = TRUE), 
                            type = "message"))
   
@@ -261,7 +261,7 @@ m2LLCpptsem <- function(parameters, cpptsemmodel){
 }
 
 gradCpptsem <- function(parameters, cpptsemmodel){
-  invisible(capture.output(grad <- try(cpptsemmodel$approxRAMGradients((1.1 * 10^(-16))^(1/3)), 
+  invisible(utils::capture.output(grad <- try(cpptsemmodel$approxRAMGradients((1.1 * 10^(-16))^(1/3)), 
                                        silent = TRUE), 
                            type = "message"))
   if(class(grad) == "try-error"){
@@ -271,7 +271,7 @@ gradCpptsem <- function(parameters, cpptsemmodel){
 }
 
 # compute 
-AACpptsemFit <- optim(par = startingValues, 
+AACpptsemFit <- stats::optim(par = startingValues, 
                       fn = m2LLCpptsem, 
                       gr = gradCpptsem,  
                       AACpptsem, 
@@ -344,7 +344,7 @@ kalmanModelNotOptimized <- ctFit(kalmanModel, dat = traindata,
 kalmanModelOptimized <- ctFit(kalmanModel, dat = traindata, 
                               objective = "Kalman", useOptimizer = T)
 ## with cpptsem
-kalmanCpptsemmodel <- regCtsem::cpptsemFromCtsem(ctsemModel = kalmanModelNotOptimized,
+kalmanCpptsemmodel <- regCtsem:::cpptsemFromCtsem(ctsemModel = kalmanModelNotOptimized,
                                                  wideData = traindata)
 
 startingValues <- omxGetParameters(kalmanModelNotOptimized$mxobj)
@@ -353,7 +353,7 @@ m2LLCpptsem <- function(parameters, cpptsemmodel){
   cpptsemmodel$setParameterValues(parameters, names(parameters))
   # catching all errors from cpptsemmodel 
   # when parameter values are impossible
-  invisible(capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(0), 
+  invisible(utils::capture.output(KALMAN <- try(cpptsemmodel$computeAndFitKalman(0), 
                                          silent = TRUE), 
                            type = "message"))
   
@@ -422,8 +422,8 @@ The cpptsemFromCtsem function automatically translates a fitted ctsem model to  
 First, the constructDataset function will separate observations from discrete time intervals. It will also identify unique missingness patterns. In the next step, prepareRAMData will group individuals with identical missingness patterns in subsamples. These subsamples will later be used by fitRAM() to speed up the likelihood computation.
 
 ```{r, eval=F}
-dataInformation <- regCtsem::constructDataset(wideData = AnomAuthfit$mxobj$data$observed)
-dataForRAM <- regCtsem::prepareRAMData(dataset = dataInformation$dataset,
+dataInformation <- regCtsem:::constructDataset(wideData = AnomAuthfit$mxobj$data$observed)
+dataForRAM <- regCtsem:::prepareRAMData(dataset = dataInformation$dataset,
                                        individualMissingPatternID = dataInformation$individualMissingPatternID,
                                        uniqueMissingPatterns = dataInformation$uniqueMissingPatterns)
 ```
@@ -433,8 +433,8 @@ dataForRAM <- regCtsem::prepareRAMData(dataset = dataInformation$dataset,
 For the Kalman filter, the functions are constructDataset and prepareKalmanData. In contrast to prepareRAMData, prepareKalmanData will not identify unique missingness patterns, as this will not speed up the computation.
 
 ```{r, eval=F}
-dataInformation <- regCtsem::constructDataset(wideData = wideData)
-dataForKalman <- regCtsem::prepareKalmanData(dataset = dataInformation$dataset,
+dataInformation <- regCtsem:::constructDataset(wideData = wideData)
+dataForKalman <- regCtsem:::prepareKalmanData(dataset = dataInformation$dataset,
                                              nlatent = nlatent, nmanifest = nmanifest,
                                              dtIndicators = dataInformation$dtIndicators,
                                              Tpoints = Tpoints)
@@ -478,7 +478,7 @@ For the manifest part:
 Note that time dependent predictors are currently not supported. For each of these matrices, c<sub>++</sub>tsem saves the values and the parameter names. For example:
 
 ```{r, echo=T}
-ctMatrices <- regCtsem::extractCtsemMatrices(AnomAuthfit$mxobj, 
+ctMatrices <- regCtsem:::extractCtsemMatrices(AnomAuthfit$mxobj, 
                                              AnomAuthfit$ctmodelobj$n.latent,
                                              AnomAuthfit$ctmodelobj$n.manifest)
 ```
@@ -515,8 +515,8 @@ The prepareAMatrix function returns a list with 4-5 objects (depending on the mo
 
 ```{r}
 mxObject  <- AnomAuthfit$mxobj
-dataInformation <- constructDataset(wideData = mxObject$data$observed)
-Amatrix <- regCtsem::prepareAMatrix(mxObject = mxObject, 
+dataInformation <- regCtsem:::constructDataset(wideData = mxObject$data$observed)
+Amatrix <- regCtsem:::prepareAMatrix(mxObject = mxObject, 
                                     ctMatrices = ctMatrices, 
                                     nlatent = AnomAuthfit$ctmodelobj$n.latent, 
                                     nmanifest = AnomAuthfit$ctmodelobj$n.manifest,

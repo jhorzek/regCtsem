@@ -32,3 +32,4 @@ prepareSMatrix(
 \description{
 prepare matrix with covariances for RAM model
 }
+\keyword{internal}

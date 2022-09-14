@@ -24,3 +24,4 @@ NOTE: Function located in file exact_optimization.R
 \author{
 Jannik Orzek
 }
+\keyword{internal}

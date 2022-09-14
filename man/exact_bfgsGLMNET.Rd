@@ -95,3 +95,4 @@ Performs GLMNET (see Friedman, 2010 & Yuan, 2011) with bfgs approximated Hessian
 \details{
 NOTE: Function located in file GLMNET.R
 }
+\keyword{internal}

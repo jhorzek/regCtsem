@@ -20,3 +20,4 @@ prepareKalmanData(dataset, nlatent, nmanifest, dtIndicators, Tpoints)
 \description{
 prepare data for Kalman model
 }
+\keyword{internal}

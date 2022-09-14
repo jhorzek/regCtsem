@@ -59,3 +59,4 @@ performs the line search procedure described by Yuan, G.-X., Ho, C.-H., & Lin, C
 \details{
 NOTE: Function located in file GLMNET.R
 }
+\keyword{internal}

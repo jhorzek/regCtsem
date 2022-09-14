@@ -55,7 +55,7 @@ regCtsem(
 
 \item{cvSample}{cross-validation sample. Has to be in wide format and compatible with ctsemOMX}
 
-\item{autoCV}{Should automatic cross-validation be used? Possible are "No", "kFold" or "Blocked". kFold splits the dataset in k groups by selecting independent units from the rows. Blocked is a within-unit split, where for each person blocks of observations are deleted. See Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740–756. https://doi.org/10.1037/met0000178 for a more detailed explanation}
+\item{autoCV}{Should automatic cross-validation be used? Possible are "No", "kFold" or "Blocked". kFold splits the dataset in k groups by selecting independent units from the rows. Blocked is a within-unit split, where for each person blocks of observations are deleted. See Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740-756. https://doi.org/10.1037/met0000178 for a more detailed explanation}
 
 \item{k}{number of cross-validation folds if autoCV = "kFold" or autoCV = "Blocked"}
 
@@ -94,11 +94,11 @@ REGularized Continuous Time Structural Equation Models (regCtsem) implements lea
 
 References:
 
-* Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1–36. https://doi.org/10.18637/jss.v077.i05
+* Driver, C. C., Oud, J. H. L., & Voelkle, M. C. (2017). Continuous Time Structural Equation Modelling With R Package ctsem. Journal of Statistical Software, 77(5), 1-36. https://doi.org/10.18637/jss.v077.i05
 
-* Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267–288.
+* Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267-288.
 
-* Zou, H. (2006). The Adaptive Lasso and Its Oracle Properties. Journal of the American Statistical Association, 101(476), 1418–1429. https://doi.org/10.1198/016214506000000735
+* Zou, H. (2006). The Adaptive Lasso and Its Oracle Properties. Journal of the American Statistical Association, 101(476), 1418-1429. https://doi.org/10.1198/016214506000000735
 
 NOTE: Function located in file regCtsem.R
 }
@@ -153,7 +153,7 @@ showParameters(fit_myModel)
 regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
 
 # Optimize model using GIST with lasso penalty
-regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+regModel <- regCtsem(ctsemObject = fit_myModel,
                                dataset = dat,
                                regIndicators = regIndicators,
                                lambdas = "auto",
@@ -176,7 +176,7 @@ plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 # regModel$setup$cpptsemObject$DRIFTValues
 
 # Optimize model using GLMNET with lasso penalty
-regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+regModel <- regCtsem(ctsemObject = fit_myModel,
                                dataset = dat,
                                regIndicators = regIndicators,
                                lambdas = "auto",
@@ -189,7 +189,7 @@ plot(regModel, what = "fit", criterion = c("AIC", "BIC", "m2LL"))
 plot(regModel, what = "drift_eta1_eta2")
 
 # The same regularization can be performed with the approximate optimization:
-regModelApprox <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+regModelApprox <- regCtsem(ctsemObject = fit_myModel,
                                      dataset = dat,
                                      regIndicators = regIndicators,
                                      lambdas = "auto",
@@ -247,7 +247,7 @@ regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
 # omxGetParameters(fit_myModel$ctmodelobj) for all parameters
 
 ## Optimization with GIST:
-regModel <- regCtsem::regCtsem(ctsemObject = fit_myModel,
+regModel <- regCtsem(ctsemObject = fit_myModel,
                                dataset = traindata,
                                regIndicators = regIndicators,
                                lambdas = "auto",
@@ -278,7 +278,7 @@ indpars <- c()
 # common group parameter
 for(i in 1:10){
   while(TRUE){
-    DRIFT <- ct_drift + matrix(c(0,rnorm(1,0,.5),0,0),2,2,TRUE)
+    DRIFT <- ct_drift + matrix(c(0,stats::rnorm(1,0,.5),0,0),2,2,TRUE)
     if(!any(Re(eigen(DRIFT)$values) > 0)){break}
   }
   indpars <- c(indpars, DRIFT[1,2])

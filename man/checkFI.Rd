@@ -4,7 +4,7 @@
 \alias{checkFI}
 \title{checkFI}
 \usage{
-checkFI(mxObject, regCtsemObject, cvModel = NULL)
+checkFI(mxObject, regCtsemObject, cvModel = NULL, threshold, testIC)
 }
 \arguments{
 \item{mxObject}{object from openmx}
@@ -12,7 +12,12 @@ checkFI(mxObject, regCtsemObject, cvModel = NULL)
 \item{regCtsemObject}{object from regCtsem}
 
 \item{cvModel}{optional cross-validation model}
+
+\item{threshold}{how close to zero should differences be to be treated as zero?}
+
+\item{testIC}{should information criteria be tested?}
 }
 \description{
 used in testthat to check the computation of fit indices of regCtsem
 }
+\keyword{internal}

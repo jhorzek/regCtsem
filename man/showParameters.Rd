@@ -11,7 +11,7 @@ showParameters(ctsemObject)
 }
 \description{
 shows the parameters of a model fitted with ctFit.
-Importantly, the untransformed paraemters are returned.
+Importantly, the untransformed parameters are returned.
 For instance, the variance-covariance matrices are implemented in log-Cholesky form
 (see Pinheiro, J. C., & Bates, D. M. (1996). Unconstrained parametrizations for variance-covariance matrices. Statistics and Computing, 6(3), 289–296. https://doi.org/10.1007/BF00140873).
 }

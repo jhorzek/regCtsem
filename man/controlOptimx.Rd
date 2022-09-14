@@ -35,6 +35,8 @@ controlOptimx(
 
 \item{method}{see ?optimx}
 
+\item{hessian}{should the final hessian be computed?}
+
 \item{itnmax}{maximal number of iterations}
 
 \item{control}{control passed to optimx}
