@@ -1,9 +1,5 @@
-### Check basic regCtsem features ###
-
-library(regCtsem)
-
-testthat::test_that(desc = "Testing basic features of regCtsem", code = {
-  skip_on_cran()
+test_that(desc = "Testing basic features of regCtsem", code = {
+  library(regCtsem)
   set.seed(17544)
 
   ## define the population model:

@@ -1,7 +1,4 @@
-### Check cpptsem Implementation ###
-
-testthat::test_that(desc = "Testing standardization", code = {
-  skip_on_cran()
+test_that(desc = "Testing standardization", code = {
   set.seed(17046)
 
   library(regCtsem)

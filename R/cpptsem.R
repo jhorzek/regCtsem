@@ -401,7 +401,7 @@ constructDataset <- function(wideData){
   dataset <- subset(wideData, select = !grepl("dT", colnames(wideData)) & !grepl("intervalID", colnames(wideData)) )
 
   # check sorting of data
-  timesAre <- sub(".*?_T", "", colnames(dataset))
+  timesAre <- as.numeric(sub(".*?_T", "", colnames(dataset)))
   if(!all(timesAre == sort(timesAre))){
     stop(
       paste0(

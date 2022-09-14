@@ -1,6 +1,4 @@
-### Check basic regCtsem features ###
-
-testthat::test_that(desc = "Testing Kalman filter", code = {
+test_that(desc = "Testing Kalman filter", code = {
   library(regCtsem)
   set.seed(17544)
 
@@ -112,60 +110,103 @@ testthat::test_that(desc = "Testing Kalman filter", code = {
                                              testIC = TRUE)
   testthat::expect_equal(regModel_BIC_checkFI, TRUE)
   regModel_BIC_checkFI <- regCtsem:::checkFI(mxObject = fit_myModel$mxobj,
-                                  regCtsemObject = regModel_BIC_GLMNET,
-                                  cvModel = fit_myModel_fortest$mxobj,
-                                  threshold = 1e-4,
-                                  testIC = TRUE)
+                                             regCtsemObject = regModel_BIC_GLMNET,
+                                             cvModel = fit_myModel_fortest$mxobj,
+                                             threshold = 1e-4,
+                                             testIC = TRUE)
   testthat::expect_equal(regModel_BIC_checkFI, TRUE)
   regModel_BIC_checkFI <- regCtsem:::checkFI(mxObject = fit_myModel$mxobj,
-                                  regCtsemObject = regModel_BIC_Approx,
-                                  cvModel = fit_myModel_fortest$mxobj,
-                                  threshold = 1e-4,
-                                  testIC = FALSE)
+                                             regCtsemObject = regModel_BIC_Approx,
+                                             cvModel = fit_myModel_fortest$mxobj,
+                                             threshold = 1e-4,
+                                             testIC = FALSE)
   testthat::expect_equal(regModel_BIC_checkFI, TRUE)
 
 
-  # message("Testing GIST, GLMNET and approximate optimization with automatic cross-validation.")
-  # regModel_CV_GIST <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
-  #                                            dataset = traindata,
-  #                                            optimizer = "GIST",
-  #                                            regIndicators = regIndicators,
-  #                                            lambdasAutoLength = 10,
-  #                                            autoCV = "kFold",
-  #                                            k = 3,
-  #                                            standardizeDrift = "asymptoticDiffusion"))
-  # regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
-  #                                               regCtsemObject = regModel_CV_GIST,
-  #                                               threshold = 1e-4,
-  #                                               testIC = TRUE)
-  # testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
-  #
-  # regModel_CV_GLMNET <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
-  #                                              dataset = traindata,
-  #                                              optimizer = "GLMNET",
-  #                                              regIndicators = regIndicators,
-  #                                              lambdasAutoLength = 10,
-  #                                              autoCV = "kFold",
-  #                                              k = 3,
-  #                                              standardizeDrift = "asymptoticDiffusion"))
-  # regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
-  #                                               regCtsemObject = regModel_CV_GLMNET,
-  #                                               threshold = 1e-4,
-  #                                               testIC = TRUE)
-  # testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
+  message("Testing GIST, GLMNET and approximate optimization with automatic cross-validation.")
+  regModel_CV_GIST <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
+                                             dataset = traindata,
+                                             optimizer = "GIST",
+                                             regIndicators = regIndicators,
+                                             lambdasAutoLength = 10,
+                                             autoCV = "kFold",
+                                             k = 3,
+                                             standardizeDrift = "asymptoticDiffusion"))
+  regModel_autoCV_checkAutoCV <- regCtsem:::checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
+                                                           regCtsemObject = regModel_CV_GIST,
+                                                           threshold = 1e-4,
+                                                           testIC = TRUE)
+  testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
 
-  # regModel_CV_Approx <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
-  #                                              dataset = traindata,
-  #                                              optimization = "approx",
-  #                                              regIndicators = regIndicators,
-  #                                              lambdasAutoLength = 10,
-  #                                              autoCV = "kFold",
-  #                                              k = 3,
-  #                                              standardizeDrift = "asymptoticDiffusion"))
-  # regModel_autoCV_checkAutoCV <- checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
-  #                                               regCtsemObject = regModel_CV_Approx,
-  #                                               threshold = 1e-4,
-  #                                               testIC = FALSE)
-  # testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
+  regModel_CV_GLMNET <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
+                                               dataset = traindata,
+                                               optimizer = "GLMNET",
+                                               regIndicators = regIndicators,
+                                               lambdasAutoLength = 10,
+                                               autoCV = "kFold",
+                                               k = 3,
+                                               standardizeDrift = "asymptoticDiffusion"))
+  regModel_autoCV_checkAutoCV <- regCtsem:::checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
+                                                           regCtsemObject = regModel_CV_GLMNET,
+                                                           threshold = 1e-4,
+                                                           testIC = TRUE)
+  testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
+
+  regModel_CV_Approx <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
+                                               dataset = traindata,
+                                               optimization = "approx",
+                                               regIndicators = regIndicators,
+                                               lambdasAutoLength = 10,
+                                               autoCV = "kFold",
+                                               k = 3,
+                                               standardizeDrift = "asymptoticDiffusion"))
+  regModel_autoCV_checkAutoCV <- regCtsem:::checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
+                                                regCtsemObject = regModel_CV_Approx,
+                                                threshold = 1e-4,
+                                                testIC = FALSE)
+  testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
+
+  message("Testing GIST, GLMNET and approximate optimization with blocked cross-validation.")
+  regModel_CV_GIST <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
+                                             dataset = traindata,
+                                             optimizer = "GIST",
+                                             regIndicators = regIndicators,
+                                             lambdasAutoLength = 10,
+                                             autoCV = "Blocked",
+                                             k = 3,
+                                             standardizeDrift = "asymptoticDiffusion"))
+  regModel_autoCV_checkAutoCV <- regCtsem:::checkAutoBlocked(ctInit = fit_myModel$ctmodelobj,
+                                                             regCtsemObject = regModel_CV_GIST,
+                                                             threshold = 1e-4,
+                                                             testIC = TRUE)
+  testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
+
+  regModel_CV_GLMNET <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
+                                               dataset = traindata,
+                                               optimizer = "GLMNET",
+                                               regIndicators = regIndicators,
+                                               lambdasAutoLength = 10,
+                                               autoCV = "kFold",
+                                               k = 3,
+                                               standardizeDrift = "asymptoticDiffusion"))
+  regModel_autoCV_checkAutoCV <- regCtsem:::checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
+                                                           regCtsemObject = regModel_CV_GLMNET,
+                                                           threshold = 1e-4,
+                                                           testIC = TRUE)
+  testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
+
+  regModel_CV_Approx <- try(regCtsem::regCtsem(ctsemObject = fit_myModel,
+                                               dataset = traindata,
+                                               optimization = "approx",
+                                               regIndicators = regIndicators,
+                                               lambdasAutoLength = 10,
+                                               autoCV = "kFold",
+                                               k = 3,
+                                               standardizeDrift = "asymptoticDiffusion"))
+  regModel_autoCV_checkAutoCV <- regCtsem:::checkAutoKFold(ctInit = fit_myModel$ctmodelobj,
+                                                regCtsemObject = regModel_CV_Approx,
+                                                threshold = 1e-4,
+                                                testIC = FALSE)
+  testthat::expect_equal(regModel_autoCV_checkAutoCV, TRUE)
 
 })

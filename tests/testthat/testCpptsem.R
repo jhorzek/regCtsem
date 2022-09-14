@@ -1,6 +1,4 @@
-### Check cpptsem Implementation ###
-testthat::test_that(desc = "Testing implementation of cpptsem", code = {
-  skip_on_cran()
+test_that(desc = "Testing implementation of cpptsem", code = {
   library(regCtsem)
   for(addCINT in c(TRUE,FALSE)){
     if(addCINT){

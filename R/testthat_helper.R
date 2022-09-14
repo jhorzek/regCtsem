@@ -14,6 +14,8 @@ checkAutoKFold <- function(ctInit,
 
   nModels <- regCtsemObject$setup$k
 
+  works <- TRUE
+
   for(model in 1:nModels){
     print(paste("Checking model", model, "of", nModels))
     testSamples <- regCtsemObject$cvFoldsAndModels$cvFolds[[model]]
@@ -36,7 +38,65 @@ checkAutoKFold <- function(ctInit,
                                         "mxRAM",
                                         "Kalman"))
 
-    works <- checkFI(mxObject = trainModel$mxobj,
+    works <- works & checkFI(mxObject = trainModel$mxobj,
+                     regCtsemObject = regCtsemObject$subModels[[model]],
+                     cvModel = cvModel$mxobj,
+                     threshold,
+                     testIC)
+  }
+
+  print("Automatic Cross-Validation Works")
+  return(works)
+}
+
+#' checkAutoBlocked
+#'
+#' used in testthat to check the automatic k-fold blocked cross-validation feature of regCtsem
+#' @param ctInit init object from ctsem
+#' @param regCtsemObject object from regCtsem
+#' @param threshold how close to zero should differences be to be treated as zero?
+#' @param testIC should information criteria be tested?
+#' @keywords internal
+checkAutoBlocked <- function(ctInit,
+                             regCtsemObject,
+                             threshold,
+                             testIC){
+  if(regCtsemObject$setup$autoCV != "Blocked") stop("Only valid for Blocked cross-validation")
+
+  nModels <- regCtsemObject$setup$k
+
+  TPoints <- regCtsemObject$setup$ctsemObject$ctmodelobj$Tpoints
+
+  works <- TRUE
+
+  for(model in 1:nModels){
+    print(paste("Checking model", model, "of", nModels))
+    testSamples <- regCtsemObject$cvFoldsAndModels$cvFolds[[model]]
+    trainSamples <- (1:TPoints)[!(1:TPoints %in% testSamples)]
+    testSet <- regCtsemObject$cvFoldsAndModels$testSets[[model]]
+
+    # check samples
+    fullData <- regCtsemObject$setup$dataset
+    trainSet <- fullData
+    trainSet[,grepl(pattern = paste0(paste0("[A-Z0-9]+_T", testSamples, "$"), collapse = "|"), colnames(trainSet))] <- NA
+
+    if(any(regCtsemObject$cvFoldsAndModels$trainSets[[model]] != trainSet, na.rm = TRUE)){
+      stop("Wrong sample size in train set")
+    }
+
+    trainModel <- ctFit(dat = trainSet,
+                        ctmodelobj = ctInit,
+                        useOptimizer = FALSE,
+                        objective = ifelse(regCtsemObject$setup$objective == "ML", "mxRAM", "Kalman"))
+
+    cvModel <- ctFit(dat = testSet,
+                     ctmodelobj = ctInit,
+                     useOptimizer = FALSE,
+                     objective = ifelse(regCtsemObject$setup$objective == "ML",
+                                        "mxRAM",
+                                        "Kalman"))
+
+    works <- works & checkFI(mxObject = trainModel$mxobj,
                      regCtsemObject = regCtsemObject$subModels[[model]],
                      cvModel = cvModel$mxobj,
                      threshold,
