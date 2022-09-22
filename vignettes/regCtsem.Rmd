@@ -34,7 +34,9 @@ In R, models of the form shown above can, for instance, be fitted with the packa
 
 ## Regularization
 
-**regCtsem** extends **ctsemOMX** by allowing for LASSO and adaptive LASSO regularization. The objective function is given by 
+**regCtsem** extends **ctsemOMX** by allowing for LASSO and adaptive LASSO regularization 
+(see Jacobucci et al., 2016 and Huang et al., 2017 for an introduction to regularized SEM). 
+The objective function is given by 
 $$f(\pmb\theta) = L(\pmb\theta) + N\sum_{j\in J}\lambda_j|\theta_j - \tau_j|$$
 where $f(\pmb\theta)$ is the regularized objective function, $L(\pmb \theta)$ is the -2 log Likelihood of the model $N$ is the sample size and $\sum_{j\in J}\lambda_j|\theta_j - \tau_j|$ is the penalty term. Here, $J$ is a set of parameter indices and $\theta_{j,j\in J}$ are the parameters which are to be regularized. This will become more clear in the following examples. In the penalty term $\tau_j$ is the target towards which the parameter $\theta_j$ is regularized. By default this is set to $0$. $\lambda_j$ controls the relative importance of the -2 log Likelihood and the penalty term. For larger $\lambda_j$ parameter $\theta_j$ will be pulled towards $\tau_j$. By default the same $\lambda$ is used for all regularized parameters. This is shown in the figure below, where the $x$-axis shows the $\lambda$ values and the blue lines are two regularized parameters. For larger $\lambda$ these are pulled towards the target $0$.
 
@@ -361,7 +363,8 @@ plot(regModel)
 
 "#parameters on target" refers to the number of parameters which are on their target values (here .5).
 
-Regularizing parameters towards specific targets can be used to model selected parameters person-specific while regularizing them towards the group value. This feature is still experimental, but can be used as follows:
+Regularizing parameters towards specific targets can be used to model selected parameters person-specific while regularizing them towards the group value (see Jacobucci & Grimm, 2018 for a similar approach).
+This feature is still experimental, but can be used as follows:
 
 ```{r, results='hide', message = FALSE, warning=FALSE}
 regIndicators <- c("drift_eta2_eta1", "drift_eta1_eta2")
@@ -514,6 +517,9 @@ Note that when combining startFromSparse with automatic standardization the T0VA
 * Friedman, J., Hastie, T., & Tibshirani, R. (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software, 33(1), 1–20. https://doi.org/10.18637/jss.v033.i01
 * Ghalanos, A., & Theussl, S. (2015). Rsolnp: General  Non-linear Optimization Using Augmented Lagrange Multiplier Method (R  package version 1.16) [Computer software].
 * Gong, P., Zhang, C., Lu, Z., Huang, J., & Ye, J. (2013). A General Iterative Shrinkage and Thresholding Algorithm for Non-convex Regularized Optimization Problems. Proceedings of the 30th International Conference on Machine Learning, 28(2)(2), 37–45.
+* Huang, P.-H., Chen, H., & Weng, L.-J. (2017). A penalized likelihood method for structural equation modeling. Psychometrika, 82(2), 329–354. https://doi.org/10.1007/s11336-017-9566-9
+* Jacobucci, R., & Grimm, K. J. (2018). Regularized Estimation of Multivariate Latent Change Score Models. In E. Ferrer, S. M. Boker, & K. J. Grimm (Eds.), Longitudinal Multivariate Psychology (1st ed., pp. 109–125). Routledge. https://doi.org/10.4324/9781315160542-6
+* Jacobucci, R., Grimm, K. J., & McArdle, J. J. (2016). Regularized structural equation modeling. Structural Equation Modeling: A Multidisciplinary Journal, 23(4), 555–566. https://doi.org/10.1080/10705511.2016.1154793
 * Nash, J. C., & Varadhan, R. (2011). Unifying Optimization Algorithms to Aid Software System Users: Optimx for R. Journal of Statistical Software, 43(9), 1–14. https://doi.org/10.18637/jss.v043.i09
 * Pinheiro, J. C., & Bates, D. M. (1996). Unconstrained parametrizations for variance-covariance matrices. Statistics and Computing, 6(3), 289–296. https://doi.org/10.1007/BF00140873
 * Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267–288.
