@@ -25,18 +25,12 @@ jobs:
     strategy:
       matrix:
         r-version: ['release']
-        os: ['windows-latest', 'ubuntu-latest'] # 'macOS-latest' -> add later on; running on macOS is more expensive
+        os: ['ubuntu-latest'] # 'windows-latest', 'macOS-latest' -> add later on; running on macOS is more expensive
 
     steps:
       - uses: actions/checkout@v3
       - name: install libcurl4-openssl-dev
-        run: |
-             if [matrix.os == 'ubuntu-latest']; then
-                echo "installing libcurl"
-                apt install libcurl4-openssl-dev
-             else
-                echo "Nothing to install"
-             fi
+        run: apt install libcurl4-openssl-dev
         shell: bash
       - name: Set up R ${{ matrix.r-version }}
         uses: r-lib/actions/setup-r@v2
