@@ -32,7 +32,7 @@ jobs:
       - name: install libcurl4-openssl-dev
         run: |
              if ["$RUNNER_OS" == "Linux"]; then
-              sudo apt-get install libcurl4-openssl-dev
+              apt install libcurl4-openssl-dev
              fi
       - name: Set up R ${{ matrix.r-version }}
         uses: r-lib/actions/setup-r@v2
