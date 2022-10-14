@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: install libcurl4-openssl-dev
-        run: apt install libcurl4-openssl-dev
+        run: sudo apt install libcurl4-openssl-dev
         shell: bash
       - name: Set up R ${{ matrix.r-version }}
         uses: r-lib/actions/setup-r@v2
