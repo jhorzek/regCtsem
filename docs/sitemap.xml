@@ -1,366 +1,366 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/404.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/404.html</loc>
   </url>
   <url>
-    <loc>/articles/MatrixExponential.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/articles/MatrixExponential.html</loc>
   </url>
   <url>
-    <loc>/articles/cpptsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/articles/cpptsem.html</loc>
   </url>
   <url>
-    <loc>/articles/index.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/articles/index.html</loc>
   </url>
   <url>
-    <loc>/articles/regCtsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/articles/regCtsem.html</loc>
   </url>
   <url>
-    <loc>/authors.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/authors.html</loc>
   </url>
   <url>
-    <loc>/index.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/index.html</loc>
   </url>
   <url>
-    <loc>/reference/GIST.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/GIST.html</loc>
   </url>
   <url>
-    <loc>/reference/GISTWithTarget.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/GISTWithTarget.html</loc>
   </url>
   <url>
-    <loc>/reference/approx_KalmanM2LLCpptsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/approx_KalmanM2LLCpptsem.html</loc>
   </url>
   <url>
-    <loc>/reference/approx_KalmanRegM2LLCpptsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/approx_KalmanRegM2LLCpptsem.html</loc>
   </url>
   <url>
-    <loc>/reference/approx_RAMM2LLCpptsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/approx_RAMM2LLCpptsem.html</loc>
   </url>
   <url>
-    <loc>/reference/approx_RAMRegM2LLCpptsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/approx_RAMRegM2LLCpptsem.html</loc>
   </url>
   <url>
-    <loc>/reference/approx_cpptsemOptim.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/approx_cpptsemOptim.html</loc>
   </url>
   <url>
-    <loc>/reference/approx_cpptsemOptimx.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/approx_cpptsemOptimx.html</loc>
   </url>
   <url>
-    <loc>/reference/approx_cpptsemRsolnp.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/approx_cpptsemRsolnp.html</loc>
   </url>
   <url>
-    <loc>/reference/approx_getFitIndices.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/approx_getFitIndices.html</loc>
   </url>
   <url>
-    <loc>/reference/approx_gradCpptsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/approx_gradCpptsem.html</loc>
   </url>
   <url>
-    <loc>/reference/approx_iterateOverLambdas.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/approx_iterateOverLambdas.html</loc>
   </url>
   <url>
-    <loc>/reference/approx_regCtsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/approx_regCtsem.html</loc>
   </url>
   <url>
-    <loc>/reference/armaExpmat.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/armaExpmat.html</loc>
   </url>
   <url>
-    <loc>/reference/checkAutoBlocked.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/checkAutoBlocked.html</loc>
   </url>
   <url>
-    <loc>/reference/checkAutoKFold.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/checkAutoKFold.html</loc>
   </url>
   <url>
-    <loc>/reference/checkFI.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/checkFI.html</loc>
   </url>
   <url>
-    <loc>/reference/computeDRIFTHASH.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeDRIFTHASH.html</loc>
   </url>
   <url>
-    <loc>/reference/computeDRIFTHASHExponentials.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeDRIFTHASHExponentials.html</loc>
   </url>
   <url>
-    <loc>/reference/computeDiscreteCINTs.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeDiscreteCINTs.html</loc>
   </url>
   <url>
-    <loc>/reference/computeDiscreteDIFFUSIONs.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeDiscreteDIFFUSIONs.html</loc>
   </url>
   <url>
-    <loc>/reference/computeDiscreteDRIFTs.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeDiscreteDRIFTs.html</loc>
   </url>
   <url>
-    <loc>/reference/computeDiscreteTRAITs.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeDiscreteTRAITs.html</loc>
   </url>
   <url>
-    <loc>/reference/computeGroupM2LL.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeGroupM2LL.html</loc>
   </url>
   <url>
-    <loc>/reference/computeIndividualM2LL.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeIndividualM2LL.html</loc>
   </url>
   <url>
-    <loc>/reference/computeKalmanLatentCovariancePrediction.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeKalmanLatentCovariancePrediction.html</loc>
   </url>
   <url>
-    <loc>/reference/computeKalmanLatentStatePrediction.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeKalmanLatentStatePrediction.html</loc>
   </url>
   <url>
-    <loc>/reference/computeKalmanManifestCovariancePrediction.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeKalmanManifestCovariancePrediction.html</loc>
   </url>
   <url>
-    <loc>/reference/computeKalmanManifestPrediction.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeKalmanManifestPrediction.html</loc>
   </url>
   <url>
-    <loc>/reference/computeRAMExpectedCovariance.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeRAMExpectedCovariance.html</loc>
   </url>
   <url>
-    <loc>/reference/computeRAMExpectedMeans.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeRAMExpectedMeans.html</loc>
   </url>
   <url>
-    <loc>/reference/computeRAMM2LL.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeRAMM2LL.html</loc>
   </url>
   <url>
-    <loc>/reference/computeStandardErrorsDelta.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeStandardErrorsDelta.html</loc>
   </url>
   <url>
-    <loc>/reference/computeStandardErrorsRaw.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/computeStandardErrorsRaw.html</loc>
   </url>
   <url>
-    <loc>/reference/constructDataset.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/constructDataset.html</loc>
   </url>
   <url>
-    <loc>/reference/constructDatasetKalman.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/constructDatasetKalman.html</loc>
   </url>
   <url>
-    <loc>/reference/controlApprox.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/controlApprox.html</loc>
   </url>
   <url>
-    <loc>/reference/controlGIST.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/controlGIST.html</loc>
   </url>
   <url>
-    <loc>/reference/controlGLMNET.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/controlGLMNET.html</loc>
   </url>
   <url>
-    <loc>/reference/controlOptimx.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/controlOptimx.html</loc>
   </url>
   <url>
-    <loc>/reference/controlRsolnp.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/controlRsolnp.html</loc>
   </url>
   <url>
-    <loc>/reference/cpptsemFromCtsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/cpptsemFromCtsem.html</loc>
   </url>
   <url>
-    <loc>/reference/createCVFoldsAndModels.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/createCVFoldsAndModels.html</loc>
   </url>
   <url>
-    <loc>/reference/createFolds.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/createFolds.html</loc>
   </url>
   <url>
-    <loc>/reference/deepCopyDataFrame.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/deepCopyDataFrame.html</loc>
   </url>
   <url>
-    <loc>/reference/deepCopyList.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/deepCopyList.html</loc>
   </url>
   <url>
-    <loc>/reference/deepCopyNumericMatrix.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/deepCopyNumericMatrix.html</loc>
   </url>
   <url>
-    <loc>/reference/deepCopyNumericVector.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/deepCopyNumericVector.html</loc>
   </url>
   <url>
-    <loc>/reference/deepCopyStringMatrix.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/deepCopyStringMatrix.html</loc>
   </url>
   <url>
-    <loc>/reference/deepCopyStringVector.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/deepCopyStringVector.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_GIST.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_GIST.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_GLMNETLineSearch.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_GLMNETLineSearch.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_armijoLineSearch.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_armijoLineSearch.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_bfgsGLMNET.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_bfgsGLMNET.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_getBFGS.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_getBFGS.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_getCVFit.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_getCVFit.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_getCppGradients.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_getCppGradients.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_getFitIndices.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_getFitIndices.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_getFitIndicesWithTarget.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_getFitIndicesWithTarget.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_getPenaltyValue.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_getPenaltyValue.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_getPenaltyValueWithTarget.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_getPenaltyValueWithTarget.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_getSubgradients.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_getSubgradients.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_innerGLMNET.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_innerGLMNET.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_outerGLMNET.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_outerGLMNET.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_regCtsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_regCtsem.html</loc>
   </url>
   <url>
-    <loc>/reference/exact_tryStartingValues.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/exact_tryStartingValues.html</loc>
   </url>
   <url>
-    <loc>/reference/extractCtsemMatrices.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/extractCtsemMatrices.html</loc>
   </url>
   <url>
-    <loc>/reference/extractOptimx.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/extractOptimx.html</loc>
   </url>
   <url>
-    <loc>/reference/extractParameterTableFromMx.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/extractParameterTableFromMx.html</loc>
   </url>
   <url>
-    <loc>/reference/fillA.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/fillA.html</loc>
   </url>
   <url>
-    <loc>/reference/fillM.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/fillM.html</loc>
   </url>
   <url>
-    <loc>/reference/fillS.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/fillS.html</loc>
   </url>
   <url>
-    <loc>/reference/fitCpptsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/fitCpptsem.html</loc>
   </url>
   <url>
-    <loc>/reference/generateDRIFTPlot.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/generateDRIFTPlot.html</loc>
   </url>
   <url>
-    <loc>/reference/getAdaptiveLassoWeights.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getAdaptiveLassoWeights.html</loc>
   </url>
   <url>
-    <loc>/reference/getCurvedLambda.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getCurvedLambda.html</loc>
   </url>
   <url>
-    <loc>/reference/getFinalModel.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getFinalModel.html</loc>
   </url>
   <url>
-    <loc>/reference/getFinalParameters.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getFinalParameters.html</loc>
   </url>
   <url>
-    <loc>/reference/getFlatStdizer.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getFlatStdizer.html</loc>
   </url>
   <url>
-    <loc>/reference/getMaxLambda.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getMaxLambda.html</loc>
   </url>
   <url>
-    <loc>/reference/getParameterEstimates.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getParameterEstimates.html</loc>
   </url>
   <url>
-    <loc>/reference/getRowsAndColsOfNonMissing.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getRowsAndColsOfNonMissing.html</loc>
   </url>
   <url>
-    <loc>/reference/getT0VAR.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getT0VAR.html</loc>
   </url>
   <url>
-    <loc>/reference/getVarianceFromVarianceBase.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getVarianceFromVarianceBase.html</loc>
   </url>
   <url>
-    <loc>/reference/getVarianceFromVarianceBase2.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getVarianceFromVarianceBase2.html</loc>
   </url>
   <url>
-    <loc>/reference/getVariances.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/getVariances.html</loc>
   </url>
   <url>
-    <loc>/reference/gradCpptsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/gradCpptsem.html</loc>
   </url>
   <url>
-    <loc>/reference/index.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/index.html</loc>
   </url>
   <url>
-    <loc>/reference/kalmanFit.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/kalmanFit.html</loc>
   </url>
   <url>
-    <loc>/reference/labeledFree.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/labeledFree.html</loc>
   </url>
   <url>
-    <loc>/reference/optimizeCpptsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/optimizeCpptsem.html</loc>
   </url>
   <url>
-    <loc>/reference/plot.regCtsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/plot.regCtsem.html</loc>
   </url>
   <url>
-    <loc>/reference/plot.regCtsemCV.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/plot.regCtsemCV.html</loc>
   </url>
   <url>
-    <loc>/reference/plot.regCtsemMultiSubject.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/plot.regCtsemMultiSubject.html</loc>
   </url>
   <url>
-    <loc>/reference/prepareAMatrix.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/prepareAMatrix.html</loc>
   </url>
   <url>
-    <loc>/reference/prepareDiscreteElementNames.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/prepareDiscreteElementNames.html</loc>
   </url>
   <url>
-    <loc>/reference/prepareDiscreteElements.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/prepareDiscreteElements.html</loc>
   </url>
   <url>
-    <loc>/reference/prepareFMatrix.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/prepareFMatrix.html</loc>
   </url>
   <url>
-    <loc>/reference/prepareKalmanData.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/prepareKalmanData.html</loc>
   </url>
   <url>
-    <loc>/reference/prepareKalmanMatrices.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/prepareKalmanMatrices.html</loc>
   </url>
   <url>
-    <loc>/reference/prepareMMatrix.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/prepareMMatrix.html</loc>
   </url>
   <url>
-    <loc>/reference/prepareRAMData.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/prepareRAMData.html</loc>
   </url>
   <url>
-    <loc>/reference/prepareSMatrix.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/prepareSMatrix.html</loc>
   </url>
   <url>
-    <loc>/reference/regCtsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/regCtsem.html</loc>
   </url>
   <url>
-    <loc>/reference/restore.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/restore.html</loc>
   </url>
   <url>
-    <loc>/reference/ridgeKalmanRegM2LLCpptsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/ridgeKalmanRegM2LLCpptsem.html</loc>
   </url>
   <url>
-    <loc>/reference/ridgeRAMRegM2LLCpptsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/ridgeRAMRegM2LLCpptsem.html</loc>
   </url>
   <url>
-    <loc>/reference/separateFitAndParameters.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/separateFitAndParameters.html</loc>
   </url>
   <url>
-    <loc>/reference/showParameters.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/showParameters.html</loc>
   </url>
   <url>
-    <loc>/reference/startFromSparse.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/startFromSparse.html</loc>
   </url>
   <url>
-    <loc>/reference/summary.regCtsem.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/summary.regCtsem.html</loc>
   </url>
   <url>
-    <loc>/reference/summary.regCtsemCV.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/summary.regCtsemCV.html</loc>
   </url>
   <url>
-    <loc>/reference/summary.regCtsemMultiSubject.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/summary.regCtsemMultiSubject.html</loc>
   </url>
   <url>
-    <loc>/reference/tryApproxFirst.html</loc>
+    <loc>https://jhorzek.github.io/regCtsem/reference/tryApproxFirst.html</loc>
   </url>
 </urlset>

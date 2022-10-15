@@ -204,853 +204,220 @@ regCtsem uses objects from ctsemOMX and implements lasso, adaptive lasso and rid
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">17046</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">regCtsem</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">#### Example 1 ####</span></span></span>
-<span class="r-in"><span><span class="co">## Regularization with FIML objective function</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Population model:</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.</span></span></span>
-<span class="r-in"><span><span class="va">ct_drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.3</span>,<span class="fl">.2</span>,<span class="fl">0</span>,<span class="op">-</span><span class="fl">.5</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">generatingModel</span><span class="op">&lt;-</span><span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">10</span>,n.latent<span class="op">=</span><span class="fl">2</span>,n.TDpred<span class="op">=</span><span class="fl">0</span>,</span></span>
-<span class="r-in"><span>                                n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>                                MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                DRIFT<span class="op">=</span><span class="va">ct_drift</span>,</span></span>
-<span class="r-in"><span>                                DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="fl">.5</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                CINT<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                T0VAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># simulate a training data set</span></span></span>
-<span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctGenerate.html" class="external-link">ctGenerate</a></span><span class="op">(</span><span class="va">generatingModel</span>, n.subjects <span class="op">=</span> <span class="fl">100</span>, wide <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  10</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Build the analysis model. Note that drift eta1_eta2 is freely estimated</span></span></span>
-<span class="r-in"><span><span class="co"># although it is 0 in the population.</span></span></span>
-<span class="r-in"><span><span class="va">myModel</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">10</span>,n.latent<span class="op">=</span><span class="fl">2</span>,n.TDpred<span class="op">=</span><span class="fl">0</span>,</span></span>
-<span class="r-in"><span>                          n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>                          LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          CINT<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'eta1_eta1'</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="st">'eta2_eta2'</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          T0VAR<span class="op">=</span><span class="st">"auto"</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># fit the model using ctsemOMX:</span></span></span>
-<span class="r-in"><span><span class="va">fit_myModel</span> <span class="op">&lt;-</span> <span class="fu">ctsemOMX</span><span class="fu">::</span><span class="fu">ctFit</span><span class="op">(</span><span class="va">dat</span>, <span class="va">myModel</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> wide format data detected</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsemCarefulFit with 11 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsem with 11 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Beginning initial fit attempt</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsem with 11 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  Lowest minimum so far:  2459.05219824391</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Solution found</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  Solution found!  Final fit=2459.0522 (started at 12144.028)  (1 attempt(s): 1 valid, 0 errors)</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># select DRIFT values for regularization:</span></span></span>
-<span class="r-in"><span><span class="co"># Note: If you are unsure what the parameters are called in</span></span></span>
-<span class="r-in"><span><span class="co"># your model, check: showParameters(fit_myModel)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="showParameters.html">showParameters</a></span><span class="op">(</span><span class="va">fit_myModel</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              label model        matrix row col        value lbound ubound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       T0var_eta1 ctsem     T0VARbase   1   1 -0.100941724     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2       T0var_eta2 ctsem     T0VARbase   2   2  0.005625431     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  T0var_eta2_eta1 ctsem     T0VARbase   2   1 -0.142072550     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4       drift_eta1 ctsem         DRIFT   1   1 -0.316155339     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  drift_eta1_eta2 ctsem         DRIFT   1   2 -0.028131324     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       drift_eta2 ctsem         DRIFT   2   2 -0.526391591     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  drift_eta2_eta1 ctsem         DRIFT   2   1  0.168028595     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8        eta1_eta1 ctsem DIFFUSIONbase   1   1 -0.672635312     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9        eta2_eta2 ctsem DIFFUSIONbase   2   2 -0.714620247     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10           mm_Y1 ctsem MANIFESTMEANS   1   1  0.080595502     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11           mm_Y2 ctsem MANIFESTMEANS   2   1  0.047101847     NA     NA</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># regularize the cross-effects:</span></span></span>
-<span class="r-in"><span><span class="va">regIndicators</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"drift_eta2_eta1"</span>, <span class="st">"drift_eta1_eta2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Optimize model using GIST with lasso penalty</span></span></span>
-<span class="r-in"><span><span class="va">regModel</span> <span class="op">&lt;-</span> <span class="fu">regCtsem</span><span class="op">(</span>ctsemObject <span class="op">=</span> <span class="va">fit_myModel</span>,</span></span>
-<span class="r-in"><span>                               dataset <span class="op">=</span> <span class="va">dat</span>,</span></span>
-<span class="r-in"><span>                               regIndicators <span class="op">=</span> <span class="va">regIndicators</span>,</span></span>
-<span class="r-in"><span>                               lambdas <span class="op">=</span> <span class="st">"auto"</span>,</span></span>
-<span class="r-in"><span>                               lambdasAutoLength <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Object with objective = ML detected.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Translating model to C++. Found the following elements: T0MEANS, T0VARbase, DRIFT, DIFFUSIONbase, CINT, MANIFESTMEANS, LAMBDA, MANIFESTVARbase.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Not using any automatic standardization.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Computing lambda_max ... </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Trying different starting values [1/6] - Trying different starting values [2/6] - Trying different starting values [3/6] - Trying different starting values [4/6] - Trying different starting values [5/6] - Trying different starting values [6/6] </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DONE </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                                              |                                                                      |   0%  |                                                                              |====                                                                  |   5%  |                                                                              |=======                                                               |  10%  |                                                                              |==========                                                            |  15%  |                                                                              |==============                                                        |  20%  |                                                                              |==================                                                    |  25%  |                                                                              |=====================                                                 |  30%  |                                                                              |========================                                              |  35%  |                                                                              |============================                                          |  40%  |                                                                              |================================                                      |  45%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================                                |  55%  |                                                                              |==========================================                            |  60%  |                                                                              |==============================================                        |  65%  |                                                                              |=================================================                     |  70%  |                                                                              |====================================================                  |  75%  |                                                                              |========================================================              |  80%  |                                                                              |============================================================          |  85%  |                                                                              |===============================================================       |  90%  |                                                                              |==================================================================    |  95%  |                                                                              |======================================================================| 100%</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">regModel</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "|---regCtsem results--------------------------------------------------|"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] " --- Parameter estimates: --- "</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                               0 0.0715724193271404 0.152366078263162</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1  0.26046940         0.26046940        0.26046940</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta1  0.00000000         0.00000000        0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta2  0.23949165         0.23949165        0.23949165</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta1_eta1      0.81719096         0.81719096        0.81719096</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta1     -0.12843128        -0.12843128       -0.12843128</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta2      1.03150047         1.03150047        1.03150047</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1          -0.31615685        -0.31676838       -0.31747721</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2     -0.02812913        -0.02354486       -0.01835698</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2          -0.52639111        -0.52578616       -0.52513208</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1      0.16802861         0.16510542        0.16181100</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                0.08059750         0.08086683        0.08116875</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                0.04710214         0.04721481        0.04734008</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     0.243569021877992 0.346522360463595 0.462739990134467</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1        0.26046940       0.260469396        0.26046940</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta1        0.00000000       0.000000000        0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta2        0.23949165       0.239491647        0.23949165</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta1_eta1            0.81719096       0.817190963        0.81719096</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta1           -0.12843128      -0.128431277       -0.12843128</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta2            1.03150047       1.031500468        1.03150047</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1                -0.31829457      -0.319261110       -0.32010828</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2           -0.01249303      -0.005838701        0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2                -0.52441365      -0.523625031       -0.52280799</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1            0.15809570       0.153900968        0.14936135</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                      0.08152733       0.081939682        0.08234025</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                      0.04748360       0.047642683        0.04779490</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     0.593930854188726 0.742024072576028 0.909197308993151</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1        0.26046940        0.26046940        0.26046940</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta1        0.00000000        0.00000000        0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta2        0.23949165        0.23949165        0.23949165</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta1_eta1            0.81719096        0.81719096        0.81719096</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta1           -0.12843128       -0.12843128       -0.12843128</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta2            1.03150047        1.03150047        1.03150047</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1                -0.32007197       -0.32003457       -0.31999646</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2            0.00000000        0.00000000        0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2                -0.52187715       -0.52086690       -0.51980737</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1            0.14495426        0.13998471        0.13438782</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                      0.08247362        0.08264877        0.08283925</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                      0.04787613        0.04797295        0.04807233</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     1.09790879273636 1.31093346618174 1.55140378943063</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1       0.26046940       0.26046940       0.26046940</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta1       0.00000000       0.00000000       0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta2       0.23949165       0.23949165       0.23949165</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta1_eta1           0.81719096       0.81719096       0.81719096</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta1          -0.12843128      -0.12843128      -0.12843128</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta2           1.03150047       1.03150047       1.03150047</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1               -0.31995835      -0.31992080      -0.31988628</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2           0.00000000       0.00000000       0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2               -0.51867631      -0.51748068      -0.51623406</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1           0.12807703       0.12095953       0.11292482</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                     0.08305691       0.08330553       0.08359052</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                     0.04817844       0.04829009       0.04840581</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     1.82285580213965 2.12928111985967 2.47518562947354</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1       0.26046940       0.26046940       0.26046940</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta1       0.00000000       0.00000000       0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta2       0.23949165       0.23949165       0.23949165</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta1_eta1           0.81719096       0.81719096       0.81719096</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta1          -0.12843128      -0.12843128      -0.12843128</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta2           1.03150047       1.03150047       1.03150047</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1               -0.31985702      -0.31983650      -0.31982914</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2           0.00000000       0.00000000       0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2               -0.51495659      -0.51367969      -0.51243888</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1           0.10384637       0.09357396       0.08192706</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                     0.08391762       0.08429703       0.08474675</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                     0.04852289       0.04863790       0.04874750</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     2.8656557468303 3.30643321087316 3.80399951408544</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1      0.26046940       0.26046940       0.26046940</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta1      0.00000000       0.00000000       0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta2      0.23949165       0.23949165       0.23949165</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta1_eta1          0.81719096       0.81719096       0.81719096</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta1         -0.12843128      -0.12843128      -0.12843128</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta2          1.03150047       1.03150047       1.03150047</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1              -0.31984161      -0.31988260      -0.31996413</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2          0.00000000       0.00000000       0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2              -0.51132309      -0.51041261      -0.50983317</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1          0.06868678       0.05357679       0.03624214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                    0.08525485       0.08583430       0.08649377</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                    0.04883572       0.04889167       0.04889869</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     4.36567121077693 4.99970750468912</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1       0.26046940       0.26046940</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta1       0.00000000       0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta2_eta2       0.23949165       0.23949165</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta1_eta1           0.81719096       0.81719096</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta1          -0.12843128      -0.12843128</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0VAR_eta2_eta2           1.03150047       1.03150047</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1               -0.32010326      -0.32026030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2           0.00000000       0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2               -0.50981920      -0.51032487</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1           0.01620061       0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                     0.08727480       0.08791704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                     0.04883263       0.04871519</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] " --- Fit: --- "</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                            0 0.0715724193271404 0.152366078263162</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL             2459.052           2460.429          2461.919</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                2459.052           2459.079          2459.174</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                 2481.052           2481.079          2481.174</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                 2509.709           2509.736          2509.831</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters   11.000             11.000            11.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     0.243569021877992 0.346522360463595 0.462739990134467</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                      2463.519          2465.219          2467.007</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                         2459.364          2459.684          2460.095</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                          2481.364          2481.684          2480.095</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                          2510.020          2510.340          2506.147</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters            11.000            11.000            10.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     0.593930854188726 0.742024072576028 0.909197308993151</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                      2468.937          2471.047          2473.341</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                         2460.328          2460.660          2461.122</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                          2480.328          2480.660          2481.122</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                          2506.380          2506.712          2507.174</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters            10.000            10.000            10.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     1.09790879273636 1.31093346618174 1.55140378943063</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                     2475.817         2478.470         2481.282</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                        2461.755         2462.613         2463.762</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                         2481.755         2482.613         2483.762</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                         2507.807         2508.664         2509.814</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters           10.000           10.000           10.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     1.82285580213965 2.12928111985967 2.47518562947354</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                     2484.224         2487.248         2490.284</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                        2465.294         2467.324         2470.005</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                         2485.294         2487.324         2490.005</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                         2511.346         2513.376         2516.057</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters           10.000           10.000           10.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     2.8656557468303 3.30643321087316 3.80399951408544</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                    2493.224         2495.919         2498.155</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                       2473.541         2478.204         2484.368</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                        2493.541         2498.204         2504.368</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                        2519.593         2524.256         2530.420</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters          10.000           10.000           10.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     4.36567121077693 4.99970750468912</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                     2499.630         2499.989</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                        2492.557         2499.989</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                         2512.557         2517.989</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                         2538.609         2541.436</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters           10.000            9.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[6]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "|----------------------------------------------------------------------|"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="regCtsem-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"fit"</span>, criterion <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AIC"</span>, <span class="st">"BIC"</span>, <span class="st">"m2LL"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="regCtsem-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># The best parameter estimates and the final model as mxObject can be extracted with:</span></span></span>
-<span class="r-in"><span><span class="co"># getFinalParameters(regCtsemObject = regModel, criterion = "BIC")</span></span></span>
-<span class="r-in"><span><span class="co"># bestModel &lt;- getFinalModel(regCtsemObject = regModel, criterion = "BIC")</span></span></span>
-<span class="r-in"><span><span class="co"># WARNING: The returned model is of type cpptsem. You can access it's elements with the</span></span></span>
-<span class="r-in"><span><span class="co"># $ operator. For example: bestModel$DRIFTValues</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># WARNING: If you load an existing regCtsem object, the underlying C++ model will no longer</span></span></span>
-<span class="r-in"><span><span class="co"># exist. You can restore this model with restore(). Example:</span></span></span>
-<span class="r-in"><span><span class="co"># save(regModel, file = "regModel.RData")</span></span></span>
-<span class="r-in"><span><span class="co"># load("regModel.RData")</span></span></span>
-<span class="r-in"><span><span class="co"># regModel &lt;- restore(regModel)</span></span></span>
-<span class="r-in"><span><span class="co"># regModel$setup$cpptsemObject$DRIFTValues</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Optimize model using GLMNET with lasso penalty</span></span></span>
-<span class="r-in"><span><span class="va">regModel</span> <span class="op">&lt;-</span> <span class="fu">regCtsem</span><span class="op">(</span>ctsemObject <span class="op">=</span> <span class="va">fit_myModel</span>,</span></span>
-<span class="r-in"><span>                               dataset <span class="op">=</span> <span class="va">dat</span>,</span></span>
-<span class="r-in"><span>                               regIndicators <span class="op">=</span> <span class="va">regIndicators</span>,</span></span>
-<span class="r-in"><span>                               lambdas <span class="op">=</span> <span class="st">"auto"</span>,</span></span>
-<span class="r-in"><span>                               lambdasAutoLength <span class="op">=</span> <span class="fl">20</span>,</span></span>
-<span class="r-in"><span>                               optimizer <span class="op">=</span> <span class="st">"GLMNET"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Object with objective = ML detected.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Translating model to C++. Found the following elements: T0MEANS, T0VARbase, DRIFT, DIFFUSIONbase, CINT, MANIFESTMEANS, LAMBDA, MANIFESTVARbase.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Not using any automatic standardization.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Computing lambda_max ... </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Trying different starting values [1/6] - Trying different starting values [2/6] - Trying different starting values [3/6] - Trying different starting values [4/6] - Trying different starting values [5/6] - Trying different starting values [6/6] </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DONE </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                                              |                                                                      |   0%  |                                                                              |====                                                                  |   5%  |                                                                              |=======                                                               |  10%  |                                                                              |==========                                                            |  15%  |                                                                              |==============                                                        |  20%  |                                                                              |==================                                                    |  25%  |                                                                              |=====================                                                 |  30%  |                                                                              |========================                                              |  35%  |                                                                              |============================                                          |  40%  |                                                                              |================================                                      |  45%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================                                |  55%  |                                                                              |==========================================                            |  60%  |                                                                              |==============================================                        |  65%  |                                                                              |=================================================                     |  70%  |                                                                              |====================================================                  |  75%  |                                                                              |========================================================              |  80%  |                                                                              |============================================================          |  85%  |                                                                              |===============================================================       |  90%  |                                                                              |==================================================================    |  95%  |                                                                              |======================================================================| 100%</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">regModel</span>, criterion <span class="op">=</span> <span class="st">"BIC"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "|---regCtsem results--------------------------------------------------|"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "The best BIC value was observed for:"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $lambda</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.46274</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] " --- Parameter estimates: --- "</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.26046971          0.00000000          0.23949095          0.81719023 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1     drift_eta1_eta2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.12843158          1.03149900         -0.32010828          0.00000000 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2     drift_eta2_eta1               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.52278695          0.14935978          0.08233106          0.04779558 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[6]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] " --- Fit: --- "</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             regM2LL                m2LL                 AIC                 BIC </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            2467.007            2460.095            2480.095            2506.147 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              10.000 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[8]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "|----------------------------------------------------------------------|"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"drift"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="regCtsem-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"fit"</span>, criterion <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AIC"</span>, <span class="st">"BIC"</span>, <span class="st">"m2LL"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="regCtsem-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"drift_eta1_eta2"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="regCtsem-5.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># The same regularization can be performed with the approximate optimization:</span></span></span>
-<span class="r-in"><span><span class="va">regModelApprox</span> <span class="op">&lt;-</span> <span class="fu">regCtsem</span><span class="op">(</span>ctsemObject <span class="op">=</span> <span class="va">fit_myModel</span>,</span></span>
-<span class="r-in"><span>                                     dataset <span class="op">=</span> <span class="va">dat</span>,</span></span>
-<span class="r-in"><span>                                     regIndicators <span class="op">=</span> <span class="va">regIndicators</span>,</span></span>
-<span class="r-in"><span>                                     lambdas <span class="op">=</span> <span class="st">"auto"</span>,</span></span>
-<span class="r-in"><span>                                     lambdasAutoLength <span class="op">=</span> <span class="fl">20</span>,</span></span>
-<span class="r-in"><span>                                     optimization <span class="op">=</span> <span class="st">"approx"</span>,</span></span>
-<span class="r-in"><span>                                     control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>                                       epsilon <span class="op">=</span> <span class="fl">.001</span>, <span class="co"># epsilon is used to transform the non-differentiable</span></span></span>
-<span class="r-in"><span>                                       <span class="co">#lasso penalty to a differentiable one if optimization = approx</span></span></span>
-<span class="r-in"><span>                                       zeroThresh <span class="op">=</span> <span class="fl">.04</span> <span class="co"># threshold below which parameters will be evaluated as == 0</span></span></span>
-<span class="r-in"><span>                                     <span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Object with objective = ML detected.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Translating model to C++. Found the following elements: T0MEANS, T0VARbase, DRIFT, DIFFUSIONbase, CINT, MANIFESTMEANS, LAMBDA, MANIFESTVARbase.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Not using any automatic standardization.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Computing lambda_max ... </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Trying different starting values [1/6] - Trying different starting values [2/6] - Trying different starting values [3/6] - Trying different starting values [4/6] - Trying different starting values [5/6] - Trying different starting values [6/6] </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DONE </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                                              |                                                                      |   0%  |                                                                              |====                                                                  |   5%  |                                                                              |=======                                                               |  10%  |                                                                              |==========                                                            |  15%  |                                                                              |==============                                                        |  20%  |                                                                              |==================                                                    |  25%  |                                                                              |=====================                                                 |  30%  |                                                                              |========================                                              |  35%  |                                                                              |============================                                          |  40%  |                                                                              |================================                                      |  45%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================                                |  55%  |                                                                              |==========================================                            |  60%  |                                                                              |==============================================                        |  65%  |                                                                              |=================================================                     |  70%  |                                                                              |====================================================                  |  75%  |                                                                              |========================================================              |  80%  |                                                                              |============================================================          |  85%  |                                                                              |===============================================================       |  90%  |                                                                              |==================================================================    |  95%  |                                                                              |======================================================================| 100%</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Comparison of parameter estimates:</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">regModel</span><span class="op">$</span><span class="va">fitAndParameters</span> <span class="op">-</span> <span class="va">regModelApprox</span><span class="op">$</span><span class="va">fitAndParameters</span>,<span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     0 0.0715724175467676 0.152366074473037 0.243569015819183</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL             0             0.0000           -0.0001           -0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                0             0.0005            0.0045            0.0098</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                 0             2.0005            2.0045            2.0098</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                 0             4.6056            4.6096            4.6150</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters 0             1.0000            1.0000            1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta1          0            -0.0001            0.0000           -0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2          0            -0.0001           -0.0001           -0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2_eta1     0             0.0000            0.0000            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1          0             0.0000            0.0000           -0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2     0             0.0001            0.0003            0.0004</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2          0             0.0000            0.0000            0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1     0             0.0001            0.0000            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta1_eta1           0             0.0000            0.0000            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta2_eta2           0             0.0000            0.0000            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1               0             0.0000            0.0000            0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2               0             0.0000            0.0000            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     0.346522351843809 0.462739978623753 0.593930839414623</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                       -0.0001           -0.0004           -0.0004</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                           0.0059            0.0133           -0.0272</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                            2.0059            0.0133           -0.0272</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                            4.6110            0.0133           -0.0272</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters            1.0000            0.0000            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta1                     0.0001           -0.0001           -0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2                    -0.0001           -0.0001           -0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2_eta1               -0.0001            0.0000            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1                     0.0000            0.0001            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2               -0.0001            0.0001            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2                    -0.0001            0.0003           -0.0002</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1               -0.0002           -0.0002            0.0005</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta1_eta1                      0.0000           -0.0001            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta2_eta2                     -0.0001            0.0001            0.0002</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                          0.0000            0.0000            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                          0.0000            0.0000            0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     0.742024054118088 0.909197286376756 1.09790876542575</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                       -0.0003           -0.0005          -0.0005</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                          -0.0360           -0.0517          -0.0653</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                           -0.0360           -0.0517          -0.0653</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                           -0.0360           -0.0517          -0.0653</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters            0.0000            0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta1                    -0.0001           -0.0001          -0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2                    -0.0001           -0.0001          -0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2_eta1                0.0000            0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1                     0.0000            0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2                0.0000            0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2                    -0.0001            0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1                0.0005            0.0006           0.0006</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta1_eta1                      0.0000            0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta2_eta2                      0.0000            0.0001           0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                          0.0000            0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                          0.0000            0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     1.31093343357211 1.55140375083927 1.82285575679589</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                      -0.0007          -0.0009          -0.0012</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                         -0.0896          -0.1212          -0.1611</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                          -0.0896          -0.1212          -0.1611</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                          -0.0896          -0.1212          -0.1611</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters           0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta1                   -0.0001          -0.0001          -0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2                    0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2_eta1               0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1                    0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2               0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2                    0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1               0.0007           0.0008           0.0009</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta1_eta1                     0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta2_eta2                     0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                         0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                         0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     2.12928106689354 2.475185567903 2.86565567554676</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                      -0.0014        -0.0017          -0.0020</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                         -0.2103        -0.2702          -0.3331</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                          -0.2103        -0.2702          -0.3331</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                          -0.2103        -0.2702          -0.3331</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters           0.0000         0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta1                    0.0000        -0.0001           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2                    0.0000         0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2_eta1               0.0000         0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1                    0.0000         0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2               0.0000         0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2                    0.0000        -0.0001          -0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1               0.0010         0.0011           0.0012</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta1_eta1                     0.0000         0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta2_eta2                    -0.0001        -0.0001          -0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                         0.0000        -0.0001           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                         0.0000         0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     3.30643312862523 3.80399941946048 4.36567110218032</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                      -0.0020          -0.0014           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                         -0.3865          -0.3700          -0.0446</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                          -0.3865           1.6300           1.9554</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                          -0.3865           4.2352           4.5606</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters           0.0000           1.0000           1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta1                    0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2                    0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2_eta1               0.0000           0.0001           0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1                    0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2               0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2                   -0.0001          -0.0001          -0.0002</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1               0.0012           0.0010           0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta1_eta1                     0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta2_eta2                    -0.0002          -0.0001           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                        -0.0001           0.0000           0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                         0.0000           0.0000           0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     4.99970738032078</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> regM2LL                      -0.0150</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> m2LL                         -0.0141</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AIC                           3.9859</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> BIC                           9.1962</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters           2.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta1                    0.0019</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2                   -0.0007</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T0var_eta2_eta1              -0.0081</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1                    0.0005</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta1_eta2               0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2                   -0.0006</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> drift_eta2_eta1               0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta1_eta1                    -0.0005</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> eta2_eta2                    -0.0013</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y1                        -0.0025</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mm_Y2                         0.0000</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">#### Example 2 ####</span></span></span>
-<span class="r-in"><span><span class="co">## Regularization with Kalman objective function</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">175446</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## define the population model:</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.</span></span></span>
-<span class="r-in"><span><span class="va">ct_drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.3</span>,<span class="fl">.2</span>,<span class="fl">0</span>,<span class="op">-</span><span class="fl">.5</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">generatingModel</span><span class="op">&lt;-</span><span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">100</span>,n.latent<span class="op">=</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>                                n.TDpred<span class="op">=</span><span class="fl">0</span>,n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>                                MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                DRIFT<span class="op">=</span><span class="va">ct_drift</span>,</span></span>
-<span class="r-in"><span>                                DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="fl">.5</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                CINT<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                T0VAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># simulate a training data and testing data set</span></span></span>
-<span class="r-in"><span><span class="va">traindata</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctGenerate.html" class="external-link">ctGenerate</a></span><span class="op">(</span><span class="va">generatingModel</span>,n.subjects <span class="op">=</span> <span class="fl">10</span>, wide <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  100</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-in"><span><span class="va">testdata</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctGenerate.html" class="external-link">ctGenerate</a></span><span class="op">(</span><span class="va">generatingModel</span>,n.subjects <span class="op">=</span> <span class="fl">10</span>, wide <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  100</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Build the analysis model. Note that drift eta1_eta2 is freely estimated</span></span></span>
-<span class="r-in"><span><span class="co"># although it is 0 in the population.</span></span></span>
-<span class="r-in"><span><span class="va">myModel</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">100</span>,n.latent<span class="op">=</span><span class="fl">2</span>,n.TDpred<span class="op">=</span><span class="fl">0</span>,</span></span>
-<span class="r-in"><span>                          n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>                          LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          CINT<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'eta1_eta1'</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="st">'eta2_eta2'</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          T0VAR<span class="op">=</span><span class="st">"auto"</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-in"><span><span class="va">fit_myModel</span> <span class="op">&lt;-</span> <span class="fu">ctFit</span><span class="op">(</span>dat <span class="op">=</span> <span class="va">traindata</span>, ctmodelobj <span class="op">=</span> <span class="va">myModel</span>, objective <span class="op">=</span> <span class="st">"Kalman"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> wide format data detected</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Single subject dataset or Kalman objective specified - ignoring any specified between subject </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>       variance matrices (TRAITVAR, T0TRAITEFFECT,MANIFESTTRAITVAR, TIPREDEFFECT, TIPREDVAR, TDTIPREDCOV, T0TIPREDEFFECT)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsemCarefulFit with 11 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsem with 11 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Beginning initial fit attempt</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsem with 11 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  Lowest minimum so far:  2241.85014995757</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Solution found</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  Solution found!  Final fit=2241.8501 (started at 12071.846)  (1 attempt(s): 1 valid, 0 errors)</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># select DRIFT values:</span></span></span>
-<span class="r-in"><span><span class="va">regIndicators</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"drift_eta2_eta1"</span>, <span class="st">"drift_eta1_eta2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># Note: If you are unsure what the parameters are called in</span></span></span>
-<span class="r-in"><span><span class="co"># your model, check: fit_myModel$ctmodelobj$DRIFT for the drift or</span></span></span>
-<span class="r-in"><span><span class="co"># omxGetParameters(fit_myModel$ctmodelobj) for all parameters</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Optimization with GIST:</span></span></span>
-<span class="r-in"><span><span class="va">regModel</span> <span class="op">&lt;-</span> <span class="fu">regCtsem</span><span class="op">(</span>ctsemObject <span class="op">=</span> <span class="va">fit_myModel</span>,</span></span>
-<span class="r-in"><span>                               dataset <span class="op">=</span> <span class="va">traindata</span>,</span></span>
-<span class="r-in"><span>                               regIndicators <span class="op">=</span> <span class="va">regIndicators</span>,</span></span>
-<span class="r-in"><span>                               lambdas <span class="op">=</span> <span class="st">"auto"</span>,</span></span>
-<span class="r-in"><span>                               lambdasAutoLength <span class="op">=</span> <span class="fl">20</span>,</span></span>
-<span class="r-in"><span>                               cvSample <span class="op">=</span> <span class="va">testdata</span> <span class="co"># data set for cross-validation</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Object with objective = Kalman detected.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Translating model to C++. Found the following elements: T0MEANS, T0VARbase, DRIFT, DIFFUSIONbase, CINT, MANIFESTMEANS, LAMBDA, MANIFESTVARbase.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Not using any automatic standardization.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Computing lambda_max ... </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Trying different starting values [1/6] - Trying different starting values [2/6] - Trying different starting values [3/6] - Trying different starting values [4/6] - Trying different starting values [5/6] - Trying different starting values [6/6] </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DONE </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                                              |                                                                      |   0%  |                                                                              |====                                                                  |   5%  |                                                                              |=======                                                               |  10%  |                                                                              |==========                                                            |  15%  |                                                                              |==============                                                        |  20%  |                                                                              |==================                                                    |  25%  |                                                                              |=====================                                                 |  30%  |                                                                              |========================                                              |  35%  |                                                                              |============================                                          |  40%  |                                                                              |================================                                      |  45%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================                                |  55%  |                                                                              |==========================================                            |  60%  |                                                                              |==============================================                        |  65%  |                                                                              |=================================================                     |  70%  |                                                                              |====================================================                  |  75%  |                                                                              |========================================================              |  80%  |                                                                              |============================================================          |  85%  |                                                                              |===============================================================       |  90%  |                                                                              |==================================================================    |  95%  |                                                                              |======================================================================| 100%</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">regModel</span>, criterion <span class="op">=</span> <span class="st">"cvM2LL"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "|---regCtsem results--------------------------------------------------|"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "The best cvM2LL value was observed for:"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $lambda</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.667371</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] " --- Parameter estimates: --- "</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         0.245480501         0.000000000         0.255101807         0.553031296 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1     drift_eta1_eta2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         0.109209424         0.613400442        -0.260877928        -0.004026393 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2     drift_eta2_eta1               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        -0.476440616         0.173204630         0.059483817         0.009123935 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[6]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] " --- Fit: --- "</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             regM2LL                m2LL                 AIC                 BIC </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            2246.976            2242.248            2264.248            2267.577 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters              cvM2LL </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              11.000            2177.060 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[8]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "|----------------------------------------------------------------------|"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"fit"</span>, criterion <span class="op">=</span> <span class="st">"cvM2LL"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="regCtsem-6.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">#### EXPERIMENTAL FEATURES: USE WITH CAUTION! ####</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">regCtsem</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Example 4: Kalman Filter with person specific parameter values</span></span></span>
-<span class="r-in"><span><span class="co">## WARNING: THIS WILL TAKE A WHILE TO RUN</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">175446</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## define the population model:</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.</span></span></span>
-<span class="r-in"><span><span class="va">ct_drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.3</span>,<span class="fl">0</span>,<span class="fl">.2</span>,<span class="op">-</span><span class="fl">.2</span><span class="op">)</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">dataset</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">indpars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># We will simulate data for 10 individuals with person-specific parameters</span></span></span>
-<span class="r-in"><span><span class="co"># These person-specific parameters will then be regularized towards a</span></span></span>
-<span class="r-in"><span><span class="co"># common group parameter</span></span></span>
-<span class="r-in"><span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="kw">while</span><span class="op">(</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">{</span></span></span>
-<span class="r-in"><span>    <span class="va">DRIFT</span> <span class="op">&lt;-</span> <span class="va">ct_drift</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">0</span>,<span class="fl">.5</span><span class="op">)</span>,<span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/complex.html" class="external-link">Re</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/eigen.html" class="external-link">eigen</a></span><span class="op">(</span><span class="va">DRIFT</span><span class="op">)</span><span class="op">$</span><span class="va">values</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">{</span><span class="kw">break</span><span class="op">}</span></span></span>
-<span class="r-in"><span>  <span class="op">}</span></span></span>
-<span class="r-in"><span>  <span class="va">indpars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">indpars</span>, <span class="va">DRIFT</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">generatingModel</span><span class="op">&lt;-</span><span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">50</span>,n.latent<span class="op">=</span><span class="fl">2</span>,n.TDpred<span class="op">=</span><span class="fl">0</span>,n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>                                  MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                  LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                  DRIFT<span class="op">=</span><span class="va">DRIFT</span>,</span></span>
-<span class="r-in"><span>                                  DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="fl">.5</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                  CINT<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,nrow <span class="op">=</span> <span class="fl">2</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                  T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                  T0VAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">dataset</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">dataset</span>, <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctGenerate.html" class="external-link">ctGenerate</a></span><span class="op">(</span><span class="va">generatingModel</span>,n.subjects <span class="op">=</span> <span class="fl">1</span>, wide <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  50</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  50</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  50</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  50</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  50</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  50</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  50</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  50</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  50</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some free parameters in matrices set to zero!</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Discrete time points created:  50</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> imputedefs==FALSE (default, recommended) so setting observations with no time value to NA</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Build the analysis model.</span></span></span>
-<span class="r-in"><span><span class="va">myModel</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">50</span>,n.latent<span class="op">=</span><span class="fl">2</span>,n.TDpred<span class="op">=</span><span class="fl">0</span>,n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>                          LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'eta1_eta1'</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="st">'eta2_eta2'</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          T0VAR<span class="op">=</span><span class="st">"auto"</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-in"><span><span class="va">myModel</span> <span class="op">&lt;-</span> <span class="fu">ctFit</span><span class="op">(</span><span class="va">myModel</span>, dat <span class="op">=</span> <span class="va">dataset</span>, objective <span class="op">=</span> <span class="st">"Kalman"</span>,</span></span>
-<span class="r-in"><span>                 useOptimizer <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> wide format data detected</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Single subject dataset or Kalman objective specified - ignoring any specified between subject </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>       variance matrices (TRAITVAR, T0TRAITEFFECT,MANIFESTTRAITVAR, TIPREDEFFECT, TIPREDVAR, TDTIPREDCOV, T0TIPREDEFFECT)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsemCarefulFit with 11 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsem with 11 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Beginning initial fit attempt</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsem with 11 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  Lowest minimum so far:  1301.61466458324</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Solution found</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  Solution found!  Final fit=1301.6147 (started at 6040.3736)  (1 attempt(s): 1 valid, 0 errors)</span>
-<span class="r-in"><span><span class="va">regIndicators</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"drift_eta2_eta1"</span>, <span class="st">"drift_eta1_eta2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># the following parameters will be estimated person-specific and (as we specified this above)</span></span></span>
-<span class="r-in"><span><span class="co"># regularized. The regularization will be towards a group parameter</span></span></span>
-<span class="r-in"><span><span class="va">subjectSpecificParameters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"drift_eta2_eta1"</span>, <span class="st">"drift_eta1_eta2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">regModel</span> <span class="op">&lt;-</span> <span class="fu">regCtsem</span><span class="op">(</span>ctsemObject <span class="op">=</span> <span class="va">myModel</span>,</span></span>
-<span class="r-in"><span>                     dataset <span class="op">=</span> <span class="va">dataset</span>,</span></span>
-<span class="r-in"><span>                     regIndicators <span class="op">=</span> <span class="va">regIndicators</span>,</span></span>
-<span class="r-in"><span>                     lambdasAutoLength <span class="op">=</span> <span class="fl">5</span>, <span class="co"># 5 will not be enough, but this takes some time to execute</span></span></span>
-<span class="r-in"><span>                     subjectSpecificParameters <span class="op">=</span> <span class="va">subjectSpecificParameters</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Object with objective = Kalman detected.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Subject-specific parameters are a very experimental feature. Usage not recommended!</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Translating model to C++. Found the following elements: T0MEANS, T0VARbase, DRIFT, DIFFUSIONbase, CINT, MANIFESTMEANS, LAMBDA, MANIFESTVARbase.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Fitting model with person-specific parameter estimates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Trying different starting values [1/6] - Trying different starting values [2/6] - Trying different starting values [3/6] - Trying different starting values [4/6] - Trying different starting values [5/6] - Trying different starting values [6/6] </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Not using any automatic standardization.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Computing lambda_max ... </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Trying different starting values [1/6] - Trying different starting values [2/6] - Trying different starting values [3/6] - Trying different starting values [4/6] - Trying different starting values [5/6] - Trying different starting values [6/6] </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DONE </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                                              |                                                                      |   0%  |                                                                              |==============                                                        |  20%  |                                                                              |============================                                          |  40%  |                                                                              |==========================================                            |  60%  |                                                                              |========================================================              |  80%  |                                                                              |======================================================================| 100%</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">regModel</span>, criterion <span class="op">=</span> <span class="st">"BIC"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "|---regCtsem results--------------------------------------------------|"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "The best BIC value was observed for:"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $lambda</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.553812</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] " --- Parameter estimates: --- "</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates$group1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.28635986          0.00000000          0.21978853          0.62918200 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1  drift_eta1_eta2_G1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.31120213          1.51386753         -0.27927225          0.26300811 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2  drift_eta2_eta1_G1               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.23507634          0.21938040         -0.09239927          0.01731182 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates$group2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.28635986          0.00000000          0.21978853          0.62918200 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1  drift_eta1_eta2_G2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.31120213          1.51386753         -0.27927225         -0.41894293 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2  drift_eta2_eta1_G2               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.23507634          0.21938040         -0.09239927          0.01731182 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates$group3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.28635986          0.00000000          0.21978853          0.62918200 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1  drift_eta1_eta2_G3 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.31120213          1.51386753         -0.27927225          0.15126689 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2  drift_eta2_eta1_G3               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.23507634          0.26447130         -0.09239927          0.01731182 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates$group4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.28635986          0.00000000          0.21978853          0.62918200 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1  drift_eta1_eta2_G4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.31120213          1.51386753         -0.27927225         -0.12236322 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2  drift_eta2_eta1_G4               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.23507634          0.21938040         -0.09239927          0.01731182 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates$group5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.28635986          0.00000000          0.21978853          0.62918200 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1  drift_eta1_eta2_G5 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.31120213          1.51386753         -0.27927225          0.03790699 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2  drift_eta2_eta1_G5               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.23507634          0.21938040         -0.09239927          0.01731182 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates$group6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.28635986          0.00000000          0.21978853          0.62918200 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1  drift_eta1_eta2_G6 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.31120213          1.51386753         -0.27927225          0.03790699 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2  drift_eta2_eta1_G6               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.23507634          0.21938040         -0.09239927          0.01731182 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates$group7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.28635986          0.00000000          0.21978853          0.62918200 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1  drift_eta1_eta2_G7 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.31120213          1.51386753         -0.27927225          0.02354091 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2  drift_eta2_eta1_G7               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.23507634          0.06602312         -0.09239927          0.01731182 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates$group8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.28635986          0.00000000          0.21978853          0.62918200 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1  drift_eta1_eta2_G8 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.31120213          1.51386753         -0.27927225          0.03790699 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2  drift_eta2_eta1_G8               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.23507634          0.21938040         -0.09239927          0.01731182 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates$group9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.28635986          0.00000000          0.21978853          0.62918200 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1  drift_eta1_eta2_G9 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.31120213          1.51386753         -0.27927225         -0.31737459 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2  drift_eta2_eta1_G9               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.23507634          0.24163066         -0.09239927          0.01731182 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $ParameterEstimates$group10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DIFFUSION_eta1_eta1 DIFFUSION_eta2_eta1 DIFFUSION_eta2_eta2     T0VAR_eta1_eta1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.28635986          0.00000000          0.21978853          0.62918200 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     T0VAR_eta2_eta1     T0VAR_eta2_eta2          drift_eta1 drift_eta1_eta2_G10 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.31120213          1.51386753         -0.27927225          0.03790699 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          drift_eta2 drift_eta2_eta1_G10               mm_Y1               mm_Y2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.23507634          0.21938040         -0.09239927          0.01731182 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[6]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] " Parameters were regularized towards the following values:"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $Targets</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  drift_eta2_eta1_G1  drift_eta2_eta1_G2  drift_eta2_eta1_G3  drift_eta2_eta1_G4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.21938040          0.21938040          0.21938040          0.21938040 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  drift_eta2_eta1_G5  drift_eta2_eta1_G6  drift_eta2_eta1_G7  drift_eta2_eta1_G8 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.21938040          0.21938040          0.21938040          0.21938040 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  drift_eta2_eta1_G9 drift_eta2_eta1_G10  drift_eta1_eta2_G1  drift_eta1_eta2_G2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.21938040          0.21938040          0.03790699          0.03790699 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  drift_eta1_eta2_G3  drift_eta1_eta2_G4  drift_eta1_eta2_G5  drift_eta1_eta2_G6 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.03790699          0.03790699          0.03790699          0.03790699 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  drift_eta1_eta2_G7  drift_eta1_eta2_G8  drift_eta1_eta2_G9 drift_eta1_eta2_G10 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.03790699          0.03790699          0.03790699          0.03790699 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[8]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] " --- Fit: --- "</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             regM2LL                m2LL                 AIC                 BIC </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            1255.243            1231.222            1267.222            1272.669 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> estimatedParameters </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              18.000 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[10]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "|----------------------------------------------------------------------|"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"drift"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="regCtsem-7.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Press [Enter] for next plot... </span>
-<span class="r-plt img"><img src="regCtsem-8.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Press [Enter] for next plot... </span>
-<span class="r-plt img"><img src="regCtsem-9.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Press [Enter] for next plot... </span>
-<span class="r-plt img"><img src="regCtsem-10.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Press [Enter] for next plot... </span>
-<span class="r-plt img"><img src="regCtsem-11.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Press [Enter] for next plot... </span>
-<span class="r-plt img"><img src="regCtsem-12.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Press [Enter] for next plot... </span>
-<span class="r-plt img"><img src="regCtsem-13.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Press [Enter] for next plot... </span>
-<span class="r-plt img"><img src="regCtsem-14.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Press [Enter] for next plot... </span>
-<span class="r-plt img"><img src="regCtsem-15.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Press [Enter] for next plot... </span>
-<span class="r-plt img"><img src="regCtsem-16.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Press [Enter] for next plot... </span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># \donttest{</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">17046</span><span class="op">)</span></span>
+<span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jhorzek.github.io/regCtsem/">regCtsem</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#### Example 1 ####</span></span>
+<span><span class="co">## Regularization with FIML objective function</span></span>
+<span></span>
+<span><span class="co">## Population model:</span></span>
+<span></span>
+<span><span class="co"># set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.</span></span>
+<span><span class="va">ct_drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.3</span>,<span class="fl">.2</span>,<span class="fl">0</span>,<span class="op">-</span><span class="fl">.5</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">generatingModel</span><span class="op">&lt;-</span><span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">10</span>,n.latent<span class="op">=</span><span class="fl">2</span>,n.TDpred<span class="op">=</span><span class="fl">0</span>,</span>
+<span>                                n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span>
+<span>                                MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                DRIFT<span class="op">=</span><span class="va">ct_drift</span>,</span>
+<span>                                DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="fl">.5</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                CINT<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                T0VAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># simulate a training data set</span></span>
+<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctGenerate.html" class="external-link">ctGenerate</a></span><span class="op">(</span><span class="va">generatingModel</span>, n.subjects <span class="op">=</span> <span class="fl">100</span>, wide <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Build the analysis model. Note that drift eta1_eta2 is freely estimated</span></span>
+<span><span class="co"># although it is 0 in the population.</span></span>
+<span><span class="va">myModel</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">10</span>,n.latent<span class="op">=</span><span class="fl">2</span>,n.TDpred<span class="op">=</span><span class="fl">0</span>,</span>
+<span>                          n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span>
+<span>                          LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          CINT<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'eta1_eta1'</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="st">'eta2_eta2'</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          T0VAR<span class="op">=</span><span class="st">"auto"</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># fit the model using ctsemOMX:</span></span>
+<span><span class="va">fit_myModel</span> <span class="op">&lt;-</span> <span class="fu">ctsemOMX</span><span class="fu">::</span><span class="fu">ctFit</span><span class="op">(</span><span class="va">dat</span>, <span class="va">myModel</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># select DRIFT values for regularization:</span></span>
+<span><span class="co"># Note: If you are unsure what the parameters are called in</span></span>
+<span><span class="co"># your model, check: showParameters(fit_myModel)</span></span>
+<span><span class="fu"><a href="showParameters.html">showParameters</a></span><span class="op">(</span><span class="va">fit_myModel</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># regularize the cross-effects:</span></span>
+<span><span class="va">regIndicators</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"drift_eta2_eta1"</span>, <span class="st">"drift_eta1_eta2"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Optimize model using GIST with lasso penalty</span></span>
+<span><span class="va">regModel</span> <span class="op">&lt;-</span> <span class="fu">regCtsem</span><span class="op">(</span>ctsemObject <span class="op">=</span> <span class="va">fit_myModel</span>,</span>
+<span>                               dataset <span class="op">=</span> <span class="va">dat</span>,</span>
+<span>                               regIndicators <span class="op">=</span> <span class="va">regIndicators</span>,</span>
+<span>                               lambdas <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>                               lambdasAutoLength <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">regModel</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"fit"</span>, criterion <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AIC"</span>, <span class="st">"BIC"</span>, <span class="st">"m2LL"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># The best parameter estimates and the final model as mxObject can be extracted with:</span></span>
+<span><span class="co"># getFinalParameters(regCtsemObject = regModel, criterion = "BIC")</span></span>
+<span><span class="co"># bestModel &lt;- getFinalModel(regCtsemObject = regModel, criterion = "BIC")</span></span>
+<span><span class="co"># WARNING: The returned model is of type cpptsem. You can access it's elements with the</span></span>
+<span><span class="co"># $ operator. For example: bestModel$DRIFTValues</span></span>
+<span></span>
+<span><span class="co"># WARNING: If you load an existing regCtsem object, the underlying C++ model will no longer</span></span>
+<span><span class="co"># exist. You can restore this model with restore(). Example:</span></span>
+<span><span class="co"># save(regModel, file = "regModel.RData")</span></span>
+<span><span class="co"># load("regModel.RData")</span></span>
+<span><span class="co"># regModel &lt;- restore(regModel)</span></span>
+<span><span class="co"># regModel$setup$cpptsemObject$DRIFTValues</span></span>
+<span></span>
+<span><span class="co"># Optimize model using GLMNET with lasso penalty</span></span>
+<span><span class="va">regModel</span> <span class="op">&lt;-</span> <span class="fu">regCtsem</span><span class="op">(</span>ctsemObject <span class="op">=</span> <span class="va">fit_myModel</span>,</span>
+<span>                               dataset <span class="op">=</span> <span class="va">dat</span>,</span>
+<span>                               regIndicators <span class="op">=</span> <span class="va">regIndicators</span>,</span>
+<span>                               lambdas <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>                               lambdasAutoLength <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>                               optimizer <span class="op">=</span> <span class="st">"GLMNET"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">regModel</span>, criterion <span class="op">=</span> <span class="st">"BIC"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"drift"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"fit"</span>, criterion <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AIC"</span>, <span class="st">"BIC"</span>, <span class="st">"m2LL"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"drift_eta1_eta2"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># The same regularization can be performed with the approximate optimization:</span></span>
+<span><span class="va">regModelApprox</span> <span class="op">&lt;-</span> <span class="fu">regCtsem</span><span class="op">(</span>ctsemObject <span class="op">=</span> <span class="va">fit_myModel</span>,</span>
+<span>                                     dataset <span class="op">=</span> <span class="va">dat</span>,</span>
+<span>                                     regIndicators <span class="op">=</span> <span class="va">regIndicators</span>,</span>
+<span>                                     lambdas <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>                                     lambdasAutoLength <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>                                     optimization <span class="op">=</span> <span class="st">"approx"</span>,</span>
+<span>                                     control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>                                       epsilon <span class="op">=</span> <span class="fl">.001</span>, <span class="co"># epsilon is used to transform the non-differentiable</span></span>
+<span>                                       <span class="co">#lasso penalty to a differentiable one if optimization = approx</span></span>
+<span>                                       zeroThresh <span class="op">=</span> <span class="fl">.04</span> <span class="co"># threshold below which parameters will be evaluated as == 0</span></span>
+<span>                                     <span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Comparison of parameter estimates:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">regModel</span><span class="op">$</span><span class="va">fitAndParameters</span> <span class="op">-</span> <span class="va">regModelApprox</span><span class="op">$</span><span class="va">fitAndParameters</span>,<span class="fl">4</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#### Example 2 ####</span></span>
+<span><span class="co">## Regularization with Kalman objective function</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">175446</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## define the population model:</span></span>
+<span></span>
+<span><span class="co"># set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.</span></span>
+<span><span class="va">ct_drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.3</span>,<span class="fl">.2</span>,<span class="fl">0</span>,<span class="op">-</span><span class="fl">.5</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">generatingModel</span><span class="op">&lt;-</span><span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">100</span>,n.latent<span class="op">=</span><span class="fl">2</span>,</span>
+<span>                                n.TDpred<span class="op">=</span><span class="fl">0</span>,n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span>
+<span>                                MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                DRIFT<span class="op">=</span><span class="va">ct_drift</span>,</span>
+<span>                                DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="fl">.5</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                CINT<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                T0VAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># simulate a training data and testing data set</span></span>
+<span><span class="va">traindata</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctGenerate.html" class="external-link">ctGenerate</a></span><span class="op">(</span><span class="va">generatingModel</span>,n.subjects <span class="op">=</span> <span class="fl">10</span>, wide <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">testdata</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctGenerate.html" class="external-link">ctGenerate</a></span><span class="op">(</span><span class="va">generatingModel</span>,n.subjects <span class="op">=</span> <span class="fl">10</span>, wide <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Build the analysis model. Note that drift eta1_eta2 is freely estimated</span></span>
+<span><span class="co"># although it is 0 in the population.</span></span>
+<span><span class="va">myModel</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">100</span>,n.latent<span class="op">=</span><span class="fl">2</span>,n.TDpred<span class="op">=</span><span class="fl">0</span>,</span>
+<span>                          n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span>
+<span>                          LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          CINT<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'eta1_eta1'</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="st">'eta2_eta2'</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          T0VAR<span class="op">=</span><span class="st">"auto"</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span>
+<span><span class="va">fit_myModel</span> <span class="op">&lt;-</span> <span class="fu">ctFit</span><span class="op">(</span>dat <span class="op">=</span> <span class="va">traindata</span>, ctmodelobj <span class="op">=</span> <span class="va">myModel</span>, objective <span class="op">=</span> <span class="st">"Kalman"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># select DRIFT values:</span></span>
+<span><span class="va">regIndicators</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"drift_eta2_eta1"</span>, <span class="st">"drift_eta1_eta2"</span><span class="op">)</span></span>
+<span><span class="co"># Note: If you are unsure what the parameters are called in</span></span>
+<span><span class="co"># your model, check: fit_myModel$ctmodelobj$DRIFT for the drift or</span></span>
+<span><span class="co"># omxGetParameters(fit_myModel$ctmodelobj) for all parameters</span></span>
+<span></span>
+<span><span class="co">## Optimization with GIST:</span></span>
+<span><span class="va">regModel</span> <span class="op">&lt;-</span> <span class="fu">regCtsem</span><span class="op">(</span>ctsemObject <span class="op">=</span> <span class="va">fit_myModel</span>,</span>
+<span>                               dataset <span class="op">=</span> <span class="va">traindata</span>,</span>
+<span>                               regIndicators <span class="op">=</span> <span class="va">regIndicators</span>,</span>
+<span>                               lambdas <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>                               lambdasAutoLength <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>                               cvSample <span class="op">=</span> <span class="va">testdata</span> <span class="co"># data set for cross-validation</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">regModel</span>, criterion <span class="op">=</span> <span class="st">"cvM2LL"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"fit"</span>, criterion <span class="op">=</span> <span class="st">"cvM2LL"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#### EXPERIMENTAL FEATURES: USE WITH CAUTION! ####</span></span>
+<span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jhorzek.github.io/regCtsem/">regCtsem</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Example 4: Kalman Filter with person specific parameter values</span></span>
+<span><span class="co">## WARNING: THIS WILL TAKE A WHILE TO RUN</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">175446</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## define the population model:</span></span>
+<span></span>
+<span><span class="co"># set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.</span></span>
+<span><span class="va">ct_drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.3</span>,<span class="fl">0</span>,<span class="fl">.2</span>,<span class="op">-</span><span class="fl">.2</span><span class="op">)</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">dataset</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">indpars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># We will simulate data for 10 individuals with person-specific parameters</span></span>
+<span><span class="co"># These person-specific parameters will then be regularized towards a</span></span>
+<span><span class="co"># common group parameter</span></span>
+<span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="kw">while</span><span class="op">(</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">{</span></span>
+<span>    <span class="va">DRIFT</span> <span class="op">&lt;-</span> <span class="va">ct_drift</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">0</span>,<span class="fl">.5</span><span class="op">)</span>,<span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="cn">TRUE</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/complex.html" class="external-link">Re</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/eigen.html" class="external-link">eigen</a></span><span class="op">(</span><span class="va">DRIFT</span><span class="op">)</span><span class="op">$</span><span class="va">values</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">{</span><span class="kw">break</span><span class="op">}</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">indpars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">indpars</span>, <span class="va">DRIFT</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">generatingModel</span><span class="op">&lt;-</span><span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">50</span>,n.latent<span class="op">=</span><span class="fl">2</span>,n.TDpred<span class="op">=</span><span class="fl">0</span>,n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span>
+<span>                                  MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                  LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                  DRIFT<span class="op">=</span><span class="va">DRIFT</span>,</span>
+<span>                                  DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="fl">.5</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                  CINT<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,nrow <span class="op">=</span> <span class="fl">2</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>                                  T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                  T0VAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span>
+<span>  <span class="va">dataset</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">dataset</span>, <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctGenerate.html" class="external-link">ctGenerate</a></span><span class="op">(</span><span class="va">generatingModel</span>,n.subjects <span class="op">=</span> <span class="fl">1</span>, wide <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co">## Build the analysis model.</span></span>
+<span><span class="va">myModel</span> <span class="op">&lt;-</span> <span class="fu">ctsem</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>Tpoints<span class="op">=</span><span class="fl">50</span>,n.latent<span class="op">=</span><span class="fl">2</span>,n.TDpred<span class="op">=</span><span class="fl">0</span>,n.TIpred<span class="op">=</span><span class="fl">0</span>,n.manifest<span class="op">=</span><span class="fl">2</span>,</span>
+<span>                          LAMBDA<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          DIFFUSION<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'eta1_eta1'</span>,<span class="fl">0</span>,<span class="fl">0</span>,<span class="st">'eta2_eta2'</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          T0MEANS<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>,ncol<span class="op">=</span><span class="fl">1</span>,nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>                          T0VAR<span class="op">=</span><span class="st">"auto"</span>, type <span class="op">=</span> <span class="st">"omx"</span><span class="op">)</span></span>
+<span><span class="va">myModel</span> <span class="op">&lt;-</span> <span class="fu">ctFit</span><span class="op">(</span><span class="va">myModel</span>, dat <span class="op">=</span> <span class="va">dataset</span>, objective <span class="op">=</span> <span class="st">"Kalman"</span>,</span>
+<span>                 useOptimizer <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">regIndicators</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"drift_eta2_eta1"</span>, <span class="st">"drift_eta1_eta2"</span><span class="op">)</span></span>
+<span><span class="co"># the following parameters will be estimated person-specific and (as we specified this above)</span></span>
+<span><span class="co"># regularized. The regularization will be towards a group parameter</span></span>
+<span><span class="va">subjectSpecificParameters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"drift_eta2_eta1"</span>, <span class="st">"drift_eta1_eta2"</span><span class="op">)</span></span>
+<span><span class="va">regModel</span> <span class="op">&lt;-</span> <span class="fu">regCtsem</span><span class="op">(</span>ctsemObject <span class="op">=</span> <span class="va">myModel</span>,</span>
+<span>                     dataset <span class="op">=</span> <span class="va">dataset</span>,</span>
+<span>                     regIndicators <span class="op">=</span> <span class="va">regIndicators</span>,</span>
+<span>                     lambdasAutoLength <span class="op">=</span> <span class="fl">5</span>, <span class="co"># 5 will not be enough, but this takes some time to execute</span></span>
+<span>                     subjectSpecificParameters <span class="op">=</span> <span class="va">subjectSpecificParameters</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">regModel</span>, criterion <span class="op">=</span> <span class="st">"BIC"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regModel</span>, what <span class="op">=</span> <span class="st">"drift"</span><span class="op">)</span></span>
+<span><span class="co"># }</span></span>
+<span></span></code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>

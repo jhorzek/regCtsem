@@ -5,5 +5,8 @@ articles:
   MatrixExponential: MatrixExponential.html
   cpptsem: cpptsem.html
   regCtsem: regCtsem.html
-last_built: 2022-10-14T10:47Z
+last_built: 2022-10-15T08:03Z
+urls:
+  reference: https://jhorzek.github.io/regCtsem/reference
+  article: https://jhorzek.github.io/regCtsem/articles
 
