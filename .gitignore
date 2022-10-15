@@ -4,7 +4,6 @@
 .Ruserdata
 inst/doc
 doc
-docs
 Meta
 src/*.o
 src/*.so
