@@ -97,7 +97,7 @@ c<sub>++</sub>tsem.</li>
 from ctsem will be used.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cdriveraus/ctsemOMX" class="external-link">ctsemOMX</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">regCtsem</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jhorzek.github.io/regCtsem/">regCtsem</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># set up model with ctsem</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"AnomAuth"</span><span class="op">)</span></span>
@@ -171,11 +171,11 @@ data and the expected means and covariances.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cpptsemmodel</span><span class="op">$</span><span class="fu">fitRAM</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">cpptsemmodel</span><span class="op">$</span><span class="va">m2LL</span></span>
-<span><span class="co">#&gt; [1] 85751.19</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 86098.36</span></span></code></pre></div>
 <p>We can now compare this to the results from ctsem:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">AnomAuthfit</span><span class="op">$</span><span class="va">mxobj</span><span class="op">$</span><span class="va">fitfunction</span><span class="op">$</span><span class="va">result</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
-<span><span class="co">#&gt; [1] 85751.19</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 86098.36</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="finite-difference-derivative-approximation-of-the-gradients">Finite difference derivative approximation of the gradients<a class="anchor" aria-label="anchor" href="#finite-difference-derivative-approximation-of-the-gradients"></a>
@@ -207,26 +207,26 @@ approxRAMGradients function:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cpptsemGradients</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">ctsemGradients</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;           T0m_eta1           T0m_eta2         drift_eta1    drift_eta2_eta1 </span></span>
-<span><span class="co">#&gt;         -81.658646        -199.382586        3745.502450        -500.009147 </span></span>
+<span><span class="co">#&gt;         -159.38084         -194.83046         3741.36498         -590.07744 </span></span>
 <span><span class="co">#&gt;    drift_eta1_eta2         drift_eta2          diff_eta1     diff_eta2_eta1 </span></span>
-<span><span class="co">#&gt;        -442.563679        4452.624532        6890.000713         -19.562421 </span></span>
+<span><span class="co">#&gt;         -572.21704         3913.61909         6878.87533          -26.37738 </span></span>
 <span><span class="co">#&gt;          diff_eta2         T0var_eta1    T0var_eta2_eta1         T0var_eta2 </span></span>
-<span><span class="co">#&gt;        8242.823336        4853.767173         -32.310510        4261.222762 </span></span>
+<span><span class="co">#&gt;         7975.03673         4506.75990          -59.45377         4293.07316 </span></span>
 <span><span class="co">#&gt;              mm_Y1              mm_Y2      traitvar_eta1 traitvar_eta2_eta1 </span></span>
-<span><span class="co">#&gt;        -128.966651        -279.644755         571.607701          -8.718577 </span></span>
+<span><span class="co">#&gt;         -213.00137         -314.51901          521.43165          -27.37396 </span></span>
 <span><span class="co">#&gt;      traitvar_eta2 </span></span>
-<span><span class="co">#&gt;         503.418802</span></span>
+<span><span class="co">#&gt;          458.57700</span></span>
 <span><span class="va">ctsemGradients</span></span>
 <span><span class="co">#&gt;           T0m_eta1           T0m_eta2         drift_eta1    drift_eta2_eta1 </span></span>
-<span><span class="co">#&gt;         -81.658643        -199.382583        3745.502427        -500.009170 </span></span>
+<span><span class="co">#&gt;         -159.38083         -194.83046         3741.36496         -590.07747 </span></span>
 <span><span class="co">#&gt;    drift_eta1_eta2         drift_eta2          diff_eta1     diff_eta2_eta1 </span></span>
-<span><span class="co">#&gt;        -442.563701        4452.624511        6890.000714         -19.562421 </span></span>
+<span><span class="co">#&gt;         -572.21707         3913.61907         6878.87533          -26.37738 </span></span>
 <span><span class="co">#&gt;          diff_eta2         T0var_eta1    T0var_eta2_eta1         T0var_eta2 </span></span>
-<span><span class="co">#&gt;        8242.823337        4853.767172         -32.310508        4261.222764 </span></span>
+<span><span class="co">#&gt;         7975.03673         4506.75989          -59.45377         4293.07316 </span></span>
 <span><span class="co">#&gt;              mm_Y1              mm_Y2      traitvar_eta1 traitvar_eta2_eta1 </span></span>
-<span><span class="co">#&gt;        -128.966651        -279.644750         571.607703          -8.718576 </span></span>
+<span><span class="co">#&gt;         -213.00136         -314.51901          521.43164          -27.37396 </span></span>
 <span><span class="co">#&gt;      traitvar_eta2 </span></span>
-<span><span class="co">#&gt;         503.418802</span></span></code></pre></div>
+<span><span class="co">#&gt;          458.57700</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="changing-parameter-values">Changing parameter values<a class="anchor" aria-label="anchor" href="#changing-parameter-values"></a>
@@ -259,7 +259,7 @@ approach with ctsem / OpenMx and the computation with c<sub>++</sub>tsem
 is demonstrated:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cdriveraus/ctsemOMX" class="external-link">ctsemOMX</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">regCtsem</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jhorzek.github.io/regCtsem/">regCtsem</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">64356</span><span class="op">)</span></span>
 <span></span>
@@ -320,8 +320,8 @@ is demonstrated:</p>
 <span><span class="op">}</span></span>
 <span><span class="va">CpptsemEnd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>For 100 repetitive computations of the gradients, ctsem / OpenMx took
-20.6413757801056 seconds, while c<sub>++</sub>tsem took
-0.186470031738281 seconds. Importantly this does <strong>not</strong>
+20.7287621498108 seconds, while c<sub>++</sub>tsem took
+0.190791845321655 seconds. Importantly this does <strong>not</strong>
 mean that c<sub>++</sub>tsem is always faster! It is only faster in this
 very specific application. The differences also tend to become smaller
 with more missings in the data set. However c<sub>++</sub>tsem still
@@ -335,7 +335,7 @@ tends to outperform the ctsem / OpenMx approach by a factor of around
 solnp or optim. In the following the use with optim is demonstrated:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cdriveraus/ctsemOMX" class="external-link">ctsemOMX</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">regCtsem</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jhorzek.github.io/regCtsem/">regCtsem</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># set up model with ctsem</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"AnomAuth"</span><span class="op">)</span></span>
@@ -438,7 +438,7 @@ filter<a class="anchor" aria-label="anchor" href="#application-example-3-general
 purpose optimizers such as solnp or optim when using the Kalman filter.
 In the following the use with solnp is demonstrated:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">regCtsem</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jhorzek.github.io/regCtsem/">regCtsem</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cdriveraus/ctsemOMX" class="external-link">ctsemOMX</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">175446</span><span class="op">)</span></span>
 <span><span class="co">## define the population model:</span></span>
@@ -539,11 +539,11 @@ c<sub>++</sub>tsem appears to be slightly faster:</p>
 <span>                                        UB <span class="op">=</span> <span class="cn">NULL</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>trace <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span>
 <span>                                        <span class="va">kalmanCpptsemmodel</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;  12.992  21.674   5.784</span></span>
+<span><span class="co">#&gt;  14.896  23.006   6.324</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fu"><a href="https://rdrr.io/pkg/OpenMx/man/mxRun.html" class="external-link">mxRun</a></span><span class="op">(</span><span class="va">kalmanModelNotOptimized</span><span class="op">$</span><span class="va">mxobj</span>, </span>
 <span>                                silent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;  47.180   2.574   9.474</span></span></code></pre></div>
+<span><span class="co">#&gt;  47.778   2.401   9.472</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="advanced-how-it-works">Advanced: How it works<a class="anchor" aria-label="anchor" href="#advanced-how-it-works"></a>
@@ -675,10 +675,10 @@ table which can be extracted from the mxobj of a ctsem:</p>
 <span><span class="co">#&gt; 5     drift_eta1_eta2 ctsem         DRIFT   1   2 -0.050000     NA     NA</span></span>
 <span><span class="co">#&gt; 6          drift_eta2 ctsem         DRIFT   2   2 -0.450000     NA     NA</span></span>
 <span><span class="co">#&gt; 7     drift_eta2_eta1 ctsem         DRIFT   2   1 -0.050000     NA     NA</span></span>
-<span><span class="co">#&gt; 8               mm_Y1 ctsem MANIFESTMEANS   1   1  0.861000     NA     NA</span></span>
-<span><span class="co">#&gt; 9               mm_Y2 ctsem MANIFESTMEANS   2   1 -0.342000     NA     NA</span></span>
-<span><span class="co">#&gt; 10           T0m_eta1 ctsem       T0MEANS   1   1 -0.123000     NA     NA</span></span>
-<span><span class="co">#&gt; 11           T0m_eta2 ctsem       T0MEANS   2   1 -0.963000     NA     NA</span></span>
+<span><span class="co">#&gt; 8               mm_Y1 ctsem MANIFESTMEANS   1   1  0.718000     NA     NA</span></span>
+<span><span class="co">#&gt; 9               mm_Y2 ctsem MANIFESTMEANS   2   1 -1.866000     NA     NA</span></span>
+<span><span class="co">#&gt; 10           T0m_eta1 ctsem       T0MEANS   1   1 -1.548000     NA     NA</span></span>
+<span><span class="co">#&gt; 11           T0m_eta2 ctsem       T0MEANS   2   1  0.568000     NA     NA</span></span>
 <span><span class="co">#&gt; 12         T0var_eta1 ctsem     T0VARbase   1   1  2.302585     NA     NA</span></span>
 <span><span class="co">#&gt; 13         T0var_eta2 ctsem     T0VARbase   2   2  2.302585     NA     NA</span></span>
 <span><span class="co">#&gt; 14    T0var_eta2_eta1 ctsem     T0VARbase   2   1  0.100000     NA     NA</span></span>

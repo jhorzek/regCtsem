@@ -73,45 +73,15 @@ For instance, the variance-covariance matrices are implemented in log-Cholesky f
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">regCtsem</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># The following example is taken from ?ctFit:</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">AnomAuth</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">AnomAuthmodel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>LAMBDA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">2</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                         Tpoints <span class="op">=</span> <span class="fl">5</span>, n.latent <span class="op">=</span> <span class="fl">2</span>, n.manifest <span class="op">=</span> <span class="fl">2</span>, MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span><span class="op">)</span>, TRAITVAR <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Type "omx" is still supported but requires ctsemOMX package installation. "stanct" or "standt" are recommended types.</span>
-<span class="r-in"><span><span class="va">AnomAuthfit</span> <span class="op">&lt;-</span> <span class="fu">ctFit</span><span class="op">(</span><span class="va">AnomAuth</span>, <span class="va">AnomAuthmodel</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> wide format data detected</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsemCarefulFit with 14 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsem with 14 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Beginning initial fit attempt</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Running ctsem with 14 parameters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  Lowest minimum so far:  23415.9290488418</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Solution found</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  Solution found!  Final fit=23415.929 (started at 85445.286)  (1 attempt(s): 1 valid, 0 errors)</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">showParameters</span><span class="op">(</span><span class="va">AnomAuthfit</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              label model        matrix row col       value lbound ubound</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1         T0m_eta1 ctsem       T0MEANS   1   1 -0.18401203     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2         T0m_eta2 ctsem       T0MEANS   2   1 -0.02065656     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3       T0var_eta1 ctsem     T0VARbase   1   1 -0.22875213     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4       T0var_eta2 ctsem     T0VARbase   2   2 -0.50676120     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  T0var_eta2_eta1 ctsem     T0VARbase   2   1  0.30763416     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6        diff_eta1 ctsem DIFFUSIONbase   1   1 -0.37407428     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7        diff_eta2 ctsem DIFFUSIONbase   2   2 -0.93389502     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8   diff_eta2_eta1 ctsem DIFFUSIONbase   2   1 -0.00670156     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9       drift_eta1 ctsem         DRIFT   1   1 -0.44728200     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 drift_eta1_eta2 ctsem         DRIFT   1   2  0.23249802     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11      drift_eta2 ctsem         DRIFT   2   2 -0.11746620     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12 drift_eta2_eta1 ctsem         DRIFT   2   1  0.04329287     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13           mm_Y1 ctsem MANIFESTMEANS   1   1  2.68744073     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14           mm_Y2 ctsem MANIFESTMEANS   2   1  2.86337877     NA     NA</span>
-</code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jhorzek.github.io/regCtsem/">regCtsem</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># The following example is taken from ?ctFit:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">AnomAuth</span><span class="op">)</span></span>
+<span><span class="va">AnomAuthmodel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ctsem/man/ctModel.html" class="external-link">ctModel</a></span><span class="op">(</span>LAMBDA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">2</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>                         Tpoints <span class="op">=</span> <span class="fl">5</span>, n.latent <span class="op">=</span> <span class="fl">2</span>, n.manifest <span class="op">=</span> <span class="fl">2</span>, MANIFESTVAR<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span><span class="op">)</span>, TRAITVAR <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span><span class="va">AnomAuthfit</span> <span class="op">&lt;-</span> <span class="fu">ctFit</span><span class="op">(</span><span class="va">AnomAuth</span>, <span class="va">AnomAuthmodel</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">showParameters</span><span class="op">(</span><span class="va">AnomAuthfit</span><span class="op">)</span></span></code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>

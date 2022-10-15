@@ -151,7 +151,7 @@ setup <strong>regCtsem</strong> expects a fitted model from
 vector with names of the parameters which should be regularized. The
 following example is taken from the documentation of ctFit:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">regCtsem</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jhorzek.github.io/regCtsem/">regCtsem</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">38723</span><span class="op">)</span></span>
 <span><span class="co">## Directly taken from ?ctFit:</span></span>
 <span><span class="co">###Example from Voelkle, Oud, Davidov, and Schmidt (2012) - anomia and authoritarianism.  </span></span>
@@ -335,9 +335,9 @@ objective in ctFit first:</p>
 our example, FIML is a lot faster:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">endFIML</span> <span class="op">-</span> <span class="va">startFIML</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Time difference of 0.7713234 secs</span></span>
+<span><span class="co">#&gt; Time difference of 0.8063128 secs</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">endKalman</span> <span class="op">-</span> <span class="va">startKalman</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Time difference of 31.47534 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time difference of 31.4024 secs</span></span></code></pre></div>
 <p>If a model is fitted with the Kalman filter in
 <strong>ctsemOMX</strong> and then passed to <strong>regCtsem</strong>,
 <strong>regCtsem</strong> will also use the Kalman filter (don’t run the
