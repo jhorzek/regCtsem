@@ -1410,7 +1410,7 @@ fitCpptsem <- function(parameterValues, cpptsemObject, objective, free = labeled
     invisible(utils::capture.output(FIT <- try(cpptsemObject$fitRAM(),
                                         silent = TRUE),
                              type = "message"))
-    if(class(RAM) == "try-error" | class(FIT) == "try-error"){
+    if(is(RAM, "try-error") | is(FIT, "try-error")){
       return(failureReturns)
     }
     m2LL <- cpptsemObject$m2LL
@@ -1654,7 +1654,7 @@ approx_RAMM2LLCpptsem <- function(parameters, cpptsemmodel, failureReturns){
   invisible(utils::capture.output(FIT <- try(cpptsemmodel$fitRAM(),
                                       silent = TRUE),
                            type = "message"))
-  if(class(RAM) == "try-error" | class(FIT) == "try-error"){
+  if(is(RAM, "try-error") | is(FIT, "try-error")){
     return(failureReturns)
   }
   m2LL <- cpptsemmodel$m2LL
@@ -1690,7 +1690,7 @@ approx_RAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeig
   invisible(utils::capture.output(FIT <- try(cpptsemmodel$fitRAM(),
                                       silent = TRUE),
                            type = "message"))
-  if(class(RAM) == "try-error" | class(FIT) == "try-error"){
+  if(is(RAM, "try-error") | is(FIT, "try-error")){
     return(failureReturns)
   }
   m2LL <- cpptsemmodel$m2LL
@@ -1726,7 +1726,7 @@ ridgeRAMRegM2LLCpptsem <- function(parameters, cpptsemmodel, adaptiveLassoWeight
   invisible(utils::capture.output(FIT <- try(cpptsemmodel$fitRAM(),
                                       silent = TRUE),
                            type = "message"))
-  if(class(RAM) == "try-error" | class(FIT) == "try-error"){
+  if(is(RAM, "try-error") | is(FIT, "try-error")){
     return(failureReturns)
   }
   m2LL <- cpptsemmodel$m2LL
