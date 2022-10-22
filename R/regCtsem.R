@@ -309,7 +309,7 @@ regCtsem <- function(
     if(tolower(argsIn$optimizer) != "gist"){
       stop("Only GIST optimizer allows for person-specific parameters")
     }
-    warning("Subject-specific parameters are a very experimental feature. Usage not recommended!")
+    message("Subject-specific parameters are a very experimental feature. Usage not recommended!")
   }
 
   ## Defaults for optimizer
@@ -373,7 +373,7 @@ regCtsem <- function(
       if(!is.null(ctsemObject$mxobj$output$hessian)){
         argsIn$initialHessianApproximation <- ctsemObject$mxobj$output$hessian
       }else{
-        warning("Extracting Hessian from OpenMx failed. Using identity")
+        message("Extracting Hessian from OpenMx failed. Using identity")
         argsIn$initialHessianApproximation <- "identity"
       }
     }
@@ -474,7 +474,7 @@ regCtsem <- function(
   }
 
   if(any(c("DIFFUSIONbase", "T0VARbase", "MANIFESTVARbase") %in% unique(cpptsemObject$parameterTable$matrix[cpptsemObject$parameterTable$label %in% regIndicators]))){
-    warning("You seem to be regularizing covariance parameters. Please not that regCtsem uses the log-Cholesky implementation to estimate covariance matrices. See Pinheiro, J. C., & Bates, D. M. (1996). Unconstrained parametrizations for variance-covariance matrices. Statistics and Computing, 6(3), 289-296. https://doi.org/10.1007/BF00140873. Check that the regularization actually does what it should!")
+    message("You seem to be regularizing covariance parameters. Please not that regCtsem uses the log-Cholesky implementation to estimate covariance matrices. See Pinheiro, J. C., & Bates, D. M. (1996). Unconstrained parametrizations for variance-covariance matrices. Statistics and Computing, 6(3), 289-296. https://doi.org/10.1007/BF00140873. Check that the regularization actually does what it should!")
   }
 
   ## Additional settings for person specific parameter estimates
@@ -1343,13 +1343,13 @@ createCVFoldsAndModels <- function(dataset, Tpoints, manifestNames, k, autoCV, i
   }
 
   if(autoCV == "Blocked"){
-    warning("Blocked CV naively builds blocks of the data of each individual and does not account for dependencies which still exist in the training and test set (see Bergmeir, C., & Benitez, J. M. (2012). On the use of cross-validation for time series predictor evaluation. Information Sciences, 191, 192-213. https://doi.org/10.1016/j.ins.2011.12.028 and Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740-756. https://doi.org/10.1037/met0000178). Also, different time intervals are not accounted for. More sophisticated forms of cross-validation currently have to be implemented manually.")
+    message("Blocked CV naively builds blocks of the data of each individual and does not account for dependencies which still exist in the training and test set (see Bergmeir, C., & Benitez, J. M. (2012). On the use of cross-validation for time series predictor evaluation. Information Sciences, 191, 192-213. https://doi.org/10.1016/j.ins.2011.12.028 and Bulteel, K., Mestdagh, M., Tuerlinckx, F., & Ceulemans, E. (2018). VAR(1) based models do not always outpredict AR(1) models in typical psychological applications. Psychological Methods, 23(4), 740-756. https://doi.org/10.1037/met0000178). Also, different time intervals are not accounted for. More sophisticated forms of cross-validation currently have to be implemented manually.")
     if(initialPars){
       # If initial parameters are estimated we will force the first few observations to always be used in the training
       # set. This is to ensure that the estimates for the initial parameters are somewhat more reliable.
       Folds <- (max(1, Tpoints %/% 10)):(Tpoints-1)
       #ignore <- paste0(paste0(manifestNames, "_T"), rep(0:(max(1, Tpoints %/% 10)-1), each = length(manifestNames)))
-      warning(paste0("Bergmeir & Benitez, (2012) do not recommend the use of cross-validation with non-stationary time series! However, your model seems to not assume stationarity. Keep this in mind when interpreting the results. max(1, Tpoints %/% 10) = ", max(1, Tpoints %/% 10), " of the initial observations will not be used in blocked CV. Otherwise the initial parameters will be very poorly estimated."))
+      message(paste0("Bergmeir & Benitez, (2012) do not recommend the use of cross-validation with non-stationary time series! However, your model seems to not assume stationarity. Keep this in mind when interpreting the results. max(1, Tpoints %/% 10) = ", max(1, Tpoints %/% 10), " of the initial observations will not be used in blocked CV. Otherwise the initial parameters will be very poorly estimated."))
     }else{
       #ignore  <- c()
       # If stationarity is assumed, all time points are used in the cross-validation. No special treatment
@@ -1432,7 +1432,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
   }
 
   if(standardizeDrift == "No" && tolower(penalty) != "adaptivelasso" && !is.numeric(adaptiveLassoWeights)){
-    warning("Not using any automatic standardization.")
+    message("Not using any automatic standardization.")
   }
 
   # if adaptiveLassoWeights were provided and no standardization is requested:
@@ -1698,7 +1698,7 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
                            failureReturns = NA)
       if(is.na(tryFit)){
         if(it ==  0){
-          warning("Error when determining the lambdas automatically: Setting all regularized parameters to their target values resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to their target; however, this might result in a wrong maximum for the lambdas! Consider setting the lambdas manually.")
+          message("Error when determining the lambdas automatically: Setting all regularized parameters to their target values resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to their target; however, this might result in a wrong maximum for the lambdas! Consider setting the lambdas manually.")
         }
         it <- it + 1
         next
@@ -1711,7 +1711,7 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
 
     if(any(class(sparseModel) == "try-error")){
       if(it ==  0){
-        warning("Error when determining the lambdas automatically: Setting all regularized parameters to their target values resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to their target; however, this might result in a wrong maximum for the lambdas! Consider setting the lambdas manually.")
+        message("Error when determining the lambdas automatically: Setting all regularized parameters to their target values resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to their target; however, this might result in a wrong maximum for the lambdas! Consider setting the lambdas manually.")
       }
       it <- it + 1
       next
@@ -1727,7 +1727,7 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
 
     if(any(class(grad) == "try-error") || anyNA(grad)){
       if(it ==  0){
-        warning("Error when determining the lambdas automatically: Setting all regularized parameters to zero resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to zero; however, this might result in a wrong maximum for the lambdas! Consider setting the lambdas manually.")
+        message("Error when determining the lambdas automatically: Setting all regularized parameters to zero resulted in an impossible model. regCtsem will try to at least set a subset of the regularized parameters to zero; however, this might result in a wrong maximum for the lambdas! Consider setting the lambdas manually.")
       }
       it <- it + 1
       next
@@ -1738,7 +1738,7 @@ getMaxLambda <- function(cpptsemObject, objective, regIndicators, targetVector, 
     converged <- TRUE
   }
   if(it > 0){
-    warning(paste0("regCtsem did set ", numberRegularized, " of the ", length(regIndicators), " regularized parameters to zero when determining the maximal lambda."))
+    message(paste0("regCtsem did set ", numberRegularized, " of the ", length(regIndicators), " regularized parameters to zero when determining the maximal lambda."))
   }
   # define maxLambda as the maximal gradient of the regularized parameters
   maxLambda <- max(abs(grad[regIndicators]) * adaptiveLassoWeights[regIndicators]^(-1))

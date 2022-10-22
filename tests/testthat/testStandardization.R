@@ -36,7 +36,7 @@ test_that(desc = "Testing standardization", code = {
                             T0VAR="auto", type = "omx")
 
   # fit the model using ctsemOMX:
-  fit_myModel <- ctsemOMX::ctFit(dat, myModel)
+  fit_myModel <- suppressWarnings(ctsemOMX::ctFit(dat, myModel))
 
   # select DRIFT values for regularization:
   # Note: If you are unsure what the parameters are called in

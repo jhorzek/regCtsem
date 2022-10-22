@@ -29,7 +29,7 @@ test_that("ML vs Kalman", {
                             type = "omx")
 
   # fit the model using ctsem:
-  fit_myModel_ML <- ctsemOMX::ctFit(traindata, myModel, objective = "mxRAM")
+  fit_myModel_ML <- suppressWarnings(ctsemOMX::ctFit(traindata, myModel, objective = "mxRAM"))
 
   # select DRIFT values:
   regIndicators <- fit_myModel_ML$mxobj$DRIFT$labels[!diag(T,2)]
@@ -39,7 +39,7 @@ test_that("ML vs Kalman", {
                                         regIndicators = regIndicators)
 
   # and with Kalman filter
-  fit_myModel_Kalman <- ctsemOMX::ctFit(traindata, myModel, objective = "Kalman")
+  fit_myModel_Kalman <- suppressWarnings(ctsemOMX::ctFit(traindata, myModel, objective = "Kalman"))
 
   regModel_Kalman <- regCtsem::regCtsem(ctsemObject = fit_myModel_Kalman,
                                         dataset = traindata,

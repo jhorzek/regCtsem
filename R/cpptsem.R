@@ -1601,7 +1601,7 @@ optimizeCpptsem <- function(cpptsemObject, free = "all", nMultistart = 0, ...){
     if(any(differencesBetweenParameters > 2)){
       optimizedValuesTable <<- optimizedValuesTable
       correspondingFit <<- fit
-      warning("Using solnp with multiple starting values indicated that there might be local minima for your model and data. Returning optimizedValuesTable and correspondingFit as global variables for you to check. You can check the profile likelihood of models using profileLikelihoodFromRegCtsem.")
+      message("Using solnp with multiple starting values indicated that there might be local minima for your model and data. Returning optimizedValuesTable and correspondingFit as global variables for you to check. You can check the profile likelihood of models using profileLikelihoodFromRegCtsem.")
     }
     bestValues <- optimizedValuesTable[,which(fit == min(fit, na.rm = TRUE))[1]]
     cpptsemObject$setParameterValues(bestValues, names(bestValues))
@@ -1923,7 +1923,7 @@ approx_cpptsemRsolnp <- function(cpptsemmodel,
   if("failureReturns" %in% names(controlRsolnp)){
     failureReturns <- controlRsolnp$failureReturns
   }else{
-    warning("No failureReturns for optimx. Using .Machine$double.xmax/2")
+    message("No failureReturns for optimx. Using .Machine$double.xmax/2")
     failureReturns <- .Machine$double.xmax/2
   }
   if("eqfun" %in% names(controlRsolnp)){
@@ -1977,7 +1977,7 @@ approx_cpptsemRsolnp <- function(cpptsemmodel,
                                                            epsilon = epsilon, objective = objective, failureReturns = failureReturns),
                                              silent = TRUE), type = c("output", "message")))
   if(any(class(CpptsemFit) == "try-error")){stop()}
-  if(CpptsemFit$convergence > 0 && !silent){warning(paste0("Rsolnp reports convcode  > 0: ", CpptsemFit$convergence, ". See ?Rsolnp::solnp for more details."))}
+  if(CpptsemFit$convergence > 0 && !silent){message(paste0("Rsolnp reports convcode  > 0: ", CpptsemFit$convergence, ". See ?Rsolnp::solnp for more details."))}
 
   # compute unregularized fit
   cpptsemmodel$setParameterValues(CpptsemFit$pars, names(CpptsemFit$pars))
@@ -2099,7 +2099,7 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
   if("failureReturns" %in% names(controlOptimx)){
     failureReturns <- controlOptimx$controlOptimx
   }else{
-    warning("No failureReturns for optimx. Using .Machine$double.xmax/2")
+    message("No failureReturns for optimx. Using .Machine$double.xmax/2")
     failureReturns <- .Machine$double.xmax/2
   }
   if("hess" %in% names(controlOptimx)){
@@ -2120,7 +2120,7 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
   if("method" %in% names(controlOptimx)){
     method <- controlOptimx$method
   }else{
-    warning("No method selected for optimx. Using L-BFGS-B.")
+    message("No method selected for optimx. Using L-BFGS-B.")
     method <- "L-BFGS-B"
   }
   if("hessian" %in% names(controlOptimx)){
@@ -2131,7 +2131,7 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
   if("itnmax" %in% names(controlOptimx)){
     itnmax <- controlOptimx$itnmax
   }else{
-    warning("No maximal number of iterations selected for optimx. Using 100.")
+    message("No maximal number of iterations selected for optimx. Using 100.")
     itnmax <- 100
   }
   if("control" %in% names(controlOptimx)){
@@ -2151,7 +2151,7 @@ approx_cpptsemOptimx <- function(cpptsemmodel,
                                                             hess = hess, lower = lower, upper = upper, itnmax = itnmax,
                                                             method = method,hessian = hessian, control = control),
                                              silent = TRUE), type = c("output", "message")))
-  if(CpptsemFit$convcode > 0 && !silent){warning(paste0("Optimx reports convcode  > 0: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
+  if(CpptsemFit$convcode > 0 && !silent){message(paste0("Optimx reports convcode  > 0: ", CpptsemFit$convcode, ". See ?optimx for more details."))}
   if(any(class(CpptsemFit) == "try-error")){stop()}
 
   # extract parameters

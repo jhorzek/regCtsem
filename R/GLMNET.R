@@ -76,7 +76,7 @@ exact_bfgsGLMNET <- function(cpptsemObject,
                                     failureReturns = NA
     ), silent = TRUE)
     if(any(class(Hessian) == "try-error")){
-      warning("Could not compute Hessian. Using Identity")
+      message("Could not compute Hessian. Using Identity")
       initialHessian <- diag(.1, length(parameters))
     }
   }else{
@@ -96,7 +96,7 @@ exact_bfgsGLMNET <- function(cpptsemObject,
   HessianNew <- initialHessian
   eigenDecomp <- eigen(HessianNew)
   if(any(eigenDecomp$values < 0)){
-    warning("Initial Hessian is not positive definite. Flipping Eigen values to obtain a positive definite initial Hessian.")
+    message("Initial Hessian is not positive definite. Flipping Eigen values to obtain a positive definite initial Hessian.")
     D <- abs(diag(eigenDecomp$values))
     L <- eigenDecomp$vectors
     HessianNew <- L%*%D%*%solve(L)
@@ -178,10 +178,10 @@ exact_bfgsGLMNET <- function(cpptsemObject,
     if(any(class(resGLMNET) == "try-error")){
 
       if(retryOnce){
-        warning(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), " did not converge. Retrying with different starting values.", sep = ""))
+        message(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), " did not converge. Retrying with different starting values.", sep = ""))
 
       }else{
-        warning(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), " did not converge.", sep = ""))
+        message(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), " did not converge.", sep = ""))
       }
       # reset theta for next iteration
       newParameters <- initialParameters
@@ -206,7 +206,7 @@ exact_bfgsGLMNET <- function(cpptsemObject,
         out2 <- NA
       }
       if(any(class(out1)== "try-error") | any(class(out2)== "try-error")){
-        warning(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), "did not converge.", sep = ""))
+        message(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), "did not converge.", sep = ""))
         # reset theta for next iteration
         newParameters <- initialParameters
         # reset Hessian approximation
@@ -352,7 +352,7 @@ exact_outerGLMNET <- function(cpptsemObject,
         newParameters <- oldParameters
         newGradients <- oldGradients
         newHessian <- oldHessian
-        warning(paste("The model did NOT CONVERGE for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda),". Returning the last working values. These values are NOT acceptable; this can happen if the function is difficult to optimize. try the approximate procedure."))
+        message(paste("The model did NOT CONVERGE for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda),". Returning the last working values. These values are NOT acceptable; this can happen if the function is difficult to optimize. try the approximate procedure."))
         break
       }
       if(convergenceCriterion){
@@ -378,7 +378,7 @@ exact_outerGLMNET <- function(cpptsemObject,
     # perform Line Search
     if(tolower(lineSearch) == "glmnet") {
       if(stepSize > 1 | stepSize < 0){
-        warning("Stepsize not allowed. Setting to .9.")
+        message("Stepsize not allowed. Setting to .9.")
         stepSize = .9
       }
       stepSize_k <- exact_GLMNETLineSearch(cpptsemObject = cpptsemObject,
@@ -439,7 +439,7 @@ exact_outerGLMNET <- function(cpptsemObject,
       # the value of 10 is rather arbitrary and is only used to prevent
       # warnings near convergence, when there might be negligible steps in
       # the wrong direction
-      warning("Step in wrong direction!")
+      message("Step in wrong direction!")
     }
 
     # Approximate Hessian using bfgs
@@ -468,7 +468,7 @@ exact_outerGLMNET <- function(cpptsemObject,
   }
   # warnings
   if(iter_out == maxIter_out){
-    warning(paste("For lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), "the maximum number of iterations was reached. Try with a higher maxIter_out or with smaller lambda-steps."))
+    message(paste("For lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), "the maximum number of iterations was reached. Try with a higher maxIter_out or with smaller lambda-steps."))
   }
   return(list("cpptsemObject" = cpptsemObject, "newParameters" = newParameters, "newGradient" = newGradients, "HessianNew" = newHessian, "convergence" = converged))
 }
@@ -778,13 +778,13 @@ exact_getBFGS <- function(oldParameters, oldGradients, oldHessian, newParameters
     return(oldHessian)
   }
   if(t(y)%*%d < 0){
-    warning("Hessian update possibly non-positive definite.")
+    message("Hessian update possibly non-positive definite.")
   }
 
   HessianNew <- oldHessian - (oldHessian%*%d%*%t(d)%*%oldHessian)/as.numeric(t(d)%*%oldHessian%*%d) + (y%*%t(y))/as.numeric(t(y)%*%d)
 
   if(anyNA(HessianNew)){
-    warning("Invalid Hessian. Returning previous Hessian")
+    message("Invalid Hessian. Returning previous Hessian")
     return(oldHessian)
   }
   HessianEigen <- eigen(HessianNew)
