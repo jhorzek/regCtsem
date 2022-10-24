@@ -18,5 +18,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check
-        run: rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
+        run: devtools::check(error_on = "warning", manual = FALSE)
         shell: Rscript {0}
