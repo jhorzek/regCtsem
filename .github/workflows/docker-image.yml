@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build Docker with Dependencies
-      run: docker build . --file Dockerfile --tag regctsem:dependencies
+      run: ls && docker build . --file .github/workflows/Dockerfile --tag regctsem:dependencies
       
     - name: Login to GitHub Packages
       run: echo ${{secrets.GH_LOGIN}} | docker login ghcr.io -u jhorzek --password-stdin
