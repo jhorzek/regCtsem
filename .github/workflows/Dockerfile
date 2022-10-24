@@ -8,5 +8,6 @@ RUN R -e "install.packages('numDeriv',dependencies=TRUE, repos='http://cran.rstu
 RUN R -e "install.packages('testthat',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('knitr',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('rmarkdown',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('RcppArmadillo',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 
 RUN apt-get update && apt-get install -y qpdf
