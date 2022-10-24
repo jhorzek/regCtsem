@@ -9,7 +9,7 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Depends: ctsemOMX, ctsem
-Imports: Rcpp (>= 1.0.5), OpenMx, optimx, Rsolnp, numDeriv, rlang, methods, stats, utils, graphics
+Imports: Rcpp (>= 1.0.5), RcppArmadillo, OpenMx, optimx, Rsolnp, numDeriv, rlang, methods, stats, utils, graphics
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.2.1
 Suggests: 
