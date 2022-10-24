@@ -143,10 +143,10 @@ exact_GIST <- function(cpptsemObject, dataset, objective, regIndicators, targetV
     if(any(class(resGIST) == "try-error") || !resGIST$convergence){
 
       if(retryOnce){
-        warning(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), " did not converge. Retrying with different starting values.", sep = ""))
+        message(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), " did not converge. Retrying with different starting values.", sep = ""))
 
       }else{
-        warning(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), " did not converge.", sep = ""))
+        message(paste("Model for lambda = ", ifelse(scaleLambdaWithN, lambda/sampleSize, lambda), " did not converge.", sep = ""))
       }
       # reset theta for next iteration
       startingValues <- initialParameters
@@ -306,25 +306,25 @@ GIST <- function(cpptsemObject,
 
       if(is.na(stepsize)){
         if(!silent){
-          warning(paste0("Outer iteration ", k_out, ": NA or infinite step size..."))}
+          message(paste0("Outer iteration ", k_out, ": NA or infinite step size..."))}
         break
       }
       if(is.infinite(stepsize)){
         if(!silent){
-          warning(paste0("Outer iteration ", k_out, ": NA or infinite step size..."))}
+          message(paste0("Outer iteration ", k_out, ": NA or infinite step size..."))}
         break
       }
       if(stepsize < stepsizeMin){
 
         if(!resetStepSize){
-          if(!silent){warning(paste0("Outer iteration ", k_out, ": Stepsize below specified minimum..."))}
+          if(!silent){message(paste0("Outer iteration ", k_out, ": Stepsize below specified minimum..."))}
           break
         }
         stepsize <- initialStepsize
       }
       if(stepsize > stepsizeMax){
         if(!resetStepSize){
-          if(!silent){warning(paste0("Outer iteration ", k_out, ": Stepsize above specified maximum..."))}
+          if(!silent){message(paste0("Outer iteration ", k_out, ": Stepsize above specified maximum..."))}
           break
         }
         stepsize <- initialStepsize
@@ -424,7 +424,7 @@ GIST <- function(cpptsemObject,
 
     if(k == maxIter_in){
       if(!silent){
-        warning("Maximal number of inner iterations used by GIST. Consider increasing the number of inner iterations.")}
+        message("Maximal number of inner iterations used by GIST. Consider increasing the number of inner iterations.")}
     }
 
     if(tolower(objective) == "ml"){
@@ -546,7 +546,7 @@ GIST <- function(cpptsemObject,
 
   if(k_out == maxIter_out){
     if(!silent){
-      warning("Maximal number of outer iterations used by GIST. Consider increasing the number of outer iterations.")}
+      message("Maximal number of outer iterations used by GIST. Consider increasing the number of outer iterations.")}
   }
 
 
@@ -673,25 +673,25 @@ GISTWithTarget <- function(cpptsemObject,
 
       if(is.na(stepsize)){
         if(!silent){
-          warning(paste0("Outer iteration ", k_out, ": NA or infinite step size..."))}
+          message(paste0("Outer iteration ", k_out, ": NA or infinite step size..."))}
         break
       }
       if(is.infinite(stepsize)){
         if(!silent){
-          warning(paste0("Outer iteration ", k_out, ": NA or infinite step size..."))}
+          message(paste0("Outer iteration ", k_out, ": NA or infinite step size..."))}
         break
       }
       if(stepsize < stepsizeMin){
 
         if(!resetStepSize){
-          if(!silent){warning(paste0("Outer iteration ", k_out, ": Stepsize below specified minimum..."))}
+          if(!silent){message(paste0("Outer iteration ", k_out, ": Stepsize below specified minimum..."))}
           break
         }
         stepsize <- initialStepsize
       }
       if(stepsize > stepsizeMax){
         if(!resetStepSize){
-          if(!silent){warning(paste0("Outer iteration ", k_out, ": Stepsize above specified maximum..."))}
+          if(!silent){message(paste0("Outer iteration ", k_out, ": Stepsize above specified maximum..."))}
           break
         }
         stepsize <- initialStepsize
@@ -802,7 +802,7 @@ GISTWithTarget <- function(cpptsemObject,
 
     if(k == maxIter_in){
       if(!silent){
-        warning("Maximal number of inner iterations used by GIST. Consider increasing the number of inner iterations.")}
+        message("Maximal number of inner iterations used by GIST. Consider increasing the number of inner iterations.")}
     }
 
     if(tolower(objective) == "ml"){
@@ -924,7 +924,7 @@ GISTWithTarget <- function(cpptsemObject,
 
   if(k_out == maxIter_out){
     if(!silent){
-      warning("Maximal number of outer iterations used by GIST. Consider increasing the number of outer iterations.")}
+      message("Maximal number of outer iterations used by GIST. Consider increasing the number of outer iterations.")}
   }
 
   return(list("type" = "cpptsem",

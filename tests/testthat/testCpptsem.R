@@ -14,7 +14,7 @@ test_that(desc = "Testing implementation of cpptsem", code = {
                               MANIFESTVAR=diag(0, 2),
                               TRAITVAR = NULL,
                               CINT = CINT)
-    AnomAuthfit1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = FALSE, stationary = stationary)
+    AnomAuthfit1 <- suppressWarnings(ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = FALSE, stationary = stationary))
     gradientModel1 <- OpenMx::mxRun(OpenMx::mxModel(AnomAuthfit1$mxobj,
                                                     OpenMx::mxComputeSequence(steps=list(
                                                       OpenMx::mxComputeNumericDeriv(checkGradient = FALSE,
@@ -33,7 +33,7 @@ test_that(desc = "Testing implementation of cpptsem", code = {
     expect_equal(sum(round(cpptsemmodel1$approxRAMGradients((1.1 * 10^(-16))^(1/3))[names(centralGrandients)] - centralGrandients,2)), 0)
 
     # change parameter values
-    AnomAuthfit1_1 <- ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = TRUE, stationary = stationary)
+    AnomAuthfit1_1 <- suppressWarnings(ctFit(AnomAuth, AnomAuthmodel1, useOptimizer = TRUE, stationary = stationary))
     newParameters <- omxGetParameters(AnomAuthfit1_1$mxobj)
     cpptsemmodel1$setParameterValues(newParameters, names(newParameters))
     cpptsemmodel1$computeRAM()
@@ -46,7 +46,7 @@ test_that(desc = "Testing implementation of cpptsem", code = {
                               MANIFESTVAR=diag(0, 2),
                               TRAITVAR = "auto",
                               CINT = CINT)
-    AnomAuthfit2 <- ctFit(AnomAuth, AnomAuthmodel2, useOptimizer = FALSE, stationary = stationary)
+    AnomAuthfit2 <- suppressWarnings(ctFit(AnomAuth, AnomAuthmodel2, useOptimizer = FALSE, stationary = stationary))
     AnomAuthfit2$mxobj$fitfunction$result[[1]]
     gradientModel2 <- OpenMx::mxRun(OpenMx::mxModel(AnomAuthfit2$mxobj,
                                                     OpenMx::mxComputeSequence(steps=list(
@@ -93,7 +93,7 @@ test_that(desc = "Testing implementation of cpptsem", code = {
                               DIFFUSION=matrix(c('eta1_eta1',0,0,'eta2_eta2'),2),
                               T0MEANS=matrix(0,ncol=1,nrow=2),
                               T0VAR="auto", type = "omx")
-    myModel <- ctFit(myModel, dat = traindata, objective = "Kalman", useOptimizer = F, stationary = stationary)
+    myModel <- suppressWarnings(ctFit(myModel, dat = traindata, objective = "Kalman", useOptimizer = F, stationary = stationary))
 
     gradientModel3 <- OpenMx::mxRun(OpenMx::mxModel(myModel$mxobj,
                                                     OpenMx::mxComputeSequence(steps=list(

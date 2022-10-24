@@ -1,7 +1,8 @@
 test_that(desc = "Testing Kalman filter", code = {
   library(regCtsem)
-  set.seed(17544)
+  set.seed(123)
 
+  N <- 20
   ## define the population model:
 
   # set the drift matrix. Note that drift eta_1_eta2 is set to equal 0 in the population.
@@ -17,8 +18,8 @@ test_that(desc = "Testing Kalman filter", code = {
                                   T0VAR=diag(1,2), type = "omx")
 
   # simulate a training data set
-  traindata <- ctsem::ctGenerate(generatingModel,n.subjects = 10, wide = TRUE)
-  testdata_1 <- ctsem::ctGenerate(generatingModel,n.subjects = 10, wide = TRUE)
+  traindata <- ctsem::ctGenerate(generatingModel,n.subjects = N, wide = TRUE)
+  testdata_1 <- ctsem::ctGenerate(generatingModel,n.subjects = N, wide = TRUE)
 
   myModel <- ctsem::ctModel(Tpoints=100,n.latent=2,n.TDpred=0,n.TIpred=0,n.manifest=2,
                             LAMBDA=diag(1,2),
@@ -29,8 +30,8 @@ test_that(desc = "Testing Kalman filter", code = {
                             T0VAR=diag(1,2), type = "omx")
 
   # fit the model using ctsem:
-  fit_myModel <- ctsemOMX::ctFit(traindata, myModel, objective = "Kalman")
-  fit_myModel_fortest <- ctsemOMX::ctFit(testdata_1, myModel, useOptimizer = FALSE, objective = "Kalman")
+  fit_myModel <- suppressWarnings(ctsemOMX::ctFit(traindata, myModel, objective = "Kalman"))
+  fit_myModel_fortest <- suppressWarnings(ctsemOMX::ctFit(testdata_1, myModel, useOptimizer = FALSE, objective = "Kalman"))
 
   # select DRIFT values:
   regIndicators <- fit_myModel$mxobj$DRIFT$labels[!diag(T,2)]
@@ -49,7 +50,7 @@ test_that(desc = "Testing Kalman filter", code = {
                                                            approxFirst = FALSE)))
   testthat::expect_equal(round(regModel$fit["m2LL",] - fit_myModel$mxobj$fitfunction$result[[1]],4)[[1]], 0)
   testthat::expect_equal(round(regModel$fit["AIC",] - AIC(fit_myModel$mxobj),4)[[1]], 0)
-  testthat::expect_equal(round(regModel$fit["BIC",] - (fit_myModel$mxobj$fitfunction$result[[1]] + log(10)*length(omxGetParameters(fit_myModel$mxobj))),4)[[1]], 0)
+  testthat::expect_equal(round(regModel$fit["BIC",] - (fit_myModel$mxobj$fitfunction$result[[1]] + log(N)*length(omxGetParameters(fit_myModel$mxobj))),4)[[1]], 0)
   testthat::expect_equal(
     all(
       abs(
@@ -69,7 +70,7 @@ test_that(desc = "Testing Kalman filter", code = {
                                                              approxFirst = T)))
   testthat::expect_equal(round(regModel$fit["m2LL",] - fit_myModel$mxobj$fitfunction$result[[1]],4)[[1]], 0)
   testthat::expect_equal(round(regModel$fit["AIC",] - AIC(fit_myModel$mxobj),4)[[1]], 0)
-  testthat::expect_equal(round(regModel$fit["BIC",] - (fit_myModel$mxobj$fitfunction$result[[1]] + log(10)*length(omxGetParameters(fit_myModel_fortest$mxobj))),4)[[1]], 0)
+  testthat::expect_equal(round(regModel$fit["BIC",] - (fit_myModel$mxobj$fitfunction$result[[1]] + log(N)*length(omxGetParameters(fit_myModel_fortest$mxobj))),4)[[1]], 0)
 
   testthat::expect_equal(
     all(

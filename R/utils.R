@@ -122,7 +122,7 @@ startFromSparse <- function(ctsemObject,
   if(autoCV!= "No") stop("Cross-Validation not yet implemented")
   if(!is.null(subjectSpecificParameters)) stop("Subject specific parameters not yet implemented")
   if(!fitFull & (penalty == "adaptiveLASSO" | standardizeDrift != "No")){
-    warning("When using fitFull = FALSE the standardization and the adaptive LASSO weights are based on a (possibly very poor) approximation of the full model. Be wary of that!")
+    message("When using fitFull = FALSE the standardization and the adaptive LASSO weights are based on a (possibly very poor) approximation of the full model. Be wary of that!")
   }
 
   if(is.null(targetVector)){
@@ -214,7 +214,7 @@ startFromSparse <- function(ctsemObject,
   grad <- exact_getCppGradients(cpptsemObject, objective = objective)
 
   if(tolower(penalty) == "lasso" && standardizeDrift != "No"){
-    warning("Standardizing with parameters of the sparse model")
+    message("Standardizing with parameters of the sparse model")
     cpptsemObject$setParameterValues(sparseParameters, names(sparseParameters))
     tryFit <- fitCpptsem(parameterValues = sparseParameters[freeParam],
                          cpptsemObject = cpptsemObject,
@@ -230,7 +230,7 @@ startFromSparse <- function(ctsemObject,
                        silent = TRUE)
       fullParameters <- fullModel$par
     }else{
-      warning("Full model will only be approximated!")
+      message("Full model will only be approximated!")
       # step 3: compute hessian
       hess <- numDeriv::hessian(func = fitCpptsem,
                                 x = cpptsemObject$getParameterValues(),

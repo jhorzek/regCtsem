@@ -29,8 +29,8 @@ test_that(desc = "Testing basic features of regCtsem", code = {
                             T0VAR=diag(1,2), type = "omx")
 
   # fit the model using ctsem:
-  fit_myModel <- ctsemOMX::ctFit(traindata, myModel)
-  fit_myModel_fortest <- ctsemOMX::ctFit(testdata_1, myModel, useOptimizer = FALSE)
+  fit_myModel <- suppressWarnings(ctsemOMX::ctFit(traindata, myModel))
+  fit_myModel_fortest <- suppressWarnings(ctsemOMX::ctFit(testdata_1, myModel, useOptimizer = FALSE))
 
   # select DRIFT values:
   regIndicators <- fit_myModel$mxobj$DRIFT$labels[!diag(T,2)]
