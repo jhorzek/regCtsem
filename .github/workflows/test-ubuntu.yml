@@ -1,0 +1,23 @@
+name: R CMD check
+
+on:
+  workflow_dispatch
+  #push:
+  #  branches: [ "main" ]
+  #pull_request:
+  #  branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+     image: ghcr.io/jhorzek/regctsem:dependencies
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check
+        run: rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
+        shell: Rscript {0}
