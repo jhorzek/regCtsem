@@ -99,11 +99,12 @@ test_that(desc = "Testing Kalman filter", code = {
                                                 regIndicators = regIndicators,
                                                 lambdasAutoLength = 10,
                                                 standardizeDrift = "asymptoticDiffusion",
-                                                cvSample = testdata_1))
+                                                cvSample = testdata_1,
+                                                control = controlApprox(epsilon = 1e-8)))
 
-  testthat::expect_equal(sum(round(regModel_BIC_GIST$fit["regM2LL",] - regModel_BIC_GLMNET$fit["regM2LL",],3)),0)
-  testthat::expect_equal(sum(round(regModel_BIC_GIST$parameterEstimatesRaw - regModel_BIC_GLMNET$parameterEstimatesRaw,3)),0)
-  testthat::expect_equal(sum(round(regModel_BIC_GIST$parameterEstimatesRaw - regModel_BIC_Approx$parameterEstimatesRaw,2)),0)
+  testthat::expect_equal(all(round(regModel_BIC_GIST$fit["regM2LL",] - regModel_BIC_GLMNET$fit["regM2LL",],3) == 0),TRUE)
+  testthat::expect_equal(all(round(regModel_BIC_GIST$parameterEstimatesRaw - regModel_BIC_GLMNET$parameterEstimatesRaw,3) == 0),TRUE)
+  testthat::expect_equal(all(round(regModel_BIC_GIST$parameterEstimatesRaw - regModel_BIC_Approx$parameterEstimatesRaw,2) == 0),TRUE)
   regModel_BIC_checkFI <- regCtsem:::checkFI(mxObject = fit_myModel$mxobj,
                                              regCtsemObject = regModel_BIC_GIST,
                                              cvModel = fit_myModel_fortest$mxobj,
