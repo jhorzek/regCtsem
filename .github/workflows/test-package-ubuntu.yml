@@ -1,0 +1,22 @@
+name: R CMD check ubuntu
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+     image: ghcr.io/jhorzek/regctsem:dependencies
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check
+        run: devtools::check(error_on = "warning", manual = FALSE)
+        shell: Rscript {0}
