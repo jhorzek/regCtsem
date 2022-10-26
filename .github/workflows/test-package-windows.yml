@@ -9,7 +9,8 @@
 name: R CMD check windows
 
 on:
-  workflow_dispatch
+  push:
+    branches: [ "main" ]
 
 permissions:
   contents: read
