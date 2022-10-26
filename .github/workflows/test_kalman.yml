@@ -1,0 +1,19 @@
+name: R CMD check ubuntu
+
+on:
+  workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+     image: ghcr.io/jhorzek/regctsem:dependencies
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check
+        run: devtools::install(); testthat::test_file(path = "tests/testthat/testKalman.R");
+        shell: Rscript {0}
