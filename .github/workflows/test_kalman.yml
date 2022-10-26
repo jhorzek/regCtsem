@@ -1,4 +1,4 @@
-name: R CMD check ubuntu
+name: check Kalman
 
 on:
   workflow_dispatch
