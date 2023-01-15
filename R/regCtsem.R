@@ -20,7 +20,7 @@
 #' @param targetVector named vector with values towards which the parameters are regularized (Standard is regularization towards zero)
 #' @param lambdas vector of penalty values (tuning parameter). E.g., seq(0,1,.01). Alternatively, lambdas can be set to "auto". regCtsem will then compute an upper limit for lambda and test lambdasAutoLength increasing lambda values
 #' @param lambdasAutoLength if lambdas == "auto", lambdasAutoLength will determine the number of lambdas tested.
-#' @param lambdasAutoCurve It is often a good idea to have unequally spaced lambda steps (e.g., .01,.02,.05,1,5,20). If lambdasAutoCurve is close to 1 lambda values will be equally spaced, if lambdasAutoCurve is large lambda values will be more concentrated close to 0. See ?getCurvedLambda for more informations.
+#' @param lambdasAutoCurve It is often a good idea to have unequally spaced lambda steps (e.g., .01,.02,.05,1,5,20). If lambdasAutoCurve is close to 1 lambda values will be equally spaced, if lambdasAutoCurve is large lambda values will be more concentrated close to 0. See ?getCurvedLambda for more information.
 #' @param penalty Currently supported are lasso, ridge and adaptiveLasso
 #' @param adaptiveLassoWeights weights for the adaptive lasso. Defaults to 1/(|theta|^adaptiveLassoPower), where theta is the maximum likelihood estimate of the regularized parameters.
 #' @param adaptiveLassoPower power for the adaptive lasso weights. The weights will be set to 1/(|theta|^adaptiveLassoPower).

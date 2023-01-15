@@ -11,7 +11,7 @@ LazyData: true
 Depends: ctsemOMX, ctsem
 Imports: Rcpp (>= 1.0.5), OpenMx, optimx, Rsolnp, numDeriv, rlang, methods, stats, utils, graphics
 LinkingTo: Rcpp, RcppArmadillo
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Suggests: 
     testthat (>= 3.0.0),
     knitr,
