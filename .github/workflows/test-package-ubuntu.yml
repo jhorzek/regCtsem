@@ -3,8 +3,6 @@ name: R CMD check ubuntu
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 permissions:
   contents: read
