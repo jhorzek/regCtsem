@@ -1432,7 +1432,7 @@ getAdaptiveLassoWeights <- function(cpptsemObject, penalty, adaptiveLassoWeights
   }
 
   if(standardizeDrift == "No" && tolower(penalty) != "adaptivelasso" && !is.numeric(adaptiveLassoWeights)){
-    message("Not using any automatic standardization.")
+    warning("Not using any automatic standardization.")
   }
 
   # if adaptiveLassoWeights were provided and no standardization is requested:
