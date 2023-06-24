@@ -1,4 +1,4 @@
-# regCtsem <a href="https://jhorzek.github.io/regCtsem/"><img src="man/figures/logo.svg" align="right" height="139" /></a>
+# regCtsem <a href="https://jhorzek.github.io/regCtsem/"><img src="man/figures/regCtsem_logo.svg" align="right" height="139" /></a>
 
 Regularized Continuous Time Structural Equation Modeling. regCtsem builds on the ctsemOMX and ctsem package (Driver et al., 2017) and extends it with
 different regularization techniques based on Jacobucci et al. (2016) and Huang et al. (2017).
