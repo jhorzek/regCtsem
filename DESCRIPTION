@@ -1,7 +1,7 @@
 Package: regCtsem
 Type: Package
 Title: Exact and approximate regularization in ctsem
-Version: 0.1.3
+Version: 0.1.4
 Author: Jannik Orzek
 Maintainer: <orzek@mpib-berlin.mpg.de>
 Description: Implements lasso, adaptive lasso, and ridge regularization for continuous time structural equation models.
