@@ -6,6 +6,7 @@
 #' @author Jannik Orzek <orzek@mpib-berlin.mpg.de>
 #' @import Rcpp
 #' @importFrom Rcpp sourceCpp
+#' @importFrom methods is
 #' @useDynLib regCtsem
 #' @name regCtsem
 
